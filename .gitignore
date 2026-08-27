@@ -1,0 +1,14 @@
+/target
+**/*.rs.bk
+
+# Local editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+
+# Agent tooling never belongs in this repo
+.claude/
+.codex/
+.agents/
+AGENTS.md
+CLAUDE.md

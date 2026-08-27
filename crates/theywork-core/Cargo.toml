@@ -1,0 +1,9 @@
+[package]
+name = "theywork-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared domain model for they-work: offices, workers, activities, events."
+
+[dependencies]
+serde = { workspace = true }

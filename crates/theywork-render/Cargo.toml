@@ -1,0 +1,11 @@
+[package]
+name = "theywork-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Half-block pixel-art renderer and views for they-work."
+
+[dependencies]
+theywork-core = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }

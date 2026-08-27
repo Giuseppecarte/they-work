@@ -1,0 +1,18 @@
+[package]
+name = "theywork-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "they-work: a pixel-art virtual office for watching your AI coding agents."
+
+[[bin]]
+name = "they-work"
+path = "src/main.rs"
+
+[dependencies]
+theywork-core = { workspace = true }
+theywork-collect = { workspace = true }
+theywork-render = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+anyhow = { workspace = true }

@@ -87,9 +87,12 @@ impl World {
         for office in self.offices.values_mut() {
             office.workers.retain(|w| !w.is_offline_at(now));
             for worker in &mut office.workers {
+                // Stop animating a quiet worker, but leave `turn_in_flight`
+                // alone: an open turn that has gone silent is exactly what
+                // `status_at` reads as blocked, and clearing it here would hide
+                // every blockage behind a coffee cup.
                 if worker.is_idle_at(now) && worker.activity.is_busy() {
                     worker.activity = Activity::Idle;
-                    worker.turn_in_flight = false;
                 }
             }
         }
@@ -138,6 +141,40 @@ mod tests {
 
         w.tick(crate::OFFLINE_AFTER_MS + 1);
         assert_eq!(w.office_count(), 0, "empty offices close");
+    }
+
+    #[test]
+    fn an_open_turn_gone_silent_reads_as_blocked_not_idle() {
+        let mut w = World::new();
+        w.apply(ev(0, "t1", EventKind::Turn { in_flight: true }));
+        w.apply(ev(0, "t1", EventKind::Acted(Activity::Typing { detail: "npm i".into() })));
+
+        let at = |w: &World, now| {
+            w.office(&OfficeId("/proj".into())).unwrap().workers[0].status_at(now)
+        };
+
+        assert_eq!(at(&w, 1_000), crate::WorkerStatus::Running);
+
+        // Quiet long enough to stop the animation, but not long enough to worry.
+        w.tick(crate::IDLE_AFTER_MS + 1);
+        assert_eq!(
+            at(&w, crate::IDLE_AFTER_MS + 1),
+            crate::WorkerStatus::Running,
+            "going quiet must not by itself look like a blockage"
+        );
+
+        // Still nothing much later: this one needs a human.
+        w.tick(crate::BLOCKED_AFTER_MS + 1);
+        assert_eq!(at(&w, crate::BLOCKED_AFTER_MS + 1), crate::WorkerStatus::Blocked);
+    }
+
+    #[test]
+    fn a_finished_turn_reads_as_idle_and_ready_for_work() {
+        let mut w = World::new();
+        w.apply(ev(0, "t1", EventKind::Turn { in_flight: true }));
+        w.apply(ev(10, "t1", EventKind::Turn { in_flight: false }));
+        let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
+        assert_eq!(worker.status_at(crate::BLOCKED_AFTER_MS * 2), crate::WorkerStatus::Idle);
     }
 
     #[test]

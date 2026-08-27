@@ -89,6 +89,40 @@ impl Activity {
     }
 }
 
+/// What a manager would say about a worker if you asked how they were doing.
+///
+/// Derived from activity and timing rather than stored, so it can never drift
+/// out of sync with what the office is showing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum WorkerStatus {
+    /// A turn is open and the worker is producing output.
+    Running,
+    /// No turn open. Finished, and ready to be given something new.
+    Idle,
+    /// A turn is open but nothing has come out of it for a long time. Almost
+    /// always a command waiting on a human to approve it, or a question asked
+    /// and never answered. These are the ones worth interrupting your day for.
+    Blocked,
+    /// Something failed.
+    Failed,
+}
+
+impl WorkerStatus {
+    pub fn label(self) -> &'static str {
+        match self {
+            WorkerStatus::Running => "running",
+            WorkerStatus::Idle => "idle",
+            WorkerStatus::Blocked => "blocked",
+            WorkerStatus::Failed => "failed",
+        }
+    }
+
+    /// Whether a human needs to do something before this worker can continue.
+    pub fn needs_attention(self) -> bool {
+        matches!(self, WorkerStatus::Blocked | WorkerStatus::Failed)
+    }
+}
+
 /// One agent thread, drawn as one employee at one desk.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Worker {
@@ -120,6 +154,21 @@ impl Worker {
             last_seen: at,
             turn_in_flight: false,
         }
+    }
+
+    /// How this worker is doing, in the sense a manager would mean it.
+    pub fn status_at(&self, now: Millis) -> WorkerStatus {
+        if matches!(self.activity, Activity::Error { .. }) {
+            return WorkerStatus::Failed;
+        }
+        if !self.turn_in_flight {
+            return WorkerStatus::Idle;
+        }
+        // An open turn that has gone silent is not working, it is waiting.
+        if now - self.last_seen > crate::BLOCKED_AFTER_MS {
+            return WorkerStatus::Blocked;
+        }
+        WorkerStatus::Running
     }
 
     /// Quiet for long enough that we should stop animating them.

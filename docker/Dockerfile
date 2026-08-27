@@ -1,5 +1,5 @@
 # Build stage: the Rust toolchain never leaves this layer.
-FROM rust:1.83-slim-bookworm AS build
+FROM rust:1.90-slim-bookworm AS build
 
 # rusqlite's bundled SQLite needs a C compiler.
 RUN apt-get update \

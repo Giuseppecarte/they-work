@@ -12,3 +12,6 @@
 .agents/
 AGENTS.md
 CLAUDE.md
+
+# Container-local cargo cache
+/.cargo-home

@@ -44,7 +44,7 @@ Every flag is there for a reason:
 
 ## From source, without Docker
 
-Requires a Rust toolchain (1.83 or newer).
+Requires a Rust toolchain (1.90 or newer).
 
 ```bash
 git clone https://github.com/OWNER/they-work

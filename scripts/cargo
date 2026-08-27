@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Run cargo inside the project's toolchain container.
+#
+# Contributors do not need Rust installed. `./scripts/cargo test` behaves like
+# `cargo test`, but the toolchain lives in an image and the build output is
+# owned by you rather than by root.
+set -eu
+
+IMAGE=${THEYWORK_DEV_IMAGE:-they-work-dev:local}
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "building $IMAGE ..." >&2
+    docker build -q -f "$ROOT/docker/Dockerfile.dev" -t "$IMAGE" "$ROOT" >&2
+fi
+
+# Attach a TTY only when we have one, so CI and scripted use also work.
+if [ -t 0 ]; then TTY=-it; else TTY=; fi
+
+exec docker run --rm $TTY \
+    --user "$(id -u):$(id -g)" \
+    -e CARGO_HOME=/src/.cargo-home \
+    -v "$ROOT:/src" -w /src \
+    "$IMAGE" cargo "$@"

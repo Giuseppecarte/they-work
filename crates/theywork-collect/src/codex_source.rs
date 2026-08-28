@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -96,18 +96,21 @@ impl Source for CodexSource {
     fn poll(&mut self, now: Millis) -> Result<Vec<Event>, SourceError> {
         let cutoff_ms = recency_cutoff(now, self.active_within);
         let Some(state) = open_read_only(&self.state_path()) else {
+            debug_blocked_unavailable("state database could not be opened read-only");
             return Ok(Vec::new());
         };
         let Ok(roster) = read_threads(&state, cutoff_ms, &mut self.office_cache) else {
+            debug_blocked_unavailable("thread roster query failed");
             return Ok(Vec::new());
         };
         let assessor_ids: Vec<String> = roster
             .iter()
-            .filter(|thread| thread.is_assessor)
+            .filter(|thread| thread.classification.kind == ThreadKind::ApprovalAssessor)
             .map(|thread| thread.id.clone())
             .collect();
         let edges = read_spawn_edges(&state, &assessor_ids).unwrap_or_default();
         let Some(history) = open_read_only(&self.history_path()) else {
+            debug_blocked_unavailable("history database could not be opened read-only");
             return Ok(Vec::new());
         };
         let turns = match read_turns(&history) {
@@ -115,7 +118,10 @@ impl Source for CodexSource {
             // A partially upgraded older database may have the item table but
             // no turn table. The feed is still safe to display in that case.
             Err(error) if error.to_string().contains("no such table") => Vec::new(),
-            Err(_) => return Ok(Vec::new()),
+            Err(_) => {
+                debug_blocked_unavailable("turn history query failed");
+                return Ok(Vec::new());
+            }
         };
         let turns_by_thread: HashMap<String, TurnRecord> = turns
             .iter()
@@ -124,13 +130,23 @@ impl Source for CodexSource {
             .collect();
         let mut assessors = Vec::new();
         let mut current = BTreeMap::new();
+        let mut exclusions: BTreeMap<&'static str, (usize, String)> = BTreeMap::new();
         for thread in roster {
-            if thread.is_assessor {
-                if path_allowed(&thread.raw_office_path, &self.only_paths) {
-                    assessors.push(thread);
+            match thread.classification.kind {
+                ThreadKind::ApprovalAssessor => {
+                    record_exclusion(&mut exclusions, &thread);
+                    if path_allowed(&thread.raw_office_path, &self.only_paths) {
+                        assessors.push(thread);
+                    }
                 }
-            } else if path_allowed(&thread.raw_office_path, &self.only_paths) {
-                current.insert(thread.id.clone(), thread);
+                ThreadKind::Developer => {
+                    if path_allowed(&thread.raw_office_path, &self.only_paths) {
+                        current.insert(thread.id.clone(), thread);
+                    }
+                }
+                ThreadKind::Subagent | ThreadKind::InternalReview => {
+                    record_exclusion(&mut exclusions, &thread);
+                }
             }
         }
         let parent_ids: Vec<String> = edges
@@ -142,11 +158,21 @@ impl Source for CodexSource {
         for parent in
             read_threads_by_ids(&state, &parent_ids, &mut self.office_cache).unwrap_or_default()
         {
-            if !parent.is_assessor && path_allowed(&parent.raw_office_path, &self.only_paths) {
-                current.insert(parent.id.clone(), parent);
+            match parent.classification.kind {
+                ThreadKind::Developer => {
+                    if path_allowed(&parent.raw_office_path, &self.only_paths) {
+                        current.insert(parent.id.clone(), parent);
+                    }
+                }
+                ThreadKind::ApprovalAssessor
+                | ThreadKind::Subagent
+                | ThreadKind::InternalReview => record_exclusion(&mut exclusions, &parent),
             }
         }
+        debug_exclusion_summary(&exclusions);
+        disambiguate_thread_names(&mut current);
         let Ok(items) = read_items(&history, self.minimum_item_watermark(&current)) else {
+            debug_blocked_unavailable("activity item query failed");
             return Ok(Vec::new());
         };
 
@@ -257,6 +283,15 @@ impl Source for CodexSource {
         }
 
         let waiting = waiting_signals(&assessors, &edges, &self.threads, &turns_by_thread, now);
+        let diagnostic = waiting_diagnostic(
+            &assessors,
+            &edges,
+            &self.threads,
+            &turns_by_thread,
+            &waiting,
+            now,
+        );
+        debug_blocked_diagnostic(&diagnostic, &waiting);
         let waiting_parent_ids: Vec<String> = waiting
             .iter()
             .map(|signal| signal.parent_thread_id.clone())
@@ -277,6 +312,13 @@ impl Source for CodexSource {
                         short_id(&signal.assessor_thread_id)
                     )
                 });
+            let detail = match signal.strategy {
+                WaitingStrategy::SpawnEdge => detail,
+                WaitingStrategy::CwdTimeFallback => {
+                    truncate_detail(&format!("cwd/time fallback: {detail}"))
+                }
+            };
+            debug_waiting(&signal, &detail);
             events.push(thread.event(at, EventKind::Acted(Activity::Waiting { detail })));
         }
         events.sort_by_key(|event| event.at);
@@ -293,7 +335,22 @@ struct ThreadRecord {
     tokens_used: u64,
     git_branch: Option<String>,
     updated_at_ms: Millis,
-    is_assessor: bool,
+    classification: ThreadClassification,
+    name_is_fallback: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ThreadKind {
+    Developer,
+    ApprovalAssessor,
+    Subagent,
+    InternalReview,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ThreadClassification {
+    kind: ThreadKind,
+    reason: &'static str,
 }
 
 impl ThreadRecord {
@@ -526,6 +583,8 @@ struct ThreadColumns {
     name_expression: &'static str,
     nickname_expression: &'static str,
     title_expression: &'static str,
+    source_expression: &'static str,
+    thread_source_expression: &'static str,
     updated_at_expression: &'static str,
     archived_expression: &'static str,
 }
@@ -546,6 +605,16 @@ fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
     } else {
         "NULL"
     };
+    let source_expression = if table_has_column(connection, "threads", "source")? {
+        "source"
+    } else {
+        "NULL"
+    };
+    let thread_source_expression = if table_has_column(connection, "threads", "thread_source")? {
+        "thread_source"
+    } else {
+        "NULL"
+    };
     let has_updated_at = table_has_column(connection, "threads", "updated_at")?;
     let has_updated_at_ms = table_has_column(connection, "threads", "updated_at_ms")?;
     let updated_at_expression = match (has_updated_at, has_updated_at_ms) {
@@ -563,6 +632,8 @@ fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
         name_expression,
         nickname_expression,
         title_expression,
+        source_expression,
+        thread_source_expression,
         updated_at_expression,
         archived_expression,
     })
@@ -570,10 +641,12 @@ fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
 
 fn thread_query(columns: &ThreadColumns, filter: &str) -> String {
     format!(
-        "SELECT id, cwd, {name_expression}, {nickname_expression}, {title_expression},          tokens_used, git_branch, {updated_at_expression} AS observed_at_ms FROM threads          WHERE {archived_expression} AND {filter}",
+        "SELECT id, cwd, {name_expression}, {nickname_expression}, {title_expression}, {source_expression}, {thread_source_expression},          tokens_used, git_branch, {updated_at_expression} AS observed_at_ms FROM threads          WHERE {archived_expression} AND {filter}",
         name_expression = columns.name_expression,
         nickname_expression = columns.nickname_expression,
         title_expression = columns.title_expression,
+        source_expression = columns.source_expression,
+        thread_source_expression = columns.thread_source_expression,
         updated_at_expression = columns.updated_at_expression,
         archived_expression = columns.archived_expression,
         filter = filter,
@@ -599,15 +672,19 @@ fn decode_thread_row(
     let name = row.get::<_, Option<String>>(2)?;
     let agent_nickname = row.get::<_, Option<String>>(3)?;
     let title = row.get::<_, Option<String>>(4)?;
-    let is_assessor = title
-        .as_deref()
-        .is_some_and(|title| title.starts_with(ASSESSOR_TITLE_PREFIX));
-    let name = choose_thread_name(&id, [name, agent_nickname, title.clone()]);
-    let tokens_used = row.get::<_, Option<i64>>(5)?.unwrap_or_default().max(0) as u64;
+    let source = row.get::<_, Option<String>>(5)?;
+    let thread_source = row.get::<_, Option<String>>(6)?;
+    let classification = classify_thread(
+        title.as_deref(),
+        source.as_deref(),
+        thread_source.as_deref(),
+    );
+    let (name, name_is_fallback) = choose_thread_name(&id, [name, agent_nickname, title]);
+    let tokens_used = row.get::<_, Option<i64>>(7)?.unwrap_or_default().max(0) as u64;
     let git_branch = row
-        .get::<_, Option<String>>(6)?
+        .get::<_, Option<String>>(8)?
         .filter(|branch| !branch.trim().is_empty());
-    let updated_at_ms = row.get::<_, Option<i64>>(7)?.unwrap_or_default();
+    let updated_at_ms = row.get::<_, Option<i64>>(9)?.unwrap_or_default();
 
     Ok(Some(ThreadRecord {
         id,
@@ -617,11 +694,12 @@ fn decode_thread_row(
         tokens_used,
         git_branch,
         updated_at_ms,
-        is_assessor,
+        classification,
+        name_is_fallback,
     }))
 }
 
-fn choose_thread_name(id: &str, candidates: [Option<String>; 3]) -> String {
+fn choose_thread_name(id: &str, candidates: [Option<String>; 3]) -> (String, bool) {
     for candidate in candidates.into_iter().flatten() {
         let candidate = candidate.trim();
         if candidate.is_empty() || candidate.starts_with('/') {
@@ -629,15 +707,342 @@ fn choose_thread_name(id: &str, candidates: [Option<String>; 3]) -> String {
         }
         let candidate = truncate_detail(candidate);
         if !candidate.is_empty() && !candidate.starts_with('/') {
-            return candidate;
+            return (candidate, false);
         }
     }
 
     let fallback = short_id(id);
     if fallback.starts_with('/') {
-        "worker".to_string()
+        ("worker".to_string(), true)
     } else {
-        fallback
+        (fallback, true)
+    }
+}
+
+fn classify_thread(
+    title: Option<&str>,
+    source: Option<&str>,
+    thread_source: Option<&str>,
+) -> ThreadClassification {
+    if structural_assessor_marker(source, thread_source) {
+        return ThreadClassification {
+            kind: ThreadKind::ApprovalAssessor,
+            reason: "structural approval assessor",
+        };
+    }
+
+    let thread_source_marker = thread_source.map(normalize_marker);
+    if thread_source_marker
+        .as_deref()
+        .is_some_and(is_internal_review_marker)
+    {
+        return ThreadClassification {
+            kind: ThreadKind::InternalReview,
+            reason: "thread_source=guardian_review/internal review",
+        };
+    }
+    if thread_source_marker.as_deref() == Some("subagent") {
+        return ThreadClassification {
+            kind: ThreadKind::Subagent,
+            reason: "thread_source=subagent",
+        };
+    }
+    if source.is_some_and(|source| source_has_json_key(source, "subagent")) {
+        return ThreadClassification {
+            kind: ThreadKind::Subagent,
+            reason: "source.subagent",
+        };
+    }
+
+    if source.is_none_or(|source| source.trim().is_empty())
+        && thread_source.is_none_or(|thread_source| thread_source.trim().is_empty())
+        && title.is_some_and(|title| title.starts_with(ASSESSOR_TITLE_PREFIX))
+    {
+        // Older state stores have no structural provenance columns. Keep the
+        // title check only as a compatibility fallback for those rows.
+        return ThreadClassification {
+            kind: ThreadKind::ApprovalAssessor,
+            reason: "title prefix (legacy assessor fallback)",
+        };
+    }
+
+    ThreadClassification {
+        kind: ThreadKind::Developer,
+        reason: "developer",
+    }
+}
+
+fn structural_assessor_marker(source: Option<&str>, thread_source: Option<&str>) -> bool {
+    thread_source.is_some_and(|value| is_assessor_marker(&normalize_marker(value)))
+        || source.is_some_and(|source| {
+            serde_json::from_str::<Value>(source)
+                .ok()
+                .is_some_and(|value| json_has_assessor_marker(&value))
+        })
+}
+
+fn is_assessor_marker(marker: &str) -> bool {
+    matches!(
+        marker,
+        "assessor" | "approval" | "approvalassessor" | "approvalreview"
+    )
+}
+
+fn is_internal_review_marker(marker: &str) -> bool {
+    matches!(
+        marker,
+        "guardianreview" | "internalreview" | "systemreview" | "review"
+    )
+}
+
+fn normalize_marker(value: &str) -> String {
+    value
+        .trim()
+        .chars()
+        .filter(|character| character.is_ascii_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+fn source_has_json_key(source: &str, wanted: &str) -> bool {
+    serde_json::from_str::<Value>(source)
+        .ok()
+        .is_some_and(|value| json_has_key(&value, wanted))
+}
+
+fn json_has_key(value: &Value, wanted: &str) -> bool {
+    match value {
+        Value::Object(object) => {
+            object.contains_key(wanted) || object.values().any(|value| json_has_key(value, wanted))
+        }
+        Value::Array(values) => values.iter().any(|value| json_has_key(value, wanted)),
+        _ => false,
+    }
+}
+
+fn json_has_assessor_marker(value: &Value) -> bool {
+    match value {
+        Value::Object(object) => object.iter().any(|(key, value)| {
+            is_assessor_marker(&normalize_marker(key)) || json_has_assessor_marker(value)
+        }),
+        Value::Array(values) => values.iter().any(json_has_assessor_marker),
+        Value::String(value) => is_assessor_marker(&normalize_marker(value)),
+        _ => false,
+    }
+}
+
+fn disambiguate_thread_names(threads: &mut BTreeMap<String, ThreadRecord>) {
+    let mut used_by_office: HashMap<String, HashSet<String>> = HashMap::new();
+    for thread in threads.values_mut() {
+        let used = used_by_office
+            .entry(thread.office_path.clone())
+            .or_default();
+        if used.insert(thread.name.clone()) {
+            continue;
+        }
+
+        let original = thread.name.clone();
+        let candidate = if thread.name_is_fallback {
+            unique_id_name(&thread.id, used)
+        } else {
+            String::new()
+        };
+        let candidate = if candidate.is_empty() || used.contains(&candidate) {
+            unique_suffix(&original, used)
+        } else {
+            candidate
+        };
+        used.insert(candidate.clone());
+        thread.name = candidate;
+    }
+}
+
+fn unique_id_name(id: &str, used: &HashSet<String>) -> String {
+    let characters: Vec<char> = id
+        .chars()
+        .filter(|character| character.is_ascii_alphanumeric())
+        .collect();
+    if characters.is_empty() {
+        return String::new();
+    }
+
+    let start = characters.len().min(8);
+    for length in start..=characters.len() {
+        let candidate: String = characters.iter().take(length).collect();
+        if !used.contains(&candidate) {
+            return candidate;
+        }
+    }
+    String::new()
+}
+
+fn unique_suffix(base: &str, used: &HashSet<String>) -> String {
+    let mut suffix = 2;
+    loop {
+        let candidate = format!("{base} ({suffix})");
+        if !used.contains(&candidate) {
+            return candidate;
+        }
+        suffix += 1;
+    }
+}
+
+fn record_exclusion(summary: &mut BTreeMap<&'static str, (usize, String)>, thread: &ThreadRecord) {
+    let entry = summary
+        .entry(thread.classification.reason)
+        .or_insert_with(|| (0, thread.id.clone()));
+    entry.0 += 1;
+}
+
+fn debug_exclusion_summary(summary: &BTreeMap<&'static str, (usize, String)>) {
+    if std::env::var_os("THEYWORK_COLLECT_DEBUG").is_none() {
+        return;
+    }
+    if summary.is_empty() {
+        eprintln!("codex exclusions: none");
+        return;
+    }
+    for (reason, (count, example)) in summary {
+        eprintln!("codex excluded {count} thread(s): {reason}; example={example}");
+    }
+}
+
+fn debug_waiting(signal: &WaitingSignal, detail: &str) {
+    if std::env::var_os("THEYWORK_COLLECT_DEBUG").is_some() {
+        eprintln!(
+            "codex waiting: parent={} strategy={} detail={detail}",
+            signal.parent_thread_id,
+            signal.strategy.label()
+        );
+    }
+}
+
+struct WaitingDiagnostic {
+    assessor_threads_seen: usize,
+    open_turns: usize,
+    silent_open_turns: usize,
+    active_spawn_edges: usize,
+    spawn_edges_resolved: usize,
+    cwd_time_fallbacks: usize,
+}
+
+fn waiting_diagnostic(
+    assessors: &[ThreadRecord],
+    edges: &[SpawnEdge],
+    developers: &BTreeMap<String, ThreadRecord>,
+    turns: &HashMap<String, TurnRecord>,
+    waiting: &[WaitingSignal],
+    now: Millis,
+) -> WaitingDiagnostic {
+    let mut open_turns = 0;
+    let mut silent_open_turns = 0;
+    for parent in developers.values() {
+        if turns
+            .get(&parent.id)
+            .and_then(|turn| turn_in_flight(&turn.status))
+            != Some(true)
+        {
+            continue;
+        }
+        open_turns += 1;
+        if now.saturating_sub(parent.updated_at_ms) > BLOCKED_AFTER_MS {
+            silent_open_turns += 1;
+        }
+    }
+
+    let active_spawn_edges = edges
+        .iter()
+        .filter(|edge| edge_is_active(&edge.status))
+        .count();
+    let spawn_edges_resolved = edges
+        .iter()
+        .filter(|edge| {
+            edge_is_active(&edge.status)
+                && assessors
+                    .iter()
+                    .any(|assessor| assessor.id == edge.child_thread_id)
+                && developers
+                    .get(&edge.parent_thread_id)
+                    .is_some_and(|parent| parent.classification.kind == ThreadKind::Developer)
+        })
+        .count();
+    let cwd_time_fallbacks = waiting
+        .iter()
+        .filter(|signal| signal.strategy == WaitingStrategy::CwdTimeFallback)
+        .count();
+
+    WaitingDiagnostic {
+        assessor_threads_seen: assessors.len(),
+        open_turns,
+        silent_open_turns,
+        active_spawn_edges,
+        spawn_edges_resolved,
+        cwd_time_fallbacks,
+    }
+}
+
+fn debug_blocked_diagnostic(diagnostic: &WaitingDiagnostic, waiting: &[WaitingSignal]) {
+    if std::env::var_os("THEYWORK_COLLECT_DEBUG").is_none() {
+        return;
+    }
+
+    let blocked_set = waiting
+        .iter()
+        .map(|signal| format!("{}({})", signal.parent_thread_id, signal.strategy.label()))
+        .collect::<Vec<_>>()
+        .join(",");
+    let blocked_set = if blocked_set.is_empty() {
+        "none".to_string()
+    } else {
+        blocked_set
+    };
+    eprintln!(
+        "codex blocked: result={blocked_set}; assessor_threads_seen={} open_turns={} silent_open_turns={} active_spawn_edges={} spawn_edges_resolved={} cwd_time_fallbacks={}",
+        diagnostic.assessor_threads_seen,
+        diagnostic.open_turns,
+        diagnostic.silent_open_turns,
+        diagnostic.active_spawn_edges,
+        diagnostic.spawn_edges_resolved,
+        diagnostic.cwd_time_fallbacks,
+    );
+    if waiting.is_empty() {
+        eprintln!(
+            "codex blocked: empty; why={}",
+            empty_blocked_reason(diagnostic)
+        );
+    }
+}
+
+fn empty_blocked_reason(diagnostic: &WaitingDiagnostic) -> String {
+    let mut reasons = Vec::new();
+    if diagnostic.assessor_threads_seen == 0 {
+        reasons.push("no assessor threads seen");
+    }
+    if diagnostic.open_turns == 0 {
+        reasons.push("no open turns");
+    } else if diagnostic.silent_open_turns == 0 {
+        reasons.push("no open turns silent past the blocked threshold");
+    }
+    if diagnostic.active_spawn_edges == 0 && diagnostic.assessor_threads_seen > 0 {
+        reasons.push("no active assessor spawn edges");
+    }
+    if diagnostic.silent_open_turns > 0
+        && diagnostic.spawn_edges_resolved == 0
+        && diagnostic.cwd_time_fallbacks == 0
+    {
+        reasons.push("no assessor matched a developer by spawn edge or cwd/time");
+    }
+    if reasons.is_empty() {
+        reasons.push("no correlation produced a blocked developer");
+    }
+    reasons.join("; ")
+}
+
+fn debug_blocked_unavailable(reason: &str) {
+    if std::env::var_os("THEYWORK_COLLECT_DEBUG").is_some() {
+        eprintln!(
+            "codex blocked: result=unavailable; assessor_threads_seen=0; open_turns=0; silent_open_turns=0; active_spawn_edges=0; spawn_edges_resolved=0; cwd_time_fallbacks=0; why={reason}"
+        );
     }
 }
 
@@ -730,11 +1135,27 @@ fn edge_is_active(status: &str) -> bool {
     )
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WaitingStrategy {
+    SpawnEdge,
+    CwdTimeFallback,
+}
+
+impl WaitingStrategy {
+    fn label(self) -> &'static str {
+        match self {
+            Self::SpawnEdge => "spawn edge",
+            Self::CwdTimeFallback => "cwd/time fallback",
+        }
+    }
+}
+
 #[derive(Clone)]
 struct WaitingSignal {
     parent_thread_id: String,
     assessor_thread_id: String,
     at: Millis,
+    strategy: WaitingStrategy,
 }
 
 fn waiting_signals(
@@ -756,7 +1177,15 @@ fn waiting_signals(
         let Some(parent) = developers.get(&edge.parent_thread_id) else {
             continue;
         };
-        if parent.id == assessor.id || parent.is_assessor {
+        if parent.classification.kind != ThreadKind::Developer {
+            continue;
+        }
+        if turns
+            .get(&parent.id)
+            .and_then(|turn| turn_in_flight(&turn.status))
+            != Some(true)
+            || now.saturating_sub(parent.updated_at_ms) <= BLOCKED_AFTER_MS
+        {
             continue;
         }
 
@@ -766,6 +1195,7 @@ fn waiting_signals(
             parent_thread_id: parent.id.clone(),
             assessor_thread_id: assessor.id.clone(),
             at: parent.updated_at_ms.max(assessor.updated_at_ms),
+            strategy: WaitingStrategy::SpawnEdge,
         };
         signals
             .entry(signal.parent_thread_id.clone())
@@ -784,7 +1214,7 @@ fn waiting_signals(
             .values()
             .filter(|parent| {
                 parent.office_path == assessor.office_path
-                    && !parent.is_assessor
+                    && parent.classification.kind == ThreadKind::Developer
                     && turns
                         .get(&parent.id)
                         .and_then(|turn| turn_in_flight(&turn.status))
@@ -803,6 +1233,7 @@ fn waiting_signals(
             parent_thread_id: parent.id.clone(),
             assessor_thread_id: assessor.id.clone(),
             at: parent.updated_at_ms.max(assessor.updated_at_ms),
+            strategy: WaitingStrategy::CwdTimeFallback,
         };
         signals
             .entry(signal.parent_thread_id.clone())

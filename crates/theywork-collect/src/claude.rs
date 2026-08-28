@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
@@ -25,6 +25,7 @@ pub struct ClaudeSource {
     active_within: Duration,
     files: BTreeMap<PathBuf, FileCursor>,
     office_cache: HashMap<String, String>,
+    worker_names: HashMap<(String, String), NameAssignment>,
 }
 
 impl ClaudeSource {
@@ -47,6 +48,7 @@ impl ClaudeSource {
             active_within,
             files: BTreeMap::new(),
             office_cache: HashMap::new(),
+            worker_names: HashMap::new(),
         }
     }
 
@@ -71,6 +73,8 @@ impl ClaudeSource {
             Err(_) => return,
         };
 
+        let discovered_count = discovered.len();
+        let discovered_subagents = discovered.iter().filter(|file| file.is_subagent).count();
         let mut paths = BTreeMap::new();
         for discovery in discovered {
             let Ok(metadata) = fs::metadata(&discovery.path) else {
@@ -85,6 +89,13 @@ impl ClaudeSource {
             paths.insert(discovery.path.clone(), discovery);
         }
 
+        let active_subagents = paths.values().filter(|file| file.is_subagent).count();
+        if std::env::var_os("THEYWORK_COLLECT_DEBUG").is_some() {
+            eprintln!(
+                "claude discovered transcripts={discovered_count} active={} subagent_transcripts={discovered_subagents} active_subagents={active_subagents}",
+                paths.len()
+            );
+        }
         self.files.retain(|path, _| paths.contains_key(path));
         for (path, discovery) in paths {
             self.files
@@ -122,6 +133,7 @@ impl Source for ClaudeSource {
         // UI gets a stable chronological feed even though directory order is
         // unspecified by the filesystem.
         events.sort_by_key(|event| event.at);
+        disambiguate_names(&mut self.worker_names, &mut events);
         Ok(events)
     }
 }
@@ -131,6 +143,11 @@ struct Discovery {
     path: PathBuf,
     is_subagent: bool,
     session_id: String,
+}
+
+struct NameAssignment {
+    base: String,
+    assigned: String,
 }
 
 struct FileCursor {
@@ -624,4 +641,89 @@ fn usage_tokens(value: &Value) -> u64 {
     .into_iter()
     .filter_map(|field| usage.get(field).and_then(Value::as_u64))
     .fold(0, |total, value| total.saturating_add(value))
+}
+fn disambiguate_names(
+    worker_names: &mut HashMap<(String, String), NameAssignment>,
+    events: &mut [Event],
+) {
+    let mut base_names = BTreeMap::new();
+    for event in events.iter() {
+        if let EventKind::Seen { name, .. } = &event.kind {
+            base_names.insert(
+                (event.office_path.clone(), event.worker.0.clone()),
+                name.clone(),
+            );
+        }
+    }
+    if base_names.is_empty() {
+        return;
+    }
+
+    let mut groups: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
+    for ((office, worker_id), base) in base_names {
+        groups.entry((office, base)).or_default().push(worker_id);
+    }
+
+    let mut assigned = HashMap::new();
+    for ((office, base), mut worker_ids) in groups {
+        worker_ids.sort_by(|left, right| {
+            let left_existing = worker_names
+                .get(&(office.clone(), left.clone()))
+                .is_some_and(|assignment| assignment.base == base);
+            let right_existing = worker_names
+                .get(&(office.clone(), right.clone()))
+                .is_some_and(|assignment| assignment.base == base);
+            right_existing
+                .cmp(&left_existing)
+                .then_with(|| left.cmp(right))
+        });
+        let mut used = HashSet::new();
+        for worker_id in worker_ids {
+            let key = (office.clone(), worker_id.clone());
+            let name = worker_names
+                .get(&key)
+                .filter(|assignment| {
+                    assignment.base == base && !used.contains(&assignment.assigned)
+                })
+                .map(|assignment| assignment.assigned.clone())
+                .unwrap_or_else(|| next_unique_name(&base, &worker_id, &used));
+            used.insert(name.clone());
+            assigned.insert(key.clone(), name.clone());
+            worker_names.insert(
+                key,
+                NameAssignment {
+                    base: base.clone(),
+                    assigned: name,
+                },
+            );
+        }
+    }
+
+    for event in events.iter_mut() {
+        if let EventKind::Seen { name, .. } = &mut event.kind {
+            if let Some(assigned_name) =
+                assigned.get(&(event.office_path.clone(), event.worker.0.clone()))
+            {
+                *name = assigned_name.clone();
+            }
+        }
+    }
+}
+
+fn next_unique_name(base: &str, worker_id: &str, used: &HashSet<String>) -> String {
+    if !used.contains(base) {
+        return base.to_string();
+    }
+    let candidate = format!("{base} ({})", short_id(worker_id));
+    if !used.contains(&candidate) {
+        return candidate;
+    }
+    let mut suffix = 2;
+    loop {
+        let candidate = format!("{base} ({suffix})");
+        if !used.contains(&candidate) {
+            return candidate;
+        }
+        suffix += 1;
+    }
 }

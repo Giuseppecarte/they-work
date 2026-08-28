@@ -18,12 +18,30 @@ pub enum ColorDepth {
     TrueColor,
     /// Approximate colours with the terminal's 256-colour palette.
     Palette256,
+    /// Render luminance as block characters without terminal colours.
+    None,
 }
 
 impl ColorDepth {
     fn from_environment() -> Self {
-        match std::env::var("COLORTERM") {
-            Ok(value) if value.eq_ignore_ascii_case("truecolor") || value == "24bit" => {
+        let no_color = std::env::var_os("NO_COLOR").is_some();
+        let forced = std::env::var("THEYWORK_COLOR").ok();
+        let colorterm = std::env::var("COLORTERM").ok();
+        Self::resolve(no_color, forced.as_deref(), colorterm.as_deref())
+    }
+
+    fn resolve(no_color: bool, forced: Option<&str>, colorterm: Option<&str>) -> Self {
+        if no_color {
+            return Self::None;
+        }
+        match forced {
+            Some(value) if value.eq_ignore_ascii_case("none") => Self::None,
+            Some(value) if value.eq_ignore_ascii_case("true") => Self::TrueColor,
+            Some("256") => Self::Palette256,
+            _ if colorterm.is_some_and(|value| {
+                value.eq_ignore_ascii_case("truecolor") || value == "24bit"
+            }) =>
+            {
                 Self::TrueColor
             }
             _ => Self::Palette256,
@@ -74,6 +92,18 @@ impl Canvas {
     /// The colour mode captured at construction.
     pub fn color_depth(&self) -> ColorDepth {
         self.depth
+    }
+
+    #[cfg(test)]
+    pub(crate) fn pixel_capacity(&self) -> usize {
+        self.pixels.capacity()
+    }
+
+    /// Remove terminal colour attributes while preserving glyphs and modifiers.
+    pub fn strip_colors(buffer: &mut Buffer) {
+        for cell in &mut buffer.content {
+            cell.set_fg(Color::Reset).set_bg(Color::Reset);
+        }
     }
 
     /// Resize the backing surface, retaining the allocation when possible.
@@ -187,6 +217,12 @@ impl Canvas {
                 else {
                     continue;
                 };
+                if self.depth == ColorDepth::None {
+                    cell.set_char(monochrome_symbol(top, bottom))
+                        .set_fg(Color::Reset)
+                        .set_bg(Color::Reset);
+                    continue;
+                }
                 match (top, bottom) {
                     (Some(top), Some(bottom)) => {
                         cell.set_char('▀').set_fg(top).set_bg(bottom);
@@ -214,8 +250,96 @@ impl Canvas {
 
     fn convert_color(&self, color: Color) -> Color {
         match self.depth {
-            ColorDepth::TrueColor => color,
+            ColorDepth::TrueColor | ColorDepth::None => color,
             ColorDepth::Palette256 => palette_color(color),
+        }
+    }
+}
+
+fn monochrome_symbol(top: Option<Color>, bottom: Option<Color>) -> char {
+    match (top, bottom) {
+        (Some(top), Some(bottom)) => {
+            let top_luminance = luminance(top);
+            let bottom_luminance = luminance(bottom);
+            if top_luminance.abs_diff(bottom_luminance) >= 48 {
+                if top_luminance >= bottom_luminance {
+                    '▀'
+                } else {
+                    '▄'
+                }
+            } else {
+                shade_char(((top_luminance as u16 + bottom_luminance as u16) / 2) as u8)
+            }
+        }
+        (Some(color), None) | (None, Some(color)) => shade_char(luminance(color)),
+        (None, None) => ' ',
+    }
+}
+
+fn shade_char(luminance: u8) -> char {
+    match luminance {
+        0..=35 => ' ',
+        36..=95 => '░',
+        96..=160 => '▒',
+        161..=215 => '▓',
+        _ => '█',
+    }
+}
+
+fn luminance(color: Color) -> u8 {
+    let (red, green, blue) = match color {
+        Color::Reset | Color::Black => (0, 0, 0),
+        Color::DarkGray => (85, 85, 85),
+        Color::Gray => (170, 170, 170),
+        Color::White => (255, 255, 255),
+        Color::Red => (205, 0, 0),
+        Color::Green => (0, 205, 0),
+        Color::Yellow => (205, 205, 0),
+        Color::Blue => (0, 0, 238),
+        Color::Magenta => (205, 0, 205),
+        Color::Cyan => (0, 205, 205),
+        Color::LightRed => (255, 0, 0),
+        Color::LightGreen => (0, 255, 0),
+        Color::LightYellow => (255, 255, 0),
+        Color::LightBlue => (92, 92, 255),
+        Color::LightMagenta => (255, 0, 255),
+        Color::LightCyan => (0, 255, 255),
+        Color::Rgb(red, green, blue) => (red, green, blue),
+        Color::Indexed(index) => indexed_rgb(index),
+    };
+    ((red as u32 * 299 + green as u32 * 587 + blue as u32 * 114) / 1_000) as u8
+}
+
+fn indexed_rgb(index: u8) -> (u8, u8, u8) {
+    const CUBE: [u8; 6] = [0, 95, 135, 175, 215, 255];
+    match index {
+        0 => (0, 0, 0),
+        1 => (205, 0, 0),
+        2 => (0, 205, 0),
+        3 => (205, 205, 0),
+        4 => (0, 0, 238),
+        5 => (205, 0, 205),
+        6 => (0, 205, 205),
+        7 => (229, 229, 229),
+        8 => (127, 127, 127),
+        9 => (255, 0, 0),
+        10 => (0, 255, 0),
+        11 => (255, 255, 0),
+        12 => (92, 92, 255),
+        13 => (255, 0, 255),
+        14 => (0, 255, 255),
+        15 => (255, 255, 255),
+        16..=231 => {
+            let cube_index = index - 16;
+            (
+                CUBE[(cube_index / 36) as usize],
+                CUBE[((cube_index / 6) % 6) as usize],
+                CUBE[(cube_index % 6) as usize],
+            )
+        }
+        _ => {
+            let gray = 8 + index.saturating_sub(232) * 10;
+            (gray, gray, gray)
         }
     }
 }
@@ -313,5 +437,65 @@ mod tests {
         let mut canvas = Canvas::with_color_depth(1, 1, ColorDepth::Palette256);
         canvas.set(0, 0, Color::Rgb(255, 0, 0));
         assert!(matches!(canvas.pixel(0, 0), Some(Color::Indexed(_))));
+    }
+
+    #[test]
+    fn color_settings_honor_no_color_and_explicit_modes() {
+        assert_eq!(
+            ColorDepth::resolve(true, Some("true"), Some("truecolor")),
+            ColorDepth::None
+        );
+        assert_eq!(
+            ColorDepth::resolve(false, Some("true"), None),
+            ColorDepth::TrueColor
+        );
+        assert_eq!(
+            ColorDepth::resolve(false, Some("256"), Some("truecolor")),
+            ColorDepth::Palette256
+        );
+        assert_eq!(
+            ColorDepth::resolve(false, Some("auto"), Some("24bit")),
+            ColorDepth::TrueColor
+        );
+        assert_eq!(
+            ColorDepth::resolve(false, Some("auto"), None),
+            ColorDepth::Palette256
+        );
+        assert_eq!(
+            ColorDepth::resolve(false, Some("none"), Some("truecolor")),
+            ColorDepth::None
+        );
+    }
+
+    #[test]
+    fn monochrome_mode_renders_luminance_glyphs_without_colour() {
+        for depth in [
+            ColorDepth::TrueColor,
+            ColorDepth::Palette256,
+            ColorDepth::None,
+        ] {
+            let mut canvas = Canvas::with_color_depth(2, 2, depth);
+            canvas.set(0, 0, Color::Rgb(255, 255, 255));
+            canvas.set(0, 1, Color::Rgb(20, 20, 20));
+            canvas.set(1, 0, Color::Rgb(120, 120, 120));
+            canvas.set(1, 1, Color::Rgb(230, 230, 230));
+            let mut buffer = Buffer::empty(Rect::new(0, 0, 2, 1));
+            let area = buffer.area;
+            canvas.render(&mut buffer, area);
+            assert!(
+                buffer.content.iter().any(|cell| cell.symbol() != " "),
+                "each depth should emit visible output"
+            );
+            if depth == ColorDepth::None {
+                assert!(buffer
+                    .content
+                    .iter()
+                    .all(|cell| cell.fg == Color::Reset && cell.bg == Color::Reset));
+                assert!(buffer
+                    .content
+                    .iter()
+                    .any(|cell| matches!(cell.symbol(), "▀" | "▄" | "░" | "▒" | "▓" | "█")));
+            }
+        }
     }
 }

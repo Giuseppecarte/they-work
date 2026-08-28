@@ -1,9 +1,11 @@
-//! The three screens presented by the renderer.
+//! The presentation screens rendered by this crate.
 
 pub mod cameras;
 pub mod desk;
+pub mod help;
 pub mod office;
 pub mod phone;
+pub mod tower;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;

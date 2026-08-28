@@ -1,4 +1,4 @@
-//! The pixel-art layer: a half-block canvas, sprites, and the three views.
+//! The pixel-art layer: a half-block canvas, sprites, and the presentation views.
 //!
 //! Owner: renderer dev. This crate reads `theywork_core::World` and draws it.
 //! It never performs I/O of its own and never looks at agent files.
@@ -7,13 +7,13 @@ use std::collections::{BTreeMap, VecDeque};
 
 use crossterm::event::KeyEvent;
 use ratatui::Frame;
-use theywork_core::{Millis, Worker, WorkerId, World};
+use theywork_core::{Millis, OfficeId, Worker, WorkerId, World};
 
 pub mod canvas;
 pub mod sprite;
 pub mod views;
 
-use canvas::Canvas;
+use canvas::{Canvas, ColorDepth};
 use sprite::SpriteSet;
 
 const ACTIVITY_HISTORY_CAP: usize = 8;
@@ -41,9 +41,16 @@ impl ActivityRecord {
 /// The current screen in the presentation hierarchy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
+    Tower,
     Cameras,
     Office,
     Desk,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TopLevelView {
+    Tower,
+    Cameras,
 }
 
 /// What the UI wants the host program to do after handling input.
@@ -58,7 +65,9 @@ pub enum UiCommand {
 /// The host owns the data (`World`); this owns only presentation.
 pub struct Ui {
     view: View,
+    office_parent: TopLevelView,
     selected_office: usize,
+    selected_office_id: Option<OfficeId>,
     selected_worker: usize,
     camera_columns: usize,
     office_columns: usize,
@@ -71,13 +80,16 @@ pub struct Ui {
     phone_open: bool,
     phone_channel: views::phone::PhoneChannel,
     phone_transition_at: Millis,
+    help_open: bool,
 }
 
 impl Ui {
     pub fn new() -> Self {
         Self {
-            view: View::Cameras,
+            view: View::Tower,
+            office_parent: TopLevelView::Tower,
             selected_office: 0,
+            selected_office_id: None,
             selected_worker: 0,
             camera_columns: 1,
             office_columns: 1,
@@ -90,6 +102,7 @@ impl Ui {
             phone_open: false,
             phone_channel: views::phone::PhoneChannel::Standup,
             phone_transition_at: 0,
+            help_open: false,
         }
     }
 
@@ -103,7 +116,7 @@ impl Ui {
         self.view
     }
 
-    /// Selected office index in the camera attention-first order.
+    /// Selected office index in the current top-level view's stable order.
     pub fn selected_office(&self) -> usize {
         self.selected_office
     }
@@ -118,6 +131,11 @@ impl Ui {
         self.phone_open
     }
 
+    /// Whether the key reference overlay is currently visible.
+    pub fn help_open(&self) -> bool {
+        self.help_open
+    }
+
     /// The channel selected in the phone overlay.
     pub fn phone_channel(&self) -> views::phone::PhoneChannel {
         self.phone_channel
@@ -127,20 +145,54 @@ impl Ui {
     pub fn handle_key(&mut self, key: KeyEvent) -> Option<UiCommand> {
         use crossterm::event::KeyCode;
 
+        if self.help_open {
+            if matches!(
+                key.code,
+                KeyCode::Char('?') | KeyCode::Esc | KeyCode::Char('q')
+            ) {
+                self.help_open = false;
+            }
+            return None;
+        }
         if self.phone_open && self.handle_phone_key(key.code) {
             return None;
         }
 
         match key.code {
             KeyCode::Char('q') => Some(UiCommand::Quit),
+            KeyCode::Char('?') => {
+                self.help_open = true;
+                None
+            }
             KeyCode::Char('p') => {
                 self.phone_open = !self.phone_open;
                 self.phone_transition_at = self.now;
                 None
             }
+            KeyCode::Tab => {
+                match self.view {
+                    View::Tower => {
+                        self.view = View::Cameras;
+                        self.office_parent = TopLevelView::Cameras;
+                    }
+                    View::Cameras => {
+                        self.view = View::Tower;
+                        self.office_parent = TopLevelView::Tower;
+                    }
+                    View::Office | View::Desk => {}
+                }
+                None
+            }
             KeyCode::Enter => {
                 match self.view {
-                    View::Cameras if self.known_office_count > 0 => self.view = View::Office,
+                    View::Tower if self.known_office_count > 0 => {
+                        self.office_parent = TopLevelView::Tower;
+                        self.view = View::Office;
+                    }
+                    View::Cameras if self.known_office_count > 0 => {
+                        self.office_parent = TopLevelView::Cameras;
+                        self.view = View::Office;
+                    }
                     View::Office if self.known_worker_count > 0 => self.view = View::Desk,
                     _ => {}
                 }
@@ -148,8 +200,12 @@ impl Ui {
             }
             KeyCode::Esc | KeyCode::Backspace => {
                 self.view = match self.view {
+                    View::Tower => View::Tower,
                     View::Cameras => View::Cameras,
-                    View::Office => View::Cameras,
+                    View::Office => match self.office_parent {
+                        TopLevelView::Tower => View::Tower,
+                        TopLevelView::Cameras => View::Cameras,
+                    },
                     View::Desk => View::Office,
                 };
                 None
@@ -172,14 +228,14 @@ impl Ui {
     /// Draw the current view.
     pub fn draw(&mut self, f: &mut Frame, world: &World) {
         self.remember_activities(world);
-        self.known_office_count = world.office_count();
-        if self.known_office_count == 0 {
-            self.selected_office = 0;
-        } else {
-            self.selected_office = self.selected_office.min(self.known_office_count - 1);
-        }
-
-        let offices = views::cameras::ordered_offices(world, self.now);
+        let offices = match self.view {
+            View::Tower => views::tower::ordered_offices(world),
+            View::Cameras | View::Office | View::Desk => {
+                views::cameras::ordered_offices(world, self.now)
+            }
+        };
+        self.known_office_count = offices.len();
+        self.sync_office_selection(&offices);
         let office = offices.get(self.selected_office).copied();
         self.known_worker_count = office.map_or(0, |value| value.workers.len());
         if self.known_worker_count == 0 {
@@ -189,6 +245,16 @@ impl Ui {
         }
 
         match self.view {
+            View::Tower => {
+                views::tower::draw(
+                    f,
+                    world,
+                    &mut self.canvas,
+                    &self.sprites,
+                    self.now,
+                    self.selected_office,
+                );
+            }
             View::Cameras => {
                 let layout = views::cameras::draw(
                     f,
@@ -247,6 +313,27 @@ impl Ui {
                 },
             );
         }
+        if self.help_open {
+            views::help::draw(f);
+        }
+        if self.canvas.color_depth() == ColorDepth::None {
+            Canvas::strip_colors(f.buffer_mut());
+        }
+    }
+
+    fn sync_office_selection(&mut self, offices: &[&theywork_core::Office]) {
+        if offices.is_empty() {
+            self.selected_office = 0;
+            self.selected_office_id = None;
+            return;
+        }
+        let selected = self
+            .selected_office_id
+            .as_ref()
+            .and_then(|id| offices.iter().position(|office| &office.id == id))
+            .unwrap_or_else(|| self.selected_office.min(offices.len() - 1));
+        self.selected_office = selected;
+        self.selected_office_id = Some(offices[selected].id.clone());
     }
 
     fn handle_phone_key(&mut self, code: crossterm::event::KeyCode) -> bool {
@@ -279,13 +366,11 @@ impl Ui {
 
     fn move_selection(&mut self, code: crossterm::event::KeyCode) {
         match self.view {
+            View::Tower => {
+                self.move_office_selection(code, 1);
+            }
             View::Cameras => {
-                self.selected_office = move_grid_index(
-                    self.selected_office,
-                    self.known_office_count,
-                    self.camera_columns.max(1),
-                    code,
-                );
+                self.move_office_selection(code, self.camera_columns.max(1));
             }
             View::Office | View::Desk => {
                 self.selected_worker = move_grid_index(
@@ -296,6 +381,12 @@ impl Ui {
                 );
             }
         }
+    }
+
+    fn move_office_selection(&mut self, code: crossterm::event::KeyCode, columns: usize) {
+        self.selected_office =
+            move_grid_index(self.selected_office, self.known_office_count, columns, code);
+        self.selected_office_id = None;
     }
 
     fn remember_activities(&mut self, world: &World) {
@@ -389,6 +480,8 @@ mod tests {
 
         let enter = KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE);
         let escape = KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE);
+        assert_eq!(ui.view(), View::Tower);
+        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
         assert_eq!(ui.view(), View::Cameras);
         ui.handle_key(enter);
         assert_eq!(ui.view(), View::Office);
@@ -401,6 +494,12 @@ mod tests {
         assert_eq!(ui.view(), View::Office);
         ui.handle_key(escape);
         assert_eq!(ui.view(), View::Cameras);
+        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        assert_eq!(ui.view(), View::Tower);
+        ui.handle_key(enter);
+        assert_eq!(ui.view(), View::Office);
+        ui.handle_key(escape);
+        assert_eq!(ui.view(), View::Tower);
         assert_eq!(
             ui.handle_key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)),
             Some(UiCommand::Quit)
@@ -484,7 +583,7 @@ mod phone_tests {
         assert_eq!(ui.phone_channel(), views::phone::PhoneChannel::Watercooler);
         ui.handle_key(press(KeyCode::Left));
         assert_eq!(ui.phone_channel(), views::phone::PhoneChannel::Shipping);
-        assert_eq!(ui.view(), View::Cameras);
+        assert_eq!(ui.view(), View::Tower);
 
         for (width, height) in [(80, 24), (24, 10), (4, 4), (1, 1)] {
             let backend = TestBackend::new(width, height);
@@ -503,6 +602,7 @@ mod m3_tests {
     use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use std::time::{Duration, Instant};
     use theywork_core::{Activity, Agent, Event, EventKind, OfficeId, WorkerId, BLOCKED_AFTER_MS};
 
     use super::*;
@@ -625,6 +725,7 @@ mod m3_tests {
         let mut ui = Ui::new();
         ui.tick(BLOCKED_AFTER_MS + 1);
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
+        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
         terminal
             .draw(|frame| ui.draw(frame, &world))
             .expect("crowded camera wall should render");
@@ -707,6 +808,118 @@ mod m3_tests {
         assert!(
             buffer_text(&terminal).contains("MESSAGES"),
             "phone first frame should already show its title"
+        );
+    }
+    #[test]
+    fn tower_stack_scrolls_and_keeps_selection_visible() {
+        let world = world_with_office_counts(&[11, 8, 6, 4, 1, 1], false);
+        let mut ui = Ui::new();
+        ui.tick(BLOCKED_AFTER_MS + 1);
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
+
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("tower frame");
+        let initial = buffer_text(&terminal);
+        for label in ["TOWER", "ROOF", "LOBBY", "ELEVATOR"] {
+            assert!(initial.contains(label), "tower should show {label}");
+        }
+        assert!(
+            initial.contains('╫'),
+            "tower should show the elevator car glyph"
+        );
+
+        for _ in 0..5 {
+            ui.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        }
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("scrolled tower frame");
+        assert_eq!(ui.selected_office(), 5);
+        let scrolled = buffer_text(&terminal);
+        assert!(
+            scrolled.contains("blocked") && scrolled.contains('!'),
+            "selected blocked floor should be obvious"
+        );
+        assert_eq!(views::tower::viewport_start(6, ui.selected_office(), 3), 3);
+    }
+
+    #[test]
+    fn help_overlay_lists_bindings_and_closes_cleanly() {
+        let world = world_with_office_counts(&[1], false);
+        let mut ui = Ui::new();
+        let press = |code| KeyEvent::new(code, KeyModifiers::NONE);
+
+        assert_eq!(ui.handle_key(press(KeyCode::Char('?'))), None);
+        assert!(ui.help_open());
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).expect("test terminal");
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("help frame");
+        let text = buffer_text(&terminal);
+        for binding in [
+            "HELP",
+            "move",
+            "Enter",
+            "Backspace",
+            "Tab",
+            "phone",
+            "1-4",
+            "q",
+        ] {
+            assert!(text.contains(binding), "help should list {binding}");
+        }
+
+        for (width, height) in [(24, 10), (4, 4)] {
+            let mut terminal =
+                Terminal::new(TestBackend::new(width, height)).expect("small terminal");
+            terminal
+                .draw(|frame| ui.draw(frame, &world))
+                .expect("help should fit small terminals");
+        }
+
+        assert_eq!(ui.handle_key(press(KeyCode::Char('?'))), None);
+        assert!(!ui.help_open());
+        assert_eq!(ui.handle_key(press(KeyCode::Char('?'))), None);
+        assert!(ui.help_open());
+        assert_eq!(ui.handle_key(press(KeyCode::Esc)), None);
+        assert!(!ui.help_open());
+        assert_eq!(ui.handle_key(press(KeyCode::Char('?'))), None);
+        assert_eq!(ui.handle_key(press(KeyCode::Char('q'))), None);
+        assert!(!ui.help_open());
+        assert_eq!(
+            ui.handle_key(press(KeyCode::Char('q'))),
+            Some(UiCommand::Quit)
+        );
+    }
+
+    #[test]
+    fn repeated_tower_frames_reuse_canvas_storage() {
+        let world = world_with_office_counts(&[11, 8, 6, 4, 1, 1], false);
+        let mut ui = Ui::new();
+        ui.tick(BLOCKED_AFTER_MS + 1);
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("first tower frame");
+        let capacity = ui.canvas.pixel_capacity();
+        let started = Instant::now();
+
+        for frame_index in 0..120 {
+            ui.tick(BLOCKED_AFTER_MS + 2 + frame_index as Millis);
+            terminal
+                .draw(|frame| ui.draw(frame, &world))
+                .expect("repeated tower frame");
+        }
+
+        assert_eq!(
+            ui.canvas.pixel_capacity(),
+            capacity,
+            "tower frames should reuse the canvas allocation"
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "repeated tower rendering should remain bounded"
         );
     }
 }

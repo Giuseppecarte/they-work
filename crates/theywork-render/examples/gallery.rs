@@ -1,4 +1,4 @@
-//! Live gallery for reviewing the deterministic demo office.
+//! Live gallery for reviewing the tower and office views.
 
 use std::io;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

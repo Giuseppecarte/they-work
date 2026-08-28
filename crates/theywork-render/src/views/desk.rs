@@ -1,0 +1,208 @@
+//! Detailed employee view: a large sprite and the useful live context.
+
+use ratatui::layout::Rect;
+use ratatui::style::{Modifier, Style};
+use ratatui::text::{Line, Span, Text};
+use ratatui::widgets::{Paragraph, Widget, Wrap};
+use ratatui::Frame;
+use theywork_core::{Millis, Office, Worker};
+
+use crate::canvas::Canvas;
+use crate::sprite::SpriteSet;
+
+use super::{
+    draw_footer, draw_header, draw_panel, draw_tiny, fill_office_background, has_area,
+    human_tokens, render_worker, short_path, status_style, token_bar, worker_status, PixelRect,
+    ACCENT, GOOD, INK, MUTED,
+};
+
+pub(crate) fn draw(
+    frame: &mut Frame,
+    office: Option<&Office>,
+    worker: Option<&Worker>,
+    history: &[String],
+    canvas: &mut Canvas,
+    sprites: &SpriteSet,
+    now: Millis,
+) {
+    let area = frame.area();
+    if area.width < 16 || area.height < 8 {
+        draw_tiny(frame, "they-work • terminal too small for the desk view");
+        return;
+    }
+    let (Some(office), Some(worker)) = (office, worker) else {
+        draw_tiny(frame, "No desk selected.");
+        return;
+    };
+
+    let branch = worker.git_branch.as_deref().unwrap_or("no branch");
+    let status = worker_status(worker, now);
+    let max_tokens = office
+        .workers
+        .iter()
+        .map(|worker| worker.tokens_used)
+        .max()
+        .unwrap_or(0);
+    let worker_title = short_path(&worker.name, area.width.saturating_sub(11) as usize);
+    let office_title = short_path(&office.name, area.width.saturating_sub(20) as usize);
+    let (header, body, footer) = super::vertical_bands(area, 2, 2);
+    draw_header(
+        frame,
+        header,
+        &format!("DESK / {}", worker_title),
+        &format!(
+            "{} • {} • {} • branch {}",
+            office_title,
+            worker.agent.label(),
+            status.label(),
+            branch
+        ),
+    );
+    draw_footer(
+        frame,
+        footer,
+        "←↑↓→ / hjkl switch worker   Esc office   q quit",
+    );
+    if !has_area(body) {
+        return;
+    }
+
+    let left_width = if body.width >= 44 {
+        body.width.saturating_mul(5) / 11
+    } else {
+        body.width / 2
+    }
+    .max(1);
+    let left = Rect::new(body.x, body.y, left_width, body.height);
+    let right = Rect::new(
+        body.x.saturating_add(left_width),
+        body.y,
+        body.width.saturating_sub(left_width),
+        body.height,
+    );
+    let left_inner = draw_panel(frame, left, "LIVE FEED", true);
+    let right_inner = draw_panel(frame, right, "WORKER DETAILS", false);
+
+    if has_area(left_inner) {
+        canvas.resize(left_inner.width as usize, left_inner.height as usize * 2);
+        let floor_start = fill_office_background(canvas, sprites);
+        if canvas.width() >= sprites.plant.width() + 2 {
+            canvas.blit(&sprites.plant, 1, 1);
+        }
+        if canvas.width() >= sprites.water_cooler.width() + 2 {
+            canvas.blit(
+                &sprites.water_cooler,
+                canvas
+                    .width()
+                    .saturating_sub(sprites.water_cooler.width() + 1),
+                1,
+            );
+        }
+
+        let worker_sprite = sprites
+            .worker_animation(worker.agent, &worker.activity)
+            .frame_at(now);
+        let desk_height = canvas.height().clamp(1, 7);
+        let desk_y = canvas.height().saturating_sub(desk_height);
+        let worker_width = worker_sprite
+            .width()
+            .min(canvas.width().saturating_sub(2))
+            .max(1);
+        let worker_height = worker_sprite
+            .height()
+            .min(desk_y.saturating_sub(1).max(1))
+            .max(1);
+        let worker_x = canvas.width().saturating_sub(worker_width) / 2;
+        let worker_y = floor_start.min(desk_y).saturating_sub(worker_height);
+        render_worker(
+            canvas,
+            sprites,
+            worker,
+            now,
+            PixelRect {
+                x: worker_x,
+                y: worker_y,
+                width: worker_width,
+                height: worker_height,
+            },
+        );
+        let desk_width = canvas.width().min(sprites.desk.width()).max(1);
+        canvas.blit_scaled(
+            &sprites.desk,
+            canvas.width().saturating_sub(desk_width) / 2,
+            desk_y,
+            desk_width,
+            desk_height,
+        );
+        canvas.render(frame.buffer_mut(), left_inner);
+    }
+
+    if has_area(right_inner) {
+        let detail = worker.activity.detail().unwrap_or("no detail");
+        let bar = token_bar(
+            worker.tokens_used,
+            max_tokens,
+            right_inner.width.saturating_sub(2) as usize,
+        );
+        let mut lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    status.label().to_ascii_uppercase(),
+                    status_style(status).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("  {}", worker.activity.label().to_ascii_uppercase()),
+                    super::activity_style(&worker.activity),
+                ),
+            ]),
+            Line::from(Span::styled(
+                short_path(detail, right_inner.width.saturating_sub(2) as usize),
+                Style::default().fg(INK),
+            )),
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("agent     {}", worker.agent.label()),
+                Style::default().fg(MUTED),
+            )),
+            Line::from(Span::styled(
+                format!("status    {}", status.label()),
+                status_style(status),
+            )),
+            Line::from(Span::styled(
+                format!("branch    {}", branch),
+                Style::default().fg(MUTED),
+            )),
+            Line::from(Span::styled(
+                format!("tokens    {}", human_tokens(worker.tokens_used)),
+                Style::default().fg(MUTED),
+            )),
+        ];
+        if !bar.is_empty() {
+            lines.push(Line::from(Span::styled(bar, Style::default().fg(GOOD))));
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            "RECENT ACTIVITY",
+            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+        )));
+        if history.is_empty() {
+            lines.push(Line::from(Span::styled(
+                "  no activity captured yet",
+                Style::default().fg(MUTED),
+            )));
+        } else {
+            for item in history.iter().take(8) {
+                lines.push(Line::from(Span::styled(
+                    format!(
+                        "  • {}",
+                        short_path(item, right_inner.width.saturating_sub(3) as usize)
+                    ),
+                    Style::default().fg(MUTED),
+                )));
+            }
+        }
+        Paragraph::new(Text::from(lines))
+            .wrap(Wrap { trim: false })
+            .render(right_inner, frame.buffer_mut());
+    }
+}

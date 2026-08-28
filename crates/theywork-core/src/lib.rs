@@ -35,4 +35,12 @@ pub const IDLE_AFTER_MS: Millis = 30_000;
 pub const BLOCKED_AFTER_MS: Millis = 180_000;
 
 /// How long a worker may go quiet before they disappear from the office.
-pub const OFFLINE_AFTER_MS: Millis = 15 * 60_000;
+///
+/// Deliberately long. A developer who finished an hour ago and is waiting to be
+/// given something else is idle, not gone, and "who is free right now" is the
+/// most useful thing this program knows. Sending them home after a few quiet
+/// minutes threw that away.
+///
+/// Collectors own the roster: they bound it by recency and emit `Left` when a
+/// session really ends. This is only a backstop for a source that cannot say so.
+pub const OFFLINE_AFTER_MS: Millis = 12 * 60 * 60_000;

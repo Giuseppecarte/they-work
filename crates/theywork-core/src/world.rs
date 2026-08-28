@@ -178,6 +178,22 @@ mod tests {
     }
 
     #[test]
+    fn a_worker_idle_for_an_hour_is_still_in_the_office() {
+        let mut w = World::new();
+        w.apply(ev(0, "t1", EventKind::Acted(Activity::Talking { detail: "done".into() })));
+        w.apply(ev(0, "t1", EventKind::Turn { in_flight: false }));
+
+        let an_hour = 60 * 60_000;
+        w.tick(an_hour);
+
+        // Finished an hour ago and waiting for the next goal. That is exactly
+        // the person you want to be able to see.
+        assert_eq!(w.worker_count(), 1, "an idle worker must not be sent home");
+        let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
+        assert_eq!(worker.status_at(an_hour), crate::WorkerStatus::Idle);
+    }
+
+    #[test]
     fn token_counts_never_go_backwards() {
         let mut w = World::new();
         w.apply(ev(0, "t1", EventKind::Tokens(500)));

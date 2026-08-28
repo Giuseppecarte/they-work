@@ -1,7 +1,7 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::event::{Event, EventKind};
-use crate::model::{Activity, Office, OfficeId, Worker};
+use crate::model::{Activity, Office, OfficeId, Worker, WorkerId};
 use crate::Millis;
 
 /// The whole building: every office, every worker, folded from events.
@@ -11,6 +11,13 @@ use crate::Millis;
 #[derive(Debug, Default, Clone)]
 pub struct World {
     offices: BTreeMap<OfficeId, Office>,
+    /// Which office each worker currently sits in.
+    ///
+    /// A worker belongs to exactly one office, always. Agents do report
+    /// different working directories over their life, and without this index a
+    /// thread that moved would be added to the new office while still sitting
+    /// in the old one, putting one developer in two companies at once.
+    desks: HashMap<WorkerId, OfficeId>,
 }
 
 impl World {
@@ -37,6 +44,18 @@ impl World {
 
     /// Fold one event into the world.
     pub fn apply(&mut self, ev: Event) {
+        // If this worker is already seated somewhere else, they moved. Clear the
+        // old desk first so they can never be drawn in two offices at once.
+        if let Some(previous) = self.desks.get(&ev.worker) {
+            if previous != &ev.office {
+                let previous = previous.clone();
+                if let Some(old) = self.offices.get_mut(&previous) {
+                    old.workers.retain(|w| w.id != ev.worker);
+                }
+                self.offices.retain(|_, o| !o.workers.is_empty());
+            }
+        }
+
         let office = self
             .offices
             .entry(ev.office.clone())
@@ -44,6 +63,8 @@ impl World {
 
         if matches!(ev.kind, EventKind::Left) {
             office.workers.retain(|w| w.id != ev.worker);
+            self.desks.remove(&ev.worker);
+            self.offices.retain(|_, o| !o.workers.is_empty());
             return;
         }
 
@@ -60,6 +81,7 @@ impl World {
                 office.workers.len() - 1
             }
         };
+        self.desks.insert(ev.worker.clone(), ev.office.clone());
         let worker = &mut office.workers[idx];
         worker.last_seen = worker.last_seen.max(ev.at);
 
@@ -84,8 +106,15 @@ impl World {
     ///
     /// Call once per frame, after applying the frame's events.
     pub fn tick(&mut self, now: Millis) {
+        let desks = &mut self.desks;
         for office in self.offices.values_mut() {
-            office.workers.retain(|w| !w.is_offline_at(now));
+            office.workers.retain(|w| {
+                let stays = !w.is_offline_at(now);
+                if !stays {
+                    desks.remove(&w.id);
+                }
+                stays
+            });
             for worker in &mut office.workers {
                 // Stop animating a quiet worker, but leave `turn_in_flight`
                 // alone: an open turn that has gone silent is exactly what
@@ -191,6 +220,50 @@ mod tests {
         assert_eq!(w.worker_count(), 1, "an idle worker must not be sent home");
         let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
         assert_eq!(worker.status_at(an_hour), crate::WorkerStatus::Idle);
+    }
+
+    #[test]
+    fn a_worker_who_moves_project_leaves_the_old_office() {
+        let mut w = World::new();
+        let seen = |at, office: &str| Event {
+            at,
+            office: OfficeId(office.into()),
+            office_path: office.into(),
+            worker: WorkerId("t1".into()),
+            agent: Agent::Codex,
+            kind: EventKind::Seen { name: "Dev 1".into(), git_branch: None },
+        };
+
+        w.apply(seen(0, "/alpha"));
+        assert_eq!(w.office(&OfficeId("/alpha".into())).unwrap().workers.len(), 1);
+
+        // The same thread now reports a different directory.
+        w.apply(seen(10, "/beta"));
+
+        assert_eq!(w.worker_count(), 1, "one thread is one worker, never two");
+        assert_eq!(w.office(&OfficeId("/beta".into())).unwrap().workers[0].name, "Dev 1");
+        assert!(
+            w.office(&OfficeId("/alpha".into())).is_none(),
+            "the office they left must not keep a ghost of them"
+        );
+    }
+
+    #[test]
+    fn no_worker_is_ever_seated_in_two_offices() {
+        let mut w = World::new();
+        for (i, office) in ["/alpha", "/beta", "/alpha", "/gamma"].iter().enumerate() {
+            w.apply(Event {
+                at: i as Millis,
+                office: OfficeId((*office).into()),
+                office_path: (*office).into(),
+                worker: WorkerId("wanderer".into()),
+                agent: Agent::Claude,
+                kind: EventKind::Acted(Activity::Thinking),
+            });
+        }
+        let seatings = w.offices().flat_map(|o| &o.workers).count();
+        assert_eq!(seatings, 1, "a wandering thread must occupy exactly one desk");
+        assert_eq!(w.office_count(), 1);
     }
 
     #[test]

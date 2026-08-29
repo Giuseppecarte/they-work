@@ -1,18 +1,44 @@
 # they-work — everything runs in Docker. Nothing is installed on your machine.
 IMAGE ?= they-work:local
 DEV_IMAGE ?= they-work-dev:local
+SHOT_DIR ?= docs/shots
 # scripts/cargo runs the toolchain container as the invoking user, so build
 # output is owned by you and not by root. Contributors need no local Rust.
 CARGO = THEYWORK_DEV_IMAGE=$(DEV_IMAGE) ./scripts/cargo
 
-DOCKER_RUN = docker run --rm -it \
+THEYWORK_CLAUDE_HOME ?= /data/claude
+THEYWORK_CODEX_HOME ?= /data/codex
+
+DOCKER_SECURITY = \
   --network none \
-  -e TERM -e COLORTERM \
+  --read-only \
+  --cap-drop ALL \
+  --security-opt no-new-privileges
+
+DOCKER_ENV = \
+  -e TERM \
+  -e COLORTERM \
+  -e THEYWORK_CLAUDE_HOME=$(THEYWORK_CLAUDE_HOME) \
+  -e THEYWORK_CODEX_HOME=$(THEYWORK_CODEX_HOME) \
+  -e THEYWORK_COLOR \
+  -e NO_COLOR
+
+DOCKER_VOLUMES = \
   -v $(HOME)/.claude:/data/claude:ro \
-  -v $(HOME)/.codex:/data/codex:ro \
+  -v $(HOME)/.codex:/data/codex:ro
+
+DOCKER_RUN = docker run --rm -it \
+  $(DOCKER_SECURITY) \
+  $(DOCKER_ENV) \
+  $(DOCKER_VOLUMES) \
   $(IMAGE)
 
-.PHONY: help build run demo test fmt lint check clean
+DOCKER_DEMO_RUN = docker run --rm -it \
+  $(DOCKER_SECURITY) \
+  $(DOCKER_ENV) \
+  $(IMAGE) --demo
+
+.PHONY: help build run demo shot test fmt fmt-check lint check clean
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -25,13 +51,19 @@ run: build ## Watch your real agents (read-only)
 	$(DOCKER_RUN)
 
 demo: build ## Watch an imaginary company; reads nothing
-	$(DOCKER_RUN) --demo
+	$(DOCKER_DEMO_RUN)
+
+shot: ## Export fixed-time review frames
+	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)"
 
 test: ## Run the test suite
 	$(CARGO) test --workspace
 
 fmt: ## Format the code
 	$(CARGO) fmt --all
+
+fmt-check: ## Check formatting without changing files
+	$(CARGO) fmt --all -- --check
 
 lint: ## Clippy, warnings are errors
 	$(CARGO) clippy --workspace --all-targets -- -D warnings
@@ -40,5 +72,3 @@ check: fmt lint test ## Everything CI runs
 
 clean: ## Remove build output
 	rm -rf target .cargo-home
-
-

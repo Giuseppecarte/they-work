@@ -20,5 +20,6 @@ if [ -t 0 ]; then TTY=-it; else TTY=; fi
 exec docker run --rm $TTY \
     --user "$(id -u):$(id -g)" \
     -e CARGO_HOME=/src/.cargo-home \
+    -e THEYWORK_UPDATE_GOLDEN \
     -v "$ROOT:/src" -w /src \
     "$IMAGE" cargo "$@"

@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">they-work demo office floor</title>
+  <desc id="desc">A pixel-art terminal showing the checkout project as an isometric office floor with three workers, desks, and a small camera-grid project list.</desc>
+
+  <rect width="1280" height="760" fill="#11101d"/>
+  <rect x="24" y="24" width="1232" height="712" rx="14" fill="#181627" stroke="#43395b" stroke-width="3"/>
+  <rect x="24" y="24" width="1232" height="54" rx="14" fill="#232035"/>
+  <rect x="24" y="64" width="1232" height="14" fill="#232035"/>
+  <circle cx="57" cy="51" r="8" fill="#ff757a"/>
+  <circle cx="83" cy="51" r="8" fill="#ffcd71"/>
+  <circle cx="109" cy="51" r="8" fill="#7edb97"/>
+  <text x="145" y="58" fill="#f8e2b6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="700" letter-spacing="2">THEY-WORK / OFFICE</text>
+  <text x="1218" y="58" text-anchor="end" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">read-only preview</text>
+
+  <text x="58" y="116" fill="#f8e2b6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="700">OFFICE FLOOR</text>
+  <text x="282" y="116" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">selected project: checkout</text>
+
+  <!-- Selected project floor -->
+  <rect x="58" y="142" width="812" height="496" fill="#232035" stroke="#6fCAFF" stroke-width="3"/>
+  <rect x="58" y="142" width="812" height="52" fill="#312841"/>
+  <text x="82" y="176" fill="#6fCAFF" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">• checkout</text>
+  <text x="846" y="176" text-anchor="end" fill="#7edb97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">3 workers • 2 busy</text>
+  <text x="82" y="222" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14">/home/dev/checkout</text>
+
+  <!-- Isometric floor -->
+  <polygon points="112,500 436,330 814,500 490,625" fill="#312841" stroke="#f8e2b6" stroke-width="3"/>
+  <path d="M166 500 490 375 760 500M220 526 490 420 706 526M276 548 490 465 650 548M332 572 490 510 596 572" fill="none" stroke="#43395b" stroke-width="2"/>
+  <path d="M274 415 598 585M382 358 706 528M490 334 814 500M166 500 490 625" fill="none" stroke="#43395b" stroke-width="2"/>
+
+  <!-- Back wall and notice board -->
+  <path d="M112 500V304l324-170 378 170v196L490 625Z" fill="#232035" stroke="#43395b" stroke-width="3"/>
+  <path d="M112 304 436 134 814 304" fill="none" stroke="#f8e2b6" stroke-width="3"/>
+  <polygon points="178,309 386,200 386,295 178,405" fill="#563a41" stroke="#a49dbe" stroke-width="2"/>
+  <text x="210" y="302" fill="#f8e2b6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" transform="rotate(-27 210 302)">SHIP IT</text>
+  <rect x="596" y="227" width="126" height="70" fill="#181627" stroke="#7edb97" stroke-width="3"/>
+  <text x="659" y="255" text-anchor="middle" fill="#7edb97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">STATUS</text>
+  <text x="659" y="278" text-anchor="middle" fill="#f8e2b6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">shipping</text>
+
+  <!-- Desk 1 -->
+  <g transform="translate(278 424)">
+    <polygon points="0,18 70,0 116,22 46,43" fill="#563a41" stroke="#f8e2b6" stroke-width="2"/>
+    <path d="M12 26v54M103 31v48" stroke="#a49dbe" stroke-width="4"/>
+    <rect x="43" y="14" width="26" height="18" fill="#11101d" stroke="#6fCAFF" stroke-width="2" transform="skewY(-18)"/>
+    <g transform="translate(40 -48)">
+      <rect x="12" y="0" width="18" height="18" fill="#f8e2b6"/>
+      <rect x="8" y="18" width="26" height="25" fill="#6fCAFF"/>
+      <rect x="3" y="43" width="36" height="8" fill="#563a41"/>
+      <rect x="-2" y="51" width="46" height="7" fill="#11101d"/>
+      <rect x="16" y="5" width="5" height="5" fill="#181627"/>
+      <rect x="25" y="5" width="5" height="5" fill="#181627"/>
+    </g>
+    <text x="58" y="96" text-anchor="middle" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">Dev 1 • CODEX</text>
+  </g>
+
+  <!-- Desk 2 -->
+  <g transform="translate(468 486)">
+    <polygon points="0,18 70,0 116,22 46,43" fill="#563a41" stroke="#f8e2b6" stroke-width="2"/>
+    <path d="M12 26v54M103 31v48" stroke="#a49dbe" stroke-width="4"/>
+    <rect x="43" y="14" width="26" height="18" fill="#11101d" stroke="#6fCAFF" stroke-width="2" transform="skewY(-18)"/>
+    <g transform="translate(40 -48)">
+      <rect x="12" y="0" width="18" height="18" fill="#f8e2b6"/>
+      <rect x="8" y="18" width="26" height="25" fill="#7edb97"/>
+      <rect x="3" y="43" width="36" height="8" fill="#563a41"/>
+      <rect x="-2" y="51" width="46" height="7" fill="#11101d"/>
+      <rect x="16" y="5" width="5" height="5" fill="#181627"/>
+      <rect x="25" y="5" width="5" height="5" fill="#181627"/>
+    </g>
+    <text x="58" y="96" text-anchor="middle" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">Dev 2 • CODEX</text>
+  </g>
+
+  <!-- Desk 3 -->
+  <g transform="translate(650 409)">
+    <polygon points="0,18 70,0 116,22 46,43" fill="#563a41" stroke="#f8e2b6" stroke-width="2"/>
+    <path d="M12 26v54M103 31v48" stroke="#a49dbe" stroke-width="4"/>
+    <rect x="43" y="14" width="26" height="18" fill="#11101d" stroke="#6fCAFF" stroke-width="2" transform="skewY(-18)"/>
+    <g transform="translate(40 -48)">
+      <rect x="12" y="0" width="18" height="18" fill="#f8e2b6"/>
+      <rect x="8" y="18" width="26" height="25" fill="#d0a7ff"/>
+      <rect x="3" y="43" width="36" height="8" fill="#563a41"/>
+      <rect x="-2" y="51" width="46" height="7" fill="#11101d"/>
+      <rect x="16" y="5" width="5" height="5" fill="#181627"/>
+      <rect x="25" y="5" width="5" height="5" fill="#181627"/>
+    </g>
+    <text x="58" y="96" text-anchor="middle" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">orchestrator • CLAUDE</text>
+  </g>
+
+  <!-- Camera grid preview -->
+  <rect x="904" y="142" width="318" height="496" fill="#232035" stroke="#43395b" stroke-width="3"/>
+  <text x="926" y="178" fill="#f8e2b6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">CAMERA GRID</text>
+  <text x="1198" y="178" text-anchor="end" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">3 projects</text>
+  <rect x="926" y="204" width="274" height="104" fill="#312841" stroke="#6fCAFF" stroke-width="3"/>
+  <text x="944" y="232" fill="#6fCAFF" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700">• checkout</text>
+  <text x="1180" y="232" text-anchor="end" fill="#7edb97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">selected</text>
+  <text x="944" y="258" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">3 workers • 2 busy</text>
+  <rect x="926" y="324" width="274" height="104" fill="#312841" stroke="#7edb97" stroke-width="2"/>
+  <text x="944" y="352" fill="#7edb97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">• infra</text>
+  <text x="944" y="378" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">1 worker • active</text>
+  <rect x="926" y="444" width="274" height="104" fill="#312841" stroke="#d0a7ff" stroke-width="2"/>
+  <text x="944" y="472" fill="#d0a7ff" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">• website</text>
+  <text x="944" y="498" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">2 workers • active</text>
+
+  <text x="58" y="687" fill="#a49dbe" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">Tab camera grid   Enter desk   p phone   ? help   q quit</text>
+  <text x="1218" y="687" text-anchor="end" fill="#7edb97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">DEMO • NO FILES MOUNTED</text>
+</svg>

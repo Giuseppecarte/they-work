@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Required verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Export reviewable frames
+        run: make shot
+
+      - name: Upload reviewable frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: they-work-shots
+          path: docs/shots/
+          if-no-files-found: error
+
+      # The runner supplies Docker; the Rust toolchain comes from
+      # docker/Dockerfile.dev through scripts/cargo.
+      - name: Build the release image
+        run: make build
+
+      - name: Check workspace formatting
+        run: ./scripts/cargo fmt --all -- --check
+
+      - name: Run strict Clippy
+        run: ./scripts/cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run the full workspace test suite
+        run: ./scripts/cargo test --workspace
+
+      - name: Run collector acceptance tests
+        run: ./scripts/cargo test -p theywork-collect --test collectors -- --nocapture
+
+      - name: Check renderer golden frames
+        run: ./scripts/cargo test -p theywork-render --lib golden::tests::snapshots_match_checked_in_goldens

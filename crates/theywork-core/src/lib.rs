@@ -14,9 +14,17 @@ mod source;
 mod world;
 
 pub use event::{Event, EventKind};
-pub use model::{Activity, Agent, Office, OfficeId, Worker, WorkerId, WorkerStatus};
+pub use model::{
+    Activity, Agent, Beat, Office, OfficeId, Outcome, Worker, WorkerId, WorkerStatus,
+};
 pub use source::{Source, SourceError};
 pub use world::World;
+
+/// How many beats of a worker's history the desk view can show.
+///
+/// Enough to read the shape of a turn, few enough that a day-old thread costs
+/// no more to remember than a fresh one.
+pub const HISTORY_LEN: usize = 64;
 
 /// Milliseconds since the Unix epoch.
 ///

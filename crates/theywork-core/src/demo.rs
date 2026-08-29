@@ -26,12 +26,22 @@ pub fn events(now: Millis) -> Vec<Event> {
             let office = OfficeId((*path).to_string());
             let phase = (now / 1500 + i as Millis * 2) % 7;
             let activity = match phase {
-                0 => Activity::Typing { detail: "cargo test --workspace".into() },
-                1 => Activity::Reading { detail: "src/world.rs".into() },
-                2 => Activity::Editing { detail: "src/render/canvas.rs".into() },
-                3 => Activity::Searching { detail: "fn apply".into() },
+                0 => Activity::Typing {
+                    detail: "cargo test --workspace".into(),
+                },
+                1 => Activity::Reading {
+                    detail: "src/world.rs".into(),
+                },
+                2 => Activity::Editing {
+                    detail: "src/render/canvas.rs".into(),
+                },
+                3 => Activity::Searching {
+                    detail: "fn apply".into(),
+                },
                 4 => Activity::Thinking,
-                5 => Activity::Talking { detail: "Tests pass, pushing.".into() },
+                5 => Activity::Talking {
+                    detail: "Tests pass, pushing.".into(),
+                },
                 _ => Activity::Idle,
             };
             let mk = |kind| Event {
@@ -47,8 +57,12 @@ pub fn events(now: Millis) -> Vec<Event> {
                     name: (*name).to_string(),
                     git_branch: Some("main".into()),
                 }),
-                mk(EventKind::Tokens(12_000 + (now / 90) as u64 * (i as u64 + 1))),
-                mk(EventKind::Turn { in_flight: activity.is_busy() }),
+                mk(EventKind::Tokens(
+                    12_000 + (now / 90) as u64 * (i as u64 + 1),
+                )),
+                mk(EventKind::Turn {
+                    in_flight: activity.is_busy(),
+                }),
                 mk(EventKind::Acted(activity)),
             ]
         })

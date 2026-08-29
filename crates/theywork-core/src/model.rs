@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use serde::{Deserialize, Serialize};
 
 use crate::Millis;
@@ -123,6 +125,29 @@ impl WorkerStatus {
     }
 }
 
+/// How something a worker did turned out.
+///
+/// Separate from [`Activity`] because an activity is a state you can be in,
+/// while an outcome is news that arrives once and then stops changing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Outcome {
+    /// A command finished with this exit status.
+    Exited(i32),
+    /// A file was edited by this many lines.
+    Changed { added: u32, removed: u32 },
+}
+
+/// One thing a worker did, at the time they did it.
+///
+/// The desk view reads a worker's recent beats as a timeline, which is why the
+/// timestamp comes from the agent's own record rather than from when we noticed.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Beat {
+    pub at: Millis,
+    pub activity: Activity,
+    pub outcome: Option<Outcome>,
+}
+
 /// One agent thread, drawn as one employee at one desk.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Worker {
@@ -139,6 +164,11 @@ pub struct Worker {
     pub last_seen: Millis,
     /// Whether the agent reports a turn actively in flight.
     pub turn_in_flight: bool,
+    /// What this worker has been doing lately, oldest first.
+    ///
+    /// Bounded: a thread that has run for hours must not cost more to remember
+    /// than one that just started.
+    pub history: VecDeque<Beat>,
 }
 
 impl Worker {
@@ -153,6 +183,7 @@ impl Worker {
             tokens_used: 0,
             last_seen: at,
             turn_in_flight: false,
+            history: VecDeque::new(),
         }
     }
 
@@ -169,6 +200,19 @@ impl Worker {
             return WorkerStatus::Blocked;
         }
         WorkerStatus::Running
+    }
+
+    /// Record something this worker did, dropping the oldest beat when full.
+    pub fn remember(&mut self, beat: Beat) {
+        if self.history.len() >= crate::HISTORY_LEN {
+            self.history.pop_front();
+        }
+        self.history.push_back(beat);
+    }
+
+    /// The most recent beats, newest last.
+    pub fn recent(&self) -> impl Iterator<Item = &Beat> {
+        self.history.iter()
     }
 
     /// Quiet for long enough that we should stop animating them.
@@ -200,7 +244,12 @@ impl Office {
             .find(|s| !s.is_empty())
             .unwrap_or("office")
             .to_string();
-        Self { id, path, name, workers: Vec::new() }
+        Self {
+            id,
+            path,
+            name,
+            workers: Vec::new(),
+        }
     }
 
     pub fn busy_count(&self) -> usize {

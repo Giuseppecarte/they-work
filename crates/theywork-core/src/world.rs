@@ -95,6 +95,10 @@ impl World {
                 }
             }
             EventKind::Acted(activity) => worker.activity = activity,
+            EventKind::Did(beat) => {
+                worker.activity = beat.activity.clone();
+                worker.remember(beat);
+            }
             EventKind::Tokens(n) => worker.tokens_used = worker.tokens_used.max(n),
             EventKind::Turn { in_flight } => worker.turn_in_flight = in_flight,
             EventKind::Left => unreachable!("handled above"),
@@ -148,7 +152,14 @@ mod tests {
     #[test]
     fn first_event_opens_an_office_and_hires_a_worker() {
         let mut w = World::new();
-        w.apply(ev(0, "t1", EventKind::Seen { name: "Dev 1".into(), git_branch: None }));
+        w.apply(ev(
+            0,
+            "t1",
+            EventKind::Seen {
+                name: "Dev 1".into(),
+                git_branch: None,
+            },
+        ));
         assert_eq!(w.office_count(), 1);
         assert_eq!(w.worker_count(), 1);
         let office = w.office(&OfficeId("/proj".into())).unwrap();
@@ -159,8 +170,16 @@ mod tests {
     #[test]
     fn quiet_workers_go_idle_then_offline_and_close_the_office() {
         let mut w = World::new();
-        w.apply(ev(0, "t1", EventKind::Acted(Activity::Typing { detail: "ls".into() })));
-        assert!(w.office(&OfficeId("/proj".into())).unwrap().workers[0].activity.is_busy());
+        w.apply(ev(
+            0,
+            "t1",
+            EventKind::Acted(Activity::Typing {
+                detail: "ls".into(),
+            }),
+        ));
+        assert!(w.office(&OfficeId("/proj".into())).unwrap().workers[0]
+            .activity
+            .is_busy());
 
         w.tick(crate::IDLE_AFTER_MS + 1);
         assert_eq!(
@@ -176,11 +195,16 @@ mod tests {
     fn an_open_turn_gone_silent_reads_as_blocked_not_idle() {
         let mut w = World::new();
         w.apply(ev(0, "t1", EventKind::Turn { in_flight: true }));
-        w.apply(ev(0, "t1", EventKind::Acted(Activity::Typing { detail: "npm i".into() })));
+        w.apply(ev(
+            0,
+            "t1",
+            EventKind::Acted(Activity::Typing {
+                detail: "npm i".into(),
+            }),
+        ));
 
-        let at = |w: &World, now| {
-            w.office(&OfficeId("/proj".into())).unwrap().workers[0].status_at(now)
-        };
+        let at =
+            |w: &World, now| w.office(&OfficeId("/proj".into())).unwrap().workers[0].status_at(now);
 
         assert_eq!(at(&w, 1_000), crate::WorkerStatus::Running);
 
@@ -194,7 +218,10 @@ mod tests {
 
         // Still nothing much later: this one needs a human.
         w.tick(crate::BLOCKED_AFTER_MS + 1);
-        assert_eq!(at(&w, crate::BLOCKED_AFTER_MS + 1), crate::WorkerStatus::Blocked);
+        assert_eq!(
+            at(&w, crate::BLOCKED_AFTER_MS + 1),
+            crate::WorkerStatus::Blocked
+        );
     }
 
     #[test]
@@ -203,13 +230,22 @@ mod tests {
         w.apply(ev(0, "t1", EventKind::Turn { in_flight: true }));
         w.apply(ev(10, "t1", EventKind::Turn { in_flight: false }));
         let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
-        assert_eq!(worker.status_at(crate::BLOCKED_AFTER_MS * 2), crate::WorkerStatus::Idle);
+        assert_eq!(
+            worker.status_at(crate::BLOCKED_AFTER_MS * 2),
+            crate::WorkerStatus::Idle
+        );
     }
 
     #[test]
     fn a_worker_idle_for_an_hour_is_still_in_the_office() {
         let mut w = World::new();
-        w.apply(ev(0, "t1", EventKind::Acted(Activity::Talking { detail: "done".into() })));
+        w.apply(ev(
+            0,
+            "t1",
+            EventKind::Acted(Activity::Talking {
+                detail: "done".into(),
+            }),
+        ));
         w.apply(ev(0, "t1", EventKind::Turn { in_flight: false }));
 
         let an_hour = 60 * 60_000;
@@ -231,17 +267,26 @@ mod tests {
             office_path: office.into(),
             worker: WorkerId("t1".into()),
             agent: Agent::Codex,
-            kind: EventKind::Seen { name: "Dev 1".into(), git_branch: None },
+            kind: EventKind::Seen {
+                name: "Dev 1".into(),
+                git_branch: None,
+            },
         };
 
         w.apply(seen(0, "/alpha"));
-        assert_eq!(w.office(&OfficeId("/alpha".into())).unwrap().workers.len(), 1);
+        assert_eq!(
+            w.office(&OfficeId("/alpha".into())).unwrap().workers.len(),
+            1
+        );
 
         // The same thread now reports a different directory.
         w.apply(seen(10, "/beta"));
 
         assert_eq!(w.worker_count(), 1, "one thread is one worker, never two");
-        assert_eq!(w.office(&OfficeId("/beta".into())).unwrap().workers[0].name, "Dev 1");
+        assert_eq!(
+            w.office(&OfficeId("/beta".into())).unwrap().workers[0].name,
+            "Dev 1"
+        );
         assert!(
             w.office(&OfficeId("/alpha".into())).is_none(),
             "the office they left must not keep a ghost of them"
@@ -262,8 +307,37 @@ mod tests {
             });
         }
         let seatings = w.offices().flat_map(|o| &o.workers).count();
-        assert_eq!(seatings, 1, "a wandering thread must occupy exactly one desk");
+        assert_eq!(
+            seatings, 1,
+            "a wandering thread must occupy exactly one desk"
+        );
         assert_eq!(w.office_count(), 1);
+    }
+
+    #[test]
+    fn history_keeps_the_newest_beats_and_stays_bounded() {
+        use crate::model::{Beat, Outcome};
+        let mut w = World::new();
+        for i in 0..(crate::HISTORY_LEN as i64 + 20) {
+            w.apply(ev(
+                i,
+                "t1",
+                EventKind::Did(Beat {
+                    at: i,
+                    activity: Activity::Typing { detail: format!("step {i}") },
+                    outcome: Some(Outcome::Exited(0)),
+                }),
+            ));
+        }
+        let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
+        assert_eq!(worker.history.len(), crate::HISTORY_LEN, "history must stay bounded");
+        let newest = worker.recent().last().unwrap();
+        assert_eq!(newest.at, crate::HISTORY_LEN as i64 + 19, "the newest beat is kept");
+        assert_eq!(
+            worker.activity,
+            Activity::Typing { detail: format!("step {}", crate::HISTORY_LEN + 19) },
+            "a remembered beat is also the current activity"
+        );
     }
 
     #[test]
@@ -271,6 +345,9 @@ mod tests {
         let mut w = World::new();
         w.apply(ev(0, "t1", EventKind::Tokens(500)));
         w.apply(ev(1, "t1", EventKind::Tokens(100)));
-        assert_eq!(w.office(&OfficeId("/proj".into())).unwrap().workers[0].tokens_used, 500);
+        assert_eq!(
+            w.office(&OfficeId("/proj".into())).unwrap().workers[0].tokens_used,
+            500
+        );
     }
 }

@@ -27,7 +27,10 @@ pub struct SourceError {
 
 impl SourceError {
     pub fn new(source_name: &'static str, message: impl Into<String>) -> Self {
-        Self { source_name, message: message.into() }
+        Self {
+            source_name,
+            message: message.into(),
+        }
     }
 }
 

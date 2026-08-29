@@ -36,10 +36,12 @@ pub(crate) fn draw(frame: &mut Frame) {
     }
     let lines = Text::from(vec![
         Line::from("move    arrows / hjkl (floor, camera, worker)"),
+        Line::from("tabs    1-9 jump; Tab / Shift-Tab cycle; 0 guard"),
         Line::from("open    Enter"),
         Line::from("back    Esc / Backspace"),
-        Line::from("top     Tab: tower <-> cameras"),
+        Line::from("camera  c cycles isometric / top-down / side"),
         Line::from("phone   p; 1-4; arrows / hjkl"),
+        Line::from("settings s; session only"),
         Line::from("help    ?; Esc/q close; q quits outside"),
     ]);
     Paragraph::new(lines)

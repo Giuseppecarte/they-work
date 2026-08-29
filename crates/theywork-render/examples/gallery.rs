@@ -1,4 +1,4 @@
-//! Live gallery for reviewing the tower and office views.
+//! Live gallery for reviewing the isometric floor and camera views.
 
 use std::io;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

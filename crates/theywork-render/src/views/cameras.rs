@@ -1,19 +1,21 @@
 //! Security-camera grid: the building-wide headline view.
 
 use ratatui::layout::Rect;
-use ratatui::style::Style;
+use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 use theywork_core::{Millis, Office, WorkerStatus, World};
 
+use super::office::draw_project_sign;
 use crate::canvas::Canvas;
-use crate::sprite::SpriteSet;
+use crate::sprite::{worker_looks, SpriteSet};
 
 use super::{
-    draw_footer, draw_header, draw_tiny, fill_office_background, grid_rect, has_area, inset,
-    paint_scanlines, render_worker, short_path, status_color, status_marker, status_style,
-    timestamp, worker_status, PixelRect, ACCENT, BACKGROUND, HOT, MUTED, WARNING,
+    below_tab_bar, draw_footer, draw_header, draw_tiny, fill_office_background, grid_rect,
+    has_area, inset, paint_scanlines, render_worker_with_look, short_path, status_color,
+    status_marker, status_style, timestamp, worker_status, PixelRect, ACCENT, BACKGROUND, HOT,
+    MUTED, WARNING,
 };
 
 /// The dimensions of a camera grid after taking count and terminal space into account.
@@ -86,8 +88,9 @@ pub(crate) fn draw(
     sprites: &SpriteSet,
     now: Millis,
     selected: usize,
+    all_selected: bool,
 ) -> GridLayout {
-    let area = frame.area();
+    let area = below_tab_bar(frame.area());
     if area.width < 16 || area.height < 6 {
         draw_tiny(frame, "they-work • terminal too small for the camera wall");
         return GridLayout::default();
@@ -97,14 +100,31 @@ pub(crate) fn draw(
     draw_header(
         frame,
         header,
-        "CAMERAS",
+        if all_selected {
+            "GUARD OFFICE"
+        } else {
+            "CAMERAS"
+        },
         &format!(
-            "{} offices • {} workers",
+            "{} rooms • {} workers • {}",
             world.office_count(),
-            world.worker_count()
+            world.worker_count(),
+            if all_selected {
+                "all feeds"
+            } else {
+                "selected feed"
+            }
         ),
     );
-    draw_footer(frame, footer, "←↑↓→ / hjkl move   Enter open   q quit");
+    draw_footer(
+        frame,
+        footer,
+        if all_selected {
+            "1-9 jump   Tab cycle   Enter open   s settings   q quit"
+        } else {
+            "←↑↓→ / hjkl move   Enter open   0 guard   s settings   q quit"
+        },
+    );
 
     if !has_area(body) {
         return GridLayout::default();
@@ -122,11 +142,21 @@ pub(crate) fn draw(
         if !has_area(tile) {
             continue;
         }
-        draw_tile(frame, canvas, sprites, office, tile, now, index == selected);
+        draw_tile(
+            frame,
+            canvas,
+            sprites,
+            office,
+            tile,
+            now,
+            index == selected,
+            index,
+        );
     }
     layout
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_tile(
     frame: &mut Frame,
     canvas: &mut Canvas,
@@ -135,6 +165,7 @@ fn draw_tile(
     tile: Rect,
     now: Millis,
     selected: bool,
+    office_index: usize,
 ) {
     let blocked_count = office
         .workers
@@ -161,7 +192,7 @@ fn draw_tile(
     } else if failed_count > 0 {
         "× "
     } else {
-        "📹 "
+        "CAM "
     };
     let title_width = tile.width.saturating_sub(4) as usize;
     let office_title = short_path(
@@ -182,6 +213,19 @@ fn draw_tile(
 
     canvas.resize(inner.width as usize, inner.height as usize * 2);
     let floor_start = fill_office_background(canvas, sprites);
+    let theme = office_index % 3;
+    let theme_wall = match theme {
+        0 => Color::Rgb(58, 51, 88),
+        1 => Color::Rgb(43, 37, 66),
+        _ => Color::Rgb(90, 169, 201),
+    };
+    for row in 0..floor_start.min(4) {
+        for column in 0..canvas.width() {
+            canvas.set(column, row, theme_wall);
+        }
+    }
+    draw_project_sign(canvas, &office.name, floor_start);
+    let looks = worker_looks(&office.workers);
     let worker_count = office.workers.len().max(1);
     let slot_width = (inner.width as usize / worker_count).max(1);
     let worker_width = slot_width.min(10);
@@ -190,10 +234,14 @@ fn draw_tile(
         let slot_x = index.saturating_mul(inner.width as usize) / worker_count;
         let worker_x = slot_x + slot_width.saturating_sub(worker_width) / 2;
         let worker_y = floor_start.saturating_sub(worker_height + 1);
-        render_worker(
+        let Some(look) = looks.get(index) else {
+            continue;
+        };
+        render_worker_with_look(
             canvas,
             sprites,
             worker,
+            look,
             now,
             PixelRect {
                 x: worker_x,

@@ -23,11 +23,15 @@ pub enum ColorDepth {
 }
 
 impl ColorDepth {
-    fn from_environment() -> Self {
+    pub(crate) fn from_environment() -> Self {
         let no_color = std::env::var_os("NO_COLOR").is_some();
         let forced = std::env::var("THEYWORK_COLOR").ok();
         let colorterm = std::env::var("COLORTERM").ok();
         Self::resolve(no_color, forced.as_deref(), colorterm.as_deref())
+    }
+
+    pub(crate) fn environment_override() -> bool {
+        std::env::var_os("NO_COLOR").is_some() || std::env::var_os("THEYWORK_COLOR").is_some()
     }
 
     fn resolve(no_color: bool, forced: Option<&str>, colorterm: Option<&str>) -> Self {
@@ -37,6 +41,12 @@ impl ColorDepth {
         match forced {
             Some(value) if value.eq_ignore_ascii_case("none") => Self::None,
             Some(value) if value.eq_ignore_ascii_case("true") => Self::TrueColor,
+            Some(value)
+                if value.eq_ignore_ascii_case("truecolor")
+                    || value.eq_ignore_ascii_case("24bit") =>
+            {
+                Self::TrueColor
+            }
             Some("256") => Self::Palette256,
             _ if colorterm.is_some_and(|value| {
                 value.eq_ignore_ascii_case("truecolor") || value == "24bit"
@@ -56,6 +66,7 @@ pub struct Canvas {
     height: usize,
     pixels: Vec<Option<Color>>,
     depth: ColorDepth,
+    light_mode: bool,
 }
 
 impl Canvas {
@@ -74,6 +85,7 @@ impl Canvas {
             height: 0,
             pixels: Vec::new(),
             depth,
+            light_mode: false,
         };
         canvas.resize(width_px, height_px);
         canvas
@@ -87,6 +99,17 @@ impl Canvas {
     /// Number of vertical pixels in the surface.
     pub fn height(&self) -> usize {
         self.height
+    }
+    pub(crate) fn set_color_depth(&mut self, depth: ColorDepth) {
+        self.depth = depth;
+    }
+
+    pub(crate) fn set_light_mode(&mut self, light: bool) {
+        self.light_mode = light;
+    }
+
+    pub(crate) fn is_light_mode(&self) -> bool {
+        self.light_mode
     }
 
     /// The colour mode captured at construction.
@@ -249,6 +272,11 @@ impl Canvas {
     }
 
     fn convert_color(&self, color: Color) -> Color {
+        let color = if self.light_mode {
+            crate::views::light_color(color)
+        } else {
+            color
+        };
         match self.depth {
             ColorDepth::TrueColor | ColorDepth::None => color,
             ColorDepth::Palette256 => palette_color(color),

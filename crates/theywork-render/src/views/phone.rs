@@ -7,15 +7,16 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 use ratatui::Frame;
-use theywork_core::{Millis, Worker, WorkerId, WorkerStatus, World};
+use theywork_core::{Millis, Office, Worker, WorkerId, WorkerStatus, World};
 
 use crate::canvas::Canvas;
-use crate::sprite::SpriteSet;
+use crate::sprite::{look_for_worker, SpriteSet, WorkerLook};
 use crate::ActivityRecord;
 
 use super::{
-    duration_label, elapsed_ms, has_area, human_tokens, inset, render_worker, short_path,
-    status_style, timestamp, worker_status, PixelRect, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
+    below_tab_bar, duration_label, elapsed_ms, has_area, human_tokens, inset,
+    render_worker_with_look, safe_display, short_path, status_style, timestamp, worker_status,
+    PixelRect, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
 };
 
 const SLIDE_MS: Millis = 260;
@@ -89,7 +90,7 @@ pub(crate) fn draw(frame: &mut Frame, context: PhoneDrawContext<'_>) {
         canvas,
         sprites,
     } = context;
-    let area = frame.area();
+    let area = below_tab_bar(frame.area());
     if !has_area(area) {
         return;
     }
@@ -130,7 +131,7 @@ pub(crate) fn draw(frame: &mut Frame, context: PhoneDrawContext<'_>) {
     );
 
     Block::default()
-        .title(format!(" 📱 MESSAGES  {} ", channel.label()))
+        .title(format!(" MESSAGES  {} ", channel.label()))
         .borders(Borders::ALL)
         .border_style(Style::default().fg(PANEL_HIGHLIGHT))
         .style(Style::default().bg(PANEL))
@@ -215,7 +216,7 @@ fn draw_message(
     now: Millis,
     row: Rect,
 ) {
-    let Some(worker) = message
+    let Some((office, worker)) = message
         .worker_id
         .as_ref()
         .and_then(|id| find_worker(world, id))
@@ -226,9 +227,10 @@ fn draw_message(
             .render(row, frame.buffer_mut());
         return;
     };
+    let look = look_for_worker(&office.workers, worker);
     let avatar_width = row.width.min(5);
     let avatar_area = Rect::new(row.x, row.y, avatar_width, row.height);
-    draw_avatar(frame, canvas, sprites, worker, now, avatar_area);
+    draw_avatar(frame, canvas, sprites, worker, &look, now, avatar_area);
     let text_area = Rect::new(
         row.x.saturating_add(avatar_width),
         row.y,
@@ -266,6 +268,7 @@ fn draw_avatar(
     canvas: &mut Canvas,
     sprites: &SpriteSet,
     worker: &Worker,
+    look: &WorkerLook,
     now: Millis,
     area: Rect,
 ) {
@@ -276,10 +279,11 @@ fn draw_avatar(
     let height = area.height as usize * 2;
     canvas.resize(width, height);
     canvas.clear();
-    render_worker(
+    render_worker_with_look(
         canvas,
         sprites,
         worker,
+        look,
         now,
         PixelRect {
             x: 0,
@@ -291,11 +295,14 @@ fn draw_avatar(
     canvas.render(frame.buffer_mut(), area);
 }
 
-fn find_worker<'a>(world: &'a World, id: &WorkerId) -> Option<&'a Worker> {
-    world
-        .offices()
-        .flat_map(|office| office.workers.iter())
-        .find(|worker| &worker.id == id)
+fn find_worker<'a>(world: &'a World, id: &WorkerId) -> Option<(&'a Office, &'a Worker)> {
+    world.offices().find_map(|office| {
+        office
+            .workers
+            .iter()
+            .find(|worker| &worker.id == id)
+            .map(|worker| (office, worker))
+    })
 }
 
 fn messages_for(
@@ -316,7 +323,11 @@ fn standup_messages(world: &World, now: Millis) -> Vec<PhoneMessage> {
     let mut messages = Vec::new();
     for office in world.offices() {
         for worker in &office.workers {
-            let branch = worker.git_branch.as_deref().unwrap_or("no branch");
+            let branch = worker
+                .git_branch
+                .as_deref()
+                .map(safe_display)
+                .unwrap_or_else(|| "no branch".to_string());
             messages.push(worker_message(
                 worker,
                 worker.last_seen,
@@ -337,7 +348,7 @@ fn standup_messages(world: &World, now: Millis) -> Vec<PhoneMessage> {
 fn current_activity(worker: &Worker) -> String {
     match worker.activity.detail() {
         Some(detail) if !detail.is_empty() => {
-            format!("{} • {}", worker.activity.label(), detail)
+            format!("{} • {}", worker.activity.label(), safe_display(detail))
         }
         _ => worker.activity.label().to_string(),
     }

@@ -8,12 +8,12 @@ use ratatui::Frame;
 use theywork_core::{Millis, Office, Worker};
 
 use crate::canvas::Canvas;
-use crate::sprite::SpriteSet;
+use crate::sprite::{look_for_worker, SpriteSet};
 
 use super::{
-    draw_footer, draw_header, draw_panel, draw_tiny, fill_office_background, has_area,
-    human_tokens, render_worker, short_path, status_style, token_bar, worker_status, PixelRect,
-    ACCENT, GOOD, INK, MUTED,
+    below_tab_bar, draw_footer, draw_header, draw_panel, draw_tiny, fill_office_background,
+    has_area, human_tokens, render_worker_with_look, safe_display, short_path, status_style,
+    token_bar, worker_status, PixelRect, ACCENT, GOOD, INK, MUTED,
 };
 
 pub(crate) fn draw(
@@ -25,7 +25,7 @@ pub(crate) fn draw(
     sprites: &SpriteSet,
     now: Millis,
 ) {
-    let area = frame.area();
+    let area = below_tab_bar(frame.area());
     if area.width < 16 || area.height < 8 {
         draw_tiny(frame, "they-work • terminal too small for the desk view");
         return;
@@ -35,7 +35,11 @@ pub(crate) fn draw(
         return;
     };
 
-    let branch = worker.git_branch.as_deref().unwrap_or("no branch");
+    let branch = worker
+        .git_branch
+        .as_deref()
+        .map(safe_display)
+        .unwrap_or_else(|| "no branch".to_string());
     let status = worker_status(worker, now);
     let max_tokens = office
         .workers
@@ -99,9 +103,8 @@ pub(crate) fn draw(
             );
         }
 
-        let worker_sprite = sprites
-            .worker_animation(worker.agent, &worker.activity)
-            .frame_at(now);
+        let look = look_for_worker(&office.workers, worker);
+        let worker_sprite = sprites.worker_frame(worker, look, now);
         let desk_height = canvas.height().clamp(1, 7);
         let desk_y = canvas.height().saturating_sub(desk_height);
         let worker_width = worker_sprite
@@ -114,10 +117,11 @@ pub(crate) fn draw(
             .max(1);
         let worker_x = canvas.width().saturating_sub(worker_width) / 2;
         let worker_y = floor_start.min(desk_y).saturating_sub(worker_height);
-        render_worker(
+        render_worker_with_look(
             canvas,
             sprites,
             worker,
+            &look,
             now,
             PixelRect {
                 x: worker_x,

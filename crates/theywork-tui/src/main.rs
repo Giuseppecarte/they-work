@@ -7,6 +7,8 @@ use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
 use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
+use std::sync::mpsc::{self, Receiver, Sender};
+use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
@@ -19,7 +21,7 @@ use crossterm::terminal::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use theywork_collect::{Config, StoreReport};
-use theywork_core::{Agent, Millis, Source, Worker, WorkerStatus, World};
+use theywork_core::{Agent, Event, Millis, Source, Worker, WorkerStatus, World};
 use theywork_render::{Ui, UiCommand, View};
 
 /// Redraw interval. Fast enough for smooth sprite animation, slow enough that
@@ -903,6 +905,58 @@ fn key(code: KeyCode) -> KeyEvent {
     KeyEvent::new(code, KeyModifiers::NONE)
 }
 
+struct PollResult {
+    events: Vec<Event>,
+    errors: Vec<String>,
+}
+
+struct Poller {
+    results: Receiver<PollResult>,
+    stop: Sender<()>,
+    thread: Option<thread::JoinHandle<()>>,
+}
+
+impl Poller {
+    fn start(mut sources: Vec<Box<dyn Source>>) -> Self {
+        let (result_tx, result_rx) = mpsc::channel();
+        let (stop_tx, stop_rx) = mpsc::channel();
+        let thread = thread::spawn(move || loop {
+            let now = now_ms();
+            let mut events = Vec::new();
+            let mut errors = Vec::new();
+            for source in &mut sources {
+                match source.poll(now) {
+                    Ok(source_events) => events.extend(source_events),
+                    Err(error) => errors.push(format!("{}: {}", error.source_name, error.message)),
+                }
+            }
+            if result_tx.send(PollResult { events, errors }).is_err() {
+                break;
+            }
+            match stop_rx.recv_timeout(POLL_INTERVAL) {
+                Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => break,
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+            }
+        });
+        Self {
+            results: result_rx,
+            stop: stop_tx,
+            thread: Some(thread),
+        }
+    }
+
+    fn drain(&self) -> impl Iterator<Item = PollResult> + '_ {
+        self.results.try_iter()
+    }
+
+    fn stop(mut self) {
+        let _ = self.stop.send(());
+        if let Some(thread) = self.thread.take() {
+            let _ = thread.join();
+        }
+    }
+}
+
 fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u64>) -> Result<()> {
     let started = Instant::now();
     let deadline = started + duration;
@@ -921,29 +975,26 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
     let mut poll_errors = 0;
     let mut errors: HashSet<String> = runtime.errors.iter().cloned().collect();
     let rss_after_initial_scan = resident_bytes();
-    let mut next_poll = Instant::now();
+    let poller = Poller::start(std::mem::take(&mut runtime.sources));
 
     loop {
         let frame_started = Instant::now();
         let now = now_ms();
         runtime.now = now;
-        if Instant::now() >= next_poll {
-            polls += 1;
-            for source in &mut runtime.sources {
-                match source.poll(now) {
-                    Ok(source_events) => {
-                        events += source_events.len();
-                        for event in source_events {
-                            runtime.world.apply(event);
-                        }
-                    }
-                    Err(error) => {
-                        poll_errors += 1;
-                        errors.insert(format!("{}: {}", error.source_name, error.message));
-                    }
-                }
+        if runtime.demo {
+            for event in theywork_core::demo::events(now) {
+                runtime.world.apply(event);
             }
-            next_poll = Instant::now() + POLL_INTERVAL;
+        } else {
+            for result in poller.drain() {
+                polls += 1;
+                events += result.events.len();
+                for event in result.events {
+                    runtime.world.apply(event);
+                }
+                poll_errors += result.errors.len();
+                errors.extend(result.errors);
+            }
         }
         runtime.world.tick(now);
 
@@ -971,6 +1022,7 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
         }
     }
 
+    poller.stop();
     let elapsed = started.elapsed();
     let (final_offices, final_workers, _) = roster_snapshot(&runtime.world);
     let effective_fps = frames as f64 / elapsed.as_secs_f64().max(f64::EPSILON);
@@ -1040,42 +1092,48 @@ fn run<B: ratatui::backend::Backend>(
 ) -> Result<()> {
     let mut ui = Ui::new();
     configure_ui(&mut ui, args, runtime.start_guard);
-    let mut next_poll = Instant::now();
+    let poller = Poller::start(std::mem::take(&mut runtime.sources));
+    let result = (|| -> Result<()> {
+        loop {
+            let now = now_ms();
 
-    loop {
-        let now = now_ms();
-
-        if runtime.demo {
-            for event in theywork_core::demo::events(now) {
-                runtime.world.apply(event);
-            }
-        } else if Instant::now() >= next_poll {
-            for source in &mut runtime.sources {
-                if let Ok(events) = source.poll(now) {
-                    for event in events {
+            if runtime.demo {
+                for event in theywork_core::demo::events(now) {
+                    runtime.world.apply(event);
+                }
+            } else {
+                for result in poller.drain() {
+                    for event in result.events {
                         runtime.world.apply(event);
+                    }
+                    for error in result.errors {
+                        if !runtime.errors.contains(&error) {
+                            runtime.errors.push(error);
+                        }
                     }
                 }
             }
-            next_poll = Instant::now() + POLL_INTERVAL;
-        }
-        runtime.world.tick(now);
-        ui.tick(now);
 
-        terminal.draw(|frame| ui.draw(frame, &runtime.world))?;
+            runtime.world.tick(now);
+            ui.tick(now);
 
-        if event::poll(FRAME)? {
-            if let TermEvent::Key(input) = event::read()? {
-                let previous_view = ui.view();
-                if ui.handle_key(input) == Some(UiCommand::Quit) {
-                    return Ok(());
-                }
-                if previous_view == View::Cameras && ui.view() == View::Office {
-                    persist_selected_office(runtime, ui.selected_office(), now)?;
+            terminal.draw(|frame| ui.draw(frame, &runtime.world))?;
+
+            if event::poll(FRAME)? {
+                if let TermEvent::Key(input) = event::read()? {
+                    let previous_view = ui.view();
+                    if ui.handle_key(input) == Some(UiCommand::Quit) {
+                        return Ok(());
+                    }
+                    if previous_view == View::Cameras && ui.view() == View::Office {
+                        persist_selected_office(runtime, ui.selected_office(), now)?;
+                    }
                 }
             }
         }
-    }
+    })();
+    poller.stop();
+    result
 }
 fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> Result<()> {
     let (Some(config_dir), Some(project)) = (

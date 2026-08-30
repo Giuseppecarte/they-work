@@ -16,6 +16,9 @@ use crate::util::{
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
     "The following is the Codex agent history whose request action you are assessing";
+// The world retains only a bounded timeline, so a newly discovered thread
+// needs its recent tail rather than its entire historical transcript.
+const INITIAL_ITEMS_PER_THREAD: i64 = 64;
 
 /// Reads the current Codex roster and activity feed from its SQLite stores.
 pub struct CodexSource {
@@ -24,6 +27,7 @@ pub struct CodexSource {
     active_within: Duration,
     threads: BTreeMap<String, ThreadRecord>,
     item_watermarks: HashMap<String, i64>,
+    last_item_watermark: i64,
     office_cache: HashMap<String, String>,
     items_initialized: bool,
     turn_states: HashMap<String, TurnState>,
@@ -49,6 +53,7 @@ impl CodexSource {
             active_within,
             threads: BTreeMap::new(),
             item_watermarks: HashMap::new(),
+            last_item_watermark: -1,
             items_initialized: false,
             turn_states: HashMap::new(),
             office_cache: HashMap::new(),
@@ -136,20 +141,17 @@ impl CodexSource {
         self.home.join("sqlite").join("thread_history_1.sqlite")
     }
 
-    fn minimum_item_watermark(&self, current: &BTreeMap<String, ThreadRecord>) -> i64 {
+    fn minimum_item_watermark(&self) -> i64 {
         if !self.items_initialized {
             return -1;
         }
-        current
-            .keys()
-            .map(|thread_id| self.item_watermarks.get(thread_id).copied().unwrap_or(-1))
-            .min()
-            .unwrap_or(DEFAULT_ITEM_WATERMARK)
+        self.last_item_watermark
     }
 
     fn clear_runtime_state(&mut self) {
         self.threads.clear();
         self.item_watermarks.clear();
+        self.last_item_watermark = -1;
         self.office_cache.clear();
         self.items_initialized = false;
         self.turn_states.clear();
@@ -256,9 +258,17 @@ impl Source for CodexSource {
         disambiguate_thread_names(&mut current);
         let previous = std::mem::replace(&mut self.threads, current);
         self.prune_runtime_state();
-        let Ok(items) = read_items(&history, self.minimum_item_watermark(&self.threads)) else {
-            return Ok(self.unavailable_poll("activity item query failed"));
-        };
+        // The global cursor keeps steady-state polls incremental. Threads with
+        // no observed item still get a targeted backfill because their first
+        // item can be older than that cursor.
+        let uninitialized_thread_ids: Vec<String> = self
+            .threads
+            .keys()
+            .filter(|thread_id| !self.item_watermarks.contains_key(*thread_id))
+            .cloned()
+            .collect();
+        let minimum_watermark = self.minimum_item_watermark();
+        let items_initialized = self.items_initialized;
 
         let mut events = Vec::new();
 
@@ -295,41 +305,50 @@ impl Source for CodexSource {
         }
 
         let mut watermark_updates: HashMap<String, i64> = HashMap::new();
-        for item in items {
-            let previous_watermark = self
-                .item_watermarks
-                .get(&item.thread_id)
-                .copied()
-                .unwrap_or({
-                    if self.items_initialized {
+        let mut last_item_watermark = self.last_item_watermark;
+        let read_result = read_items(
+            &history,
+            minimum_watermark,
+            &uninitialized_thread_ids,
+            |item| {
+                last_item_watermark = last_item_watermark.max(item.created_at_ms);
+                let previous_watermark = self
+                    .item_watermarks
+                    .get(&item.thread_id)
+                    .copied()
+                    .unwrap_or(if items_initialized {
                         DEFAULT_ITEM_WATERMARK
                     } else {
                         -1
-                    }
-                });
-            if item.created_at_ms <= previous_watermark {
-                continue;
-            }
+                    });
+                if item.created_at_ms <= previous_watermark {
+                    return;
+                }
 
-            let Some(thread) = self.threads.get(&item.thread_id) else {
-                continue;
-            };
-            watermark_updates
-                .entry(item.thread_id.clone())
-                .and_modify(|watermark| *watermark = (*watermark).max(item.created_at_ms))
-                .or_insert(item.created_at_ms);
+                let Some(thread) = self.threads.get(&item.thread_id) else {
+                    return;
+                };
+                watermark_updates
+                    .entry(item.thread_id.clone())
+                    .and_modify(|watermark| *watermark = (*watermark).max(item.created_at_ms))
+                    .or_insert(item.created_at_ms);
 
-            let payload = serde_json::from_str::<Value>(&item.item_json).unwrap_or(Value::Null);
-            if let Some(kind) = item_kind(&item.item_type, &payload, item.created_at_ms) {
-                events.push(thread.event(item.created_at_ms, kind));
-            }
-            if item.item_type == "userMessage" {
-                events.push(thread.event(
-                    item.created_at_ms,
-                    message_beat(&payload, item.created_at_ms),
-                ));
-            }
+                let payload = serde_json::from_str::<Value>(&item.item_json).unwrap_or(Value::Null);
+                if let Some(kind) = item_kind(&item.item_type, &payload, item.created_at_ms) {
+                    events.push(thread.event(item.created_at_ms, kind));
+                }
+                if item.item_type == "userMessage" {
+                    events.push(thread.event(
+                        item.created_at_ms,
+                        message_beat(&payload, item.created_at_ms),
+                    ));
+                }
+            },
+        );
+        if read_result.is_err() {
+            return Ok(self.unavailable_poll("activity item query failed"));
         }
+        self.last_item_watermark = last_item_watermark.max(DEFAULT_ITEM_WATERMARK);
         for (thread_id, watermark) in watermark_updates {
             self.item_watermarks
                 .entry(thread_id)
@@ -532,25 +551,76 @@ fn read_threads(
     Ok(threads)
 }
 
-fn read_items(
+fn read_items<F>(
     connection: &Connection,
     minimum_watermark: i64,
-) -> rusqlite::Result<Vec<ItemRecord>> {
-    let mut statement = connection.prepare(
-        "SELECT thread_id, created_at_ms, item_type, item_json \
-         FROM thread_items WHERE created_at_ms >= ?1 ORDER BY created_at_ms ASC",
-    )?;
-    let mut rows = statement.query([minimum_watermark])?;
-    let mut items = Vec::new();
-    while let Some(row) = rows.next()? {
-        items.push(ItemRecord {
-            thread_id: row.get(0)?,
-            created_at_ms: row.get(1)?,
-            item_type: row.get(2)?,
-            item_json: row.get(3)?,
-        });
+    uninitialized_thread_ids: &[String],
+    visit: F,
+) -> rusqlite::Result<()>
+where
+    F: FnMut(ItemRecord),
+{
+    let mut visit = visit;
+    let mut backfill = Vec::new();
+    for thread_id in uninitialized_thread_ids {
+        let mut statement = connection.prepare(
+            "SELECT thread_id, created_at_ms, item_type, item_json \
+             FROM thread_items \
+             WHERE thread_id = ?1 AND created_at_ms < ?2 \
+             ORDER BY created_at_ms DESC LIMIT ?3",
+        )?;
+        let mut rows = statement.query(rusqlite::params![
+            thread_id,
+            minimum_watermark,
+            INITIAL_ITEMS_PER_THREAD
+        ])?;
+        while let Some(row) = rows.next()? {
+            backfill.push(ItemRecord {
+                thread_id: row.get(0)?,
+                created_at_ms: row.get(1)?,
+                item_type: row.get(2)?,
+                item_json: row.get(3)?,
+            });
+        }
     }
-    Ok(items)
+    backfill.sort_by_key(|item| item.created_at_ms);
+    for item in backfill {
+        visit(item);
+    }
+
+    if minimum_watermark < 0 {
+        let mut statement = connection.prepare(
+            "SELECT thread_id, created_at_ms, item_type, item_json \
+             FROM (SELECT thread_id, created_at_ms, item_type, item_json, \
+             ROW_NUMBER() OVER (PARTITION BY thread_id ORDER BY created_at_ms DESC) \
+             AS row_number FROM thread_items) \
+             WHERE row_number <= ?1 ORDER BY created_at_ms ASC",
+        )?;
+        let mut rows = statement.query([INITIAL_ITEMS_PER_THREAD])?;
+        while let Some(row) = rows.next()? {
+            visit(ItemRecord {
+                thread_id: row.get(0)?,
+                created_at_ms: row.get(1)?,
+                item_type: row.get(2)?,
+                item_json: row.get(3)?,
+            });
+        }
+    } else {
+        let mut statement = connection.prepare(
+            "SELECT thread_id, created_at_ms, item_type, item_json \
+             FROM thread_items WHERE created_at_ms >= ?1 ORDER BY created_at_ms ASC",
+        )?;
+        let mut rows = statement.query([minimum_watermark])?;
+        while let Some(row) = rows.next()? {
+            visit(ItemRecord {
+                thread_id: row.get(0)?,
+                created_at_ms: row.get(1)?,
+                item_type: row.get(2)?,
+                item_json: row.get(3)?,
+            });
+        }
+    }
+    Ok(())
 }
 
 fn read_turns(connection: &Connection) -> rusqlite::Result<Vec<TurnRecord>> {

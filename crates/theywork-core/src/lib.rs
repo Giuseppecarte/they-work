@@ -14,9 +14,7 @@ mod source;
 mod world;
 
 pub use event::{Event, EventKind};
-pub use model::{
-    Activity, Agent, Beat, Office, OfficeId, Outcome, Worker, WorkerId, WorkerStatus,
-};
+pub use model::{Activity, Agent, Beat, Office, OfficeId, Outcome, Worker, WorkerId, WorkerStatus};
 pub use source::{Source, SourceError};
 pub use world::World;
 

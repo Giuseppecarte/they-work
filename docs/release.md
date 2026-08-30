@@ -45,3 +45,31 @@ curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/i
 The running process still has `--network none`, a read-only root, dropped
 capabilities, no-new-privileges, and no writable agent mount. The exact policy
 and the optional project/configuration arguments are in [INSTALL.md](../INSTALL.md).
+
+## Clean-host probe
+
+On 2026-08-30, the reviewed installer was staged in a temporary directory and
+run from `/tmp` with an empty temporary `HOME`, the published image name, and no
+local image substitution. No repository was present in the probe's working
+directory. The stranger experience was:
+
+~~~text
+$ env HOME=/tmp/they-work-m8-installer.0dqlfZ/home THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:latest sh /tmp/they-work-m8-installer.0dqlfZ/install.sh
+Pulling ghcr.io/giuseppecarte/they-work:latest ...
+Error response from daemon: Head "https://ghcr.io/v2/giuseppecarte/they-work/manifests/latest": denied
+~~~
+
+It exited with status 1. This is the current release-state finding: the GHCR
+package has not been made public and no semver release image has been published
+yet. The public no-clone script URL was checked again from `/tmp` without
+executing fetched content:
+
+~~~text
+$ curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh
+curl: (22) The requested URL returned error: 404
+~~~
+
+After the first tag is published, the package is set Public, and the installer
+is present on the default branch, rerun both probes. The intended successful
+experience is a Docker-only, no-checkout launch with existing homes mounted
+read-only or an empty office when neither home exists.

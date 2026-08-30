@@ -22,8 +22,22 @@ fi
 
 mkdir -p "$OUT"
 render() {
-    "$BROWSER" --headless --disable-gpu --no-sandbox --hide-scrollbars \
-        --screenshot="$OUT/$2.png" --window-size="$3,$4" "file://$SRC/$1" >/dev/null 2>&1
+    target="$OUT/$2.png"
+    rm -f "$target"
+    log=$(mktemp /tmp/they-work-design-render.XXXXXX)
+    if ! "$BROWSER" --headless --disable-gpu --no-sandbox --hide-scrollbars \
+        --screenshot="$target" --window-size="$3,$4" "file://$SRC/$1" >"$log" 2>&1
+    then
+        echo "failed to render $1 with $BROWSER" >&2
+        sed -n '1,20p' "$log" >&2
+        rm -f "$log"
+        exit 1
+    fi
+    rm -f "$log"
+    if [ ! -s "$target" ]; then
+        echo "browser produced no reference image for $1: $target" >&2
+        exit 1
+    fi
     echo "  $2.png"
 }
 

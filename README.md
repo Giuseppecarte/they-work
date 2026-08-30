@@ -34,24 +34,29 @@ make demo
 
 The demo mounts no agent directories and reads no local agent data.
 
-![A still frame of the deterministic they-work office](docs/demo.svg)
+![A conceptual overview of the deterministic they-work office](docs/demo.svg)
 
-*A still frame from the deterministic demo world. It reads nobody's files.*
+*A conceptual interface overview, not a renderer screenshot. It reads nobody's
+files.*
 
 ## Reviewable frames
 
-The checked-in review shots preserve the renderer's exact cell colors at its
-fixed snapshot time. They are generated with `make shot`; use
-`make shot VIEW=top LIGHT=1` to select the guard-office frame in `docs/shots/shot.svg`
-and use a light review border. Every run writes all four surfaces:
+Open the [review contact sheet](docs/shots/index.html) for all four surfaces,
+the intended-design reference slots, and dark/light PNG outputs at the fixed
+demo timestamp. `make shot` is the one command that regenerates it. PNG export
+rasterizes the exact SVG through Google Chrome or Chromium, whose font fallback
+preserves spaces, bullets, and box-drawing characters. The generated PNGs are
+ordinary images and need no Rust or browser toolchain to view; set
+`THEYWORK_SVG_RASTERIZER` when the browser executable is not on `PATH`.
+The contact sheet shows the primary normal golden at 160×48 beside the degraded
+80×24 golden, and labels every rendered panel with its terminal size.
 
-| Floor | Guard office |
-| --- | --- |
-| ![Office floor shot](docs/shots/floor.svg) | ![Guard office shot](docs/shots/guard-office.svg) |
-
-| Desk | Phone |
-| --- | --- |
-| ![Desk shot](docs/shots/desk.svg) | ![Phone shot](docs/shots/phone.svg) |
+The desk frame is presentable enough for review, but the floor frame is not;
+the renderer is still being brought into line with the supplied designs. Hold
+both renderer shots out of the README until the floor comparison is right.
+That is the moment to add the floor and desk PNGs from the same `make shot`
+run; rerunning that one command whenever frame art changes keeps the README
+art and review bundle aligned.
 
 ## Watch your agents
 

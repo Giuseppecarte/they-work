@@ -53,7 +53,7 @@ run: build ## Watch your real agents (read-only)
 demo: build ## Watch an imaginary company; reads nothing
 	$(DOCKER_DEMO_RUN)
 
-shot: ## Export fixed-time review frames
+shot: ## Export 160x48 primary plus 80x24 degraded PNG/SVG frames and contact sheet
 	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)"
 
 test: ## Run the test suite

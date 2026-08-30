@@ -15,6 +15,9 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Render design references
+        run: scripts/render-design.sh
+
       - name: Export reviewable frames
         run: make shot
 

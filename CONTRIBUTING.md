@@ -49,6 +49,11 @@ built from <code>docker/Dockerfile</code>; its dependency layer copies the
 manifests and stub sources before the real sources, so ordinary source edits
 can reuse the registry and dependency layers.
 
+<code>cargo fmt --all</code> crosses crate boundaries. For a focused change,
+use <code>./scripts/cargo fmt -p &lt;crate&gt;</code> (and add
+<code>-- --check</code> when checking) so an unrelated crate is not
+reformatted by accident.
+
 ## Collector safety rule
 
 Collectors may only open their configured transcript or database paths for
@@ -108,22 +113,58 @@ pinning rules are in [`docs/release.md`](docs/release.md).
 
 ## Reviewing art
 
+The renderer is a pixel canvas whose resolution is the terminal size. A design
+drawn at desktop resolution does not survive scaling down to 80 columns. The
+primary review target is 160×48; the degraded 80×24 golden remains beside it so
+the smaller view is still reviewable. A screenshot without its terminal size
+attached cannot be judged.
+
+When a board under `docs/design` changes, run `scripts/render-design.sh` first.
+CI runs that same source-to-reference step before `make shot`, so the sheet
+does not quietly review an older generated reference.
+
 Generate the deterministic review bundle with:
 
 ~~~bash
 make shot
-make shot VIEW=top LIGHT=1
 ~~~
 
 This writes one SVG per surface (`floor.svg`, `guard-office.svg`, `desk.svg`,
-and `phone.svg`), a selected `shot.svg`, and an `index.html` under
-`docs/shots/`. The exporter consumes the renderer's fixed-time golden-frame
-serialization, so the cells shown here are the same cells that the golden test
-compares. CI uploads this directory as the `they-work-shots` build artifact.
+and `phone.svg`), matching dark/light PNG and SVG variants, selected
+compatibility files, and an `index.html` contact sheet under `docs/shots/`.
+The contact sheet puts the intended-design reference beside the dark and light
+render for every surface and shows the fixed demo timestamp. The exporter
+consumes the renderer's fixed-time golden-frame serialization, so the cells
+shown here are the same cells that the golden test compares. Its PNG path uses
+Google Chrome or Chromium to rasterize the exact SVG that it just wrote; set
+`THEYWORK_SVG_RASTERIZER` to an executable path when it is not on `PATH`. The
+PNG path does not redraw cells: it checks that the SVG text matches the frame,
+captures that SVG, and checks the resulting PNG dimensions before writing the
+output. This is the round-trip guard against the PNG and SVG paths drifting.
+CI uploads this directory as the `they-work-shots` build artifact.
+The exporter reads the normal golden as the 160×48 primary frame and the small
+golden as the 80×24 degraded frame. The contact sheet labels every dark and
+light panel with its terminal size, and each SVG title carries the same size for
+review outside the sheet.
+Only surfaces with rendered output appear in the contact sheet. The six
+additional design-only boards stay in `docs/references` until a matching
+renderer surface exists, because there is nothing to compare against yet.
+The exporter searches `THEYWORK_SVG_RASTERIZER`, `google-chrome`, `chromium`,
+and `chromium-browser` in that order. If none is available, it fails with
+`cannot rasterize SVG: install Google Chrome/Chromium or set
+THEYWORK_SVG_RASTERIZER to its executable`.
 
-Goldens answer “did any cell change?” and should be regenerated only when an art
-change is intentional. Regenerate the checked-in dark/light, normal/small set
-with:
+Reference images belong in [`docs/references`](docs/references/README.md) as
+`floor.png`, `guard-office.png`, `desk.png`, or `phone.png` (JPEG, WebP, and
+SVG are also accepted). Replace a supplied reference there and rerun `make
+shot`; the exporter never overwrites that directory.
+The extra supplied boards are documented as design-only references and are
+not added as contact-sheet rows without corresponding renderer output.
+
+Goldens prove nothing changed. Shots let a human judge whether it is any good.
+Neither substitutes for the other, and a golden regenerated against broken
+output makes the breakage permanent. Regenerate the checked-in dark/light,
+normal/small set only when an art change is intentional, with:
 
 ~~~bash
 THEYWORK_UPDATE_GOLDEN=1 ./scripts/cargo test -p theywork-render --lib golden::tests::snapshots_match_checked_in_goldens
@@ -131,6 +172,10 @@ THEYWORK_UPDATE_GOLDEN=1 ./scripts/cargo test -p theywork-render --lib golden::t
 
 Shots answer “does the art look good?” and are the files to open during review.
 Keep both in the review loop.
+
+Visual review means opening `docs/shots/index.html` and comparing every
+rendered output with its intended-design reference. Reading a diff is not a
+substitute for that comparison.
 
 ## CI boundary
 

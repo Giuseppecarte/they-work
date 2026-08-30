@@ -324,18 +324,30 @@ mod tests {
                 "t1",
                 EventKind::Did(Beat {
                     at: i,
-                    activity: Activity::Typing { detail: format!("step {i}") },
+                    activity: Activity::Typing {
+                        detail: format!("step {i}"),
+                    },
                     outcome: Some(Outcome::Exited(0)),
                 }),
             ));
         }
         let worker = &w.office(&OfficeId("/proj".into())).unwrap().workers[0];
-        assert_eq!(worker.history.len(), crate::HISTORY_LEN, "history must stay bounded");
+        assert_eq!(
+            worker.history.len(),
+            crate::HISTORY_LEN,
+            "history must stay bounded"
+        );
         let newest = worker.recent().last().unwrap();
-        assert_eq!(newest.at, crate::HISTORY_LEN as i64 + 19, "the newest beat is kept");
+        assert_eq!(
+            newest.at,
+            crate::HISTORY_LEN as i64 + 19,
+            "the newest beat is kept"
+        );
         assert_eq!(
             worker.activity,
-            Activity::Typing { detail: format!("step {}", crate::HISTORY_LEN + 19) },
+            Activity::Typing {
+                detail: format!("step {}", crate::HISTORY_LEN + 19)
+            },
             "a remembered beat is also the current activity"
         );
     }

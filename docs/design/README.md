@@ -35,3 +35,11 @@ scripts/render-design.sh
 ~~~
 
 It needs Chrome or Chromium and writes only into `docs/references/`.
+If no browser is found, the script exits with:
+
+~~~text
+no browser found; install Chrome or Chromium, or set THEYWORK_SVG_RASTERIZER
+~~~
+
+If the browser exits without writing one of the expected PNGs, the script
+reports the source board and target path and stops before reporting success.

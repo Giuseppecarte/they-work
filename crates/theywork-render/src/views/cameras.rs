@@ -1,21 +1,20 @@
 //! Security-camera grid: the building-wide headline view.
 
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 use theywork_core::{Millis, Office, WorkerStatus, World};
 
-use super::office::draw_project_sign;
+use super::office::{draw_room_scene, worker_marker_position, RoomScale};
 use crate::canvas::Canvas;
 use crate::sprite::{worker_looks, SpriteSet};
 
 use super::{
-    below_tab_bar, draw_footer, draw_header, draw_tiny, fill_office_background, grid_rect,
-    has_area, inset, paint_scanlines, render_worker_with_look, short_path, status_color,
-    status_marker, status_style, timestamp, worker_status, PixelRect, ACCENT, BACKGROUND, HOT,
-    MUTED, WARNING,
+    below_tab_bar, draw_footer, draw_header, draw_tiny, grid_rect, has_area, inset, paint_opaque,
+    paint_scanlines, short_path, status_color, status_marker, status_style, timestamp,
+    worker_status, ACCENT, BACKGROUND, HOT, MUTED, WARNING,
 };
 
 /// The dimensions of a camera grid after taking count and terminal space into account.
@@ -142,16 +141,7 @@ pub(crate) fn draw(
         if !has_area(tile) {
             continue;
         }
-        draw_tile(
-            frame,
-            canvas,
-            sprites,
-            office,
-            tile,
-            now,
-            index == selected,
-            index,
-        );
+        draw_tile(frame, canvas, sprites, office, tile, now, index == selected);
     }
     layout
 }
@@ -165,7 +155,6 @@ fn draw_tile(
     tile: Rect,
     now: Millis,
     selected: bool,
-    office_index: usize,
 ) {
     let blocked_count = office
         .workers
@@ -212,55 +201,17 @@ fn draw_tile(
     }
 
     canvas.resize(inner.width as usize, inner.height as usize * 2);
-    let floor_start = fill_office_background(canvas, sprites);
-    let theme = office_index % 3;
-    let theme_wall = match theme {
-        0 => Color::Rgb(58, 51, 88),
-        1 => Color::Rgb(43, 37, 66),
-        _ => Color::Rgb(90, 169, 201),
-    };
-    for row in 0..floor_start.min(4) {
-        for column in 0..canvas.width() {
-            canvas.set(column, row, theme_wall);
-        }
-    }
-    draw_project_sign(canvas, &office.name, floor_start);
+    let workers = office.workers.iter().collect::<Vec<_>>();
     let looks = worker_looks(&office.workers);
-    let worker_count = office.workers.len().max(1);
-    let slot_width = (inner.width as usize / worker_count).max(1);
-    let worker_width = slot_width.min(10);
-    let worker_height = floor_start.saturating_sub(1).clamp(1, 10);
-    for (index, worker) in office.workers.iter().enumerate() {
-        let slot_x = index.saturating_mul(inner.width as usize) / worker_count;
-        let worker_x = slot_x + slot_width.saturating_sub(worker_width) / 2;
-        let worker_y = floor_start.saturating_sub(worker_height + 1);
-        let Some(look) = looks.get(index) else {
-            continue;
-        };
-        render_worker_with_look(
-            canvas,
-            sprites,
-            worker,
-            look,
-            now,
-            PixelRect {
-                x: worker_x,
-                y: worker_y,
-                width: worker_width,
-                height: worker_height,
-            },
-        );
-        let desk_width = slot_width.min(12);
-        let desk_x = slot_x + slot_width.saturating_sub(desk_width) / 2;
-        let desk_y = floor_start
-            .saturating_sub(2)
-            .min(canvas.height().saturating_sub(1));
-        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width.max(1), 3);
-    }
-    if canvas.width() >= 8 && canvas.height() >= 5 {
-        let monitor_x = canvas.width().saturating_sub(8);
-        canvas.blit_scaled(&sprites.monitor, monitor_x, 1, 7, 4);
-    }
+    let grid = draw_room_scene(
+        canvas,
+        &office.name,
+        &workers,
+        &looks,
+        sprites,
+        now,
+        RoomScale::Feed,
+    );
     canvas.render(frame.buffer_mut(), inner);
     paint_scanlines(frame.buffer_mut(), inner, now);
 
@@ -269,17 +220,16 @@ fn draw_tile(
         let Some(marker) = status_marker(status) else {
             continue;
         };
-        let slot_x = index.saturating_mul(inner.width as usize) / worker_count;
-        let desk_width = slot_width.min(12);
-        let desk_x = slot_x + slot_width.saturating_sub(desk_width) / 2;
-        let desk_y = floor_start
-            .saturating_sub(2)
-            .min(canvas.height().saturating_sub(1));
-        let marker_x = inner.x + (desk_x + desk_width / 2).min(inner.width as usize - 1) as u16;
-        let marker_y = inner.y + (desk_y / 2).min(inner.height as usize - 1) as u16;
+        let (marker_px, marker_py) = worker_marker_position(grid, index);
+        let marker_x = inner.x + marker_px.clamp(0, inner.width.saturating_sub(1) as i32) as u16;
+        let marker_y =
+            inner.y + (marker_py / 2).clamp(0, inner.height.saturating_sub(1) as i32) as u16;
+        let marker_area = Rect::new(marker_x, marker_y, 1, 1);
+        let marker_style = status_style(status).bg(BACKGROUND);
+        paint_opaque(frame, marker_area, marker_style);
         Paragraph::new(marker)
-            .style(status_style(status))
-            .render(Rect::new(marker_x, marker_y, 1, 1), frame.buffer_mut());
+            .style(marker_style)
+            .render(marker_area, frame.buffer_mut());
     }
 
     let summary_status = if blocked_count > 0 {
@@ -319,8 +269,12 @@ fn draw_tile(
     };
 
     let status_area = Rect::new(inner.x, inner.y, inner.width, inner.height.min(1));
+    let status_text_style = Style::default()
+        .fg(status_color(summary_status))
+        .bg(BACKGROUND);
+    paint_opaque(frame, status_area, status_text_style);
     Paragraph::new(status)
-        .style(Style::default().fg(status_color(summary_status)))
+        .style(status_text_style)
         .render(status_area, frame.buffer_mut());
     if inner.width >= 9 && inner.height >= 2 {
         let rec = if now.div_euclid(500) % 2 == 0 {
@@ -334,10 +288,15 @@ fn draw_tile(
             7.min(inner.width),
             1,
         );
+        let rec_style = Style::default()
+            .fg(status_color(summary_status))
+            .bg(BACKGROUND);
+        paint_opaque(frame, rec_area, rec_style);
         Paragraph::new(Line::from(vec![
-            Span::styled(rec, Style::default().fg(status_color(summary_status))),
-            Span::styled(" ", Style::default()),
+            Span::styled(rec, rec_style),
+            Span::styled(" ", rec_style),
         ]))
+        .style(rec_style)
         .render(rec_area, frame.buffer_mut());
     }
     if inner.width >= 8 && inner.height >= 2 {
@@ -347,8 +306,10 @@ fn draw_tile(
             inner.width,
             1,
         );
+        let time_style = Style::default().fg(MUTED).bg(BACKGROUND);
+        paint_opaque(frame, time_area, time_style);
         Paragraph::new(timestamp(now))
-            .style(Style::default().fg(MUTED))
+            .style(time_style)
             .render(time_area, frame.buffer_mut());
     }
 }

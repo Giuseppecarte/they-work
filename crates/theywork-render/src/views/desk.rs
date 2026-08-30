@@ -1,11 +1,11 @@
 //! Detailed employee view: a large sprite and the useful live context.
 
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Paragraph, Widget, Wrap};
 use ratatui::Frame;
-use theywork_core::{Millis, Office, Worker};
+use theywork_core::{Activity, Beat, Millis, Office, Outcome, Worker};
 
 use crate::canvas::Canvas;
 use crate::sprite::{look_for_worker, SpriteSet};
@@ -15,12 +15,98 @@ use super::{
     has_area, human_tokens, render_worker_with_look, safe_display, short_path, status_style,
     token_bar, worker_status, PixelRect, ACCENT, GOOD, INK, MUTED,
 };
+const TIMELINE_LIMIT: usize = 8;
+
+fn timeline_time(at: Millis) -> String {
+    let minutes = at.max(0).div_euclid(60_000).rem_euclid(1_440) as u64;
+    format!("{:02}:{:02}", minutes / 60, minutes % 60)
+}
+
+fn timeline_label(activity: &Activity) -> &'static str {
+    match activity {
+        Activity::Typing { .. } => "RAN",
+        Activity::Reading { .. } => "READ",
+        Activity::Editing { .. } => "EDITED",
+        Activity::Searching { .. } => "SEARCH",
+        Activity::Thinking => "THOUGHT",
+        Activity::Talking { .. } => "SAID",
+        Activity::Waiting { .. } => "ASKED",
+        Activity::Idle => "IDLE",
+        Activity::Error { .. } => "FAILED",
+    }
+}
+
+fn timeline_outcome(outcome: Option<Outcome>) -> String {
+    match outcome {
+        Some(Outcome::Exited(status)) => format!("exit {status}"),
+        Some(Outcome::Changed { added, removed }) => format!("+{added} −{removed}"),
+        None => String::new(),
+    }
+}
+
+fn timeline_color(activity: &Activity, outcome: Option<Outcome>) -> Color {
+    match outcome {
+        Some(Outcome::Exited(status)) if status != 0 => super::HOT,
+        Some(Outcome::Exited(_)) => GOOD,
+        Some(Outcome::Changed { .. }) => ACCENT,
+        None => match activity {
+            Activity::Error { .. } => super::HOT,
+            Activity::Waiting { .. } => super::WARNING,
+            Activity::Thinking => ACCENT,
+            Activity::Idle => MUTED,
+            _ => GOOD,
+        },
+    }
+}
+
+fn timeline_line(beat: &Beat, width: usize) -> Line<'static> {
+    let label = timeline_label(&beat.activity);
+    let outcome = timeline_outcome(beat.outcome);
+    let prefix_width = 6 + 7;
+    let outcome_width = if outcome.is_empty() {
+        0
+    } else {
+        outcome.chars().count() + 2
+    };
+    let detail_width = width.saturating_sub(prefix_width + outcome_width);
+    let detail = beat
+        .activity
+        .detail()
+        .filter(|detail| !detail.is_empty())
+        .map(safe_display)
+        .unwrap_or_else(|| "-".to_string());
+    let detail = short_path(&detail, detail_width);
+    let label_style = Style::default().fg(timeline_color(&beat.activity, beat.outcome));
+    let mut spans = vec![
+        Span::styled(
+            format!("{} ", timeline_time(beat.at)),
+            Style::default().fg(MUTED),
+        ),
+        Span::styled(format!("{label:<7}"), label_style),
+        Span::styled(detail, Style::default().fg(INK)),
+    ];
+    if !outcome.is_empty() {
+        spans.push(Span::styled(
+            format!("  {outcome}"),
+            Style::default().fg(
+                if matches!(
+                    beat.outcome,
+                    Some(Outcome::Exited(status)) if status != 0
+                ) {
+                    super::HOT
+                } else {
+                    timeline_color(&beat.activity, beat.outcome)
+                },
+            ),
+        ));
+    }
+    Line::from(spans)
+}
 
 pub(crate) fn draw(
     frame: &mut Frame,
     office: Option<&Office>,
     worker: Option<&Worker>,
-    history: &[String],
     canvas: &mut Canvas,
     sprites: &SpriteSet,
     now: Millis,
@@ -177,7 +263,11 @@ pub(crate) fn draw(
                 Style::default().fg(MUTED),
             )),
             Line::from(Span::styled(
-                format!("tokens    {}", human_tokens(worker.tokens_used)),
+                format!(
+                    "tokens    {} / {} max",
+                    human_tokens(worker.tokens_used),
+                    human_tokens(max_tokens)
+                ),
                 Style::default().fg(MUTED),
             )),
         ];
@@ -189,20 +279,15 @@ pub(crate) fn draw(
             "RECENT ACTIVITY",
             Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
         )));
-        if history.is_empty() {
+        if worker.history.is_empty() {
             lines.push(Line::from(Span::styled(
-                "  no activity captured yet",
+                "  no recorded beats yet",
                 Style::default().fg(MUTED),
             )));
         } else {
-            for item in history.iter().take(8) {
-                lines.push(Line::from(Span::styled(
-                    format!(
-                        "  • {}",
-                        short_path(item, right_inner.width.saturating_sub(3) as usize)
-                    ),
-                    Style::default().fg(MUTED),
-                )));
+            let start = worker.history.len().saturating_sub(TIMELINE_LIMIT);
+            for beat in worker.history.iter().skip(start) {
+                lines.push(timeline_line(beat, right_inner.width as usize));
             }
         }
         Paragraph::new(Text::from(lines))

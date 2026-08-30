@@ -12,13 +12,20 @@ use crate::sprite::{worker_looks, Sprite, SpriteSet, WorkerLook};
 use crate::views::render_worker_with_look;
 
 use super::{
-    draw_footer, draw_header, draw_tiny, has_area, short_path, status_color, worker_status, ACCENT,
-    FLOOR, INK, MUTED, PANEL, PANEL_HIGHLIGHT, WALL, WARNING,
+    draw_footer, draw_header, draw_tiny, has_area, paint_opaque, short_path, status_color,
+    worker_status, ACCENT, FLOOR, INK, MUTED, PANEL, PANEL_HIGHLIGHT, WALL, WARNING,
 };
 
 const MAX_DESKS: usize = 10;
 const MIN_WIDTH: u16 = 16;
 const MIN_HEIGHT: u16 = 7;
+// The terminal height passed here is the body height after the title/footer
+// bands. These cutoffs leave enough pixels for the room silhouette before the
+// renderer asks a smaller window to carry the same information more plainly.
+const ISO_MIN_WIDTH: u16 = 128;
+const ISO_MIN_HEIGHT: u16 = 36;
+const TOP_DOWN_MIN_WIDTH: u16 = 80;
+const TOP_DOWN_MIN_HEIGHT: u16 = 24;
 const MANAGER_TRAVEL_MS: u64 = 2_400;
 const MANAGER_HOLD_MS: u64 = 1_800;
 const SKY_CYCLE_MS: u64 = 90_000;
@@ -45,6 +52,25 @@ const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
 const DAY_SKY_TOP: Color = Color::Rgb(88, 214, 232);
 const DAY_SKY_BOTTOM: Color = Color::Rgb(90, 169, 201);
 
+const ISO_ROOM_COLUMNS: usize = 5;
+const ISO_ROOM_ROWS: usize = 4;
+const ISO_DESK_TILES: [(usize, usize); 10] = [
+    (2, 0),
+    (4, 1),
+    (0, 2),
+    (2, 2),
+    (1, 2),
+    (2, 1),
+    (4, 2),
+    (0, 1),
+    (3, 3),
+    (1, 3),
+];
+const ISO_RUG_TILE: (usize, usize) = (3, 1);
+const ISO_PLANT_TILE: (usize, usize) = (0, 3);
+const ISO_COOLER_TILE: (usize, usize) = (4, 0);
+const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 3);
+
 fn outline_color(canvas: &Canvas) -> Color {
     if canvas.is_light_mode() {
         super::LIGHT_INK
@@ -67,6 +93,7 @@ pub(crate) enum Projection {
     Iso,
     TopDown,
     Side,
+    List,
 }
 
 impl Projection {
@@ -75,7 +102,8 @@ impl Projection {
             Self::Auto => Self::Iso,
             Self::Iso => Self::TopDown,
             Self::TopDown => Self::Side,
-            Self::Side => Self::Auto,
+            Self::Side => Self::List,
+            Self::List => Self::Auto,
         }
     }
 
@@ -85,6 +113,7 @@ impl Projection {
             Self::Iso => Self::Auto,
             Self::TopDown => Self::Iso,
             Self::Side => Self::TopDown,
+            Self::List => Self::Side,
         }
     }
 
@@ -94,16 +123,19 @@ impl Projection {
             Self::Iso => "isometric",
             Self::TopDown => "top-down",
             Self::Side => "side",
+            Self::List => "list",
         }
     }
 }
 
 pub(crate) fn effective_projection(projection: Projection, width: u16, height: u16) -> Projection {
     match projection {
-        Projection::Auto if height >= width / 2 => Projection::TopDown,
-        Projection::Auto if width >= 110 && height <= 22 => Projection::Side,
-
-        Projection::Auto => Projection::Iso,
+        Projection::Auto if width >= ISO_MIN_WIDTH && height >= ISO_MIN_HEIGHT => Projection::Iso,
+        Projection::Auto if width >= TOP_DOWN_MIN_WIDTH && height >= TOP_DOWN_MIN_HEIGHT => {
+            Projection::TopDown
+        }
+        Projection::Auto if width >= 110 && height < TOP_DOWN_MIN_HEIGHT => Projection::Side,
+        Projection::Auto => Projection::List,
         other => other,
     }
 }
@@ -145,11 +177,8 @@ struct IsoFootprint {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum IsoKind {
     Rug,
-    Cable,
     Plant,
     Cooler,
-    Coffee,
-    Printer,
     MeetingTable,
     Worker(usize),
     Manager,
@@ -167,8 +196,7 @@ struct IsoItem {
 fn kind_rank(kind: IsoKind) -> u8 {
     match kind {
         IsoKind::Rug => 0,
-        IsoKind::Cable => 1,
-        IsoKind::Plant | IsoKind::Cooler | IsoKind::Coffee | IsoKind::Printer => 2,
+        IsoKind::Plant | IsoKind::Cooler => 1,
         IsoKind::MeetingTable => 3,
         IsoKind::Worker(_) => 4,
         IsoKind::Manager => 5,
@@ -189,7 +217,7 @@ fn painter_order(items: &mut [IsoItem]) {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct IsoGrid {
+pub(crate) struct IsoGrid {
     columns: usize,
     rows: usize,
     tile_width: i32,
@@ -207,22 +235,97 @@ impl IsoGrid {
     }
 
     fn desk_tile(self, slot: usize) -> (usize, usize) {
-        (slot % self.columns, slot / self.columns)
+        let (tile_x, tile_y) = ISO_DESK_TILES
+            .get(slot)
+            .copied()
+            .unwrap_or((slot % self.columns, slot / self.columns));
+        (
+            tile_x.min(self.columns.saturating_sub(1)),
+            tile_y.min(self.rows.saturating_sub(1)),
+        )
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RoomScale {
+    Floor,
+    Feed,
+}
+
+impl RoomScale {
+    fn worker_size(self, grid: IsoGrid) -> (usize, usize) {
+        match self {
+            Self::Floor => (
+                (grid.tile_width / 3).clamp(4, 8) as usize,
+                (grid.tile_height + 1).clamp(5, 9) as usize,
+            ),
+            Self::Feed => (
+                (grid.tile_width / 2).clamp(3, 6) as usize,
+                (grid.tile_height + 1).clamp(3, 6) as usize,
+            ),
+        }
+    }
+
+    fn desk_size(self, grid: IsoGrid) -> (usize, usize) {
+        match self {
+            Self::Floor => (
+                (grid.tile_width * 2 / 3).clamp(5, 14) as usize,
+                grid.tile_height.saturating_sub(1).clamp(3, 6) as usize,
+            ),
+            Self::Feed => (
+                (grid.tile_width * 3 / 4).clamp(3, 9) as usize,
+                grid.tile_height.saturating_sub(1).clamp(2, 4) as usize,
+            ),
+        }
+    }
+
+    fn plant_size(self, grid: IsoGrid) -> (usize, usize) {
+        match self {
+            Self::Floor => (
+                (grid.tile_width / 2).clamp(4, 10) as usize,
+                (grid.tile_height + 2).clamp(5, 10) as usize,
+            ),
+            Self::Feed => (
+                (grid.tile_width / 2).clamp(2, 5) as usize,
+                (grid.tile_height + 2).clamp(3, 6) as usize,
+            ),
+        }
+    }
+
+    fn cooler_size(self, grid: IsoGrid) -> (usize, usize) {
+        match self {
+            Self::Floor => (
+                (grid.tile_width / 3).clamp(4, 8) as usize,
+                (grid.tile_height + 1).clamp(5, 9) as usize,
+            ),
+            Self::Feed => (
+                (grid.tile_width / 2).clamp(2, 5) as usize,
+                (grid.tile_height + 1).clamp(3, 6) as usize,
+            ),
+        }
+    }
+
+    fn manager_size(self, grid: IsoGrid) -> (usize, usize) {
+        self.worker_size(grid)
     }
 }
 
 fn make_grid(width: usize, height: usize, columns: usize, rows: usize) -> IsoGrid {
     let columns = columns.max(1);
     let rows = rows.max(1);
-    let tile_width =
-        (width.saturating_mul(2) / columns.saturating_add(rows).max(1)).clamp(8, 18) as i32;
-    let tile_height = if height < 24 {
+    let floor_span = columns.saturating_add(rows).saturating_sub(1).max(1);
+    let tile_width = width
+        .saturating_mul(8)
+        .div_ceil(floor_span.saturating_mul(5).max(1))
+        .clamp(4, 22) as i32;
+    let tile_height = if height < 20 {
         2
     } else {
-        (tile_width / 3).clamp(3, 6)
+        (tile_width * 2 / 5).clamp(3, 10)
     };
-    let floor_extent = ((columns + rows) as i32 * tile_height + 1) / 2;
-    let floor_top = height.saturating_sub(floor_extent.max(1) as usize + 1) as i32;
+    let floor_depth = (floor_span as i32 * tile_height) / 2;
+    let floor_margin = (height / 10).clamp(3, 8);
+    let origin_y = height as i32 - floor_margin as i32 - floor_depth;
     let origin_x = width as i32 / 2 - (columns as i32 - rows as i32) * tile_width / 4;
     IsoGrid {
         columns,
@@ -230,7 +333,7 @@ fn make_grid(width: usize, height: usize, columns: usize, rows: usize) -> IsoGri
         tile_width,
         tile_height,
         origin_x,
-        origin_y: floor_top + tile_height / 2,
+        origin_y,
     }
 }
 
@@ -288,6 +391,12 @@ fn set_pixel(canvas: &mut Canvas, x: i32, y: i32, color: Color) {
     }
 }
 
+fn set_sign_pixel(canvas: &mut Canvas, x: i32, y: i32, color: Color, floor_top: usize) {
+    if y >= 0 && (y as usize) < floor_top {
+        set_pixel(canvas, x, y, color);
+    }
+}
+
 fn draw_line(canvas: &mut Canvas, x0: i32, y0: i32, x1: i32, y1: i32, color: Color) {
     let steps = (x1 - x0).abs().max((y1 - y0).abs());
     if steps == 0 {
@@ -298,6 +407,43 @@ fn draw_line(canvas: &mut Canvas, x0: i32, y0: i32, x1: i32, y1: i32, color: Col
         let x = x0 + (x1 - x0) * step / steps;
         let y = y0 + (y1 - y0) * step / steps;
         set_pixel(canvas, x, y, color);
+    }
+}
+
+fn fill_polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
+    if points.len() < 3 {
+        return;
+    }
+    let min_y = points.iter().map(|point| point.1).min().unwrap_or(0);
+    let max_y = points.iter().map(|point| point.1).max().unwrap_or(0);
+    for y in min_y..=max_y {
+        let mut intersections = Vec::with_capacity(points.len());
+        for index in 0..points.len() {
+            let (x0, y0) = points[index];
+            let (x1, y1) = points[(index + 1) % points.len()];
+            if y0 == y1 {
+                continue;
+            }
+            let lower = y0.min(y1);
+            let upper = y0.max(y1);
+            if y < lower || y > upper {
+                continue;
+            }
+            let numerator = i64::from(x1 - x0) * i64::from(y - y0);
+            let denominator = i64::from(y1 - y0);
+            let x = i64::from(x0) + numerator / denominator;
+            if let Ok(x) = i32::try_from(x) {
+                intersections.push(x);
+            }
+        }
+        intersections.sort_unstable();
+        for pair in intersections.chunks_exact(2) {
+            let start = pair[0].min(pair[1]);
+            let end = pair[0].max(pair[1]);
+            for x in start..=end {
+                set_pixel(canvas, x, y, color);
+            }
+        }
     }
 }
 
@@ -386,8 +532,8 @@ fn draw_diamond(
     let right = (center_x + half_width, center_y);
     let bottom = (center_x, center_y + half_height);
     let left = (center_x - half_width, center_y);
-    draw_line(canvas, top.0, top.1, left.0, left.1, FLOOR_LIGHT);
-    draw_line(canvas, top.0, top.1, right.0, right.1, WINDOW_LIGHT);
+    draw_line(canvas, top.0, top.1, left.0, left.1, FLOOR_DARK);
+    draw_line(canvas, top.0, top.1, right.0, right.1, FLOOR_DITHER);
     draw_line(
         canvas,
         left.0,
@@ -546,6 +692,243 @@ fn draw_backdrop(canvas: &mut Canvas, floor_top: usize, now: Millis) {
     }
 }
 
+fn draw_polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
+    if points.len() < 2 {
+        return;
+    }
+    for index in 0..points.len() {
+        let start = points[index];
+        let end = points[(index + 1) % points.len()];
+        draw_line(canvas, start.0, start.1, end.0, end.1, color);
+    }
+}
+
+fn wall_point(start: (i32, i32), end: (i32, i32), along: i32, rise: i32) -> (i32, i32) {
+    let x = start.0 + (end.0 - start.0) * along / 10;
+    let y = start.1 + (end.1 - start.1) * along / 10 - rise;
+    (x, y)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_wall_window(
+    canvas: &mut Canvas,
+    start: (i32, i32),
+    end: (i32, i32),
+    wall_height: i32,
+    start_along: i32,
+    end_along: i32,
+    now: Millis,
+    window_color: Color,
+) {
+    if wall_height < 6 || end_along <= start_along {
+        return;
+    }
+    let frame_top = wall_height.saturating_sub(1);
+    let frame = [
+        wall_point(start, end, start_along, frame_top),
+        wall_point(start, end, end_along, frame_top),
+        wall_point(start, end, end_along, 2),
+        wall_point(start, end, start_along, 2),
+    ];
+    fill_polygon(canvas, &frame, WINDOW_FRAME);
+    draw_polygon(canvas, &frame, outline_color(canvas));
+    let inner_top = wall_height.saturating_sub(2);
+    let inner_bottom = 3;
+    let inner = [
+        wall_point(start, end, start_along + 1, inner_top),
+        wall_point(start, end, end_along - 1, inner_top),
+        wall_point(start, end, end_along - 1, inner_bottom),
+        wall_point(start, end, start_along + 1, inner_bottom),
+    ];
+    let sky = blend_color(window_color, ACCENT, daylight_amount(now) / 3);
+    fill_polygon(canvas, &inner, sky);
+    draw_polygon(canvas, &inner, window_color);
+    let middle = (start_along + end_along) / 2;
+    let divider_top = wall_point(start, end, middle, inner_top);
+    let divider_bottom = wall_point(start, end, middle, inner_bottom);
+    draw_line(
+        canvas,
+        divider_top.0,
+        divider_top.1,
+        divider_bottom.0,
+        divider_bottom.1,
+        WINDOW_FRAME,
+    );
+}
+
+fn iso_wall_height(canvas: &Canvas) -> i32 {
+    (canvas.height() / 6).clamp(8, 14) as i32
+}
+fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
+    canvas.fill(super::BACKGROUND);
+    let [back, right, _, left] = floor_corners(grid);
+    let wall_height = iso_wall_height(canvas);
+    let back_top = (back.0, back.1 - wall_height);
+    let left_top = (left.0, left.1 - wall_height);
+    let right_top = (right.0, right.1 - wall_height);
+    fill_polygon(canvas, &[back_top, back, left, left_top], WALL);
+    fill_polygon(
+        canvas,
+        &[back_top, back, right, right_top],
+        Color::Rgb(43, 37, 66),
+    );
+    let outline = outline_color(canvas);
+    draw_line(
+        canvas, back_top.0, back_top.1, left_top.0, left_top.1, outline,
+    );
+    draw_line(
+        canvas,
+        back_top.0,
+        back_top.1,
+        right_top.0,
+        right_top.1,
+        outline,
+    );
+    draw_line(canvas, back_top.0, back_top.1, back.0, back.1, outline);
+    draw_line(canvas, left_top.0, left_top.1, left.0, left.1, outline);
+    draw_line(canvas, right_top.0, right_top.1, right.0, right.1, outline);
+    draw_wall_window(canvas, back, left, wall_height, 2, 8, now, TITLE_COLOR);
+    draw_wall_window(
+        canvas,
+        back,
+        right,
+        wall_height,
+        2,
+        5,
+        now + 1_700,
+        WINDOW_LIGHT,
+    );
+    draw_wall_window(
+        canvas,
+        back,
+        right,
+        wall_height,
+        6,
+        9,
+        now + 3_400,
+        WINDOW_LIGHT,
+    );
+}
+fn compact_glyph(character: char) -> [u8; 5] {
+    let glyph = glyph_5x7(character);
+    [0, 1, 3, 5, 6].map(|row| {
+        let source = glyph[row];
+        let mut compact = 0;
+        if source & 0b11_000 != 0 {
+            compact |= 0b100;
+        }
+        if source & 0b00_100 != 0 {
+            compact |= 0b010;
+        }
+        if source & 0b00_011 != 0 {
+            compact |= 0b001;
+        }
+        compact
+    })
+}
+
+fn compact_sign_width(line: &str) -> usize {
+    line.chars().count().saturating_mul(4).saturating_sub(1)
+}
+
+fn compact_sign_lines(label: &str, width: usize) -> Vec<String> {
+    let max_chars = width.saturating_add(1).div_euclid(4).max(1);
+    label
+        .chars()
+        .collect::<Vec<_>>()
+        .chunks(max_chars)
+        .map(|line| line.iter().collect::<String>())
+        .collect()
+}
+
+fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32, floor_back: i32) {
+    let width = canvas.width().saturating_sub(2);
+    let lines = compact_sign_lines(label, width);
+    let line_height = 6_i32;
+    let total_height = lines.len().saturating_mul(line_height as usize) as i32;
+    let top = (wall_top - total_height - 1).max(0);
+    let floor_limit = floor_back.max(0) as usize;
+    for (line_index, line) in lines.iter().enumerate() {
+        let line_width = compact_sign_width(line);
+        let x0 = (canvas.width().saturating_sub(line_width) / 2) as i32;
+        let y0 = top + line_index as i32 * line_height;
+        for (character_index, character) in line.chars().enumerate() {
+            let glyph = compact_glyph(character);
+            let glyph_x = x0 + character_index as i32 * 4;
+            for (row_index, bits) in glyph.iter().enumerate() {
+                for column_index in 0..3 {
+                    if bits & (1 << (2 - column_index)) == 0 {
+                        continue;
+                    }
+                    set_sign_pixel(
+                        canvas,
+                        glyph_x + column_index,
+                        y0 + row_index as i32,
+                        TITLE_COLOR,
+                        floor_limit,
+                    );
+                }
+            }
+        }
+    }
+}
+
+fn draw_isometric_sign(canvas: &mut Canvas, label: &str, floor_back: i32, wall_top: i32) {
+    if canvas.width() == 0 || canvas.height() == 0 {
+        return;
+    }
+    let lines = sign_lines(label);
+    let Some(line) = (lines.len() == 1).then(|| lines[0].as_str()) else {
+        draw_compact_sign(canvas, label, wall_top, floor_back);
+        return;
+    };
+    let glyph_pitch = 7usize;
+    let face_width = line
+        .chars()
+        .count()
+        .saturating_mul(glyph_pitch)
+        .saturating_sub(1);
+    let extrusion = 12usize;
+    let sign_height = 7usize
+        .saturating_add(face_width.div_ceil(2))
+        .saturating_add(extrusion);
+    if face_width == 0
+        || face_width.saturating_add(extrusion) > canvas.width()
+        || sign_height.saturating_add(1) > floor_back.max(0) as usize
+    {
+        draw_compact_sign(canvas, label, wall_top, floor_back);
+        return;
+    }
+
+    let x0 = ((canvas.width() - face_width - extrusion) / 2) as i32;
+    let top = floor_back - sign_height as i32 + 1;
+    let floor_limit = floor_back.max(0) as usize;
+    let mut face_pixels = Vec::new();
+    for (character_index, character) in line.chars().enumerate() {
+        let glyph = glyph_5x7(character);
+        let glyph_x = x0 + character_index as i32 * glyph_pitch as i32;
+        for (row_index, bits) in glyph.iter().enumerate() {
+            for column_index in 0..5 {
+                if bits & (1 << (4 - column_index)) == 0 {
+                    continue;
+                }
+                let x = glyph_x + column_index - row_index as i32 / 3;
+                let logical_x = character_index as i32 * glyph_pitch as i32 + column_index;
+                let y = top + row_index as i32 + logical_x.div_euclid(2);
+                face_pixels.push((x, y));
+                for depth in (1..=6).rev() {
+                    let offset = depth * 2;
+                    let color = if depth >= 5 { TITLE_SIGN } else { TITLE_BODY };
+                    set_sign_pixel(canvas, x + offset, y + offset, color, floor_limit);
+                }
+            }
+        }
+    }
+    for (x, y) in face_pixels {
+        set_sign_pixel(canvas, x, y, TITLE_COLOR, floor_limit);
+    }
+}
+
 fn glyph_5x7(character: char) -> [u8; 7] {
     match character {
         'A' => [0x0e, 0x11, 0x11, 0x1f, 0x11, 0x11, 0x11],
@@ -614,6 +997,32 @@ fn project_label(name: &str) -> String {
     }
     label
 }
+fn worker_plate_name(worker_name: &str, office_name: &str) -> String {
+    let worker_name = worker_name.trim();
+    let prefixes = [
+        office_name,
+        office_name.trim_matches('/'),
+        office_name
+            .rsplit('/')
+            .find(|part| !part.is_empty())
+            .unwrap_or(office_name),
+    ];
+    for prefix in prefixes {
+        if prefix.is_empty() {
+            continue;
+        }
+        let Some(suffix) = worker_name.strip_prefix(prefix) else {
+            continue;
+        };
+        let suffix = suffix.trim_start_matches(|character: char| {
+            matches!(character, '/' | '#' | ':' | '-' | '_' | ' ' | '·')
+        });
+        if !suffix.is_empty() {
+            return suffix.to_string();
+        }
+    }
+    worker_name.to_string()
+}
 
 fn block_text_step(scale: usize) -> usize {
     6usize.saturating_mul(scale.max(1))
@@ -666,17 +1075,6 @@ fn draw_project_name(canvas: &mut Canvas, label: &str, floor_top: usize) {
             continue;
         }
         let x0 = canvas.width().saturating_sub(width) / 2;
-        let board_left = x0 as i32 - 7;
-        let board_top = line_top.saturating_sub(1) as i32;
-        let board_height = 7 * scale + width / 2 + 8;
-        fill_rect(
-            canvas,
-            board_left,
-            board_top,
-            width as i32 + 14,
-            board_height as i32,
-            TITLE_SIGN,
-        );
         for (character_index, character) in line.chars().enumerate() {
             let glyph = glyph_5x7(character);
             let glyph_x = x0 + character_index * block_text_step(scale);
@@ -693,9 +1091,15 @@ fn draw_project_name(canvas: &mut Canvas, label: &str, floor_top: usize) {
                             for depth in (1..=6).rev() {
                                 let offset = depth * 2;
                                 let color = if depth >= 4 { TITLE_SIGN } else { TITLE_BODY };
-                                set_pixel(canvas, x as i32 - offset, y as i32 + offset, color);
+                                set_sign_pixel(
+                                    canvas,
+                                    x as i32 - offset,
+                                    y as i32 + offset,
+                                    color,
+                                    floor_top,
+                                );
                             }
-                            set_pixel(canvas, x as i32, y as i32, TITLE_COLOR);
+                            set_sign_pixel(canvas, x as i32, y as i32, TITLE_COLOR, floor_top);
                         }
                     }
                 }
@@ -703,10 +1107,6 @@ fn draw_project_name(canvas: &mut Canvas, label: &str, floor_top: usize) {
         }
         line_top = line_top.saturating_add(line_pitches[line_index]);
     }
-}
-
-pub(crate) fn draw_project_sign(canvas: &mut Canvas, name: &str, floor_top: usize) {
-    draw_project_name(canvas, &project_label(name), floor_top);
 }
 
 fn blit_scaled_signed(
@@ -739,6 +1139,40 @@ fn blit_scaled_signed(
     }
 }
 
+fn lerp_point(
+    start: (i32, i32),
+    end: (i32, i32),
+    numerator: usize,
+    denominator: usize,
+) -> (i32, i32) {
+    if denominator == 0 {
+        return start;
+    }
+    let numerator = numerator as i32;
+    let denominator = denominator as i32;
+    (
+        start.0 + (end.0 - start.0) * numerator / denominator,
+        start.1 + (end.1 - start.1) * numerator / denominator,
+    )
+}
+fn draw_floor_grid(canvas: &mut Canvas, grid: IsoGrid) {
+    // At room scale these seams make the floor read as a constructed surface;
+    // compact views omit them so each remaining pixel can carry a signal.
+    if grid.tile_width < 18 {
+        return;
+    }
+    let [back, right, front, left] = floor_corners(grid);
+    for index in 1..grid.columns {
+        let start = lerp_point(back, right, index, grid.columns);
+        let end = lerp_point(left, front, index, grid.columns);
+        draw_line(canvas, start.0, start.1, end.0, end.1, FLOOR_DITHER);
+    }
+    for index in 1..grid.rows {
+        let start = lerp_point(back, left, index, grid.rows);
+        let end = lerp_point(right, front, index, grid.rows);
+        draw_line(canvas, start.0, start.1, end.0, end.1, FLOOR_DITHER);
+    }
+}
 fn draw_floor_plate(canvas: &mut Canvas, grid: IsoGrid) {
     for depth in 0..grid.columns.saturating_add(grid.rows) {
         for tile_y in 0..grid.rows {
@@ -750,54 +1184,24 @@ fn draw_floor_plate(canvas: &mut Canvas, grid: IsoGrid) {
                 continue;
             }
             let (center_x, center_y) = grid.center(tile_x, tile_y);
-            let base = if (tile_x + tile_y).is_multiple_of(2) {
-                FLOOR
-            } else {
-                FLOOR_DARK
-            };
-            draw_diamond(
+            let base = FLOOR;
+            fill_diamond(
                 canvas,
                 center_x,
                 center_y,
                 grid.tile_width / 2,
                 grid.tile_height / 2,
                 base,
-                FLOOR_DITHER,
+                base,
             );
-            if grid.tile_width >= 12 {
-                draw_line(
-                    canvas,
-                    center_x - grid.tile_width / 4,
-                    center_y,
-                    center_x,
-                    center_y + grid.tile_height / 3,
-                    FLOOR_DARK,
-                );
-            }
         }
     }
-}
-
-fn draw_machine(
-    canvas: &mut Canvas,
-    center_x: i32,
-    center_y: i32,
-    width: i32,
-    height: i32,
-    accent: Color,
-) {
-    let x = center_x - width / 2;
-    let y = center_y - height;
-    fill_rect(canvas, x, y, width, height, MACHINE);
-    draw_rect_outline(canvas, x, y, width, height, outline_color(canvas));
-    if width > 3 && height > 2 {
-        fill_rect(canvas, x + 1, y + 1, width - 2, 1, accent);
-        set_pixel(canvas, x + width / 2, y + height - 2, MACHINE_LIGHT);
-    }
+    draw_floor_grid(canvas, grid);
+    draw_floor_edges(canvas, grid);
 }
 
 fn draw_table(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
-    let half_width = (grid.tile_width / 3).max(2);
+    let half_width = (grid.tile_width / 4).max(2);
     let half_height = (grid.tile_height / 2).max(1);
     draw_diamond(
         canvas,
@@ -838,50 +1242,24 @@ fn draw_rug(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
     );
 }
 
+// Drawing one item needs the canvas, where it sits, how big the room is, and
+// who is in it; grouping those into a struct would only move the same list.
+#[allow(clippy::too_many_arguments)]
 fn draw_item(
     canvas: &mut Canvas,
     grid: IsoGrid,
+    scale: RoomScale,
     item: IsoItem,
     workers: &[&Worker],
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
 ) {
-    let (base_x, base_y) = grid.center(item.tile_x, item.tile_y);
-    let prop_separation = if grid.columns <= 4 {
-        grid.tile_width / 4
-    } else {
-        0
-    };
-    let (center_x, center_y) = match item.kind {
-        IsoKind::Plant | IsoKind::Cooler => (base_x - prop_separation, base_y),
-        IsoKind::Coffee | IsoKind::Printer => (base_x + prop_separation, base_y),
-        _ => (base_x, base_y),
-    };
+    let (center_x, center_y) = grid.center(item.tile_x, item.tile_y);
     match item.kind {
         IsoKind::Rug => draw_rug(canvas, grid, center_x, center_y),
-        IsoKind::Cable => {
-            let (next_x, next_y) = grid.center(
-                item.tile_x
-                    .saturating_add(1)
-                    .min(grid.columns.saturating_sub(1)),
-                item.tile_y,
-            );
-            draw_line(
-                canvas,
-                center_x,
-                center_y,
-                next_x,
-                next_y,
-                outline_color(canvas),
-            );
-            if grid.tile_width >= 12 {
-                set_pixel(canvas, center_x + 2, center_y - 1, ACCENT);
-            }
-        }
         IsoKind::Plant => {
-            let width = (grid.tile_width / 2).clamp(4, 9) as usize;
-            let height = (grid.tile_height + 6).clamp(5, 12) as usize;
+            let (width, height) = scale.plant_size(grid);
             blit_scaled_signed(
                 canvas,
                 &sprites.plant,
@@ -892,8 +1270,7 @@ fn draw_item(
             );
         }
         IsoKind::Cooler => {
-            let width = (grid.tile_width / 2).clamp(4, 9) as usize;
-            let height = (grid.tile_height + 7).clamp(6, 13) as usize;
+            let (width, height) = scale.cooler_size(grid);
             blit_scaled_signed(
                 canvas,
                 &sprites.water_cooler,
@@ -902,28 +1279,6 @@ fn draw_item(
                 width,
                 height,
             );
-        }
-        IsoKind::Coffee => {
-            draw_machine(
-                canvas,
-                center_x,
-                center_y,
-                (grid.tile_width / 2).clamp(4, 8),
-                (grid.tile_height + 3).clamp(4, 8),
-                TABLE_LIGHT,
-            );
-            set_pixel(canvas, center_x, center_y - 2, INK);
-        }
-        IsoKind::Printer => {
-            draw_machine(
-                canvas,
-                center_x,
-                center_y,
-                (grid.tile_width / 2).clamp(4, 8),
-                (grid.tile_height + 2).clamp(4, 8),
-                ACCENT,
-            );
-            set_pixel(canvas, center_x - 1, center_y - 1, INK);
         }
         IsoKind::MeetingTable => draw_table(canvas, grid, center_x, center_y),
         IsoKind::Worker(index) => {
@@ -934,13 +1289,12 @@ fn draw_item(
                 return;
             };
             let sprite = sprites.worker_frame(worker, *look, now);
-            let width = (grid.tile_width * 2 / 3).clamp(5, 12) as usize;
-            let height = (grid.tile_height * 2 + 5).clamp(6, 14) as usize;
+            let (width, height) = scale.worker_size(grid);
             blit_scaled_signed(
                 canvas,
                 &sprite,
                 center_x - width as i32 / 2,
-                center_y - grid.tile_height / 2 - height as i32 + 2,
+                center_y - grid.tile_height / 2 - height as i32 + 1,
                 width,
                 height,
             );
@@ -957,13 +1311,12 @@ fn draw_item(
                 origin.1 + (target.1 - origin.1) * travel as i32 / MANAGER_TRAVEL_MS as i32;
             let attention = phase >= MANAGER_TRAVEL_MS;
             let sprite = sprites.manager_animation(attention).frame_at(now);
-            let width = (grid.tile_width * 2 / 3).clamp(5, 11) as usize;
-            let height = (grid.tile_height * 2 + 5).clamp(6, 14) as usize;
+            let (width, height) = scale.manager_size(grid);
             blit_scaled_signed(
                 canvas,
                 sprite,
                 manager_x - width as i32 / 2,
-                manager_y - grid.tile_height / 2 - height as i32 + 2,
+                manager_y - grid.tile_height / 2 - height as i32 + 1,
                 width,
                 height,
             );
@@ -977,8 +1330,7 @@ fn draw_item(
             }
         }
         IsoKind::Desk(_) => {
-            let width = (grid.tile_width - 3).clamp(5, 16) as usize;
-            let height = (grid.tile_height + 2).clamp(3, 8) as usize;
+            let (width, height) = scale.desk_size(grid);
             blit_scaled_signed(
                 canvas,
                 &sprites.desk,
@@ -991,40 +1343,31 @@ fn draw_item(
     }
 }
 
-fn draw_scene(
+pub(crate) fn draw_room_scene(
     canvas: &mut Canvas,
-    office: &Office,
+    office_name: &str,
     visible_workers: &[&Worker],
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
-    layout: OfficeLayout,
+    scale: RoomScale,
 ) -> IsoGrid {
     canvas.clear();
     let grid = make_grid(
         canvas.width(),
         canvas.height(),
-        layout.columns,
-        layout.rows.saturating_add(1),
+        ISO_ROOM_COLUMNS,
+        ISO_ROOM_ROWS,
     );
-    let floor_top = grid.origin_y.saturating_sub(grid.tile_height / 2).max(0) as usize;
-    draw_backdrop(canvas, floor_top, now);
-    draw_project_name(canvas, &project_label(&office.name), floor_top);
+    draw_isometric_backdrop(canvas, grid, now);
+    let [back, ..] = floor_corners(grid);
+    let wall_top = back.1 - iso_wall_height(canvas);
+    draw_isometric_sign(canvas, &project_label(office_name), back.1, wall_top);
     draw_floor_plate(canvas, grid);
 
-    let mut items = Vec::with_capacity(visible_workers.len().saturating_mul(3) + 8);
+    let mut items = Vec::with_capacity(visible_workers.len().saturating_mul(2) + 4);
     for (slot, _) in visible_workers.iter().enumerate() {
         let (tile_x, tile_y) = grid.desk_tile(slot);
-        items.push(IsoItem {
-            tile_x,
-            tile_y,
-            footprint: IsoFootprint {
-                width: 1,
-                depth: 1,
-                height: 1,
-            },
-            kind: IsoKind::Rug,
-        });
         items.push(IsoItem {
             tile_x,
             tile_y,
@@ -1047,12 +1390,20 @@ fn draw_scene(
         });
     }
 
-    let prop_row = grid.rows.saturating_sub(1);
-    let middle = grid.columns / 2;
     items.extend([
         IsoItem {
-            tile_x: 0,
-            tile_y: prop_row,
+            tile_x: ISO_RUG_TILE.0,
+            tile_y: ISO_RUG_TILE.1,
+            footprint: IsoFootprint {
+                width: 1,
+                depth: 1,
+                height: 1,
+            },
+            kind: IsoKind::Rug,
+        },
+        IsoItem {
+            tile_x: ISO_PLANT_TILE.0,
+            tile_y: ISO_PLANT_TILE.1,
             footprint: IsoFootprint {
                 width: 1,
                 depth: 1,
@@ -1061,8 +1412,8 @@ fn draw_scene(
             kind: IsoKind::Plant,
         },
         IsoItem {
-            tile_x: grid.columns.saturating_sub(1),
-            tile_y: prop_row,
+            tile_x: ISO_COOLER_TILE.0,
+            tile_y: ISO_COOLER_TILE.1,
             footprint: IsoFootprint {
                 width: 1,
                 depth: 1,
@@ -1071,8 +1422,8 @@ fn draw_scene(
             kind: IsoKind::Cooler,
         },
         IsoItem {
-            tile_x: middle,
-            tile_y: prop_row,
+            tile_x: ISO_MEETING_TABLE_TILE.0,
+            tile_y: ISO_MEETING_TABLE_TILE.1,
             footprint: IsoFootprint {
                 width: 2,
                 depth: 1,
@@ -1080,40 +1431,7 @@ fn draw_scene(
             },
             kind: IsoKind::MeetingTable,
         },
-        IsoItem {
-            tile_x: middle.saturating_sub(1),
-            tile_y: prop_row,
-            footprint: IsoFootprint {
-                width: 1,
-                depth: 1,
-                height: 1,
-            },
-            kind: IsoKind::Coffee,
-        },
-        IsoItem {
-            tile_x: middle.saturating_add(1).min(grid.columns.saturating_sub(1)),
-            tile_y: prop_row,
-            footprint: IsoFootprint {
-                width: 1,
-                depth: 1,
-                height: 1,
-            },
-            kind: IsoKind::Printer,
-        },
     ]);
-
-    if grid.columns > 1 {
-        items.push(IsoItem {
-            tile_x: 0,
-            tile_y: 0,
-            footprint: IsoFootprint {
-                width: 1,
-                depth: 1,
-                height: 0,
-            },
-            kind: IsoKind::Cable,
-        });
-    }
 
     if let Some((slot, _)) = visible_workers
         .iter()
@@ -1135,7 +1453,16 @@ fn draw_scene(
 
     painter_order(&mut items);
     for item in items {
-        draw_item(canvas, grid, item, visible_workers, looks, sprites, now);
+        draw_item(
+            canvas,
+            grid,
+            scale,
+            item,
+            visible_workers,
+            looks,
+            sprites,
+            now,
+        );
     }
     grid
 }
@@ -1324,6 +1651,11 @@ fn draw_side_scene(
         );
     }
 }
+fn draw_list_scene(canvas: &mut Canvas) {
+    // The list view is intentionally quiet: the text rows carry identity and
+    // status, while the pixel canvas simply clears the room behind them.
+    canvas.fill(super::BACKGROUND);
+}
 fn status_label(office: &Office, now: Millis) -> String {
     let blocked = office
         .workers
@@ -1351,11 +1683,62 @@ fn status_label(office: &Office, now: Millis) -> String {
         "idle • floor quiet".to_string()
     }
 }
+fn draw_list_rows(
+    frame: &mut Frame,
+    body: Rect,
+    office_name: &str,
+    workers: &[&Worker],
+    start: usize,
+    selected: usize,
+    now: Millis,
+) {
+    if !has_area(body) {
+        return;
+    }
+    for (slot, worker) in workers.iter().enumerate() {
+        if slot >= usize::from(body.height) {
+            break;
+        }
+        let row = Rect::new(body.x, body.y.saturating_add(slot as u16), body.width, 1);
+        let status = worker_status(worker, now);
+        let status_word = match status {
+            WorkerStatus::Running => "RUNNING",
+            WorkerStatus::Idle => "IDLE",
+            WorkerStatus::Blocked => "BLOCKED",
+            WorkerStatus::Failed => "FAILED",
+        };
+        let marker = if start + slot == selected {
+            ">"
+        } else if status == WorkerStatus::Blocked {
+            "!"
+        } else if status == WorkerStatus::Failed {
+            "×"
+        } else {
+            " "
+        };
+        let name_width = usize::from(body.width)
+            .saturating_sub(status_word.len().saturating_add(4))
+            .max(1);
+        let name = short_path(&worker_plate_name(&worker.name, office_name), name_width);
+        let label = format!("{marker} {name}  {status_word}");
+        let style = if start + slot == selected {
+            Style::default().fg(INK).bg(PANEL_HIGHLIGHT)
+        } else {
+            Style::default().fg(status_color(status)).bg(PANEL)
+        };
+        paint_opaque(frame, row, style);
+        Paragraph::new(Line::from(Span::styled(label, style)))
+            .style(style)
+            .render(row, frame.buffer_mut());
+    }
+}
 
+#[allow(clippy::too_many_arguments)]
 fn draw_nameplates(
     frame: &mut Frame,
     body: Rect,
     grid: IsoGrid,
+    office_name: &str,
     workers: &[&Worker],
     start: usize,
     selected: usize,
@@ -1364,7 +1747,7 @@ fn draw_nameplates(
     if body.width == 0 || body.height == 0 {
         return;
     }
-    let max_label_width = (grid.tile_width.max(6) as u16 / 2).max(6).min(body.width);
+    let max_label_width = (grid.tile_width.max(12) as u16 / 2).max(12).min(body.width);
     for (slot, worker) in workers.iter().enumerate() {
         let (center_x, center_y) = grid.desk_tile(slot);
         let (center_x, center_y) = grid.center(center_x, center_y);
@@ -1378,7 +1761,10 @@ fn draw_nameplates(
         } else if status == WorkerStatus::Failed {
             prefix = "×";
         }
-        let name = short_path(&worker.name, usize::from(label_width.saturating_sub(2)));
+        let name = short_path(
+            &worker_plate_name(&worker.name, office_name),
+            usize::from(label_width.saturating_sub(2)),
+        );
         let label = format!("{prefix} {name}");
         let x = (center_x - i32::from(label_width) / 2)
             .clamp(0, i32::from(body.width.saturating_sub(label_width)));
@@ -1391,6 +1777,16 @@ fn draw_nameplates(
         } else {
             Style::default().fg(status_color(status)).bg(PANEL)
         };
+        paint_opaque(
+            frame,
+            Rect::new(
+                body.x.saturating_add(x as u16),
+                body.y.saturating_add(y as u16),
+                label_width,
+                1,
+            ),
+            style,
+        );
         Paragraph::new(Line::from(Span::styled(label, style)))
             .style(style)
             .render(
@@ -1409,6 +1805,7 @@ fn draw_nameplates(
 fn draw_projection_nameplates(
     frame: &mut Frame,
     body: Rect,
+    office_name: &str,
     workers: &[&Worker],
     start: usize,
     selected: usize,
@@ -1444,7 +1841,7 @@ fn draw_projection_nameplates(
             " "
         };
         let name = short_path(
-            &worker.name,
+            &worker_plate_name(&worker.name, office_name),
             label_width.saturating_sub(prefix.chars().count() + 1),
         );
         let style = if start + slot == selected {
@@ -1461,11 +1858,16 @@ fn draw_projection_nameplates(
                 ((row + 1).saturating_mul(usize::from(body.height)) / rows).saturating_sub(1)
                     as u16,
             ),
-            Projection::Side | Projection::Iso | Projection::Auto => {
+            Projection::Side | Projection::Iso | Projection::Auto | Projection::List => {
                 body.y.saturating_add(body.height.saturating_sub(1))
             }
         };
         let available = body.x.saturating_add(body.width).saturating_sub(x);
+        paint_opaque(
+            frame,
+            Rect::new(x, y, available.min(label_width as u16).max(1), 1),
+            style,
+        );
         Paragraph::new(Line::from(Span::styled(format!("{prefix} {name}"), style)))
             .style(style)
             .render(
@@ -1560,14 +1962,14 @@ pub(crate) fn draw(
 
     canvas.resize(body.width as usize, body.height as usize * 2);
     let iso_grid = match effective {
-        Projection::Iso | Projection::Auto => Some(draw_scene(
+        Projection::Iso | Projection::Auto => Some(draw_room_scene(
             canvas,
-            office,
+            &office.name,
             &visible_workers,
             &looks,
             sprites,
             now,
-            layout,
+            RoomScale::Floor,
         )),
         Projection::TopDown => {
             draw_top_down_scene(
@@ -1585,15 +1987,39 @@ pub(crate) fn draw(
             draw_side_scene(canvas, office, &visible_workers, &looks, sprites, now);
             None
         }
+        Projection::List => {
+            draw_list_scene(canvas);
+            None
+        }
     };
     canvas.render(frame.buffer_mut(), body);
-    if name_plates {
+    if effective == Projection::List {
+        draw_list_rows(
+            frame,
+            body,
+            &office.name,
+            &visible_workers,
+            start,
+            selected,
+            now,
+        );
+    } else if name_plates {
         if let Some(grid) = iso_grid {
-            draw_nameplates(frame, body, grid, &visible_workers, start, selected, now);
+            draw_nameplates(
+                frame,
+                body,
+                grid,
+                &office.name,
+                &visible_workers,
+                start,
+                selected,
+                now,
+            );
         } else {
             draw_projection_nameplates(
                 frame,
                 body,
+                &office.name,
                 &visible_workers,
                 start,
                 selected,
@@ -1603,7 +2029,11 @@ pub(crate) fn draw(
             );
         }
     }
-    if (blocked_count > 0 || failed_count > 0) && body.width >= 24 && body.height >= 2 {
+    if (blocked_count > 0 || failed_count > 0)
+        && body.width >= 24
+        && body.height >= 2
+        && effective != Projection::List
+    {
         let (alert, color) = if blocked_count > 0 {
             let alert = if failed_count > 0 {
                 format!("! {blocked_count} BLOCKED • × {failed_count} FAILED • MANAGER")
@@ -1617,6 +2047,11 @@ pub(crate) fn draw(
                 super::HOT,
             )
         };
+        paint_opaque(
+            frame,
+            Rect::new(body.x, body.y.saturating_add(1), body.width.min(36), 1),
+            Style::default().bg(super::BACKGROUND),
+        );
         Paragraph::new(alert)
             .style(
                 Style::default()
@@ -1630,6 +2065,16 @@ pub(crate) fn draw(
             );
     }
     if office.workers.is_empty() && body.width >= 20 && body.height >= 2 {
+        paint_opaque(
+            frame,
+            Rect::new(
+                body.x,
+                body.y.saturating_add(body.height / 2),
+                body.width.min(34),
+                1,
+            ),
+            Style::default().bg(PANEL),
+        );
         Paragraph::new("QUIET FLOOR  •  waiting for a developer")
             .style(Style::default().fg(MUTED).bg(PANEL))
             .render(
@@ -1643,6 +2088,55 @@ pub(crate) fn draw(
             );
     }
     layout
+}
+
+fn floor_corners(grid: IsoGrid) -> [(i32, i32); 4] {
+    let half_width = grid.tile_width / 2;
+    let half_height = grid.tile_height / 2;
+    let (back_x, back_y) = grid.center(0, 0);
+    let (right_x, right_y) = grid.center(grid.columns.saturating_sub(1), 0);
+    let (front_x, front_y) =
+        grid.center(grid.columns.saturating_sub(1), grid.rows.saturating_sub(1));
+    let (left_x, left_y) = grid.center(0, grid.rows.saturating_sub(1));
+    [
+        (back_x, back_y - half_height),
+        (right_x + half_width, right_y),
+        (front_x, front_y + half_height),
+        (left_x - half_width, left_y),
+    ]
+}
+
+pub(crate) fn worker_marker_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
+    let (tile_x, tile_y) = grid.desk_tile(slot);
+    let (center_x, center_y) = grid.center(tile_x, tile_y);
+    (center_x, center_y + grid.tile_height / 2)
+}
+
+fn draw_floor_edges(canvas: &mut Canvas, grid: IsoGrid) {
+    let [back, right, front, left] = floor_corners(grid);
+    let outline = outline_color(canvas);
+    draw_line(canvas, back.0, back.1, left.0, left.1, FLOOR_LIGHT);
+    draw_line(canvas, back.0, back.1, right.0, right.1, FLOOR_LIGHT);
+    draw_line(canvas, left.0, left.1, front.0, front.1, outline);
+    draw_line(canvas, front.0, front.1, right.0, right.1, outline);
+    for offset in 1..=2 {
+        draw_line(
+            canvas,
+            left.0,
+            left.1 + offset,
+            front.0,
+            front.1 + offset,
+            FLOOR_DARK,
+        );
+        draw_line(
+            canvas,
+            front.0,
+            front.1 + offset,
+            right.0,
+            right.1 + offset,
+            FLOOR_DARK,
+        );
+    }
 }
 
 #[cfg(test)]
@@ -1665,6 +2159,219 @@ mod tests {
         assert_eq!(layout.rows, 2);
         assert_eq!(layout.page_size, 6);
         assert_eq!(layout.pages, 1);
+    }
+    fn room_items(worker_count: usize) -> Vec<IsoItem> {
+        let grid = make_grid(80, 38, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
+        let mut items = Vec::with_capacity(worker_count.saturating_mul(2) + 4);
+        for slot in 0..worker_count {
+            let (tile_x, tile_y) = grid.desk_tile(slot);
+            items.push(IsoItem {
+                tile_x,
+                tile_y,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 2,
+                },
+                kind: IsoKind::Worker(slot),
+            });
+            items.push(IsoItem {
+                tile_x,
+                tile_y,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 1,
+                },
+                kind: IsoKind::Desk(slot),
+            });
+        }
+        items.extend([
+            IsoItem {
+                tile_x: ISO_RUG_TILE.0,
+                tile_y: ISO_RUG_TILE.1,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 1,
+                },
+                kind: IsoKind::Rug,
+            },
+            IsoItem {
+                tile_x: ISO_PLANT_TILE.0,
+                tile_y: ISO_PLANT_TILE.1,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 2,
+                },
+                kind: IsoKind::Plant,
+            },
+            IsoItem {
+                tile_x: ISO_COOLER_TILE.0,
+                tile_y: ISO_COOLER_TILE.1,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 2,
+                },
+                kind: IsoKind::Cooler,
+            },
+            IsoItem {
+                tile_x: ISO_MEETING_TABLE_TILE.0,
+                tile_y: ISO_MEETING_TABLE_TILE.1,
+                footprint: IsoFootprint {
+                    width: 2,
+                    depth: 1,
+                    height: 1,
+                },
+                kind: IsoKind::MeetingTable,
+            },
+        ]);
+        items
+    }
+
+    fn sprite_bounds(grid: IsoGrid, item: IsoItem) -> Option<(i32, i32, i32, i32)> {
+        let (center_x, center_y) = grid.center(item.tile_x, item.tile_y);
+        let (width, height) = match item.kind {
+            IsoKind::Rug | IsoKind::Manager => return None,
+            IsoKind::Plant => (
+                (grid.tile_width / 2).clamp(4, 10),
+                (grid.tile_height + 2).clamp(5, 10),
+            ),
+            IsoKind::Cooler => (
+                (grid.tile_width / 3).clamp(4, 8),
+                (grid.tile_height + 1).clamp(5, 9),
+            ),
+            IsoKind::Worker(_) => (
+                (grid.tile_width / 3).clamp(4, 8),
+                (grid.tile_height + 1).clamp(5, 9),
+            ),
+            IsoKind::Desk(_) => (
+                (grid.tile_width * 2 / 3).clamp(5, 14),
+                grid.tile_height.saturating_sub(1).clamp(3, 6),
+            ),
+            IsoKind::MeetingTable => {
+                let half_width = (grid.tile_width / 4).max(2);
+                let half_height = (grid.tile_height / 2).max(1);
+                return Some((
+                    center_x - half_width,
+                    center_y - 1 - half_height,
+                    center_x + half_width + 1,
+                    center_y + grid.tile_height / 2 + 2,
+                ));
+            }
+        };
+        let (top, y_offset) = match item.kind {
+            IsoKind::Worker(_) => (center_y - grid.tile_height / 2 - height + 1, 0),
+            IsoKind::Desk(_) => (center_y + grid.tile_height / 3 - height / 2, 0),
+            _ => (center_y - height, 0),
+        };
+        Some((
+            center_x - width / 2,
+            top + y_offset,
+            center_x - width / 2 + width,
+            top + y_offset + height,
+        ))
+    }
+
+    fn overlap_area(first: (i32, i32, i32, i32), second: (i32, i32, i32, i32)) -> i32 {
+        let width = (first.2.min(second.2) - first.0.max(second.0)).max(0);
+        let height = (first.3.min(second.3) - first.1.max(second.1)).max(0);
+        width * height
+    }
+
+    fn polygon_area(points: &[(i32, i32)]) -> usize {
+        let twice_area = points
+            .iter()
+            .enumerate()
+            .map(|(index, &(x0, y0))| {
+                let (x1, y1) = points[(index + 1) % points.len()];
+                i64::from(x0) * i64::from(y1) - i64::from(y0) * i64::from(x1)
+            })
+            .sum::<i64>()
+            .unsigned_abs();
+        usize::try_from(twice_area / 2).expect("room polygon fits in usize")
+    }
+
+    #[test]
+    fn isometric_room_has_a_floor_plate_with_breathing_space() {
+        let width = 80;
+        let height = 38;
+        let grid = make_grid(width, height, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
+        let plate_area = polygon_area(&floor_corners(grid));
+        let frame_area = width * height;
+
+        // A room should anchor the scene without swallowing its wall and margin.
+        assert!(
+            plate_area >= frame_area / 5 && plate_area <= frame_area * 3 / 5,
+            "floor plate area {plate_area} is not a sane share of frame area {frame_area}"
+        );
+
+        let mut canvas = crate::canvas::Canvas::with_color_depth(
+            width,
+            height,
+            crate::canvas::ColorDepth::TrueColor,
+        );
+        draw_floor_plate(&mut canvas, grid);
+        let floor_colors = [FLOOR, FLOOR_DARK, FLOOR_DITHER];
+        let floor_pixels = (0..width)
+            .flat_map(|x| (0..height).map(move |y| (x, y)))
+            .filter(|(x, y)| {
+                canvas
+                    .pixel(*x, *y)
+                    .is_some_and(|color| floor_colors.contains(&color))
+            })
+            .count();
+        assert!(
+            floor_pixels >= frame_area / 5,
+            "floor plate drew only {floor_pixels} pixels in a {frame_area}-pixel frame"
+        );
+    }
+
+    #[test]
+    fn isometric_room_keeps_objects_separate_and_ground_open() {
+        let grid = make_grid(80, 38, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
+        let items = room_items(5);
+        let bounds = items
+            .iter()
+            .filter_map(|item| sprite_bounds(grid, *item))
+            .collect::<Vec<_>>();
+        for (first_index, first) in bounds.iter().enumerate() {
+            for second in bounds.iter().skip(first_index + 1) {
+                let overlap = overlap_area(*first, *second);
+                assert!(
+                    overlap <= 8,
+                    "room objects overlap by {overlap} pixels: {first:?} and {second:?}"
+                );
+            }
+        }
+
+        let mut occupied = std::collections::BTreeSet::new();
+        for item in items {
+            let start_x = item.tile_x.min(grid.columns);
+            let end_x = item
+                .tile_x
+                .saturating_add(usize::from(item.footprint.width))
+                .min(grid.columns);
+            let start_y = item.tile_y.min(grid.rows);
+            let end_y = item
+                .tile_y
+                .saturating_add(usize::from(item.footprint.depth))
+                .min(grid.rows);
+            for tile_y in start_y..end_y {
+                for tile_x in start_x..end_x {
+                    occupied.insert((tile_x, tile_y));
+                }
+            }
+        }
+        let total_tiles = grid.columns * grid.rows;
+        let empty_tiles = total_tiles.saturating_sub(occupied.len());
+        // Keep at least two fifths of the plate visibly free for the eye to read.
+        assert!(
+            empty_tiles * 5 >= total_tiles * 2,
+            "only {empty_tiles} of {total_tiles} ground tiles remain open"
+        );
     }
 
     #[test]
@@ -1749,14 +2456,22 @@ mod tests {
         );
     }
     #[test]
-    fn auto_projection_chooses_each_camera_shape() {
+    fn auto_projection_chooses_room_then_degrades_by_available_space() {
         assert_eq!(
-            effective_projection(Projection::Auto, 80, 30),
+            effective_projection(Projection::Auto, 160, 43),
             Projection::Iso
         );
         assert_eq!(
-            effective_projection(Projection::Auto, 80, 50),
+            effective_projection(Projection::Auto, 96, 25),
             Projection::TopDown
+        );
+        assert_eq!(
+            effective_projection(Projection::Auto, 80, 19),
+            Projection::List
+        );
+        assert_eq!(
+            effective_projection(Projection::Auto, 32, 7),
+            Projection::List
         );
         assert_eq!(
             effective_projection(Projection::Auto, 110, 20),
@@ -1767,6 +2482,29 @@ mod tests {
             Projection::Side
         );
     }
+    #[test]
+    fn project_sign_stays_above_floor_and_within_bounded_area() {
+        let mut canvas =
+            crate::canvas::Canvas::with_color_depth(80, 40, crate::canvas::ColorDepth::TrueColor);
+        draw_project_name(&mut canvas, "A", 30);
+        let sign_colors = [TITLE_COLOR, TITLE_BODY, TITLE_SIGN];
+        let mut sign_pixels = 0;
+        for x in 0..canvas.width() {
+            for y in 0..canvas.height() {
+                if let Some(color) = canvas.pixel(x, y) {
+                    if sign_colors.contains(&color) {
+                        assert!(y < 30, "sign pixel entered floor at ({x}, {y})");
+                        sign_pixels += 1;
+                    }
+                }
+            }
+        }
+        assert!(
+            sign_pixels <= canvas.width() * canvas.height() / 3,
+            "sign should occupy a modest top band"
+        );
+    }
+
     #[test]
     fn light_mode_keeps_floor_outlines_dark() {
         let mut canvas =
@@ -1790,5 +2528,22 @@ mod tests {
         assert!(count_color(TITLE_COLOR) > 0);
         assert!(count_color(TITLE_BODY) > 0);
         assert!(count_color(TITLE_SIGN) > 0);
+    }
+    #[test]
+    fn worker_plate_names_preserve_distinguishing_suffixes() {
+        let labels = (0..5)
+            .map(|index| worker_plate_name(&format!("sustain worker {index}"), "sustain"))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            labels,
+            vec!["worker 0", "worker 1", "worker 2", "worker 3", "worker 4"]
+        );
+        assert_eq!(
+            labels
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len(),
+            labels.len()
+        );
     }
 }

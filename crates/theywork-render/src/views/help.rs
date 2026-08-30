@@ -6,7 +6,7 @@ use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 use ratatui::Frame;
 
-use super::{has_area, inset, INK, MUTED, PANEL, PANEL_HIGHLIGHT};
+use super::{has_area, inset, paint_opaque, INK, MUTED, PANEL, PANEL_HIGHLIGHT};
 
 pub(crate) fn draw(frame: &mut Frame) {
     let area = frame.area();
@@ -23,11 +23,13 @@ pub(crate) fn draw(frame: &mut Frame) {
         width,
         height,
     );
+    let block_style = Style::default().fg(INK).bg(PANEL);
+    paint_opaque(frame, popup, block_style);
     let block = Block::default()
         .title(" ? HELP ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(PANEL_HIGHLIGHT))
-        .style(Style::default().fg(INK).bg(PANEL));
+        .style(block_style);
     block.render(popup, frame.buffer_mut());
 
     let inner = inset(popup, 1);

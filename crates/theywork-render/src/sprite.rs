@@ -318,6 +318,9 @@ pub(crate) struct SpriteSet {
     pub(crate) manager_walk: Animation,
     pub(crate) manager_attention: Animation,
     pub(crate) desk: Sprite,
+    /// Held for the sprite-cache count; the desk draws its own screen, so
+    /// nothing outside the tests reads this.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) monitor: Sprite,
     pub(crate) plant: Sprite,
     pub(crate) water_cooler: Sprite,

@@ -3,11 +3,9 @@
 //! Owner: renderer dev. This crate reads `theywork_core::World` and draws it.
 //! It never performs I/O of its own and never looks at agent files.
 
-use std::collections::{BTreeMap, VecDeque};
-
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::Frame;
-use theywork_core::{Millis, OfficeId, Worker, WorkerId, World};
+use theywork_core::{Millis, OfficeId, World};
 
 pub mod canvas;
 pub mod sprite;
@@ -18,28 +16,6 @@ mod golden;
 use canvas::{Canvas, ColorDepth};
 use sprite::{look_for_worker, SpriteSet};
 
-const ACTIVITY_HISTORY_CAP: usize = 8;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ActivityRecord {
-    pub(crate) at: Millis,
-    pub(crate) label: String,
-    pub(crate) detail: Option<String>,
-    pub(crate) branch: Option<String>,
-}
-
-impl ActivityRecord {
-    fn matches_worker(&self, worker: &Worker) -> bool {
-        self.label == worker.activity.label() && self.detail.as_deref() == worker.activity.detail()
-    }
-
-    pub(crate) fn display(&self) -> String {
-        match self.detail.as_deref() {
-            Some(detail) if !detail.is_empty() => format!("{} • {}", self.label, detail),
-            _ => self.label.clone(),
-        }
-    }
-}
 /// The current screen in the presentation hierarchy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
@@ -70,7 +46,6 @@ pub struct Ui {
     now: Millis,
     canvas: Canvas,
     sprites: SpriteSet,
-    activity_history: BTreeMap<WorkerId, VecDeque<ActivityRecord>>,
     phone_open: bool,
     phone_channel: views::phone::PhoneChannel,
     phone_transition_at: Millis,
@@ -102,7 +77,6 @@ impl Ui {
             now: 0,
             canvas: Canvas::with_color_depth(0, 0, color_depth),
             sprites: SpriteSet::new(),
-            activity_history: BTreeMap::new(),
             phone_open: false,
             phone_channel: views::phone::PhoneChannel::Standup,
             phone_transition_at: 0,
@@ -344,7 +318,6 @@ impl Ui {
             .set_light_mode(self.theme == views::UiTheme::Light);
         self.sprites
             .set_animation_time(Some(if self.motion { self.now } else { 0 }));
-        self.remember_activities(world);
         let offices = views::cameras::ordered_offices(world, self.now);
         self.known_office_count = offices.len();
         self.sync_office_selection(&offices);
@@ -385,24 +358,7 @@ impl Ui {
             }
             View::Desk => {
                 let worker = office.and_then(|value| value.workers.get(self.selected_worker));
-                let history = worker
-                    .and_then(|value| self.activity_history.get(&value.id))
-                    .map(|items| {
-                        items
-                            .iter()
-                            .map(ActivityRecord::display)
-                            .collect::<Vec<_>>()
-                    })
-                    .unwrap_or_default();
-                views::desk::draw(
-                    f,
-                    office,
-                    worker,
-                    &history,
-                    &mut self.canvas,
-                    &self.sprites,
-                    self.now,
-                );
+                views::desk::draw(f, office, worker, &mut self.canvas, &self.sprites, self.now);
             }
         }
         if self.phone_open {
@@ -411,7 +367,6 @@ impl Ui {
                 views::phone::PhoneDrawContext {
                     world,
                     channel: self.phone_channel,
-                    history: &self.activity_history,
                     now: self.now,
                     transition_at: self.phone_transition_at,
                     canvas: &mut self.canvas,
@@ -516,27 +471,6 @@ impl Ui {
         self.selected_office =
             move_grid_index(self.selected_office, self.known_office_count, columns, code);
         self.selected_office_id = None;
-    }
-
-    fn remember_activities(&mut self, world: &World) {
-        for office in world.offices() {
-            for worker in &office.workers {
-                let record = ActivityRecord {
-                    at: self.now,
-                    label: worker.activity.label().to_string(),
-                    detail: worker.activity.detail().map(str::to_string),
-                    branch: worker.git_branch.clone(),
-                };
-                let entry = self.activity_history.entry(worker.id.clone()).or_default();
-                let changed = entry.back().is_none_or(|last| !last.matches_worker(worker));
-                if changed {
-                    entry.push_back(record);
-                    while entry.len() > ACTIVITY_HISTORY_CAP {
-                        entry.pop_front();
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -652,20 +586,8 @@ mod phone_tests {
     use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
-    use theywork_core::{Activity, Agent, Event, EventKind, OfficeId, WorkerId};
 
     use super::*;
-
-    fn history_event(worker: &WorkerId, at: Millis, kind: EventKind) -> Event {
-        Event {
-            at,
-            office: OfficeId("/history".into()),
-            office_path: "/history".into(),
-            worker: worker.clone(),
-            agent: Agent::Codex,
-            kind,
-        }
-    }
 
     fn demo_world(now: Millis) -> World {
         let mut world = World::new();
@@ -673,39 +595,6 @@ mod phone_tests {
             world.apply(event);
         }
         world
-    }
-
-    #[test]
-    fn phone_history_is_bounded_and_tracks_activity_changes() {
-        let worker = WorkerId("/history#dev".into());
-        let mut world = World::new();
-        let mut ui = Ui::new();
-        for index in 0..(ACTIVITY_HISTORY_CAP + 3) {
-            let at = index as Millis;
-            world.apply(history_event(
-                &worker,
-                at,
-                EventKind::Acted(Activity::Typing {
-                    detail: format!("command-{index}"),
-                }),
-            ));
-            ui.tick(at);
-            ui.remember_activities(&world);
-        }
-
-        let history = ui
-            .activity_history
-            .get(&worker)
-            .expect("worker history should be captured");
-        assert_eq!(history.len(), ACTIVITY_HISTORY_CAP);
-        assert_eq!(
-            history.front().and_then(|item| item.detail.as_deref()),
-            Some("command-3")
-        );
-        assert_eq!(
-            history.back().and_then(|item| item.detail.as_deref()),
-            Some("command-10")
-        );
     }
 
     #[test]

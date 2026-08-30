@@ -102,6 +102,24 @@ pub(crate) fn below_tab_bar(area: Rect) -> Rect {
 pub(crate) fn has_area(area: Rect) -> bool {
     area.width > 0 && area.height > 0
 }
+
+/// Clear an area to spaces before painting a widget over a previous view.
+/// Ratatui styles update a cell's colours but do not remove a previously
+/// rendered half-block, so overlays need an explicit opaque backing.
+pub(crate) fn paint_opaque(frame: &mut Frame, area: Rect, style: Style) {
+    if !has_area(area) {
+        return;
+    }
+    let buffer = frame.buffer_mut();
+    buffer.set_style(area, style);
+    for row in 0..area.height {
+        for column in 0..area.width {
+            if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
+                cell.set_symbol(" ");
+            }
+        }
+    }
+}
 pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
     if office
         .workers
@@ -225,6 +243,7 @@ pub(crate) fn vertical_bands(
 pub(crate) fn draw_tiny(frame: &mut Frame, message: &str) {
     let area = frame.area();
     if has_area(area) {
+        paint_opaque(frame, area, Style::default().fg(INK).bg(BACKGROUND));
         Paragraph::new(message)
             .style(Style::default().fg(INK).bg(BACKGROUND))
             .render(area, frame.buffer_mut());
@@ -266,6 +285,7 @@ pub(crate) fn draw_panel(frame: &mut Frame, area: Rect, title: &str, selected: b
         } else {
             Style::default().fg(MUTED).bg(PANEL)
         };
+        paint_opaque(frame, area, style);
         Block::default()
             .title(format!(" {title} "))
             .borders(Borders::ALL)
@@ -435,7 +455,7 @@ pub(crate) fn token_bar(tokens: u64, max_tokens: u64, width: usize) -> String {
     } else if tokens >= max_tokens {
         slots
     } else {
-        let ratio = ((tokens as f64) + 1.0).ln() / ((max_tokens as f64) + 1.0).ln();
+        let ratio = tokens as f64 / max_tokens as f64;
         (ratio * slots as f64).ceil().clamp(1.0, slots as f64) as usize
     };
     format!(
@@ -501,12 +521,39 @@ pub(crate) fn short_path(path: &str, max_chars: usize) -> String {
     if max_chars == 1 {
         return "…".to_string();
     }
-    let tail: String = chars.iter().rev().take(max_chars - 1).copied().collect();
-    format!("…{}", tail.chars().rev().collect::<String>())
+    let head: String = chars.iter().take(max_chars - 1).copied().collect();
+    format!("{head}…")
 }
 #[cfg(test)]
 mod tests {
+    use ratatui::backend::TestBackend;
+    use ratatui::layout::Rect;
+    use ratatui::style::Color;
+    use ratatui::Terminal;
+
     use super::*;
+    #[test]
+    fn opaque_paint_replaces_previous_symbols_and_background() {
+        let mut terminal = Terminal::new(TestBackend::new(12, 8)).expect("test terminal");
+        let area = Rect::new(2, 2, 5, 3);
+        terminal
+            .draw(|frame| {
+                for cell in &mut frame.buffer_mut().content {
+                    cell.set_symbol("X");
+                    cell.set_bg(Color::Blue);
+                }
+                paint_opaque(frame, area, Style::default().bg(PANEL));
+            })
+            .expect("opaque paint should render");
+        let buffer = terminal.backend().buffer();
+        for row in area.y..area.y + area.height {
+            for column in area.x..area.x + area.width {
+                let cell = &buffer.content[usize::from(row) * 12 + usize::from(column)];
+                assert_eq!(cell.symbol(), " ");
+                assert_eq!(cell.bg, PANEL);
+            }
+        }
+    }
 
     #[test]
     fn token_labels_use_human_units() {
@@ -516,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn token_bar_uses_a_logarithmic_scale_against_the_office_maximum() {
+    fn token_bar_scales_against_the_office_maximum() {
         let maximum = 136_934_015;
         assert_eq!(token_bar(0, maximum, 10), "[........]");
         assert_eq!(token_bar(maximum, maximum, 10), "[########]");
@@ -524,6 +571,7 @@ mod tests {
             token_bar(1_000, maximum, 10).contains('#'),
             "small nonzero token counts should remain visible"
         );
+        assert_eq!(token_bar(125_000, 155_000, 10), "[#######.]");
     }
 
     #[test]
@@ -531,8 +579,9 @@ mod tests {
         let long_ascii = "x".repeat(200);
         let elided = short_path(&long_ascii, 16);
         assert_eq!(elided.chars().count(), 16);
-        assert!(elided.starts_with("…"));
+        assert!(elided.ends_with("…"));
 
+        assert_eq!(short_path("abcdefghijk", 6), "abcde…");
         let unicode = "界🛠️é".repeat(80);
         for width in 0..=16 {
             assert!(

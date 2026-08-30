@@ -12,8 +12,8 @@ use crate::sprite::{SpriteSet, WorkerLook};
 
 use super::office::Projection;
 use super::{
-    draw_panel, fill_office_background, has_area, inset, render_worker_with_look, short_path,
-    PixelRect, UiTheme, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
+    draw_panel, fill_office_background, has_area, inset, paint_opaque, render_worker_with_look,
+    short_path, PixelRect, UiTheme, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
 };
 
 pub(crate) struct SettingsDrawContext<'a> {
@@ -60,11 +60,13 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
         popup_width,
         popup_height,
     );
+    let popup_style = Style::default().fg(INK).bg(PANEL);
+    paint_opaque(frame, popup, popup_style);
     Block::default()
         .title(" SETTINGS  session only ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().fg(INK).bg(PANEL))
+        .style(popup_style)
         .render(popup, frame.buffer_mut());
 
     let inner = inset(popup, 1);

@@ -17,7 +17,8 @@ use ratatui::buffer::Buffer;
 use ratatui::style::Color;
 use ratatui::Terminal;
 use theywork_core::{
-    Activity, Agent, Event, EventKind, Millis, OfficeId, WorkerId, World, BLOCKED_AFTER_MS,
+    Activity, Agent, Beat, Event, EventKind, Millis, OfficeId, Outcome, WorkerId, World,
+    BLOCKED_AFTER_MS,
 };
 
 use crate::canvas::{Canvas, ColorDepth};
@@ -25,8 +26,8 @@ use crate::views::UiTheme;
 use crate::{Ui, View};
 
 const SNAPSHOT_NOW: Millis = BLOCKED_AFTER_MS + 12_000;
-const NORMAL_SIZE: (u16, u16) = (80, 24);
-const SMALL_SIZE: (u16, u16) = (32, 12);
+const NORMAL_SIZE: (u16, u16) = (160, 48);
+const DEGRADED_SIZE: (u16, u16) = (80, 24);
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum SnapshotView {
@@ -69,7 +70,7 @@ const CASES: [(SnapshotView, &str); 7] = [
     (SnapshotView::Settings, "settings"),
 ];
 
-const SIZES: [(&str, (u16, u16)); 2] = [("normal", NORMAL_SIZE), ("small", SMALL_SIZE)];
+const SIZES: [(&str, (u16, u16)); 2] = [("normal", NORMAL_SIZE), ("small", DEGRADED_SIZE)];
 
 pub(crate) fn render_snapshot(view: SnapshotView, size: (u16, u16), theme: UiTheme) -> String {
     let world = snapshot_world();
@@ -95,6 +96,7 @@ fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme) -> Ui {
     let mut ui = Ui::new();
     // Snapshots use a canonical color depth so the files do not depend on the
     // environment in which the test suite happens to run.
+    ui.color_depth = ColorDepth::TrueColor;
     ui.canvas = Canvas::with_color_depth(0, 0, ColorDepth::TrueColor);
     ui.theme = theme;
     ui.tick(now);
@@ -302,6 +304,17 @@ fn fixture_event(
     }
 }
 
+fn snapshot_outcome(activity: &Activity) -> Option<Outcome> {
+    match activity {
+        Activity::Typing { .. } => Some(Outcome::Exited(0)),
+        Activity::Editing { .. } => Some(Outcome::Changed {
+            added: 412,
+            removed: 96,
+        }),
+        _ => None,
+    }
+}
+
 fn snapshot_world() -> World {
     const OFFICES: [(&str, usize); 6] = [
         ("/golden/sustain", 5),
@@ -391,7 +404,11 @@ fn snapshot_world() -> World {
                 office,
                 &worker,
                 agent,
-                EventKind::Acted(activity),
+                EventKind::Did(Beat {
+                    at: observed_at,
+                    outcome: snapshot_outcome(&activity),
+                    activity,
+                }),
             ));
         }
     }

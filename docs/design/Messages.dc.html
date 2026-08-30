@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .t { font-size: 8px; color: #5c566e; width: 42px; flex-shrink: 0; }
+    .k { font-size: 8px; font-weight: 700; letter-spacing: 1px; width: 62px; flex-shrink: 0; }
+    .row { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #1c1830; }
+    .body { font-size: 10px; color: #b4aec2; line-height: 1.65; flex: 1; }
+  </style>
+</helmet>
+
+<div style="width: 900px; height: 800px; background: #0d0b14; overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6;">
+
+  <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px; background: #171425; border-bottom: 1px solid #2a2440;">
+    <div style="color: #8a8299; font-size: 11px;">sustain &nbsp;/&nbsp; Dev 2 &nbsp;&mdash;&nbsp; the desk</div>
+    <div style="margin-left: auto; color: #f0b429; font-size: 11px;">BLOCKED &middot; 4m</div>
+  </div>
+
+  <!-- who -->
+  <div style="display: flex; gap: 16px; padding: 18px 20px 14px; border-bottom: 1px solid #241f3d;">
+    <svg width="96" height="96" viewBox="0 0 48 48" shape-rendering="crispEdges" style="background: #131126; border: 1px solid #241f3d;">
+      <polygon points="24,30 40,38 40,44 24,36" fill="#3a7cbd"/>
+      <polygon points="24,30 8,38 8,44 24,36" fill="#4f9ee8"/>
+      <rect x="16" y="14" width="16" height="14" fill="#f2c9a0" stroke="#8a5a38"/>
+      <rect x="15" y="10" width="18" height="6" fill="#2e2118"/>
+      <rect x="20" y="20" width="3" height="3" fill="#2e2118"/>
+      <rect x="26" y="20" width="3" height="3" fill="#2e2118"/>
+      <rect x="33" y="14" width="4" height="12" fill="#f2c9a0" stroke="#8a5a38"/>
+      <polygon points="24,2 33,7 24,12 15,7" fill="#f0b429" stroke="#8a5f05"/>
+      <rect x="23" y="4" width="2" height="5" fill="#12101a"/>
+      <rect x="23" y="10" width="2" height="2" fill="#12101a"/>
+    </svg>
+    <div style="flex: 1;">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #e8e2d6;">DEV&nbsp;2</div>
+        <div style="font-size: 9px; color: #4f9ee8;">Codex</div>
+      </div>
+      <div style="font-size: 10px; color: #6f6885; margin-top: 8px; line-height: 1.8;">
+        <div>branch <span style="color: #b4aec2;">main</span> &nbsp;&middot;&nbsp; thread <span style="color: #b4aec2;">01a044ff-8bd7</span></div>
+        <div>38.8M tokens &nbsp;&middot;&nbsp; 41 turns &nbsp;&middot;&nbsp; open since 14:22</div>
+      </div>
+      <div style="margin-top: 10px; background: #2e2410; border-left: 3px solid #f0b429; padding: 9px 12px;">
+        <div style="font-size: 9px; color: #f0b429; font-weight: 700; letter-spacing: 1px;">WAITING ON YOU</div>
+        <div style="font-size: 10px; color: #e8e2d6; margin-top: 5px;">Approve or deny in the Dev 2 thread:</div>
+        <div style="font-size: 10px; color: #f0b429; background: #0d0b14; padding: 6px 9px; margin-top: 6px;">rm -rf target &amp;&amp; cargo clean</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- the thread -->
+  <div style="padding: 12px 20px 0;">
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px; margin-bottom: 4px;">THIS THREAD &mdash; NEWEST LAST</div>
+
+    <div class="row">
+      <div class="t">14:22</div><div class="k" style="color: #e8834a;">YOU</div>
+      <div class="body" style="color: #e8e2d6;">Replace the tower with a single isometric office floor. Delete views/tower.rs.</div>
+    </div>
+
+    <div class="row">
+      <div class="t">14:22</div><div class="k" style="color: #6f6885;">THINKING</div>
+      <div class="body" style="color: #6f6885; font-style: italic;">Planning the tile grid and painter&rsquo;s-algorithm draw order</div>
+    </div>
+
+    <div class="row">
+      <div class="t">14:23</div><div class="k" style="color: #58d6e8;">RAN</div>
+      <div class="body"><span style="color: #58d6e8;">git rm crates/theywork-render/src/views/tower.rs</span>
+        <div style="font-size: 9px; color: #56c26a; margin-top: 3px;">exit 0 &middot; 0.2s</div></div>
+    </div>
+
+    <div class="row">
+      <div class="t">14:31</div><div class="k" style="color: #4fa860;">EDITED</div>
+      <div class="body"><span style="color: #4fa860;">views/office.rs</span> <span style="color: #5c566e;">+412 &minus;96</span>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 3px;">isometric floor plate, desk placement, depth sort</div></div>
+    </div>
+
+    <div class="row">
+      <div class="t">14:38</div><div class="k" style="color: #4fa860;">EDITED</div>
+      <div class="body"><span style="color: #4fa860;">sprite.rs</span> <span style="color: #5c566e;">+180 &minus;12</span>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 3px;">isometric footprints for desk, plant, cooler</div></div>
+    </div>
+
+    <div class="row">
+      <div class="t">14:44</div><div class="k" style="color: #e8834a;">SAID</div>
+      <div class="body" style="color: #e8e2d6;">The floor plate renders and the depth sort is right, but the old tower goldens
+        still exist and now fail. I want to clear the build directory before regenerating them.</div>
+    </div>
+
+    <div class="row" style="background: #2e2410; border-bottom-color: #4a3a12; padding-left: 10px; margin-left: -10px; margin-right: -10px; padding-right: 10px;">
+      <div class="t" style="color: #f0b429;">14:45</div><div class="k" style="color: #f0b429;">ASKED</div>
+      <div class="body" style="color: #e8e2d6;">Waiting for approval &mdash; <span style="color: #f0b429;">rm -rf target &amp;&amp; cargo clean</span>
+        <div style="font-size: 9px; color: #8a7a4a; margin-top: 4px;">nothing has moved for 4 minutes</div></div>
+    </div>
+  </div>
+
+  <!-- message kinds legend -->
+  <div style="position: absolute; left: 0; right: 0; bottom: 34px; padding: 12px 20px; border-top: 1px solid #241f3d; background: #131126;">
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px; margin-bottom: 8px;">EVERY LINE IS ONE OF SIX KINDS &mdash; COLOUR CARRIES THE MEANING, NOT AN ICON</div>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; font-size: 8px;">
+      <div><span style="color: #e8834a; font-weight: 700;">YOU</span><div style="color: #6f6885; margin-top: 3px;">a prompt you sent</div></div>
+      <div><span style="color: #6f6885; font-weight: 700;">THINKING</span><div style="color: #6f6885; margin-top: 3px;">reasoning summary</div></div>
+      <div><span style="color: #58d6e8; font-weight: 700;">RAN</span><div style="color: #6f6885; margin-top: 3px;">command + exit code</div></div>
+      <div><span style="color: #4fa860; font-weight: 700;">EDITED</span><div style="color: #6f6885; margin-top: 3px;">file + line delta</div></div>
+      <div><span style="color: #e8834a; font-weight: 700;">SAID</span><div style="color: #6f6885; margin-top: 3px;">message to you</div></div>
+      <div><span style="color: #f0b429; font-weight: 700;">ASKED</span><div style="color: #6f6885; margin-top: 3px;">blocked, needs you</div></div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 18px; padding: 0 16px; background: #171425; border-top: 1px solid #2a2440; font-size: 10px; color: #5c566e;">
+    <span><span style="color: #e8e2d6;">&#8593;&#8595;</span> scroll</span>
+    <span><span style="color: #e8e2d6;">&#8592;&#8594;</span> other desks</span>
+    <span><span style="color: #e8e2d6;">p</span> phone</span>
+    <span><span style="color: #e8e2d6;">Esc</span> back to the floor</span>
+    <span style="margin-left: auto;">read-only &mdash; they-work cannot answer for you</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

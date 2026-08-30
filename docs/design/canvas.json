@@ -1,0 +1,182 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1200,
+      "h": 760,
+      "title": "The floor \u2014 dark"
+    },
+    {
+      "file": "Light.dc.html",
+      "x": 1320,
+      "y": 0,
+      "w": 1200,
+      "h": 760,
+      "title": "The floor \u2014 light"
+    },
+    {
+      "file": "Tabs.dc.html",
+      "x": 0,
+      "y": 960,
+      "w": 1240,
+      "h": 860,
+      "title": "Tabs & the guard office"
+    },
+    {
+      "file": "Identity.dc.html",
+      "x": 1360,
+      "y": 960,
+      "w": 1240,
+      "h": 640,
+      "title": "One face, every surface"
+    },
+    {
+      "file": "Devs.dc.html",
+      "x": 0,
+      "y": 2020,
+      "w": 1240,
+      "h": 940,
+      "title": "The cast"
+    },
+    {
+      "file": "Views.dc.html",
+      "x": 1360,
+      "y": 2020,
+      "w": 1240,
+      "h": 720,
+      "title": "Three cameras"
+    },
+    {
+      "file": "Settings.dc.html",
+      "x": 0,
+      "y": 3160,
+      "w": 1000,
+      "h": 760,
+      "title": "Settings"
+    },
+    {
+      "file": "FirstRun.dc.html",
+      "x": 1120,
+      "y": 3160,
+      "w": 1000,
+      "h": 640,
+      "title": "First screen"
+    },
+    {
+      "file": "Offices.dc.html",
+      "x": 2240,
+      "y": 3160,
+      "w": 1100,
+      "h": 700,
+      "title": "Office themes"
+    },
+    {
+      "file": "Titles.dc.html",
+      "x": 0,
+      "y": 4120,
+      "w": 1000,
+      "h": 520,
+      "title": "Project titles"
+    },
+    {
+      "file": "Phone.dc.html",
+      "x": 1120,
+      "y": 4120,
+      "w": 760,
+      "h": 800,
+      "title": "The phone"
+    },
+    {
+      "file": "Messages.dc.html",
+      "x": 1960,
+      "y": 4120,
+      "w": 900,
+      "h": 800,
+      "title": "A thread"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "the-shape",
+      "x": 0,
+      "y": -250,
+      "w": 560,
+      "text": "THE SHAPE OF IT\n\nOne project = one floor, and a floor draws that project's threads and nothing else. Tabs across the top switch offices; the ALL tab is the guard office.\n\nMeasured on the real machine every office holds five workers: an orchestrator, three devs, a collector."
+    },
+    {
+      "id": "light-note",
+      "x": 1320,
+      "y": -250,
+      "w": 560,
+      "text": "LIGHT IS NOT AN INVERSION\n\nLight pixel art dies from thin outlines, so strokes stay dark and full weight rather than fading with the background.\n\nShirts and status colours barely move - a worker must not read differently because of the time of day."
+    },
+    {
+      "id": "personality",
+      "x": 0,
+      "y": 1890,
+      "w": 620,
+      "text": "PERSONALITY COMES FROM COMBINATION, NOT FROM DRAWING 50 PEOPLE\n\nSix slots - head, face, top, desk object, skin, hair - each with five or six options. A few dozen sprites give thousands of distinct people, and a floor of five where nobody is a twin.\n\nEach slot is rolled from the thread id, so a worker keeps the same face across restarts and looks identical on your machine and mine. Recognising someone by their hair before you read the name plate is the whole point."
+    },
+    {
+      "id": "camera-note",
+      "x": 1360,
+      "y": 1890,
+      "w": 560,
+      "text": "THE CAMERA IS A PREFERENCE, NOT A MODE\n\nAll three projections read the same World and put the same people at the same desks. Switching never changes what is true, which is exactly why it can be a setting.\n\nAuto is the default: isometric when there is room, top-down when the office is crowded, side when the window is short."
+    },
+    {
+      "id": "colour-law",
+      "x": 0,
+      "y": 3030,
+      "w": 520,
+      "text": "ONE COLOUR LAW ACROSS EVERY SURFACE\n\nShirt = which agent. Orange is Claude, blue is Codex. Always.\n\nStatus = the bar under the name plate. Green running, grey idle, amber blocked, red failed. Always.\n\nA theme, a camera or light mode may repaint the room. None of them may repaint the people."
+    },
+    {
+      "id": "amber-rule",
+      "x": 2240,
+      "y": 3030,
+      "w": 480,
+      "text": "AMBER IS RESERVED\n\nBlocked is the one state worth interrupting someone's day for, so amber appears nowhere else - not in a theme, not as an accent, not in either light mode.\n\nWhen you see amber anywhere in they-work, a developer is waiting on you."
+    },
+    {
+      "id": "no-icons",
+      "x": 1120,
+      "y": 3990,
+      "w": 460,
+      "text": "NO EMOJI, NO DINGBATS\n\nEverything is drawn: sprites from half-block pixels, icons from shapes. Emoji render at different widths in different terminals and break a character grid.\n\nThe reference earns its charm from density and consistent light, not decoration."
+    },
+    {
+      "id": "thread-note",
+      "x": 1960,
+      "y": 3990,
+      "w": 500,
+      "text": "A THREAD READS LIKE A LOG, NOT A CHAT\n\nSix kinds of line, distinguished by colour and a short caps label - no bubbles, no avatars per row. The eye scans the left column and finds RAN or ASKED instantly.\n\nThe last line is the current state, so a blocked thread ends on the thing you need to approve."
+    },
+    {
+      "id": "open-q",
+      "x": 0,
+      "y": 3990,
+      "w": 440,
+      "text": "STILL OPEN\n\n1. Settings are session-only unless you mount a config dir. Right call, or should they persist by default?\n\n2. Should idle workers keep their desks or drift to the coffee machine?\n\n3. Four office themes is four times the art to keep good. Worth it, or one strong look?"
+    },
+    {
+      "id": "isolation",
+      "x": 0,
+      "y": 830,
+      "w": 600,
+      "text": "THE RULE THAT CANNOT BEND\n\nAn office is one project. A floor renders exactly one office's workers - never a union, never a filter over everyone.\n\nThis was a real bug, not just a drawing rule: World::apply looked a worker up only inside the event's office, so a thread that reported a different directory was added to the new office while still sitting in the old one. One developer, two companies. Fixed, with a test that says no worker is ever seated twice."
+    },
+    {
+      "id": "identity",
+      "x": 1360,
+      "y": 830,
+      "w": 560,
+      "text": "A LOOK IS A VALUE, NOT SIX DRAWINGS\n\nDerived once from the thread id and carried with the worker. Floor, side, top-down, guard feed, phone avatar and desk all ask that same value and differ only in scale.\n\nThe day the phone gets its own avatar set is the day the ponytail stops meaning Dev 2."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

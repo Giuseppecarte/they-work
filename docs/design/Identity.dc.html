@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .cap { font-size: 9px; color: #6f6885; line-height: 1.6; }
+    .sfc { font-size: 9px; font-weight: 700; color: #e8e2d6; letter-spacing: 1.2px; }
+    .box { background: #131126; border: 1px solid #241f3d; padding: 12px 12px 11px; }
+  </style>
+</helmet>
+
+<div style="width: 1240px; height: 640px; background: #0d0b14; overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6;">
+
+  <div style="display: flex; align-items: baseline; gap: 14px; padding: 18px 26px 0;">
+    <div style="font-family: 'Press Start 2P', monospace; font-size: 15px; color: #e8342c; text-shadow: 2px 2px 0 #8e1a15;">ONE&nbsp;FACE,&nbsp;EVERY&nbsp;SURFACE</div>
+    <div style="font-size: 10px; color: #6f6885;">Dev 2 of sustain &mdash; ponytail, thick frames, striped tee &mdash; drawn six ways from one description</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; padding: 18px 26px 0;">
+
+    <!-- 1. floor -->
+    <div class="box">
+      <div class="sfc">THE FLOOR</div>
+      <div class="cap" style="margin-bottom: 8px;">isometric, 48px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <polygon points="80,96 128,120 128,130 32,130 32,120" fill="#dcc9a4"/>
+        <polygon points="32,104 80,128 128,104 80,80" fill="#8a5a38" stroke="#3d2413" stroke-width="1.5"/>
+        <polygon points="32,104 80,128 80,136 32,112" fill="#6b4429"/>
+        <polygon points="80,52 104,64 104,96 80,84" fill="#c96a37" stroke="#7a3d1c" stroke-width="1.5"/>
+        <polygon points="80,52 56,64 56,96 80,84" fill="#e8834a" stroke="#7a3d1c" stroke-width="1.5"/>
+        <polygon points="56,70 104,70 104,76 56,76" fill="#c96a37"/>
+        <rect x="64" y="22" width="32" height="28" fill="#d9a479" stroke="#8a5a38" stroke-width="1.5"/>
+        <rect x="62" y="16" width="36" height="11" fill="#5a3a22"/>
+        <rect x="94" y="20" width="8" height="20" fill="#5a3a22"/>
+        <rect x="66" y="32" width="12" height="9" fill="#1a2a33" stroke="#9db4c4" stroke-width="1.5"/>
+        <rect x="82" y="32" width="12" height="9" fill="#1a2a33" stroke="#9db4c4" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <!-- 2. side -->
+    <div class="box">
+      <div class="sfc">SIDE</div>
+      <div class="cap" style="margin-bottom: 8px;">profile, 48px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <rect x="20" y="98" width="120" height="8" fill="#8a5a38" stroke="#3d2413" stroke-width="1.5"/>
+        <rect x="24" y="106" width="8" height="24" fill="#6b4429"/>
+        <rect x="26" y="66" width="34" height="32" fill="#241f33" stroke="#12101a" stroke-width="1.5"/>
+        <rect x="30" y="70" width="26" height="24" fill="#58d6e8"/>
+        <rect x="86" y="60" width="30" height="38" fill="#e8834a" stroke="#7a3d1c" stroke-width="1.5"/>
+        <rect x="86" y="70" width="30" height="6" fill="#c96a37"/>
+        <rect x="88" y="30" width="28" height="30" fill="#d9a479" stroke="#8a5a38" stroke-width="1.5"/>
+        <rect x="86" y="22" width="32" height="12" fill="#5a3a22"/>
+        <rect x="114" y="30" width="10" height="26" fill="#5a3a22"/>
+        <rect x="90" y="40" width="16" height="10" fill="#1a2a33" stroke="#9db4c4" stroke-width="1.5"/>
+        <rect x="66" y="88" width="20" height="10" fill="#d9a479" stroke="#8a5a38" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <!-- 3. top-down -->
+    <div class="box">
+      <div class="sfc">TOP-DOWN</div>
+      <div class="cap" style="margin-bottom: 8px;">from above, 30px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <rect x="30" y="26" width="100" height="46" fill="#8a5a38" stroke="#3d2413" stroke-width="1.5"/>
+        <rect x="36" y="30" width="88" height="10" fill="#241f33"/>
+        <rect x="42" y="33" width="76" height="4" fill="#58d6e8"/>
+        <circle cx="80" cy="96" r="24" fill="#e8834a" stroke="#7a3d1c" stroke-width="2"/>
+        <circle cx="80" cy="96" r="15" fill="#5a3a22"/>
+        <rect x="74" y="118" width="12" height="10" fill="#5a3a22"/>
+        <rect x="72" y="70" width="16" height="6" fill="#d9a479"/>
+      </svg>
+    </div>
+
+    <!-- 4. camera feed -->
+    <div class="box">
+      <div class="sfc">GUARD FEED</div>
+      <div class="cap" style="margin-bottom: 8px;">scaled down, 16px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <rect x="16" y="34" width="128" height="62" fill="#0f0d1a" stroke="#2a2440" stroke-width="2"/>
+        <polygon points="56,70 80,82 104,70 80,58" fill="#8a5a38" stroke="#3d2413"/>
+        <rect x="74" y="48" width="13" height="11" fill="#d9a479"/>
+        <rect x="73" y="44" width="15" height="5" fill="#5a3a22"/>
+        <polygon points="80,59 90,64 90,74 80,69" fill="#c96a37"/>
+        <polygon points="80,59 70,64 70,74 80,69" fill="#e8834a"/>
+        <g opacity="0.08" fill="#ffffff"><rect x="16" y="40" width="128" height="1"/><rect x="16" y="52" width="128" height="1"/><rect x="16" y="64" width="128" height="1"/><rect x="16" y="76" width="128" height="1"/><rect x="16" y="88" width="128" height="1"/></g>
+      </svg>
+    </div>
+
+    <!-- 5. phone avatar -->
+    <div class="box">
+      <div class="sfc">PHONE</div>
+      <div class="cap" style="margin-bottom: 8px;">avatar, 22px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <rect x="46" y="30" width="68" height="68" fill="#c96a37"/>
+        <rect x="60" y="42" width="40" height="28" fill="#d9a479"/>
+        <rect x="57" y="34" width="46" height="12" fill="#5a3a22"/>
+        <rect x="98" y="42" width="10" height="22" fill="#5a3a22"/>
+        <rect x="63" y="52" width="14" height="10" fill="#1a2a33" stroke="#9db4c4" stroke-width="1.5"/>
+        <rect x="82" y="52" width="14" height="10" fill="#1a2a33" stroke="#9db4c4" stroke-width="1.5"/>
+        <rect x="52" y="76" width="56" height="22" fill="#e8834a"/>
+        <rect x="52" y="84" width="56" height="5" fill="#c96a37"/>
+      </svg>
+      <div class="cap" style="margin-top: 6px;">the same face, cropped &mdash; not a separate icon set</div>
+    </div>
+
+    <!-- 6. desk view -->
+    <div class="box">
+      <div class="sfc">THE DESK</div>
+      <div class="cap" style="margin-bottom: 8px;">full bust, 96px</div>
+      <svg width="100%" height="130" viewBox="0 0 160 130" shape-rendering="crispEdges">
+        <rect x="42" y="76" width="76" height="54" fill="#e8834a" stroke="#7a3d1c" stroke-width="2"/>
+        <rect x="42" y="76" width="76" height="8" fill="#c96a37"/>
+        <rect x="42" y="94" width="76" height="6" fill="#c96a37"/>
+        <rect x="42" y="112" width="76" height="6" fill="#c96a37"/>
+        <rect x="56" y="30" width="48" height="44" fill="#d9a479" stroke="#8a5a38" stroke-width="2"/>
+        <rect x="53" y="20" width="54" height="18" fill="#5a3a22"/>
+        <rect x="100" y="28" width="14" height="34" fill="#5a3a22"/>
+        <rect x="98" y="60" width="18" height="8" fill="#e8342c"/>
+        <rect x="60" y="44" width="18" height="14" fill="#1a2a33" stroke="#9db4c4" stroke-width="2"/>
+        <rect x="82" y="44" width="18" height="14" fill="#1a2a33" stroke="#9db4c4" stroke-width="2"/>
+        <rect x="78" y="49" width="4" height="4" fill="#9db4c4"/>
+        <rect x="72" y="64" width="16" height="4" fill="#b8865f"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- the mechanism -->
+  <div style="display: flex; gap: 16px; padding: 22px 26px 0;">
+    <div style="flex: 1.4; background: #131126; border: 1px solid #241f3d; border-left: 3px solid #56c26a; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #56c26a; letter-spacing: 1.5px;">ONE DESCRIPTION, SIX RENDERERS</div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 9px;">
+        A worker&rsquo;s appearance is a <span style="color: #58d6e8;">value</span>, derived once from the
+        thread id and carried with them. Every surface asks the same value for what to draw
+        and differs only in scale and projection.
+      </div>
+      <div style="font-size: 9px; color: #5c566e; background: #0d0b14; border: 1px solid #241f3d; padding: 10px 12px; margin-top: 11px; line-height: 1.9;">
+        <div><span style="color: #58d6e8;">Look</span> { head, face, top, prop, skin, hair }</div>
+        <div style="color: #3f3a55;">&#8595; derived once, from the thread id</div>
+        <div>floor &middot; side &middot; top-down &middot; feed &middot; avatar &middot; desk</div>
+      </div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 11px;">
+        No surface may invent its own artwork. The day the phone gets its own avatar set is
+        the day the ponytail stops meaning Dev 2.
+      </div>
+    </div>
+    <div style="flex: 1; background: #131126; border: 1px solid #241f3d; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #f0b429; letter-spacing: 1.5px;">WHAT SURVIVES AT EVERY SIZE</div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 9px;">
+        At 96px you see the frames and the ponytail tie. At 16px you see an orange
+        shirt and a brown silhouette with something on the right side of the head.
+      </div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 9px;">
+        So the slots are ranked. <span style="color: #e8e2d6;">Shirt hue</span> and
+        <span style="color: #e8e2d6;">hair silhouette</span> must read at 16px and are chosen to
+        differ sharply within one office. Frames, freckles and desk props are luxuries that
+        appear as the sprite grows.
+      </div>
+    </div>
+    <div style="flex: 1; background: #131126; border: 1px solid #241f3d; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #e8342c; letter-spacing: 1.5px;">TEST IT, DO NOT TRUST IT</div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 9px;">
+        A golden-frame test renders one worker on all six surfaces and asserts the
+        derived look is identical. Consistency by convention lasts until the first
+        person is in a hurry.
+      </div>
+      <div style="font-size: 10px; color: #b4aec2; line-height: 1.9; margin-top: 9px;">
+        A second test builds a full office and asserts no two workers share a
+        silhouette at feed scale &mdash; twins are a rendering bug, not bad luck.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

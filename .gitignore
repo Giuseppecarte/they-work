@@ -19,3 +19,6 @@ CLAUDE.md
 # Backup artefacts from patch tools
 *.orig
 *.rej
+
+# Built design canvas — regenerate from docs/design/ sources
+/docs/design/*.canvas.html

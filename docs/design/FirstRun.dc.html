@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 640px; background: #0d0b14; overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6;">
+
+  <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px; background: #171425; border-bottom: 1px solid #2a2440;">
+    <div style="display: flex; gap: 5px;">
+      <div style="width: 9px; height: 9px; background: #e8342c;"></div>
+      <div style="width: 9px; height: 9px; background: #f0b429;"></div>
+      <div style="width: 9px; height: 9px; background: #56c26a;"></div>
+    </div>
+    <div style="color: #8a8299; font-size: 11px;">$ they-work</div>
+  </div>
+
+  <div style="padding: 26px 40px 0; display: flex; flex-direction: column; gap: 18px;">
+
+    <!-- wordmark -->
+    <div style="display: flex; align-items: flex-end; gap: 14px;">
+      <div style="font-family: 'Press Start 2P', monospace; font-size: 30px; color: #e8342c; line-height: 1; text-shadow: 2px 2px 0 #8e1a15, 4px 4px 0 #8e1a15, 6px 6px 0 #5c0f0c;">THEY&nbsp;WORK</div>
+      <div style="font-size: 11px; color: #5c566e; padding-bottom: 6px;">v0.1.0</div>
+    </div>
+    <div style="font-size: 12px; color: #8a8299; margin-top: -8px;">A virtual office for the agents already running on this machine.</div>
+
+    <!-- what was found -->
+    <div style="display: flex; gap: 14px;">
+      <div style="flex: 1; background: #171425; border: 1px solid #2a2440; border-left: 3px solid #e8834a; padding: 14px 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 10px; height: 10px; background: #e8834a;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Claude Code</div>
+          <div style="margin-left: auto; font-size: 10px; color: #56c26a;">FOUND</div>
+        </div>
+        <div style="font-size: 10px; color: #8a8299; margin-top: 8px;">~/.claude/projects/</div>
+        <div style="font-size: 10px; color: #5c566e; margin-top: 4px;">4 projects &middot; 12 sessions &middot; 2 active now</div>
+      </div>
+      <div style="flex: 1; background: #171425; border: 1px solid #2a2440; border-left: 3px solid #4f9ee8; padding: 14px 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 10px; height: 10px; background: #4f9ee8;"></div>
+          <div style="font-size: 12px; font-weight: 700;">Codex</div>
+          <div style="margin-left: auto; font-size: 10px; color: #56c26a;">FOUND</div>
+        </div>
+        <div style="font-size: 10px; color: #8a8299; margin-top: 8px;">~/.codex/sqlite/</div>
+        <div style="font-size: 10px; color: #5c566e; margin-top: 4px;">4 projects &middot; 20 threads &middot; 3 active now</div>
+      </div>
+    </div>
+
+    <!-- the consent panel: the honest bit -->
+    <div style="background: #131126; border: 1px solid #2a2440; padding: 16px 18px;">
+      <div style="font-size: 11px; font-weight: 700; color: #f0b429; letter-spacing: 1px;">WHAT THIS READS</div>
+      <div style="display: flex; gap: 30px; margin-top: 12px;">
+        <div style="flex: 1; font-size: 10px; color: #b4aec2; line-height: 1.8;">
+          <div>&#8226; Prompts you sent your agents</div>
+          <div>&#8226; Shell commands they ran</div>
+          <div>&#8226; File paths they opened and edited</div>
+          <div>&#8226; Messages they wrote back</div>
+        </div>
+        <div style="flex: 1; font-size: 10px; color: #b4aec2; line-height: 1.8;">
+          <div><span style="color: #56c26a;">&#10003;</span> Opened read-only, never written to</div>
+          <div><span style="color: #56c26a;">&#10003;</span> No network interface at all</div>
+          <div><span style="color: #56c26a;">&#10003;</span> Nothing leaves this machine</div>
+          <div><span style="color: #56c26a;">&#10003;</span> All of it is drawn on your screen</div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #5c566e; margin-top: 12px; border-top: 1px solid #2a2440; padding-top: 10px;">
+        docker run --rm -it --network none -v ~/.claude:/data/claude:<span style="color: #f0b429;">ro</span> -v ~/.codex:/data/codex:<span style="color: #f0b429;">ro</span>
+      </div>
+    </div>
+
+    <!-- project picker -->
+    <div>
+      <div style="font-size: 11px; font-weight: 700; color: #8a8299; letter-spacing: 1px; margin-bottom: 8px;">PICK AN OFFICE</div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: #241f3d; border-left: 3px solid #e8342c;">
+          <div style="color: #e8342c; font-size: 11px;">&#9656;</div>
+          <div style="font-size: 12px; font-weight: 700; width: 150px;">sustain</div>
+          <div style="font-size: 10px; color: #8a8299; width: 90px;">5 workers</div>
+          <div style="font-size: 10px; color: #56c26a;">&#9632;&#9632;&#9632;</div>
+          <div style="font-size: 10px; color: #f0b429;">&#9632;</div>
+          <div style="font-size: 10px; color: #5c566e;">&#9632;</div>
+          <div style="margin-left: auto; font-size: 10px; color: #f0b429;">1 blocked</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: #171425;">
+          <div style="width: 7px;"></div>
+          <div style="font-size: 12px; width: 150px; color: #b4aec2;">hugo-ai</div>
+          <div style="font-size: 10px; color: #8a8299; width: 90px;">5 workers</div>
+          <div style="font-size: 10px; color: #56c26a;">&#9632;&#9632;</div>
+          <div style="font-size: 10px; color: #5c566e;">&#9632;&#9632;&#9632;</div>
+          <div style="margin-left: auto; font-size: 10px; color: #5c566e;">quiet</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: #171425;">
+          <div style="width: 7px;"></div>
+          <div style="font-size: 12px; width: 150px; color: #b4aec2;">giin-jalisco</div>
+          <div style="font-size: 10px; color: #8a8299; width: 90px;">5 workers</div>
+          <div style="font-size: 10px; color: #56c26a;">&#9632;</div>
+          <div style="font-size: 10px; color: #5c566e;">&#9632;&#9632;&#9632;&#9632;</div>
+          <div style="margin-left: auto; font-size: 10px; color: #5c566e;">quiet</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: #171425;">
+          <div style="width: 7px;"></div>
+          <div style="font-size: 12px; width: 150px; color: #b4aec2;">they-work</div>
+          <div style="font-size: 10px; color: #8a8299; width: 90px;">5 workers</div>
+          <div style="font-size: 10px; color: #56c26a;">&#9632;&#9632;&#9632;&#9632;</div>
+          <div style="font-size: 10px; color: #5c566e;">&#9632;</div>
+          <div style="margin-left: auto; font-size: 10px; color: #56c26a;">busy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 20px; padding: 0 16px; background: #171425; border-top: 1px solid #2a2440; font-size: 11px; color: #5c566e;">
+    <span><span style="color: #e8e2d6;">&#8593;&#8595;</span> choose</span>
+    <span><span style="color: #e8e2d6;">Enter</span> open office</span>
+    <span><span style="color: #e8e2d6;">Tab</span> watch all four</span>
+    <span><span style="color: #e8e2d6;">q</span> quit</span>
+    <span style="margin-left: auto;">no agents found? &nbsp;THEYWORK_CLAUDE_HOME=&hellip;</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

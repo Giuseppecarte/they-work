@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .ext { font-family: "Press Start 2P", monospace; color: #e8342c;
+           text-shadow: 2px 2px 0 #8e1a15, 4px 4px 0 #8e1a15, 6px 6px 0 #8e1a15, 8px 8px 0 #5c0f0c; }
+    .lbl { font-size: 9px; color: #6f6885; letter-spacing: 1px; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 520px; background: #0d0b14; overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6;">
+
+  <div style="display: flex; align-items: baseline; gap: 14px; padding: 18px 24px 0;">
+    <div style="font-family: 'Press Start 2P', monospace; font-size: 15px; color: #e8342c; text-shadow: 2px 2px 0 #8e1a15;">THE&nbsp;SIGN</div>
+    <div style="font-size: 10px; color: #6f6885;">the project name, extruded and laid along the isometric axis &mdash; it is the first thing you read</div>
+  </div>
+
+  <!-- the hero treatment -->
+  <div style="height: 190px; position: relative; border-bottom: 1px solid #241f3d; margin: 14px 24px 0; overflow: hidden;">
+    <div style="position: absolute; left: 40px; top: 34px; transform: rotate(26.57deg);">
+      <div class="ext" style="font-size: 44px; line-height: 1; letter-spacing: 2px;">SUSTAIN</div>
+    </div>
+    <div style="position: absolute; right: 12px; bottom: 12px; font-size: 9px; color: #5c566e; line-height: 1.9; text-align: right;">
+      <div>rotation <span style="color: #b4aec2;">26.57&deg;</span> &mdash; the isometric axis, atan(0.5)</div>
+      <div>extrusion <span style="color: #b4aec2;">6 steps</span> down-right, 2px apart</div>
+      <div>face <span style="color: #e8342c;">#e8342c</span> &nbsp; body <span style="color: #8e1a15;">#8e1a15</span> &nbsp; base <span style="color: #a8352f;">#5c0f0c</span></div>
+    </div>
+  </div>
+
+  <!-- how names of every length behave -->
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 20px 24px 0;">
+
+    <div>
+      <div class="lbl">SHORT &mdash; up to 8 characters</div>
+      <div style="height: 74px; display: flex; align-items: center;">
+        <div class="ext" style="font-size: 26px; letter-spacing: 2px;">SUSTAIN</div>
+      </div>
+      <div style="font-size: 9px; color: #6f6885; line-height: 1.8;">Full height. One line. The default and the best case.</div>
+    </div>
+
+    <div>
+      <div class="lbl">LONG &mdash; 9 to 16 characters</div>
+      <div style="height: 74px; display: flex; align-items: center;">
+        <div class="ext" style="font-size: 17px; letter-spacing: 1px; text-shadow: 2px 2px 0 #8e1a15, 4px 4px 0 #8e1a15, 5px 5px 0 #5c0f0c;">GIIN-JALISCO</div>
+      </div>
+      <div style="font-size: 9px; color: #6f6885; line-height: 1.8;">Step the type down and shorten the extrusion so the sign still fits the wall.</div>
+    </div>
+
+    <div>
+      <div class="lbl">VERY LONG &mdash; over 16</div>
+      <div style="height: 74px; display: flex; flex-direction: column; justify-content: center; gap: 3px;">
+        <div class="ext" style="font-size: 15px; letter-spacing: 1px; text-shadow: 2px 2px 0 #8e1a15, 4px 4px 0 #5c0f0c;">PLATFORM</div>
+        <div class="ext" style="font-size: 15px; letter-spacing: 1px; text-shadow: 2px 2px 0 #8e1a15, 4px 4px 0 #5c0f0c;">MIGRATION</div>
+      </div>
+      <div style="font-size: 9px; color: #6f6885; line-height: 1.8;">Break on a separator into two lines. Never ellipsize a name &mdash; a half-read sign is worse than a small one.</div>
+    </div>
+  </div>
+
+  <!-- letterform spec -->
+  <div style="display: flex; gap: 18px; padding: 18px 24px 0; align-items: flex-start;">
+    <div style="flex: 1;">
+      <div class="lbl" style="margin-bottom: 8px;">LETTERFORM &mdash; 5&times;7 CELLS, ONE PIXEL OF WEIGHT</div>
+      <svg width="100%" height="76" viewBox="0 0 460 76" shape-rendering="crispEdges">
+        <g fill="#e8342c">
+          <rect x="0" y="8" width="8" height="56"/><rect x="8" y="8" width="24" height="8"/><rect x="32" y="16" width="8" height="16"/><rect x="8" y="32" width="24" height="8"/><rect x="32" y="40" width="8" height="16"/><rect x="8" y="56" width="24" height="8"/>
+          <rect x="56" y="8" width="8" height="56"/><rect x="64" y="8" width="24" height="8"/><rect x="88" y="16" width="8" height="40"/><rect x="64" y="56" width="24" height="8"/>
+          <rect x="112" y="8" width="8" height="56"/><rect x="120" y="8" width="24" height="8"/><rect x="144" y="16" width="8" height="16"/><rect x="120" y="32" width="24" height="8"/><rect x="136" y="40" width="8" height="24"/>
+          <rect x="168" y="8" width="40" height="8"/><rect x="184" y="16" width="8" height="48"/>
+          <rect x="224" y="8" width="8" height="56"/><rect x="264" y="8" width="8" height="56"/><rect x="232" y="32" width="32" height="8"/>
+        </g>
+        <g fill="#8e1a15" opacity="0.85">
+          <rect x="296" y="8" width="8" height="56"/><rect x="304" y="8" width="24" height="8"/><rect x="328" y="16" width="8" height="16"/><rect x="304" y="32" width="24" height="8"/><rect x="328" y="40" width="8" height="16"/><rect x="304" y="56" width="24" height="8"/>
+        </g>
+        <g stroke="#241f3d" stroke-width="1" fill="none">
+          <rect x="296" y="8" width="40" height="56"/>
+          <line x1="304" y1="8" x2="304" y2="64"/><line x1="312" y1="8" x2="312" y2="64"/><line x1="320" y1="8" x2="320" y2="64"/><line x1="328" y1="8" x2="328" y2="64"/>
+          <line x1="296" y1="16" x2="336" y2="16"/><line x1="296" y1="24" x2="336" y2="24"/><line x1="296" y1="32" x2="336" y2="32"/><line x1="296" y1="40" x2="336" y2="40"/><line x1="296" y1="48" x2="336" y2="48"/><line x1="296" y1="56" x2="336" y2="56"/>
+        </g>
+        <text x="348" y="30" fill="#6f6885" font-size="9" font-family="JetBrains Mono, monospace">5 wide &times; 7 tall</text>
+        <text x="348" y="44" fill="#6f6885" font-size="9" font-family="JetBrains Mono, monospace">1 cell of side bearing</text>
+        <text x="348" y="58" fill="#6f6885" font-size="9" font-family="JetBrains Mono, monospace">A&ndash;Z 0&ndash;9 and - . _ only</text>
+      </svg>
+    </div>
+    <div style="width: 300px; background: #131126; border: 1px solid #241f3d; padding: 12px 14px;">
+      <div class="lbl" style="color: #f0b429;">RULES</div>
+      <div style="font-size: 9px; color: #b4aec2; line-height: 1.9; margin-top: 8px;">
+        <div>&#8226; Uppercase always. Lowercase names are upcased.</div>
+        <div>&#8226; Characters outside the set become a middle dot.</div>
+        <div>&#8226; The sign never overlaps a desk &mdash; the floor plate starts below it.</div>
+        <div>&#8226; On a narrow terminal it degrades to one plain bold line, not a broken sign.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

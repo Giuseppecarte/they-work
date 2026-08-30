@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .grp { font-size: 9px; font-weight: 700; color: #6f6885; letter-spacing: 1.5px; margin-bottom: 7px; }
+    .opt { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: #171425; font-size: 11px; color: #b4aec2; }
+    .on  { background: #241f3d; color: #e8e2d6; border-left: 3px solid #e8342c; padding-left: 9px; }
+    .hint { font-size: 9px; color: #5c566e; margin-left: auto; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 760px; background: #0d0b14; overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6;">
+
+  <div style="display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px; background: #171425; border-bottom: 1px solid #2a2440;">
+    <div style="color: #8a8299; font-size: 11px;">sustain &nbsp;/&nbsp; settings</div>
+    <div style="margin-left: auto; color: #5c566e; font-size: 11px;">s &mdash; settings</div>
+  </div>
+
+  <div style="display: flex; gap: 22px; padding: 20px 24px 0;">
+
+    <!-- left: the settings -->
+    <div style="width: 500px; display: flex; flex-direction: column; gap: 18px;">
+
+      <div>
+        <div class="grp">CAMERA</div>
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <div class="opt on"><span style="color: #e8342c;">&#9656;</span> Isometric <span class="hint">depth and set dressing</span></div>
+          <div class="opt"><span style="width: 7px;"></span> Top-down <span class="hint">fits the most desks</span></div>
+          <div class="opt"><span style="width: 7px;"></span> Side <span class="hint">biggest faces</span></div>
+          <div class="opt"><span style="width: 7px;"></span> Auto <span class="hint">picks by terminal size</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="grp">LIGHT</div>
+        <div style="display: flex; gap: 3px;">
+          <div class="opt" style="flex: 1; justify-content: center;">Dark</div>
+          <div class="opt on" style="flex: 1; justify-content: center; border-left: 3px solid #f0b429;">Light</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Auto</div>
+        </div>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 6px; line-height: 1.7;">
+          Auto follows your terminal&rsquo;s own background, and falls back to dark. Agent and status colours are chosen to hold their meaning in both.
+        </div>
+      </div>
+
+      <div>
+        <div class="grp">OFFICE THEME</div>
+        <div style="display: flex; gap: 3px;">
+          <div class="opt on" style="flex: 1; justify-content: center; border-left: 3px solid #56c26a;">Auto</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Sandstone</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Midnight</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Orchard</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Arcade</div>
+        </div>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 6px; line-height: 1.7;">
+          Auto derives it from the project name, so every office looks distinct without you choosing.
+        </div>
+      </div>
+
+      <div>
+        <div class="grp">COLOUR DEPTH</div>
+        <div style="display: flex; gap: 3px;">
+          <div class="opt on" style="flex: 1; justify-content: center; border-left: 3px solid #58d6e8;">Auto</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Truecolor</div>
+          <div class="opt" style="flex: 1; justify-content: center;">256</div>
+          <div class="opt" style="flex: 1; justify-content: center;">Mono</div>
+        </div>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 6px; line-height: 1.7;">
+          <span style="color: #f0b429;">NO_COLOR</span> is honoured above all of these.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 18px;">
+        <div style="flex: 1;">
+          <div class="grp">MOTION</div>
+          <div style="display: flex; gap: 3px;">
+            <div class="opt on" style="flex: 1; justify-content: center; border-left: 3px solid #4fa860;">Full</div>
+            <div class="opt" style="flex: 1; justify-content: center;">Calm</div>
+            <div class="opt" style="flex: 1; justify-content: center;">Still</div>
+          </div>
+        </div>
+        <div style="flex: 1;">
+          <div class="grp">NAME PLATES</div>
+          <div style="display: flex; gap: 3px;">
+            <div class="opt on" style="flex: 1; justify-content: center; border-left: 3px solid #4fa860;">Always</div>
+            <div class="opt" style="flex: 1; justify-content: center;">On focus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right: live preview -->
+    <div style="flex: 1;">
+      <div class="grp">PREVIEW</div>
+      <div style="background: #f4efe4; border: 1px solid #241f3d; padding: 0;">
+        <svg width="100%" height="230" viewBox="0 0 420 230" shape-rendering="crispEdges">
+          <rect width="420" height="230" fill="#f4efe4"/>
+          <polygon points="210,58 350,128 350,86 210,16" fill="#cfc6e0" stroke="#a79cc0" stroke-width="2"/>
+          <polygon points="210,58 70,128 70,86 210,16" fill="#bdb2d4" stroke="#a79cc0" stroke-width="2"/>
+          <polygon points="252,92 296,114 296,80 252,58" fill="#bfe0ee" stroke="#7fa8bc" stroke-width="2"/>
+          <polygon points="210,58 350,128 210,198 70,128" fill="#e6d9b8" stroke="#b9a97f" stroke-width="2"/>
+          <g stroke="#d4c5a0"><line x1="140" y1="93" x2="280" y2="163"/><line x1="280" y1="93" x2="140" y2="163"/></g>
+          <g><polygon points="140,92 174,109 208,92 174,75" fill="#a2703f" stroke="#5f4021" stroke-width="1.5"/><polygon points="140,92 174,109 174,117 140,100" fill="#835729"/>
+             <rect x="166" y="56" width="16" height="13" fill="#f2c9a0" stroke="#8a5a38" stroke-width="1.5"/><rect x="165" y="52" width="18" height="6" fill="#2e2118"/><polygon points="174,69 186,75 186,90 174,84" fill="#3a7cbd"/><polygon points="174,69 162,75 162,90 174,84" fill="#4f9ee8"/></g>
+          <g><polygon points="212,122 246,139 280,122 246,105" fill="#a2703f" stroke="#5f4021" stroke-width="1.5"/><polygon points="212,122 246,139 246,147 212,130" fill="#835729"/>
+             <rect x="238" y="86" width="16" height="13" fill="#d9a479" stroke="#8a5a38" stroke-width="1.5"/><rect x="237" y="82" width="18" height="6" fill="#5a3a22"/><polygon points="246,99 258,105 258,120 246,114" fill="#c96a37"/><polygon points="246,99 234,105 234,120 246,114" fill="#e8834a"/>
+             <polygon points="246,64 259,71 246,78 233,71" fill="#d99a10" stroke="#7a5405" stroke-width="1.5"/><rect x="244" y="68" width="3" height="5" fill="#3a2c05"/></g>
+          <g><polygon points="98,122 132,139 166,122 132,105" fill="#a2703f" stroke="#5f4021" stroke-width="1.5"/><polygon points="98,122 132,139 132,147 98,130" fill="#835729"/>
+             <rect x="124" y="86" width="16" height="13" fill="#a9714b" stroke="#6b4429" stroke-width="1.5"/><rect x="123" y="80" width="18" height="8" fill="#d99a10"/><polygon points="132,99 144,105 144,120 132,114" fill="#3d8a4e"/><polygon points="132,99 120,105 120,120 132,114" fill="#4fa860"/></g>
+          <g transform="rotate(26.57 62 26)"><text x="62" y="32" font-family="'Press Start 2P', monospace" font-size="15" fill="#d1241d">SUSTAIN</text></g>
+        </svg>
+      </div>
+      <div style="font-size: 9px; color: #5c566e; margin-top: 8px; line-height: 1.8;">
+        The preview is the real renderer at a small size, not a picture &mdash; whatever you
+        change, you see before you leave the screen.
+      </div>
+
+      <div style="margin-top: 18px; background: #131126; border: 1px solid #241f3d; padding: 14px 16px;">
+        <div style="font-size: 10px; font-weight: 700; color: #f0b429; letter-spacing: 1.5px;">WHERE THIS IS KEPT</div>
+        <div style="font-size: 10px; color: #b4aec2; line-height: 1.85; margin-top: 8px;">
+          Nowhere, by default. Settings live for the session, and flags set them
+          at launch. they-work writes nothing unless you mount a config
+          directory and ask it to.
+        </div>
+        <div style="font-size: 9px; color: #5c566e; margin-top: 10px; background: #0d0b14; border: 1px solid #241f3d; padding: 9px 10px; line-height: 1.8;">
+          <div>they-work --view top --light</div>
+          <div style="color: #3f3a55;"># to keep them:</div>
+          <div>-v ~/.config/they-work:/config</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 34px; display: flex; align-items: center; gap: 18px; padding: 0 16px; background: #171425; border-top: 1px solid #2a2440; font-size: 10px; color: #5c566e;">
+    <span><span style="color: #e8e2d6;">&#8593;&#8595;</span> setting</span>
+    <span><span style="color: #e8e2d6;">&#8592;&#8594;</span> value</span>
+    <span><span style="color: #e8e2d6;">v</span> cycle camera anywhere</span>
+    <span><span style="color: #e8e2d6;">Esc</span> back to the floor</span>
+    <span style="margin-left: auto;">changes apply as you move</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

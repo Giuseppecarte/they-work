@@ -634,6 +634,8 @@ dependencies = [
  "anyhow",
  "crossterm",
  "ratatui",
+ "rusqlite",
+ "serde_json",
  "theywork-collect",
  "theywork-core",
  "theywork-render",

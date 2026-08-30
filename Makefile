@@ -9,7 +9,12 @@ CARGO = THEYWORK_DEV_IMAGE=$(DEV_IMAGE) ./scripts/cargo
 THEYWORK_CLAUDE_HOME ?= /data/claude
 THEYWORK_CODEX_HOME ?= /data/codex
 
+# Run as you. Agent transcripts are private to their owner (Claude writes them
+# 0600), so a container with its own uid can list the directories and open
+# nothing. Reading them as yourself is also the honest posture: they-work sees
+# exactly what you can see, and no more.
 DOCKER_SECURITY = \
+  --user $(shell id -u):$(shell id -g) \
   --network none \
   --read-only \
   --cap-drop ALL \

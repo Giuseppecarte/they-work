@@ -77,6 +77,7 @@ fn is_windows_mount(path: &str) -> bool {
             .is_some_and(|drive| drive.len() == 1 && drive.as_bytes()[0].is_ascii_alphabetic())
 }
 pub(crate) const DETAIL_LIMIT: usize = 120;
+pub(crate) const TIMELINE_TEXT_LIMIT: usize = 2_000;
 
 /// Keep details useful in a desk caption without allowing an agent-controlled
 /// command or message to make the UI (or a collector's state) unbounded.
@@ -110,6 +111,41 @@ pub(crate) fn truncate_detail(input: &str) -> String {
     }
 
     output
+}
+
+/// Keep timeline messages readable without retaining an agent-controlled
+/// prompt or response indefinitely. Characters, rather than bytes, are the
+/// unit here so a cap never cuts through a UTF-8 code point or destroys the
+/// text the desk view is meant to show.
+pub(crate) fn truncate_timeline_text(input: &str) -> String {
+    input.chars().take(TIMELINE_TEXT_LIMIT).collect()
+}
+
+pub(crate) fn text_line_count(input: &str) -> u32 {
+    u32::try_from(input.lines().count()).unwrap_or(u32::MAX)
+}
+
+/// Count a diff only when it has an explicit unified-diff hunk. A raw file
+/// payload can begin lines with `+` or `-` as ordinary content, so counting
+/// prefixes without a hunk would manufacture edit statistics.
+pub(crate) fn unified_diff_counts(input: &str) -> Option<(u32, u32)> {
+    if !input.lines().any(|line| line.starts_with("@@")) {
+        return None;
+    }
+
+    let mut added = 0_u32;
+    let mut removed = 0_u32;
+    for line in input.lines() {
+        if line.starts_with("+++") || line.starts_with("---") {
+            continue;
+        }
+        if line.starts_with('+') {
+            added = added.saturating_add(1);
+        } else if line.starts_with('-') {
+            removed = removed.saturating_add(1);
+        }
+    }
+    Some((added, removed))
 }
 
 pub(crate) fn short_id(id: &str) -> String {
@@ -260,6 +296,19 @@ fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
 /// Resolve a working directory to the nearest enclosing Git root once per
 /// normalized spelling.
 pub(crate) fn repository_root(input: &str, cache: &mut HashMap<String, String>) -> String {
+    repository_root_with_project_hint(input, cache, None)
+}
+
+/// Resolve a working directory when the source's project directory encodes a
+/// root that is not mounted beside the collector. Claude stores transcripts
+/// below names such as `-home-gc-projects-demo`; matching that encoding against
+/// the recorded cwd preserves one office per repository in the read-only
+/// container while still preferring a real `.git` walk whenever it is visible.
+pub(crate) fn repository_root_with_project_hint(
+    input: &str,
+    cache: &mut HashMap<String, String>,
+    project_key: Option<&str>,
+) -> String {
     let normalized = normalize_office_path(input);
     if normalized.is_empty() {
         return normalized;
@@ -274,11 +323,38 @@ pub(crate) fn repository_root(input: &str, cache: &mut HashMap<String, String>) 
             break normalize_office_path(&current.to_string_lossy());
         }
         if !current.pop() {
-            break normalized.clone();
+            break project_root_hint(&normalized, project_key)
+                .unwrap_or_else(|| normalized.clone());
         }
     };
     cache.insert(normalized, result.clone());
     result
+}
+
+fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<String> {
+    let project_key = project_key?.trim();
+    if project_key.is_empty() {
+        return None;
+    }
+
+    let absolute = normalized.starts_with('/');
+    let mut components = Vec::new();
+    for component in normalized
+        .split('/')
+        .filter(|component| !component.is_empty())
+    {
+        components.push(component);
+        let candidate = if absolute {
+            format!("/{}", components.join("/"))
+        } else {
+            components.join("/")
+        };
+        let encoded = candidate.replace('/', "-");
+        if encoded == project_key || encoded.eq_ignore_ascii_case(project_key) {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 fn filesystem_path(input: &str) -> String {
@@ -335,6 +411,19 @@ mod tests {
         assert_eq!(
             normalize_office_path("/mnt/c/users/pc/onedrive/documentos/aistudio 2"),
             "/mnt/c/users/pc/onedrive/documentos/aistudio 2"
+        );
+    }
+
+    #[test]
+    fn project_key_finds_unmounted_repository_root() {
+        let mut cache = HashMap::new();
+        let root = "/path/that-is-not-mounted/they-work/project-name";
+        let cwd = format!("{root}/apps/web");
+        let project_key = "-path-that-is-not-mounted-they-work-project-name";
+
+        assert_eq!(
+            repository_root_with_project_hint(&cwd, &mut cache, Some(project_key)),
+            root
         );
     }
 

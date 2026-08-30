@@ -5,11 +5,14 @@ use std::time::Duration;
 use rusqlite::{params_from_iter, Connection, OpenFlags};
 use serde_json::Value;
 use theywork_core::{
-    Activity, Agent, Event, EventKind, Millis, OfficeId, Source, SourceError, WorkerId,
-    BLOCKED_AFTER_MS,
+    Activity, Agent, Beat, Event, EventKind, Millis, OfficeId, Outcome, Source, SourceError,
+    WorkerId, BLOCKED_AFTER_MS,
 };
 
-use crate::util::{path_allowed, recency_cutoff, repository_root, short_id, truncate_detail};
+use crate::util::{
+    path_allowed, recency_cutoff, repository_root, short_id, truncate_detail,
+    truncate_timeline_text, unified_diff_counts,
+};
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
     "The following is the Codex agent history whose request action you are assessing";
@@ -63,6 +66,68 @@ impl CodexSource {
             && sqlite.join("thread_history_1.sqlite").is_file()
     }
 
+    pub(crate) fn inspect_home(
+        home: &Path,
+        active_within: Duration,
+        now: Millis,
+    ) -> crate::StoreReport {
+        let mut report = crate::StoreReport::new(Agent::Codex, home.to_path_buf());
+        report.home_found = home.is_dir();
+        if !report.home_found {
+            report.error = Some("home is not a directory".to_string());
+            return report;
+        }
+
+        let state_path = home.join("sqlite").join("state_5.sqlite");
+        let history_path = home.join("sqlite").join("thread_history_1.sqlite");
+        if !state_path.is_file() || !history_path.is_file() {
+            report.error = Some("required SQLite stores are missing".to_string());
+            return report;
+        }
+
+        let Some(state) = open_read_only(&state_path) else {
+            report.error = Some("state database could not be opened read-only".to_string());
+            return report;
+        };
+        let mut office_cache = HashMap::new();
+        let all_threads = match read_threads(&state, i64::MIN, &mut office_cache) {
+            Ok(threads) => threads,
+            Err(error) => {
+                report.error = Some(format!("thread roster query failed: {error}"));
+                return report;
+            }
+        };
+        let active_threads = match read_threads(
+            &state,
+            recency_cutoff(now, active_within),
+            &mut office_cache,
+        ) {
+            Ok(threads) => threads,
+            Err(error) => {
+                report.error = Some(format!("active roster query failed: {error}"));
+                return report;
+            }
+        };
+        let Some(history) = open_read_only(&history_path) else {
+            report.error = Some("history database could not be opened read-only".to_string());
+            return report;
+        };
+        if let Err(error) = read_turns(&history) {
+            report.error = Some(format!("turn history query failed: {error}"));
+            return report;
+        }
+
+        let projects: HashSet<String> = all_threads
+            .iter()
+            .map(|thread| thread.office_path.clone())
+            .collect();
+        report.readable = true;
+        report.projects = projects.len();
+        report.threads = all_threads.len();
+        report.active_threads = active_threads.len();
+        report
+    }
+
     fn state_path(&self) -> PathBuf {
         self.home.join("sqlite").join("state_5.sqlite")
     }
@@ -77,14 +142,39 @@ impl CodexSource {
         }
         current
             .keys()
-            .map(|thread_id| {
-                self.item_watermarks
-                    .get(thread_id)
-                    .copied()
-                    .unwrap_or(DEFAULT_ITEM_WATERMARK)
-            })
+            .map(|thread_id| self.item_watermarks.get(thread_id).copied().unwrap_or(-1))
             .min()
             .unwrap_or(DEFAULT_ITEM_WATERMARK)
+    }
+
+    fn clear_runtime_state(&mut self) {
+        self.threads.clear();
+        self.item_watermarks.clear();
+        self.office_cache.clear();
+        self.items_initialized = false;
+        self.turn_states.clear();
+    }
+
+    fn prune_runtime_state(&mut self) {
+        let active_ids: HashSet<String> = self.threads.keys().cloned().collect();
+        self.item_watermarks
+            .retain(|thread_id, _| active_ids.contains(thread_id));
+        self.turn_states
+            .retain(|thread_id, _| active_ids.contains(thread_id));
+
+        let active_offices: HashSet<String> = self
+            .threads
+            .values()
+            .map(|thread| thread.office_path.clone())
+            .collect();
+        self.office_cache
+            .retain(|_, office_path| active_offices.contains(office_path));
+    }
+
+    fn unavailable_poll(&mut self, reason: &str) -> Vec<Event> {
+        self.clear_runtime_state();
+        debug_blocked_unavailable(reason);
+        Vec::new()
     }
 }
 
@@ -96,12 +186,10 @@ impl Source for CodexSource {
     fn poll(&mut self, now: Millis) -> Result<Vec<Event>, SourceError> {
         let cutoff_ms = recency_cutoff(now, self.active_within);
         let Some(state) = open_read_only(&self.state_path()) else {
-            debug_blocked_unavailable("state database could not be opened read-only");
-            return Ok(Vec::new());
+            return Ok(self.unavailable_poll("state database could not be opened read-only"));
         };
         let Ok(roster) = read_threads(&state, cutoff_ms, &mut self.office_cache) else {
-            debug_blocked_unavailable("thread roster query failed");
-            return Ok(Vec::new());
+            return Ok(self.unavailable_poll("thread roster query failed"));
         };
         let assessor_ids: Vec<String> = roster
             .iter()
@@ -110,17 +198,12 @@ impl Source for CodexSource {
             .collect();
         let edges = read_spawn_edges(&state, &assessor_ids).unwrap_or_default();
         let Some(history) = open_read_only(&self.history_path()) else {
-            debug_blocked_unavailable("history database could not be opened read-only");
-            return Ok(Vec::new());
+            return Ok(self.unavailable_poll("history database could not be opened read-only"));
         };
         let turns = match read_turns(&history) {
             Ok(turns) => turns,
-            // A partially upgraded older database may have the item table but
-            // no turn table. The feed is still safe to display in that case.
-            Err(error) if error.to_string().contains("no such table") => Vec::new(),
             Err(_) => {
-                debug_blocked_unavailable("turn history query failed");
-                return Ok(Vec::new());
+                return Ok(self.unavailable_poll("turn history query failed"));
             }
         };
         let turns_by_thread: HashMap<String, TurnRecord> = turns
@@ -171,12 +254,12 @@ impl Source for CodexSource {
         }
         debug_exclusion_summary(&exclusions);
         disambiguate_thread_names(&mut current);
-        let Ok(items) = read_items(&history, self.minimum_item_watermark(&current)) else {
-            debug_blocked_unavailable("activity item query failed");
-            return Ok(Vec::new());
+        let previous = std::mem::replace(&mut self.threads, current);
+        self.prune_runtime_state();
+        let Ok(items) = read_items(&history, self.minimum_item_watermark(&self.threads)) else {
+            return Ok(self.unavailable_poll("activity item query failed"));
         };
 
-        let previous = std::mem::replace(&mut self.threads, current);
         let mut events = Vec::new();
 
         for (id, old_thread) in &previous {
@@ -228,19 +311,24 @@ impl Source for CodexSource {
                 continue;
             }
 
+            let Some(thread) = self.threads.get(&item.thread_id) else {
+                continue;
+            };
             watermark_updates
                 .entry(item.thread_id.clone())
                 .and_modify(|watermark| *watermark = (*watermark).max(item.created_at_ms))
                 .or_insert(item.created_at_ms);
 
-            let Some(thread) = self.threads.get(&item.thread_id) else {
-                continue;
-            };
             let payload = serde_json::from_str::<Value>(&item.item_json).unwrap_or(Value::Null);
-            let Some(kind) = item_kind(&item.item_type, &payload) else {
-                continue;
-            };
-            events.push(thread.event(item.created_at_ms, kind));
+            if let Some(kind) = item_kind(&item.item_type, &payload, item.created_at_ms) {
+                events.push(thread.event(item.created_at_ms, kind));
+            }
+            if item.item_type == "userMessage" {
+                events.push(thread.event(
+                    item.created_at_ms,
+                    message_beat(&payload, item.created_at_ms),
+                ));
+            }
         }
         for (thread_id, watermark) in watermark_updates {
             self.item_watermarks
@@ -321,6 +409,7 @@ impl Source for CodexSource {
             debug_waiting(&signal, &detail);
             events.push(thread.event(at, EventKind::Acted(Activity::Waiting { detail })));
         }
+        self.prune_runtime_state();
         events.sort_by_key(|event| event.at);
         Ok(events)
     }
@@ -405,7 +494,9 @@ struct TurnState {
 }
 
 fn open_read_only(path: &Path) -> Option<Connection> {
-    Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY).ok()
+    let connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY).ok()?;
+    connection.busy_timeout(Duration::ZERO).ok()?;
+    Some(connection)
 }
 
 fn table_has_column(connection: &Connection, table: &str, wanted: &str) -> rusqlite::Result<bool> {
@@ -489,14 +580,31 @@ fn read_turns(connection: &Connection) -> rusqlite::Result<Vec<TurnRecord>> {
     Ok(turns)
 }
 
-fn item_kind(item_type: &str, payload: &Value) -> Option<EventKind> {
+fn item_kind(item_type: &str, payload: &Value, at: Millis) -> Option<EventKind> {
     match item_type {
-        "commandExecution" => Some(EventKind::Acted(Activity::Typing {
-            detail: json_detail(payload, &["command", "cmd"]),
-        })),
+        "commandExecution" => {
+            let activity = Activity::Typing {
+                detail: json_detail(payload, &["command", "cmd"]),
+            };
+            if command_status(payload).is_some_and(command_status_is_terminal) {
+                return Some(match exit_code(payload) {
+                    Some(exit_code) => EventKind::Did(Beat {
+                        at,
+                        activity,
+                        outcome: Some(Outcome::Exited(exit_code)),
+                    }),
+                    None => EventKind::Acted(activity),
+                });
+            }
+            Some(EventKind::Acted(activity))
+        }
         "reasoning" => Some(EventKind::Acted(Activity::Thinking)),
-        "agentMessage" => Some(EventKind::Acted(Activity::Talking {
-            detail: json_detail(payload, &["message", "text", "content"]),
+        "agentMessage" => Some(EventKind::Did(Beat {
+            at,
+            activity: Activity::Talking {
+                detail: timeline_detail(payload, &["message", "text", "content"]),
+            },
+            outcome: None,
         })),
         "mcpToolCall" => Some(EventKind::Acted(Activity::Searching {
             detail: json_detail(payload, &["name", "tool", "tool_name", "query", "url"]),
@@ -504,8 +612,13 @@ fn item_kind(item_type: &str, payload: &Value) -> Option<EventKind> {
         "webSearch" => Some(EventKind::Acted(Activity::Searching {
             detail: json_detail(payload, &["query", "url"]),
         })),
-        "fileChange" => Some(EventKind::Acted(Activity::Editing {
-            detail: json_detail(payload, &["path", "file_path", "filename", "changes"]),
+        "fileChange" => Some(EventKind::Did(Beat {
+            at,
+            activity: Activity::Editing {
+                detail: json_detail(payload, &["path", "file_path", "filename", "changes"]),
+            },
+            outcome: file_change_counts(payload)
+                .map(|(added, removed)| Outcome::Changed { added, removed }),
         })),
         "userMessage" => Some(EventKind::Turn { in_flight: true }),
         "contextCompaction" => None,
@@ -513,6 +626,116 @@ fn item_kind(item_type: &str, payload: &Value) -> Option<EventKind> {
     }
 }
 
+fn message_beat(payload: &Value, at: Millis) -> EventKind {
+    EventKind::Did(Beat {
+        at,
+        activity: Activity::Talking {
+            detail: timeline_detail(payload, &["message", "text", "content"]),
+        },
+        outcome: None,
+    })
+}
+
+fn timeline_detail(payload: &Value, keys: &[&str]) -> String {
+    keys.iter()
+        .find_map(|key| payload.get(*key).and_then(value_detail))
+        .map(|detail| truncate_timeline_text(&detail))
+        .unwrap_or_default()
+}
+
+fn exit_code(payload: &Value) -> Option<i32> {
+    find_numeric_field(
+        payload,
+        &["exitCode", "exit_code", "returnCode", "return_code"],
+    )
+}
+
+fn find_numeric_field(value: &Value, keys: &[&str]) -> Option<i32> {
+    match value {
+        Value::Object(object) => {
+            for key in keys {
+                if let Some(number) = object.get(*key).and_then(integer_value) {
+                    return Some(number);
+                }
+            }
+            object
+                .values()
+                .find_map(|value| find_numeric_field(value, keys))
+        }
+        Value::Array(values) => values
+            .iter()
+            .find_map(|value| find_numeric_field(value, keys)),
+        _ => None,
+    }
+}
+
+fn integer_value(value: &Value) -> Option<i32> {
+    value
+        .as_i64()
+        .and_then(|value| i32::try_from(value).ok())
+        .or_else(|| value.as_u64().and_then(|value| i32::try_from(value).ok()))
+        .or_else(|| value.as_str()?.trim().parse::<i32>().ok())
+}
+
+fn explicit_change_counts(value: &Value) -> Option<(u32, u32)> {
+    let object = value.as_object()?;
+    let added = [
+        "added",
+        "addedLines",
+        "added_lines",
+        "linesAdded",
+        "lines_added",
+        "additions",
+        "insertions",
+    ]
+    .iter()
+    .find_map(|key| object.get(*key).and_then(u32_value));
+    let removed = [
+        "removed",
+        "removedLines",
+        "removed_lines",
+        "linesRemoved",
+        "lines_removed",
+        "deletions",
+    ]
+    .iter()
+    .find_map(|key| object.get(*key).and_then(u32_value));
+    added.zip(removed)
+}
+fn file_change_counts(payload: &Value) -> Option<(u32, u32)> {
+    if let Some(counts) = explicit_change_counts(payload) {
+        return Some(counts);
+    }
+    if let Some(changes) = payload.get("changes").and_then(Value::as_array) {
+        if changes.is_empty() {
+            return None;
+        }
+        let mut total = (0_u32, 0_u32);
+        for change in changes {
+            let counts = explicit_change_counts(change).or_else(|| {
+                change
+                    .get("diff")
+                    .and_then(Value::as_str)
+                    .and_then(unified_diff_counts)
+            })?;
+            total.0 = total.0.saturating_add(counts.0);
+            total.1 = total.1.saturating_add(counts.1);
+        }
+        return Some(total);
+    }
+    payload
+        .get("diff")
+        .and_then(Value::as_str)
+        .and_then(unified_diff_counts)
+}
+
+fn u32_value(value: &Value) -> Option<u32> {
+    value
+        .as_u64()
+        .and_then(|value| u32::try_from(value).ok())
+        .or_else(|| value.as_i64().and_then(|value| u32::try_from(value).ok()))
+        .or_else(|| value.as_str()?.trim().parse::<u32>().ok())
+}
 fn turn_in_flight(status: &str) -> Option<bool> {
     match status {
         "inProgress" => Some(true),
@@ -1158,6 +1381,11 @@ struct WaitingSignal {
     strategy: WaitingStrategy,
 }
 
+// Real blocked-state recipe: launch Codex with approval policy
+// --ask-for-approval on-request in a disposable checkout, ask it to run
+// rm -rf target (or another command that requires approval), and leave the
+// approval unanswered for more than BLOCKED_AFTER_MS (180 seconds). Poll once
+// more; the developer should emit Waiting with the pending command detail.
 fn waiting_signals(
     assessors: &[ThreadRecord],
     edges: &[SpawnEdge],
@@ -1329,4 +1557,82 @@ fn command_status_is_terminal(status: &str) -> bool {
             | "timedout"
             | "killed"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn thread(id: &str, office_path: &str) -> ThreadRecord {
+        ThreadRecord {
+            id: id.to_string(),
+            raw_office_path: office_path.to_string(),
+            office_path: office_path.to_string(),
+            name: id.to_string(),
+            tokens_used: 1,
+            git_branch: None,
+            updated_at_ms: 1,
+            classification: ThreadClassification {
+                kind: ThreadKind::Developer,
+                reason: "developer",
+            },
+            name_is_fallback: false,
+        }
+    }
+
+    #[test]
+    fn ended_threads_leave_every_codex_runtime_map() {
+        let mut source = CodexSource::new("/tmp/does-not-exist");
+        source
+            .threads
+            .insert("active".to_string(), thread("active", "/repo"));
+        source
+            .threads
+            .insert("ended".to_string(), thread("ended", "/gone"));
+        source.item_watermarks.insert("active".to_string(), 10);
+        source.item_watermarks.insert("ended".to_string(), 20);
+        source.turn_states.insert(
+            "active".to_string(),
+            TurnState {
+                turn_id: "turn-active".to_string(),
+                in_flight: true,
+                error_detail: None,
+            },
+        );
+        source.turn_states.insert(
+            "ended".to_string(),
+            TurnState {
+                turn_id: "turn-ended".to_string(),
+                in_flight: false,
+                error_detail: None,
+            },
+        );
+        source
+            .office_cache
+            .insert("/repo/src".to_string(), "/repo".to_string());
+        source
+            .office_cache
+            .insert("/gone/src".to_string(), "/gone".to_string());
+
+        source.threads.remove("ended");
+        source.prune_runtime_state();
+
+        assert_eq!(source.threads.len(), 1);
+        assert_eq!(source.item_watermarks.len(), 1);
+        assert_eq!(source.turn_states.len(), 1);
+        assert_eq!(source.office_cache.len(), 1);
+        assert!(source.item_watermarks.contains_key("active"));
+        assert!(source.turn_states.contains_key("active"));
+        assert!(source.office_cache.contains_key("/repo/src"));
+        assert!(!source.item_watermarks.contains_key("ended"));
+        assert!(!source.turn_states.contains_key("ended"));
+        assert!(!source.office_cache.contains_key("/gone/src"));
+
+        source.clear_runtime_state();
+        assert!(source.threads.is_empty());
+        assert!(source.item_watermarks.is_empty());
+        assert!(source.turn_states.is_empty());
+        assert!(source.office_cache.is_empty());
+        assert!(!source.items_initialized);
+    }
 }

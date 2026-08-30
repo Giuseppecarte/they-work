@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use rusqlite::{params, Connection, OpenFlags};
 use serde_json::{json, Value};
@@ -11,7 +11,7 @@ use theywork_collect::{
     normalize_office_path, sources as build_sources, ClaudeSource, CodexSource, Config,
     DEFAULT_ACTIVE_WITHIN,
 };
-use theywork_core::{Activity, Agent, Event, EventKind, Source, World};
+use theywork_core::{Activity, Agent, Beat, Event, EventKind, Outcome, Source, World, HISTORY_LEN};
 
 static NEXT_TEMP_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -63,9 +63,28 @@ fn set_modified_millis(path: &Path, millis: i64) {
         .unwrap();
 }
 
+fn process_rss_bytes() -> Option<u64> {
+    let statm = fs::read_to_string("/proc/self/statm").ok()?;
+    let resident_pages = statm.split_whitespace().nth(1)?.parse::<u64>().ok()?;
+    Some(resident_pages.saturating_mul(4096))
+}
+
+fn mean_poll_micros(samples: &[Duration]) -> f64 {
+    let total = samples.iter().map(Duration::as_secs_f64).sum::<f64>();
+    total * 1_000_000.0 / samples.len() as f64
+}
+
+fn simulated_epoch_millis() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system clock is before Unix epoch")
+        .as_millis() as i64
+}
+
 fn has_activity(events: &[Event], expected: &Activity) -> bool {
     events.iter().any(|event| match &event.kind {
         EventKind::Acted(activity) => activity == expected,
+        EventKind::Did(beat) => &beat.activity == expected,
         _ => false,
     })
 }
@@ -303,7 +322,7 @@ fn claude_maps_tools_text_turns_and_names() {
     assert!(has_activity(
         &events,
         &Activity::Talking {
-            detail: "finished with details".into()
+            detail: "finished\nwith details".into()
         }
     ));
     assert!(events
@@ -544,6 +563,38 @@ fn claude_collapses_nested_workdirs_to_the_nearest_git_root() {
     assert!(events.iter().all(|event| event.office.0 == root));
 }
 #[test]
+fn claude_uses_project_key_when_repository_is_unmounted() {
+    let temp = TempDir::new();
+    let repo = temp.path().join("repo-with-hyphen");
+    let project_key = format!(
+        "-{}",
+        repo.to_string_lossy()
+            .trim_start_matches('/')
+            .replace('/', "-")
+    );
+    let project_dir = temp.path().join("projects").join(project_key);
+    fs::create_dir_all(&project_dir).unwrap();
+    let transcript = project_dir.join("session-unmounted.jsonl");
+
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "system",
+            "timestamp": 1_000_000,
+            "sessionId": "session-unmounted",
+            "cwd": repo.join("apps/web").to_string_lossy(),
+            "customTitle": "unmounted repo worker"
+        }),
+    );
+
+    let root = normalize_office_path(&repo.to_string_lossy());
+    let mut source = ClaudeSource::new(temp.path());
+    let events = source.poll(2_000_000).unwrap();
+    assert!(!events.is_empty());
+    assert!(events.iter().all(|event| event.office_path == root));
+}
+
+#[test]
 fn claude_keeps_one_worker_in_one_office_across_path_spellings() {
     let temp = TempDir::new();
     let repo = temp.path().join("repo");
@@ -635,7 +686,7 @@ fn create_acceptance_claude_fixture(home: &Path, repo: &Path) {
             "timestamp": 1_010_000,
             "sessionId": "session-main",
             "cwd": repo.join("docs").to_string_lossy(),
-            "message": {"content": [{"type": "text", "text": "go"}]}
+            "message": {"content": [{"type": "text", "text": "go\nplease preserve this user message in the timeline ".repeat(12)}]}
         }),
     );
     append_jsonl(
@@ -647,7 +698,87 @@ fn create_acceptance_claude_fixture(home: &Path, repo: &Path) {
             "cwd": repo.join("docs").to_string_lossy(),
             "message": {
                 "usage": {"input_tokens": 2, "output_tokens": 3},
-                "content": [{"type": "text", "text": "done"}]
+                "content": [{"type": "text", "text": "done\nwith details preserved for the timeline ".repeat(12)}]
+            }
+        }),
+    );
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "assistant",
+            "timestamp": 1_040_000,
+            "sessionId": "session-main",
+            "cwd": repo.join("docs").to_string_lossy(),
+            "message": {
+                "content": [{
+                    "type": "tool_use",
+                    "id": "bash-accept",
+                    "name": "Bash",
+                    "input": {"command": "cargo test"}
+                }]
+            }
+        }),
+    );
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "user",
+            "timestamp": 1_041_000,
+            "sessionId": "session-main",
+            "cwd": repo.join("docs").to_string_lossy(),
+            "message": {
+                "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": "bash-accept",
+                    "content": "Exit code: 0\ncommand completed"
+                }]
+            }
+        }),
+    );
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "assistant",
+            "timestamp": 1_060_000,
+            "sessionId": "session-main",
+            "cwd": repo.join("docs").to_string_lossy(),
+            "message": {
+                "content": [{
+                    "type": "tool_use",
+                    "id": "edit-accept",
+                    "name": "Edit",
+                    "input": {
+                        "file_path": "src/main.rs",
+                        "old_string": "old\nline",
+                        "new_string": "new\nline\nextra"
+                    }
+                }]
+            }
+        }),
+    );
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "user",
+            "timestamp": 1_061_000,
+            "sessionId": "session-main",
+            "cwd": repo.join("docs").to_string_lossy(),
+            "message": {
+                "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": "edit-accept",
+                    "content": "applied"
+                }]
+            },
+            "toolUseResult": {
+                "filePath": "src/main.rs",
+                "structuredPatch": [{
+                    "oldLines": 2,
+                    "newLines": 3,
+                    "oldStart": 1,
+                    "newStart": 1,
+                    "lines": [" old", "-line", "+line", "+extra"]
+                }]
             }
         }),
     );
@@ -799,12 +930,16 @@ fn create_codex_fixture(home: &Path) {
         (
             100,
             "commandExecution",
-            json!({"command": "cargo test", "cwd": "/workspace/app"}),
+            json!({"command": "cargo test", "cwd": "/workspace/app", "status": "completed", "exitCode": 0}),
         ),
         (200, "reasoning", json!({"summary": "considering"})),
         (300, "agentMessage", json!({"message": "done"})),
         (400, "mcpToolCall", json!({"name": "search"})),
-        (500, "fileChange", json!({"path": "src/main.rs"})),
+        (
+            500,
+            "fileChange",
+            json!({"path": "src/main.rs", "diff": "@@ -1,2 +1,3 @@\n-old\n+new\n+line"}),
+        ),
         (600, "userMessage", json!({"message": "continue"})),
         (700, "contextCompaction", json!({})),
     ];
@@ -839,6 +974,109 @@ fn create_codex_fixture(home: &Path) {
             ],
         )
         .unwrap();
+}
+
+fn create_codex_soak_fixture(home: &Path, worker_count: usize, initial_now: i64) {
+    let sqlite_dir = home.join("sqlite");
+    fs::create_dir_all(&sqlite_dir).unwrap();
+
+    let state = Connection::open(sqlite_dir.join("state_5.sqlite")).unwrap();
+    state
+        .execute_batch(
+            "CREATE TABLE threads (
+                id TEXT,
+                rollout_path TEXT,
+                created_at INTEGER,
+                updated_at INTEGER,
+                cwd TEXT,
+                title TEXT,
+                tokens_used INTEGER,
+                git_branch TEXT,
+                archived INTEGER,
+                updated_at_ms INTEGER
+            );",
+        )
+        .unwrap();
+    for index in 0..worker_count {
+        insert_codex_soak_thread(
+            &state,
+            &format!("soak-{index:03}"),
+            initial_now,
+            index as i64,
+        );
+    }
+    drop(state);
+
+    let history = Connection::open(sqlite_dir.join("thread_history_1.sqlite")).unwrap();
+    history
+        .execute_batch(
+            "CREATE TABLE thread_items (
+                thread_id TEXT,
+                turn_id TEXT,
+                item_id TEXT,
+                created_at_ms INTEGER,
+                item_type TEXT,
+                item_json TEXT
+            );
+            CREATE TABLE thread_turns (
+                thread_id TEXT,
+                turn_id TEXT,
+                status TEXT,
+                started_at INTEGER,
+                completed_at INTEGER,
+                duration_ms INTEGER,
+                error_json TEXT
+            );",
+        )
+        .unwrap();
+    for index in 0..worker_count {
+        insert_item(
+            &history,
+            &format!("soak-{index:03}"),
+            initial_now - 1_000 + index as i64,
+            "agentMessage",
+            json!({"message": format!("initial-{index}")}),
+        );
+    }
+}
+
+fn insert_codex_soak_thread(state: &Connection, id: &str, updated_at_ms: i64, index: i64) {
+    state
+        .execute(
+            "INSERT INTO threads (
+                id, rollout_path, created_at, updated_at, cwd, title,
+                tokens_used, git_branch, archived, updated_at_ms
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 0, ?9)",
+            params![
+                id,
+                "/not/on/this/machine",
+                updated_at_ms / 1_000,
+                updated_at_ms / 1_000,
+                "/workspace/soak",
+                format!("Soak {index}"),
+                1,
+                "main",
+                updated_at_ms
+            ],
+        )
+        .unwrap();
+}
+
+fn append_claude_soak_event(path: &Path, session_id: &str, at: i64, text: &str) {
+    append_jsonl(
+        path,
+        json!({
+            "type": "assistant",
+            "timestamp": at,
+            "sessionId": session_id,
+            "cwd": "/workspace/claude-soak",
+            "message": {
+                "usage": {"input_tokens": 1, "output_tokens": 1},
+                "content": [{"type": "text", "text": text}]
+            }
+        }),
+    );
+    set_modified_millis(path, at);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -912,6 +1150,9 @@ fn insert_codex_structural_thread(
         .unwrap();
 }
 
+// This fixture mirrors the observed state_5.sqlite/thread_history_1.sqlite
+// approval shape: structural assessor provenance, a live spawn edge, an open
+// turn, and a non-terminal commandExecution row awaiting approval.
 fn create_codex_m3_fixture(home: &Path) {
     let sqlite_dir = home.join("sqlite");
     fs::create_dir_all(&sqlite_dir).unwrap();
@@ -1156,7 +1397,7 @@ fn create_codex_m3_fixture(home: &Path) {
         "developer-edge",
         1_800_000,
         "commandExecution",
-        json!({"command": "old command", "status": "completed"}),
+        json!({"command": "old command", "status": "completed", "exitCode": 0}),
     );
     insert_item(
         &history,
@@ -1270,6 +1511,14 @@ fn has_nested_office(world: &World) -> bool {
             .iter()
             .any(|child| parent != child && Path::new(child).starts_with(Path::new(parent)))
     })
+}
+
+fn remembered_beats(world: &World) -> Vec<&Beat> {
+    world
+        .offices()
+        .flat_map(|office| office.workers.iter())
+        .flat_map(|worker| worker.history.iter())
+        .collect()
 }
 
 #[test]
@@ -1524,6 +1773,145 @@ fn collector_acceptance_fixtures() {
         format!("spawn-edge={edge_waiting}, cwd/time fallback={fallback_waiting}"),
     );
 
+    let beats = remembered_beats(&world);
+    let command_beats: Vec<&Beat> = beats
+        .iter()
+        .copied()
+        .filter(|beat| matches!(&beat.activity, Activity::Typing { .. }))
+        .collect();
+    let command_missing_outcome = command_beats
+        .iter()
+        .filter(|beat| !matches!(beat.outcome, Some(Outcome::Exited(_))))
+        .count();
+    report.record(
+        10,
+        "remembered command beats carry exit status",
+        if !command_beats.is_empty() && command_missing_outcome == 0 {
+            AcceptanceStatus::Pass
+        } else {
+            AcceptanceStatus::Fail
+        },
+        format!(
+            "{} of {} remembered command beats carry an exit outcome",
+            command_beats.len().saturating_sub(command_missing_outcome),
+            command_beats.len()
+        ),
+    );
+
+    let edit_beats: Vec<&Beat> = beats
+        .iter()
+        .copied()
+        .filter(|beat| matches!(&beat.activity, Activity::Editing { .. }))
+        .collect();
+    let edit_missing_counts = edit_beats
+        .iter()
+        .filter(|beat| !matches!(beat.outcome, Some(Outcome::Changed { .. })))
+        .count();
+    report.record(
+        11,
+        "remembered edit beats carry line counts",
+        if !edit_beats.is_empty() && edit_missing_counts == 0 {
+            AcceptanceStatus::Pass
+        } else {
+            AcceptanceStatus::Fail
+        },
+        format!(
+            "{} of {} remembered edit beats carry Changed counts",
+            edit_beats.len().saturating_sub(edit_missing_counts),
+            edit_beats.len()
+        ),
+    );
+
+    let long_messages: Vec<&str> = beats
+        .iter()
+        .filter_map(|beat| match &beat.activity {
+            Activity::Talking { detail } if detail.chars().count() > 120 => Some(detail.as_str()),
+            _ => None,
+        })
+        .collect();
+    let long_messages_with_newlines = long_messages
+        .iter()
+        .filter(|detail| detail.contains('\n'))
+        .count();
+    report.record(
+        12,
+        "remembered messages preserve fuller source text",
+        if !long_messages.is_empty() && long_messages_with_newlines > 0 {
+            AcceptanceStatus::Pass
+        } else {
+            AcceptanceStatus::Fail
+        },
+        format!(
+            "{} talking beats exceed the caption limit; {} preserve newlines",
+            long_messages.len(),
+            long_messages_with_newlines
+        ),
+    );
+
+    let workers: Vec<_> = world
+        .offices()
+        .flat_map(|office| office.workers.iter())
+        .collect();
+    let oversized_histories = workers
+        .iter()
+        .filter(|worker| worker.history.len() > HISTORY_LEN)
+        .count();
+    let unordered_histories = workers
+        .iter()
+        .filter(|worker| {
+            worker
+                .history
+                .iter()
+                .zip(worker.history.iter().skip(1))
+                .any(|(older, newer)| older.at > newer.at)
+        })
+        .count();
+    let history_beats = workers
+        .iter()
+        .map(|worker| worker.history.len())
+        .sum::<usize>();
+    report.record(
+        13,
+        "worker histories are bounded and chronological",
+        if !workers.is_empty() && oversized_histories == 0 && unordered_histories == 0 {
+            AcceptanceStatus::Pass
+        } else {
+            AcceptanceStatus::Fail
+        },
+        format!(
+            "{} workers, {} remembered beats, {} oversized histories, {} out of order",
+            workers.len(),
+            history_beats,
+            oversized_histories,
+            unordered_histories
+        ),
+    );
+
+    let source_timestamps: HashSet<i64> = [
+        1_010_000, 1_015_000, 1_020_000, 1_025_000, 1_030_000, 1_041_000, 1_061_000, 1_800_000,
+    ]
+    .into_iter()
+    .collect();
+    let timestamp_mismatches = beats
+        .iter()
+        .filter(|beat| !source_timestamps.contains(&beat.at))
+        .count();
+    let poll_stamped = beats.iter().filter(|beat| beat.at == fixture_now).count();
+    report.record(
+        14,
+        "beat timestamps come from source records",
+        if !beats.is_empty() && timestamp_mismatches == 0 && poll_stamped == 0 {
+            AcceptanceStatus::Pass
+        } else {
+            AcceptanceStatus::Fail
+        },
+        format!(
+            "{} beats match known fixture record times; {} use poll time",
+            beats.len().saturating_sub(timestamp_mismatches),
+            poll_stamped
+        ),
+    );
+
     report.finish();
 }
 #[test]
@@ -1641,7 +2029,7 @@ fn codex_reads_roster_items_and_turn_state_incrementally() {
     assert!(next.iter().any(|event| {
         event.worker.0 == "thread-other"
             && event.at == 650
-            && matches!(&event.kind, EventKind::Acted(Activity::Talking { detail }) if detail == "late")
+            && matches!(&event.kind, EventKind::Did(Beat { activity: Activity::Talking { detail }, .. }) if detail == "late")
     }));
     assert!(next.iter().any(|event| matches!(
         &event.kind,
@@ -1771,6 +2159,436 @@ fn codex_hides_assessors_and_correlates_waiting_developers() {
         .flat_map(|office| office.workers.iter())
         .all(|worker| !worker.name.starts_with('/')));
 }
+
+#[test]
+fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
+    let temp = TempDir::new();
+    create_codex_fixture(temp.path());
+    let state_path = temp.path().join("sqlite/state_5.sqlite");
+    let history_path = temp.path().join("sqlite/thread_history_1.sqlite");
+    let mut source = CodexSource::new(temp.path());
+
+    assert!(!source.poll(10_000).unwrap().is_empty());
+
+    let replacement = temp.path().join("sqlite/history-replacement.sqlite");
+    fs::copy(&history_path, &replacement).unwrap();
+    fs::remove_file(&history_path).unwrap();
+    fs::rename(&replacement, &history_path).unwrap();
+    assert!(source.poll(10_001).unwrap().is_empty());
+
+    {
+        let history = Connection::open(&history_path).unwrap();
+        history.execute_batch("VACUUM").unwrap();
+    }
+    assert!(source.poll(10_002).unwrap().is_empty());
+
+    {
+        let state = Connection::open(&state_path).unwrap();
+        state
+            .execute("ALTER TABLE threads ADD COLUMN migration_marker TEXT", [])
+            .unwrap();
+    }
+    assert!(source.poll(10_003).unwrap().is_empty());
+
+    {
+        let state = Connection::open(&state_path).unwrap();
+        state
+            .execute_batch(
+                "ALTER TABLE threads RENAME TO threads_full;
+                 CREATE TABLE threads (
+                    id TEXT,
+                    cwd TEXT,
+                    tokens_used INTEGER,
+                    git_branch TEXT,
+                    updated_at INTEGER,
+                    archived INTEGER
+                 );
+                 INSERT INTO threads (id, cwd, tokens_used, git_branch, updated_at, archived)
+                 SELECT id, cwd, tokens_used, git_branch, updated_at, archived
+                 FROM threads_full;
+                 DROP TABLE threads_full;",
+            )
+            .unwrap();
+    }
+    let after_schema_loss = source.poll(10_004).unwrap();
+    assert!(after_schema_loss.iter().any(|event| {
+        event.worker.0 == "thread-active"
+            && matches!(
+                &event.kind,
+                EventKind::Seen { name, .. } if name == "thread-a"
+            )
+    }));
+
+    {
+        let history = Connection::open(&history_path).unwrap();
+        history.execute_batch("PRAGMA journal_mode = WAL;").unwrap();
+    }
+    let lock = Connection::open(&history_path).unwrap();
+    lock.execute_batch("BEGIN IMMEDIATE").unwrap();
+    for now in 10_005..10_008 {
+        assert!(
+            source.poll(now).unwrap().is_empty(),
+            "a live WAL writer must not wedge the read poll"
+        );
+    }
+    lock.execute_batch("ROLLBACK").unwrap();
+    drop(lock);
+    {
+        let history = Connection::open(&history_path).unwrap();
+        insert_item(
+            &history,
+            "thread-active",
+            800,
+            "agentMessage",
+            json!({"message": "after lock"}),
+        );
+    }
+    let recovered = source.poll(10_008).unwrap();
+    assert!(has_activity(
+        &recovered,
+        &Activity::Talking {
+            detail: "after lock".into()
+        }
+    ));
+
+    {
+        let history = Connection::open(&history_path).unwrap();
+        history.execute("DROP TABLE thread_items", []).unwrap();
+    }
+    assert!(source.poll(10_009).unwrap().is_empty());
+
+    {
+        let history = Connection::open(&history_path).unwrap();
+        history
+            .execute_batch(
+                "CREATE TABLE thread_items (
+                    thread_id TEXT,
+                    turn_id TEXT,
+                    item_id TEXT,
+                    created_at_ms INTEGER,
+                    item_type TEXT,
+                    item_json TEXT
+                );",
+            )
+            .unwrap();
+        insert_item(
+            &history,
+            "thread-active",
+            900,
+            "agentMessage",
+            json!({"message": "recovered"}),
+        );
+    }
+    let recovered = source.poll(10_010).unwrap();
+    assert!(has_activity(
+        &recovered,
+        &Activity::Talking {
+            detail: "recovered".into()
+        }
+    ));
+}
+
+#[test]
+fn claude_recovers_from_home_gap_deletion_and_same_size_replacement() {
+    let temp = TempDir::new();
+    let projects = temp.path().join("projects/demo");
+    fs::create_dir_all(&projects).unwrap();
+    let transcript = projects.join("session-recovery.jsonl");
+    let initial_now = simulated_epoch_millis();
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "assistant",
+            "timestamp": initial_now - 1_000,
+            "sessionId": "session-recovery",
+            "cwd": "/workspace/recovery",
+            "message": {"content": [{"type": "text", "text": "before"}]}
+        }),
+    );
+    set_modified_millis(&transcript, initial_now);
+
+    let mut source = ClaudeSource::with_paths_and_active_within(
+        temp.path(),
+        Vec::new(),
+        Duration::from_secs(24 * 60 * 60),
+    );
+    assert!(has_activity(
+        &source.poll(initial_now).unwrap(),
+        &Activity::Talking {
+            detail: "before".into()
+        }
+    ));
+
+    let replacement = json!({
+        "type": "assistant",
+        "timestamp": initial_now - 500,
+        "sessionId": "session-recovery",
+        "cwd": "/workspace/recovery",
+        "message": {"content": [{"type": "text", "text": "after!"}]}
+    });
+    let mut replacement_bytes = serde_json::to_vec(&replacement).unwrap();
+    replacement_bytes.push(b'\n');
+    assert_eq!(
+        replacement_bytes.len(),
+        fs::metadata(&transcript).unwrap().len() as usize
+    );
+    fs::write(&transcript, replacement_bytes).unwrap();
+    set_modified_millis(&transcript, initial_now + 1);
+    assert!(has_activity(
+        &source.poll(initial_now + 1).unwrap(),
+        &Activity::Talking {
+            detail: "after!".into()
+        }
+    ));
+
+    fs::remove_file(&transcript).unwrap();
+    assert!(source.poll(initial_now + 2).unwrap().is_empty());
+
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "assistant",
+            "timestamp": initial_now - 400,
+            "sessionId": "session-recovery",
+            "cwd": "/workspace/recovery",
+            "message": {"content": [{"type": "text", "text": "returned"}]}
+        }),
+    );
+    set_modified_millis(&transcript, initial_now + 3);
+    assert!(has_activity(
+        &source.poll(initial_now + 3).unwrap(),
+        &Activity::Talking {
+            detail: "returned".into()
+        }
+    ));
+
+    let hidden_projects = temp.path().join("projects-hidden");
+    fs::rename(temp.path().join("projects"), &hidden_projects).unwrap();
+    assert!(source.poll(initial_now + 4).unwrap().is_empty());
+    fs::rename(&hidden_projects, temp.path().join("projects")).unwrap();
+    assert!(has_activity(
+        &source.poll(initial_now + 5).unwrap(),
+        &Activity::Talking {
+            detail: "returned".into()
+        }
+    ));
+}
+
+#[test]
+fn collectors_soak_for_hours_with_changing_stores() {
+    const WORKER_COUNT: usize = 32;
+    const POLL_COUNT: usize = 120;
+    const ROTATE_EVERY: usize = 15;
+    const ROTATE_COUNT: usize = 4;
+    const STEP_MS: i64 = 180_000;
+    const INITIAL_CODEX_NOW: i64 = 100_000_000;
+
+    let temp = TempDir::new();
+    let codex_home = temp.path().join("codex-soak");
+    create_codex_soak_fixture(&codex_home, WORKER_COUNT, INITIAL_CODEX_NOW);
+    let state_path = codex_home.join("sqlite/state_5.sqlite");
+    let history_path = codex_home.join("sqlite/thread_history_1.sqlite");
+    let state = Connection::open(&state_path).unwrap();
+    let history = Connection::open(&history_path).unwrap();
+    let mut active_ids: Vec<String> = (0..WORKER_COUNT)
+        .map(|index| format!("soak-{index:03}"))
+        .collect();
+    let mut next_id = 0;
+    let mut source = CodexSource::with_paths_and_active_within(
+        &codex_home,
+        Vec::new(),
+        Duration::from_secs(24 * 60 * 60),
+    );
+    let mut world = World::new();
+    let rss_start = process_rss_bytes();
+    let first = source.poll(INITIAL_CODEX_NOW).unwrap();
+    assert_eq!(
+        first
+            .iter()
+            .filter(|event| event.worker.0.starts_with("soak-"))
+            .map(|event| event.worker.0.as_str())
+            .collect::<HashSet<_>>()
+            .len(),
+        WORKER_COUNT
+    );
+    for event in first {
+        world.apply(event);
+    }
+    assert!(source.poll(INITIAL_CODEX_NOW + 1).unwrap().is_empty());
+
+    let mut codex_poll_times = Vec::with_capacity(POLL_COUNT);
+    let mut codex_event_count = 0;
+    let mut ended_workers = 0;
+    let mut peak_active_workers = active_ids.len();
+    for step in 1..=POLL_COUNT {
+        let now = INITIAL_CODEX_NOW + step as i64 * STEP_MS;
+        if step % ROTATE_EVERY == 0 {
+            for _ in 0..ROTATE_COUNT {
+                let ended = active_ids.remove(0);
+                state
+                    .execute("DELETE FROM threads WHERE id = ?1", [&ended])
+                    .unwrap();
+                ended_workers += 1;
+
+                let id = format!("soak-new-{next_id:03}");
+                next_id += 1;
+                insert_codex_soak_thread(&state, &id, now, (WORKER_COUNT + next_id) as i64);
+                active_ids.push(id);
+            }
+        }
+        peak_active_workers = peak_active_workers.max(active_ids.len());
+        for (index, id) in active_ids.iter().enumerate() {
+            state
+                .execute(
+                    "UPDATE threads SET updated_at_ms = ?1 WHERE id = ?2",
+                    params![now, id],
+                )
+                .unwrap();
+            insert_item(
+                &history,
+                id,
+                now - 1_000 + index as i64,
+                "agentMessage",
+                json!({"message": format!("step {step} worker {index}")}),
+            );
+        }
+
+        let started = Instant::now();
+        let events = source.poll(now).unwrap();
+        codex_poll_times.push(started.elapsed());
+        codex_event_count += events.len();
+        for event in events {
+            world.apply(event);
+        }
+    }
+
+    let max_history = world
+        .offices()
+        .flat_map(|office| office.workers.iter())
+        .map(|worker| worker.history.len())
+        .max()
+        .unwrap_or_default();
+    assert_eq!(active_ids.len(), WORKER_COUNT);
+    assert_eq!(peak_active_workers, WORKER_COUNT);
+    assert_eq!(ended_workers, (POLL_COUNT / ROTATE_EVERY) * ROTATE_COUNT);
+    assert_eq!(world.worker_count(), WORKER_COUNT);
+    assert!(
+        max_history <= HISTORY_LEN,
+        "Codex history grew beyond {HISTORY_LEN}: {max_history}"
+    );
+    let codex_split = POLL_COUNT / 2;
+    let codex_head_mean = mean_poll_micros(&codex_poll_times[..codex_split]);
+    let codex_tail_mean = mean_poll_micros(&codex_poll_times[codex_split..]);
+    assert!(
+        codex_tail_mean <= codex_head_mean * 4.0 + 2_000.0,
+        "Codex poll time crept: head={codex_head_mean:.1}us tail={codex_tail_mean:.1}us"
+    );
+
+    let claude_home = temp.path().join("claude-soak");
+    let claude_project = claude_home.join("projects/soak");
+    fs::create_dir_all(&claude_project).unwrap();
+    let initial_claude_now = simulated_epoch_millis();
+    let mut active_files: Vec<(String, PathBuf)> = (0..WORKER_COUNT)
+        .map(|index| {
+            let session_id = format!("claude-{index:03}");
+            let path = claude_project.join(format!("{session_id}.jsonl"));
+            append_claude_soak_event(&path, &session_id, initial_claude_now - 1_000, "initial");
+            (session_id, path)
+        })
+        .collect();
+    let mut claude = ClaudeSource::with_paths_and_active_within(
+        &claude_home,
+        Vec::new(),
+        Duration::from_secs(24 * 60 * 60),
+    );
+    assert!(!claude.poll(initial_claude_now).unwrap().is_empty());
+    assert!(claude.poll(initial_claude_now + 1).unwrap().is_empty());
+
+    let mut claude_poll_times = Vec::with_capacity(POLL_COUNT);
+    let mut claude_event_count = 0;
+    let mut ended_transcripts = 0;
+    let mut next_claude_id = 0;
+    for step in 1..=POLL_COUNT {
+        let now = initial_claude_now + step as i64 * STEP_MS;
+        if step % ROTATE_EVERY == 0 {
+            for _ in 0..ROTATE_COUNT {
+                let (_session_id, path) = active_files.remove(0);
+                fs::remove_file(path).unwrap();
+                ended_transcripts += 1;
+
+                let session_id = format!("claude-new-{next_claude_id:03}");
+                next_claude_id += 1;
+                let path = claude_project.join(format!("{session_id}.jsonl"));
+                append_claude_soak_event(&path, &session_id, now - 1_000, "new session");
+                active_files.push((session_id, path));
+            }
+        }
+        for (session_id, path) in &active_files {
+            append_claude_soak_event(
+                path,
+                session_id,
+                now - 500,
+                &format!("step {step} {session_id}"),
+            );
+        }
+
+        let started = Instant::now();
+        let events = claude.poll(now).unwrap();
+        claude_poll_times.push(started.elapsed());
+        claude_event_count += events.len();
+    }
+    let claude_split = POLL_COUNT / 2;
+    let claude_head_mean = mean_poll_micros(&claude_poll_times[..claude_split]);
+    let claude_tail_mean = mean_poll_micros(&claude_poll_times[claude_split..]);
+    assert!(
+        claude_tail_mean <= claude_head_mean * 4.0 + 2_000.0,
+        "Claude poll time crept: head={claude_head_mean:.1}us tail={claude_tail_mean:.1}us"
+    );
+    assert_eq!(active_files.len(), WORKER_COUNT);
+    assert_eq!(
+        ended_transcripts,
+        (POLL_COUNT / ROTATE_EVERY) * ROTATE_COUNT
+    );
+
+    for (_, path) in active_files {
+        fs::remove_file(path).unwrap();
+    }
+    assert!(claude
+        .poll(initial_claude_now + (POLL_COUNT as i64 + 1) * STEP_MS)
+        .unwrap()
+        .is_empty());
+
+    let rss_peak = process_rss_bytes();
+    let rss_end = process_rss_bytes();
+    if let (Some(start), Some(peak), Some(end)) = (rss_start, rss_peak, rss_end) {
+        assert!(
+            peak <= start + 128 * 1024 * 1024,
+            "collector soak RSS grew by more than 128 MiB: start={start} peak={peak}"
+        );
+        assert!(
+            end <= start + 128 * 1024 * 1024,
+            "collector soak RSS remained more than 128 MiB above start: start={start} end={end}"
+        );
+    }
+    println!(
+        "collector soak: codex simulated_hours={:.2} polls={} active_workers={} workers_ended={} events={} max_history={} head_mean_us={codex_head_mean:.1} tail_mean_us={codex_tail_mean:.1} rss_start={rss_start:?} rss_peak={rss_peak:?} rss_end={rss_end:?}",
+        POLL_COUNT as f64 * STEP_MS as f64 / 3_600_000.0,
+        POLL_COUNT,
+        active_ids.len(),
+        ended_workers,
+        codex_event_count,
+        max_history
+    );
+    println!(
+        "collector soak: claude simulated_hours={:.2} polls={} active_files={} transcripts_ended={} events={} head_mean_us={claude_head_mean:.1} tail_mean_us={claude_tail_mean:.1}",
+        POLL_COUNT as f64 * STEP_MS as f64 / 3_600_000.0,
+        POLL_COUNT,
+        WORKER_COUNT,
+        ended_transcripts,
+        claude_event_count
+    );
+}
+
 #[test]
 fn sources_wires_existing_homes_and_skips_missing_ones() {
     let temp = TempDir::new();
@@ -2174,7 +2992,9 @@ fn collector_acceptance_live_when_homes_exist() {
     let mut codex_events = Vec::new();
     let mut claude_events = Vec::new();
     let mut poll_errors = Vec::new();
-    for source in &mut build_sources(&config) {
+    let mut live_sources = build_sources(&config);
+    let rss_before_cost = process_rss_bytes();
+    for source in &mut live_sources {
         let source_name = source.name();
         match source.poll(now) {
             Ok(mut events) => {
@@ -2186,6 +3006,41 @@ fn collector_acceptance_live_when_homes_exist() {
             }
             Err(error) => poll_errors.push(format!("{source_name}: {error}")),
         }
+    }
+    let mut cost_samples = Vec::new();
+    let codex_timestamps_after = codex_home.and_then(snapshot_live_codex_timestamps);
+    let mut events_at_rest = 0;
+    let mut cost_errors = Vec::new();
+    for source in &mut live_sources {
+        for iteration in 0..20 {
+            let started = Instant::now();
+            match source.poll(now.saturating_add(1 + iteration)) {
+                Ok(events) => {
+                    if iteration == 0 {
+                        events_at_rest += events.len();
+                    }
+                }
+                Err(error) => cost_errors.push(format!("{}: {error}", source.name())),
+            }
+            cost_samples.push(started.elapsed());
+        }
+    }
+    let rss_after_cost = process_rss_bytes();
+    if cost_samples.is_empty() {
+        println!("collector poll cost: SKIP - no readable agent stores");
+    } else {
+        println!(
+            "collector poll cost: polls={} mean_us={:.1} max_us={:.1} events_at_rest={} errors={} rss_before={rss_before_cost:?} rss_after={rss_after_cost:?}",
+            cost_samples.len(),
+            mean_poll_micros(&cost_samples),
+            cost_samples
+                .iter()
+                .map(Duration::as_secs_f64)
+                .fold(0.0_f64, f64::max)
+                * 1_000_000.0,
+            events_at_rest,
+            cost_errors.len(),
+        );
     }
     let codex_poll_error = poll_errors
         .iter()
@@ -2385,18 +3240,23 @@ fn collector_acceptance_live_when_homes_exist() {
             AcceptanceStatus::Skip,
             "no active Codex workers to compare",
         );
-    } else if let Some(timestamps) = codex_timestamps.as_ref() {
+    } else if codex_timestamps.is_some() || codex_timestamps_after.is_some() {
         let direct_matches = codex_workers
             .iter()
             .filter(|worker| {
-                let Some(updated_at_ms) = timestamps.get(&worker.id.0) else {
-                    return false;
-                };
-                codex_events.iter().any(|event| {
-                    event.worker.0.as_str() == worker.id.0.as_str()
-                        && event.at == *updated_at_ms
-                        && matches!(&event.kind, EventKind::Seen { .. })
-                }) && worker.last_seen >= *updated_at_ms
+                [codex_timestamps.as_ref(), codex_timestamps_after.as_ref()]
+                    .into_iter()
+                    .flatten()
+                    .any(|timestamps| {
+                        let Some(updated_at_ms) = timestamps.get(&worker.id.0) else {
+                            return false;
+                        };
+                        codex_events.iter().any(|event| {
+                            event.worker.0.as_str() == worker.id.0.as_str()
+                                && event.at == *updated_at_ms
+                                && matches!(&event.kind, EventKind::Seen { .. })
+                        }) && worker.last_seen >= *updated_at_ms
+                    })
             })
             .count();
         let ok = direct_matches == codex_workers.len() && codex_poll_error.is_none();
@@ -2576,6 +3436,174 @@ fn collector_acceptance_live_when_homes_exist() {
                 format!("current blocked set: {}", blocked.join(" | ")),
             );
         }
+    }
+
+    let beats = remembered_beats(&world);
+    let command_beats: Vec<&Beat> = beats
+        .iter()
+        .copied()
+        .filter(|beat| matches!(&beat.activity, Activity::Typing { .. }))
+        .collect();
+    if command_beats.is_empty() {
+        report.record(
+            10,
+            "remembered command beats carry exit status",
+            AcceptanceStatus::Skip,
+            "no completed command beats were observed in the active horizon",
+        );
+    } else {
+        let missing = command_beats
+            .iter()
+            .filter(|beat| !matches!(beat.outcome, Some(Outcome::Exited(_))))
+            .count();
+        report.record(
+            10,
+            "remembered command beats carry exit status",
+            if missing == 0 {
+                AcceptanceStatus::Pass
+            } else {
+                AcceptanceStatus::Fail
+            },
+            format!(
+                "{} of {} remembered command beats carry an exit outcome",
+                command_beats.len().saturating_sub(missing),
+                command_beats.len()
+            ),
+        );
+    }
+
+    let edit_beats: Vec<&Beat> = beats
+        .iter()
+        .copied()
+        .filter(|beat| matches!(&beat.activity, Activity::Editing { .. }))
+        .collect();
+    if edit_beats.is_empty() {
+        report.record(
+            11,
+            "remembered edit beats carry line counts",
+            AcceptanceStatus::Skip,
+            "no edit beats were observed in the active horizon",
+        );
+    } else {
+        let missing = edit_beats
+            .iter()
+            .filter(|beat| !matches!(beat.outcome, Some(Outcome::Changed { .. })))
+            .count();
+        report.record(
+            11,
+            "remembered edit beats carry line counts",
+            if missing == 0 {
+                AcceptanceStatus::Pass
+            } else {
+                AcceptanceStatus::Skip
+            },
+            if missing == 0 {
+                format!(
+                    "all {} remembered edit beats carry Changed counts",
+                    edit_beats.len()
+                )
+            } else {
+                format!(
+                    "source did not expose line counts for {missing}/{} edit beats",
+                    edit_beats.len()
+                )
+            },
+        );
+    }
+
+    let long_message_count = beats
+        .iter()
+        .filter(|beat| {
+            matches!(&beat.activity, Activity::Talking { detail } if detail.chars().count() > 120)
+        })
+        .count();
+    let long_message_newline_count = beats
+        .iter()
+        .filter(|beat| {
+            matches!(&beat.activity, Activity::Talking { detail } if detail.chars().count() > 120 && detail.contains('\n'))
+        })
+        .count();
+    if long_message_count == 0 {
+        report.record(
+            12,
+            "remembered messages preserve fuller source text",
+            AcceptanceStatus::Skip,
+            "no source message longer than the 120-character caption limit was observed",
+        );
+    } else {
+        report.record(
+            12,
+            "remembered messages preserve fuller source text",
+            AcceptanceStatus::Pass,
+            format!(
+                "{long_message_count} talking beats exceed the caption limit; {long_message_newline_count} preserve newlines"
+            ),
+        );
+    }
+
+    let oversized_histories = workers
+        .iter()
+        .filter(|worker| worker.history.len() > HISTORY_LEN)
+        .count();
+    let unordered_histories = workers
+        .iter()
+        .filter(|worker| {
+            worker
+                .history
+                .iter()
+                .zip(worker.history.iter().skip(1))
+                .any(|(older, newer)| older.at > newer.at)
+        })
+        .count();
+    let history_beats = workers
+        .iter()
+        .map(|worker| worker.history.len())
+        .sum::<usize>();
+    if workers.is_empty() {
+        report.record(
+            13,
+            "worker histories are bounded and chronological",
+            AcceptanceStatus::Skip,
+            "no active workers were observed in the active horizon",
+        );
+    } else {
+        report.record(
+            13,
+            "worker histories are bounded and chronological",
+            if oversized_histories == 0 && unordered_histories == 0 {
+                AcceptanceStatus::Pass
+            } else {
+                AcceptanceStatus::Fail
+            },
+            format!(
+                "{} workers, {history_beats} remembered beats, {oversized_histories} oversized histories, {unordered_histories} out of order",
+                workers.len()
+            ),
+        );
+    }
+
+    let invalid_timestamps = beats.iter().filter(|beat| beat.at >= now).count();
+    if beats.is_empty() {
+        report.record(
+            14,
+            "beat timestamps come from source records",
+            AcceptanceStatus::Skip,
+            "no beats were observed in the active horizon",
+        );
+    } else {
+        report.record(
+            14,
+            "beat timestamps come from source records",
+            if invalid_timestamps == 0 {
+                AcceptanceStatus::Pass
+            } else {
+                AcceptanceStatus::Fail
+            },
+            format!(
+                "{} beats have source-time timestamps; {invalid_timestamps} are future or pinned to poll time",
+                beats.len().saturating_sub(invalid_timestamps)
+            ),
+        );
     }
 
     report.finish();

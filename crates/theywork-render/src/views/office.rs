@@ -324,7 +324,7 @@ fn make_grid(width: usize, height: usize, columns: usize, rows: usize) -> IsoGri
         (tile_width * 2 / 5).clamp(3, 10)
     };
     let floor_depth = (floor_span as i32 * tile_height) / 2;
-    let floor_margin = (height / 10).clamp(3, 8);
+    let floor_margin = (height / 10).clamp(3, 6);
     let origin_y = height as i32 - floor_margin as i32 - floor_depth;
     let origin_x = width as i32 / 2 - (columns as i32 - rows as i32) * tile_width / 4;
     IsoGrid {
@@ -889,8 +889,9 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, floor_back: i32, wall_t
         .saturating_mul(glyph_pitch)
         .saturating_sub(1);
     let extrusion = 12usize;
+    let rise_per_glyph = 3usize;
     let sign_height = 7usize
-        .saturating_add(face_width.div_ceil(2))
+        .saturating_add(line.chars().count().saturating_sub(1) * rise_per_glyph)
         .saturating_add(extrusion);
     if face_width == 0
         || face_width.saturating_add(extrusion) > canvas.width()
@@ -912,15 +913,27 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, floor_back: i32, wall_t
                 if bits & (1 << (4 - column_index)) == 0 {
                     continue;
                 }
-                let x = glyph_x + column_index - row_index as i32 / 3;
-                let logical_x = character_index as i32 * glyph_pitch as i32 + column_index;
-                let y = top + row_index as i32 + logical_x.div_euclid(2);
+                let x = glyph_x + column_index;
+                let y = top + row_index as i32 + character_index as i32 * rise_per_glyph as i32;
                 face_pixels.push((x, y));
                 for depth in (1..=6).rev() {
                     let offset = depth * 2;
                     let color = if depth >= 5 { TITLE_SIGN } else { TITLE_BODY };
                     set_sign_pixel(canvas, x + offset, y + offset, color, floor_limit);
                 }
+            }
+        }
+    }
+    for &(x, y) in &face_pixels {
+        for y_offset in -1..=1 {
+            for x_offset in -1..=1 {
+                set_sign_pixel(
+                    canvas,
+                    x + x_offset,
+                    y + y_offset,
+                    outline_color(canvas),
+                    floor_limit,
+                );
             }
         }
     }

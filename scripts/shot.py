@@ -33,6 +33,7 @@ FRAME_PADDING = 4
 # height gives the SVG its full viewport; rasterize_svg crops that outer band.
 RASTERIZER_WINDOW_SLACK = 128
 PRIMARY_TARGET_SIZE = (160, 48)
+DEFAULT_ENCODING = "half-block"
 GOLDEN_VARIANTS = (("primary", "normal"), ("degraded", "small"))
 
 SURFACES = {
@@ -58,11 +59,6 @@ VIEW_ALIASES = {
 
 RGB_RE = re.compile(r"rgb\((\d+),(\d+),(\d+)\)")
 INDEXED_RE = re.compile(r"indexed\((\d+)\)")
-METADATA_RE = re.compile(
-    r"^view=(?P<view>\S+) theme=(?P<theme>\S+) "
-    r"size=(?P<width>\d+)x(?P<height>\d+) now=(?P<now>\d+) "
-    r"depth=(?P<depth>\S+)$"
-)
 SVG_TEXT_RE = re.compile(r"<text\b[^>]*>(.*?)</text>", re.DOTALL)
 
 NAMED_COLORS = {
@@ -96,6 +92,7 @@ class Cell:
 class Frame:
     surface: str
     renderer_view: str
+    encoding: str
     width: int
     height: int
     now: int
@@ -232,6 +229,29 @@ def parse_cell(token: str, theme: str) -> Cell:
     )
 
 
+def parse_metadata(line: str, path: Path) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for token in line.split():
+        key, separator, value = token.partition("=")
+        if not separator or not key or not value:
+            raise ValueError(f"invalid metadata token in {path}: {token!r}")
+        fields[key] = value
+
+    required = {"view", "theme", "size", "now", "depth"}
+    missing = sorted(required - fields.keys())
+    if missing:
+        raise ValueError(f"missing metadata fields in {path}: {', '.join(missing)}")
+    if re.fullmatch(r"\d+x\d+", fields["size"]) is None:
+        raise ValueError(f"invalid metadata size in {path}: {fields['size']!r}")
+    if re.fullmatch(r"\d+", fields["now"]) is None:
+        raise ValueError(f"invalid metadata timestamp in {path}: {fields['now']!r}")
+    encoding = fields.get("encoding", DEFAULT_ENCODING)
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]*", encoding) is None:
+        raise ValueError(f"invalid metadata encoding in {path}: {encoding!r}")
+    fields["encoding"] = encoding
+    return fields
+
+
 def parse_golden(
     surface: str, renderer_view: str, theme: str, golden_variant: str
 ) -> Frame:
@@ -245,17 +265,14 @@ def parse_golden(
         raise ValueError(f"unsupported golden header in {path}")
     if len(lines) < 2:
         raise ValueError(f"missing golden metadata in {path}")
-    metadata = METADATA_RE.fullmatch(lines[1])
-    if metadata is None:
-        raise ValueError(f"invalid golden metadata in {path}: {lines[1]!r}")
-    if metadata.group("theme") != theme:
+    metadata = parse_metadata(lines[1], path)
+    if metadata["theme"] != theme:
         raise ValueError(
-            f"golden metadata theme {metadata.group('theme')!r} does not match "
+            f"golden metadata theme {metadata['theme']!r} does not match "
             f"requested {theme!r} in {path}"
         )
 
-    width = int(metadata.group("width"))
-    height = int(metadata.group("height"))
+    width, height = (int(value) for value in metadata["size"].split("x"))
     rows: list[tuple[Cell, ...]] = []
     for expected_row, line in enumerate(lines[2:]):
         match = re.fullmatch(r"(\d{3}):(.*)", line)
@@ -272,10 +289,11 @@ def parse_golden(
         raise ValueError(f"{path} has {len(rows)} rows, expected {height}")
     return Frame(
         surface=surface,
-        renderer_view=metadata.group("view"),
+        renderer_view=metadata["view"],
+        encoding=metadata["encoding"],
         width=width,
         height=height,
-        now=int(metadata.group("now")),
+        now=int(metadata["now"]),
         rows=tuple(rows),
     )
 
@@ -485,7 +503,7 @@ def render_svg(frame: Frame, light: bool) -> str:
     frame_background = LIGHT_BACKGROUND if light else DARK_BACKGROUND
     title = (
         f"they-work {frame.surface} at fixed time {frame.now} · "
-        f"terminal size {frame.width}×{frame.height}"
+        f"{frame.encoding} encoding · terminal size {frame.width}×{frame.height}"
     )
 
     output = [
@@ -544,18 +562,18 @@ def render_index(
         surface: str, label: str, frame: Frame, theme: str, variant: str
     ) -> str:
         suffix = "" if variant == "primary" else "-small"
-        variant_label = "Primary" if variant == "primary" else "Degraded"
+        variant_label = "Primary rung" if variant == "primary" else "Degraded rung"
         size = f"{frame.width}×{frame.height}"
         panel_class = "dark" if theme == "dark" else "light"
         png_name = f"{surface}-{theme}{suffix}.png"
         svg_name = f"{surface}-{theme}{suffix}.svg"
         return (
             f'<div class="panel {panel_class} {variant}">'
-            f'<h3>{theme.title()} · {variant_label} · terminal {size}</h3>'
+            f'<h3>{theme.title()} · {variant_label} · {frame.encoding} · terminal {size}</h3>'
             f'<a href="{png_name}"><img loading="lazy" src="{png_name}" '
-            f'alt="{theme.title()} {variant_label.lower()} {html.escape(label, quote=True)} output at terminal {size}"></a>'
+            f'alt="{theme.title()} {variant_label.lower()} {html.escape(label, quote=True)} output with {frame.encoding} encoding at terminal {size}"></a>'
             f'<p><a href="{png_name}">PNG</a> · <a href="{svg_name}">SVG</a> · '
-            f'terminal {size} · time {frame.now}</p></div>'
+            f'{frame.encoding} encoding · terminal {size} · time {frame.now}</p></div>'
         )
 
     cards = []
@@ -586,8 +604,8 @@ def render_index(
                     '<article class="surface">',
                     f'<div class="surface-heading"><h2>{html.escape(label)}</h2>',
                     f'<p>Fixed demo timestamp: {timestamp} · primary terminal: ',
-                    f'{primary_dark.width}×{primary_dark.height} · degraded terminal: ',
-                    f'{degraded_dark.width}×{degraded_dark.height}</p></div>',
+                    f'{primary_dark.width}×{primary_dark.height} ({primary_dark.encoding}) · degraded terminal: ',
+                    f'{degraded_dark.width}×{degraded_dark.height} ({degraded_dark.encoding})</p></div>',
                     '<div class="comparison">',
                     '<div class="panel reference"><h3>Intended design</h3>',
                     f"{reference_markup}<p>{reference_note}</p></div>",
@@ -634,8 +652,12 @@ def render_index(
             f"<p>One page for every surface. Fixed demo timestamp: {timestamp}. "
             f"Primary outputs: terminal {primary_size}; degraded outputs: terminal {degraded_size}. "
             f"Selected compatibility shot: {html.escape(selected)} ({selected_theme}). "
-            "Every rendered panel carries its terminal size. Design-only reference boards remain "
-            "in docs/references until a matching rendered surface exists.</p>",
+            "Every rendered panel carries its terminal size and encoding. "
+            "Each row repeats one surface at every available resolution rung. "
+            "Current goldens use terminal-cell half-block encoding. Graphics-protocol capture is "
+            "not available to this exporter: it needs a deterministic backend frame or recording, "
+            "a fixed terminal viewport and timestamp, and a protocol-aware capture/decoder. "
+            "Design-only reference boards remain in docs/references until a matching rendered surface exists.</p>",
             "<main>",
             *cards,
             "</main></body></html>",

@@ -21,13 +21,18 @@ use theywork_core::{
     BLOCKED_AFTER_MS,
 };
 
-use crate::canvas::{Canvas, ColorDepth};
+use crate::canvas::{Canvas, ColorDepth, PixelEncoding};
 use crate::views::UiTheme;
 use crate::{Ui, View};
 
 const SNAPSHOT_NOW: Millis = BLOCKED_AFTER_MS + 12_000;
 const NORMAL_SIZE: (u16, u16) = (160, 48);
 const DEGRADED_SIZE: (u16, u16) = (80, 24);
+// The checked-in unsuffixed files feed `make shot`, whose browser font is the
+// deliberately font-poor fallback terminal. Keep that review surface
+// readable; the explicit `.sextants` fixtures still exercise the preferred
+// runtime encoding.
+const PRIMARY_ENCODING: PixelEncoding = PixelEncoding::Quadrants;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum SnapshotView {
@@ -72,9 +77,14 @@ const CASES: [(SnapshotView, &str); 7] = [
 
 const SIZES: [(&str, (u16, u16)); 2] = [("normal", NORMAL_SIZE), ("small", DEGRADED_SIZE)];
 
-pub(crate) fn render_snapshot(view: SnapshotView, size: (u16, u16), theme: UiTheme) -> String {
+pub(crate) fn render_snapshot(
+    view: SnapshotView,
+    size: (u16, u16),
+    theme: UiTheme,
+    encoding: PixelEncoding,
+) -> String {
     let world = snapshot_world();
-    render_view(&world, view, size, SNAPSHOT_NOW, theme)
+    render_view(&world, view, size, SNAPSHOT_NOW, theme, encoding)
 }
 
 fn render_view(
@@ -83,21 +93,30 @@ fn render_view(
     size: (u16, u16),
     now: Millis,
     theme: UiTheme,
+    encoding: PixelEncoding,
 ) -> String {
-    let mut ui = configured_ui(view, now, theme);
+    let mut ui = configured_ui(view, now, theme, encoding);
     let mut terminal = Terminal::new(TestBackend::new(size.0, size.1)).expect("snapshot terminal");
     terminal
         .draw(|frame| ui.draw(frame, world))
         .expect("snapshot frame");
-    serialize_buffer(view, size, now, theme, terminal.backend().buffer())
+    serialize_buffer(
+        view,
+        size,
+        now,
+        theme,
+        encoding,
+        terminal.backend().buffer(),
+    )
 }
 
-fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme) -> Ui {
+fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme, encoding: PixelEncoding) -> Ui {
     let mut ui = Ui::new();
     // Snapshots use a canonical color depth so the files do not depend on the
     // environment in which the test suite happens to run.
     ui.color_depth = ColorDepth::TrueColor;
-    ui.canvas = Canvas::with_color_depth(0, 0, ColorDepth::TrueColor);
+    ui.encoding = encoding;
+    ui.canvas = Canvas::with_color_depth_and_encoding(0, 0, ColorDepth::TrueColor, encoding);
     ui.theme = theme;
     ui.tick(now);
     match view {
@@ -139,18 +158,20 @@ fn serialize_buffer(
     size: (u16, u16),
     now: Millis,
     theme: UiTheme,
+    encoding: PixelEncoding,
     buffer: &Buffer,
 ) -> String {
     let mut output = String::new();
     writeln!(output, "they-work golden v1").expect("string write");
     writeln!(
         output,
-        "view={} theme={} size={}x{} now={} depth=truecolor",
+        "view={} theme={} size={}x{} now={} depth=truecolor+{}",
         view.name(),
         theme_name(theme),
         size.0,
         size.1,
-        now
+        now,
+        encoding.label(),
     )
     .expect("string write");
 
@@ -424,10 +445,19 @@ mod tests {
         for theme in [UiTheme::Dark, UiTheme::Light] {
             for (view, view_name) in CASES {
                 for (size_name, size) in SIZES {
-                    let golden_name =
-                        format!("{view_name}.{}.{size_name}.golden", theme_name(theme));
-                    let actual = render_snapshot(view, size, theme);
-                    assert_golden(&golden_name, &actual);
+                    for encoding in PixelEncoding::ALL {
+                        let encoding_suffix = if encoding == PRIMARY_ENCODING {
+                            String::new()
+                        } else {
+                            format!(".{}", encoding.label())
+                        };
+                        let golden_name = format!(
+                            "{view_name}.{}.{size_name}{encoding_suffix}.golden",
+                            theme_name(theme)
+                        );
+                        let actual = render_snapshot(view, size, theme, encoding);
+                        assert_golden(&golden_name, &actual);
+                    }
                 }
             }
         }

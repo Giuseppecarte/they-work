@@ -7,7 +7,7 @@ use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 use theywork_core::{Millis, Worker};
 
-use crate::canvas::{Canvas, ColorDepth};
+use crate::canvas::{Canvas, ColorDepth, PixelEncoding};
 use crate::sprite::{SpriteSet, WorkerLook};
 
 use super::office::Projection;
@@ -21,6 +21,8 @@ pub(crate) struct SettingsDrawContext<'a> {
     pub(crate) theme: UiTheme,
     pub(crate) color_depth: ColorDepth,
     pub(crate) color_locked: bool,
+    pub(crate) encoding: PixelEncoding,
+    pub(crate) encoding_locked: bool,
     pub(crate) motion: bool,
     pub(crate) name_plates: bool,
     pub(crate) cursor: usize,
@@ -36,6 +38,8 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
         theme,
         color_depth,
         color_locked,
+        encoding,
+        encoding_locked,
         motion,
         name_plates,
         cursor,
@@ -88,6 +92,11 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
     } else {
         color_depth_label(color_depth).to_string()
     };
+    let pixels = if encoding_locked {
+        format!("{} (env)", encoding.label())
+    } else {
+        encoding.label().to_string()
+    };
     let options = [
         ("camera", projection.label()),
         ("light", if theme == UiTheme::Light { "on" } else { "off" }),
@@ -102,6 +111,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
         ("colour", colour.as_str()),
         ("motion", if motion { "on" } else { "off" }),
         ("names", if name_plates { "on" } else { "off" }),
+        ("pixels", pixels.as_str()),
     ];
     if has_area(options_inner) {
         for (index, (label, value)) in options.iter().enumerate() {
@@ -151,7 +161,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
             preview_inner.height.saturating_sub(label_height),
         );
         if has_area(preview) {
-            canvas.resize(preview.width as usize, preview.height as usize * 2);
+            canvas.resize_for_cells(preview.width as usize, preview.height as usize);
             let floor_start = fill_office_background(canvas, sprites);
             if let Some((worker, look)) = worker {
                 let sprite = sprites.worker_frame(worker, look, now);

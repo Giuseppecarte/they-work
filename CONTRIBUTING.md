@@ -49,6 +49,18 @@ built from <code>docker/Dockerfile</code>; its dependency layer copies the
 manifests and stub sources before the real sources, so ordinary source edits
 can reuse the registry and dependency layers.
 
+The Cargo container runs with Docker's <code>--network none</code> by default.
+On a fresh checkout, populate the ignored <code>.cargo-home</code> cache once
+with an explicit networked fetch, then run the normal commands offline:
+
+~~~bash
+THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked
+~~~
+
+CI caches that directory by lockfile and toolchain pin and performs that
+networked bootstrap only on a cache miss. Set <code>THEYWORK_CARGO_NETWORK</code>
+only when intentionally refreshing the dependency cache.
+
 <code>cargo fmt --all</code> crosses crate boundaries. For a focused change,
 use <code>./scripts/cargo fmt -p &lt;crate&gt;</code> (and add
 <code>-- --check</code> when checking) so an unrelated crate is not
@@ -144,8 +156,13 @@ output. This is the round-trip guard against the PNG and SVG paths drifting.
 CI uploads this directory as the `they-work-shots` build artifact.
 The exporter reads the normal golden as the 160×48 primary frame and the small
 golden as the 80×24 degraded frame. The contact sheet labels every dark and
-light panel with its terminal size, and each SVG title carries the same size for
-review outside the sheet.
+light panel with its terminal size and encoding, and each SVG title carries the
+same metadata for review outside the sheet. Current goldens default to
+`half-block`; a future golden can add `encoding=sextants` to its metadata and
+the same ladder will show that encoding without an unlabeled image.
+`docs/shots/` is gitignored, so a fresh clone has no contact sheet or rendered
+frames until `make shot` runs. Generate the bundle before opening the sheet;
+the CI artifact is the copy retained outside the working tree.
 Only surfaces with rendered output appear in the contact sheet. The six
 additional design-only boards stay in `docs/references` until a matching
 renderer surface exists, because there is nothing to compare against yet.
@@ -153,6 +170,11 @@ The exporter searches `THEYWORK_SVG_RASTERIZER`, `google-chrome`, `chromium`,
 and `chromium-browser` in that order. If none is available, it fails with
 `cannot rasterize SVG: install Google Chrome/Chromium or set
 THEYWORK_SVG_RASTERIZER to its executable`.
+
+The graphics-protocol backend is not captured by this exporter yet. Adding a
+panel requires a deterministic backend frame or recording, a fixed viewport
+and timestamp, and a protocol-aware capture/decoder; it must not be represented
+by a guessed or silently missing PNG.
 
 Reference images belong in [`docs/references`](docs/references/README.md) as
 `floor.png`, `guard-office.png`, `desk.png`, or `phone.png` (JPEG, WebP, and
@@ -173,9 +195,9 @@ THEYWORK_UPDATE_GOLDEN=1 ./scripts/cargo test -p theywork-render --lib golden::t
 Shots answer “does the art look good?” and are the files to open during review.
 Keep both in the review loop.
 
-Visual review means opening `docs/shots/index.html` and comparing every
-rendered output with its intended-design reference. Reading a diff is not a
-substitute for that comparison.
+Visual review means running `make shot`, opening `docs/shots/index.html`, and
+comparing every rendered output with its intended-design reference. Reading a
+diff is not a substitute for that comparison.
 
 ## CI boundary
 

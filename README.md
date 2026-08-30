@@ -41,23 +41,39 @@ files.*
 
 ## Reviewable frames
 
-Run `make shot` and open `docs/shots/index.html` for all four surfaces,
-the intended-design reference slots, and dark/light PNG outputs at the fixed
-demo timestamp. The frames are generated rather than stored, so the sheet is
-always the code you have checked out. PNG export
+Run `make shot` before opening this section's generated images or
+`docs/shots/index.html`. The frames are generated rather than stored, so a
+fresh clone has no sheet until that command runs, and the sheet always matches
+the code you have checked out. PNG export
 rasterizes the exact SVG through Google Chrome or Chromium, whose font fallback
 preserves spaces, bullets, and box-drawing characters. The generated PNGs are
 ordinary images and need no Rust or browser toolchain to view; set
 `THEYWORK_SVG_RASTERIZER` when the browser executable is not on `PATH`.
 The contact sheet shows the primary normal golden at 160×48 beside the degraded
 80×24 golden, and labels every rendered panel with its terminal size.
+It also labels the encoding for each resolution rung; the current terminal-cell
+goldens are `half-block`. Graphics-protocol output is not claimed yet because
+the exporter still needs a deterministic backend frame or recording, a fixed
+viewport and timestamp, and a protocol-aware capture/decoder to render one.
 
-The desk frame is presentable enough for review, but the floor frame is not;
-the renderer is still being brought into line with the supplied designs. Hold
-both renderer shots out of the README until the floor comparison is right.
-That is the moment to add the floor and desk PNGs from the same `make shot`
-run; rerunning that one command whenever frame art changes keeps the README
-art and review bundle aligned.
+The reviewed primary frames are included below. They are the selected dark
+compatibility exports from the same `make shot` run; rerun that one command
+whenever frame art changes to keep the README art and review bundle aligned.
+
+<table>
+  <tr>
+    <td><strong>Office floor · primary 160×48 · half-block</strong><br>
+      <img src="docs/shots/floor.png" alt="Rendered office floor using half-block encoding at terminal size 160×48" width="640">
+    </td>
+    <td><strong>Desk detail · primary 160×48 · half-block</strong><br>
+      <img src="docs/shots/desk.png" alt="Rendered desk detail using half-block encoding at terminal size 160×48" width="640">
+    </td>
+  </tr>
+</table>
+
+These two images are intentionally generated files. If the links do not resolve
+in a fresh checkout, run `make shot` first; CI retains the complete generated
+bundle as the `they-work-shots` artifact.
 
 ## Watch your agents
 
@@ -170,7 +186,7 @@ The runtime flags are intentionally visible in the command above:
 - `--cap-drop ALL` drops all Linux capabilities;
 - `--security-opt no-new-privileges` prevents privilege elevation;
 - `:ro` makes both agent mounts read-only;
-- the image runs as `watcher` (UID `10001`), not root; and
+- it runs as you, not root, so it can read exactly what you can read and no more; and
 - `--rm` removes the stopped container.
 
 Image construction may need Docker's normal access to pull base images. That is

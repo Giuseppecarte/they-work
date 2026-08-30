@@ -75,23 +75,12 @@ docker run --rm -it \
 | `--cap-drop ALL` | Linux capabilities are dropped. |
 | `--security-opt no-new-privileges` | The process cannot gain additional privileges. |
 | `:ro` on both mounts | The kernel refuses writes to agent data. |
-| Image `USER watcher` (UID `10001`) | The binary does not run as root. |
+| `--user` your own UID/GID | Not root, and no wider than your own account: it reads exactly the files you can read. |
 | `--rm` | The stopped runtime container is removed. |
 
 The `make demo` target uses the same security flags but omits both mounts. The
 image build itself may use Docker's normal access to download base images; the
 running program has no network interface.
-
-### Docker Compose
-
-The root `docker-compose.yml` describes the same real-agent policy:
-
-~~~bash
-docker compose up --build
-~~~
-
-It sets `network_mode: none`, `read_only: true`, `cap_drop: [ALL]`,
-`security_opt: [no-new-privileges:true]`, and mounts both homes with `:ro`.
 
 ## Selecting a project
 

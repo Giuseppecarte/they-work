@@ -1,6 +1,6 @@
 # Toolchain image for `make test`, `make lint`, and `make fmt`.
 # Kept separate from the runtime image so contributors never need Rust locally.
-FROM rust:1.90-slim-bookworm
+FROM rust:1.90.0-slim-bookworm
 RUN apt-get update \
  && apt-get install -y --no-install-recommends gcc libc6-dev \
  && rm -rf /var/lib/apt/lists/* \

@@ -14,7 +14,9 @@ The source of truth for these images is [docs/design](../design/README.md).
 scripts/render-design.sh renders those boards into this directory; do not edit
 the generated PNGs by hand. The contact sheet scales each reference to fit
 beside the output without stretching it. PNG at the native design dimensions
-is preferred.
+is preferred. The contact sheet and rendered outputs live under the ignored
+`docs/shots/` directory, so run `make shot` before opening them in a fresh
+checkout.
 
 ## Design-only boards
 

@@ -200,7 +200,7 @@ fn draw_tile(
         return;
     }
 
-    canvas.resize(inner.width as usize, inner.height as usize * 2);
+    canvas.resize_for_cells(inner.width as usize, inner.height as usize);
     let workers = office.workers.iter().collect::<Vec<_>>();
     let looks = worker_looks(&office.workers);
     let grid = draw_room_scene(

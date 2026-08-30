@@ -8,6 +8,7 @@ set -eu
 
 IMAGE=${THEYWORK_DEV_IMAGE:-they-work-dev:local}
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+CARGO_NETWORK=${THEYWORK_CARGO_NETWORK:-none}
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "building $IMAGE ..." >&2
@@ -18,6 +19,7 @@ fi
 if [ -t 0 ]; then TTY=-it; else TTY=; fi
 
 exec docker run --rm $TTY \
+    --network "$CARGO_NETWORK" \
     --user "$(id -u):$(id -g)" \
     -e CARGO_HOME=/src/.cargo-home \
     -e THEYWORK_UPDATE_GOLDEN \

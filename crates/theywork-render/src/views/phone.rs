@@ -368,8 +368,8 @@ fn draw_avatar(
     }
     paint_opaque(frame, area, Style::default().bg(PANEL));
     let width = area.width as usize;
-    let height = area.height as usize * 2;
-    canvas.resize(width, height);
+    let height = area.height as usize;
+    canvas.resize_for_cells(width, height);
     canvas.clear();
     render_worker_with_look(
         canvas,

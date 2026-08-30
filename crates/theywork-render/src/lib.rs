@@ -13,7 +13,7 @@ pub mod views;
 
 #[cfg(test)]
 mod golden;
-use canvas::{Canvas, ColorDepth};
+use canvas::{Canvas, ColorDepth, PixelEncoding};
 use sprite::{look_for_worker, SpriteSet};
 
 /// The current screen in the presentation hierarchy.
@@ -57,6 +57,8 @@ pub struct Ui {
     theme: views::UiTheme,
     color_depth: ColorDepth,
     color_locked: bool,
+    encoding: PixelEncoding,
+    encoding_locked: bool,
     motion: bool,
     name_plates: bool,
 }
@@ -65,6 +67,8 @@ impl Ui {
     pub fn new() -> Self {
         let color_depth = ColorDepth::from_environment();
         let color_locked = ColorDepth::environment_override();
+        let encoding = PixelEncoding::from_environment();
+        let encoding_locked = PixelEncoding::environment_override();
         Self {
             view: View::Office,
             selected_office: 0,
@@ -75,7 +79,7 @@ impl Ui {
             known_office_count: 0,
             known_worker_count: 0,
             now: 0,
-            canvas: Canvas::with_color_depth(0, 0, color_depth),
+            canvas: Canvas::with_color_depth_and_encoding(0, 0, color_depth, encoding),
             sprites: SpriteSet::new(),
             phone_open: false,
             phone_channel: views::phone::PhoneChannel::Standup,
@@ -88,6 +92,8 @@ impl Ui {
             theme: views::UiTheme::Dark,
             color_depth,
             color_locked,
+            encoding,
+            encoding_locked,
             motion: true,
             name_plates: true,
         }
@@ -111,6 +117,11 @@ impl Ui {
     /// Selected worker index in the current office.
     pub fn selected_worker(&self) -> usize {
         self.selected_worker
+    }
+
+    /// The active pixel packing used for the next frame.
+    pub fn encoding(&self) -> PixelEncoding {
+        self.encoding
     }
 
     /// Whether the phone overlay is currently visible.
@@ -260,11 +271,11 @@ impl Ui {
                 None
             }
             KeyCode::Up | KeyCode::Char('k') => {
-                self.settings_cursor = (self.settings_cursor + 5) % 6;
+                self.settings_cursor = (self.settings_cursor + 6) % 7;
                 None
             }
             KeyCode::Down | KeyCode::Char('j') => {
-                self.settings_cursor = (self.settings_cursor + 1) % 6;
+                self.settings_cursor = (self.settings_cursor + 1) % 7;
                 None
             }
             KeyCode::Left | KeyCode::Char('h') => {
@@ -307,6 +318,7 @@ impl Ui {
             }
             4 => self.motion = !self.motion,
             5 => self.name_plates = !self.name_plates,
+            6 if !self.encoding_locked => self.encoding = self.encoding.next(forward),
             _ => {}
         }
     }
@@ -314,6 +326,7 @@ impl Ui {
     /// Draw the current view.
     pub fn draw(&mut self, f: &mut Frame, world: &World) {
         self.canvas.set_color_depth(self.color_depth);
+        self.canvas.set_encoding(self.encoding);
         self.canvas
             .set_light_mode(self.theme == views::UiTheme::Light);
         self.sprites
@@ -391,6 +404,8 @@ impl Ui {
                     theme: self.theme,
                     color_depth: self.color_depth,
                     color_locked: self.color_locked,
+                    encoding: self.encoding,
+                    encoding_locked: self.encoding_locked,
                     motion: self.motion,
                     name_plates: self.name_plates,
                     cursor: self.settings_cursor,

@@ -174,7 +174,7 @@ pub(crate) fn draw(
     let right_inner = draw_panel(frame, right, "WORKER DETAILS", false);
 
     if has_area(left_inner) {
-        canvas.resize(left_inner.width as usize, left_inner.height as usize * 2);
+        canvas.resize_for_cells(left_inner.width as usize, left_inner.height as usize);
         let floor_start = fill_office_background(canvas, sprites);
         if canvas.width() >= sprites.plant.width() + 2 {
             canvas.blit(&sprites.plant, 1, 1);

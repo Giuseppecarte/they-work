@@ -41,9 +41,10 @@ files.*
 
 ## Reviewable frames
 
-Open the [review contact sheet](docs/shots/index.html) for all four surfaces,
+Run `make shot` and open `docs/shots/index.html` for all four surfaces,
 the intended-design reference slots, and dark/light PNG outputs at the fixed
-demo timestamp. `make shot` is the one command that regenerates it. PNG export
+demo timestamp. The frames are generated rather than stored, so the sheet is
+always the code you have checked out. PNG export
 rasterizes the exact SVG through Google Chrome or Chromium, whose font fallback
 preserves spaces, bullets, and box-drawing characters. The generated PNGs are
 ordinary images and need no Rust or browser toolchain to view; set

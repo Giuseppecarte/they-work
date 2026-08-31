@@ -415,6 +415,7 @@ impl RoomScale {
     }
 }
 
+#[cfg(test)]
 fn make_grid(width: usize, height: usize, columns: usize, rows: usize) -> IsoGrid {
     make_grid_with_encoding(width, height, columns, rows, PixelEncoding::HalfBlocks)
 }

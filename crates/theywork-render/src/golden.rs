@@ -28,10 +28,9 @@ use crate::{Ui, View};
 const SNAPSHOT_NOW: Millis = BLOCKED_AFTER_MS + 12_000;
 const NORMAL_SIZE: (u16, u16) = (160, 48);
 const DEGRADED_SIZE: (u16, u16) = (80, 24);
-// The checked-in unsuffixed files feed `make shot`, whose browser font is the
-// deliberately font-poor fallback terminal. Keep that review surface
-// readable; the explicit `.sextants` fixtures still exercise the preferred
-// runtime encoding.
+// Keep the unsuffixed quadrants files as stable aliases for existing review
+// links; explicit files for every encoding are emitted as well so tooling can
+// discover the complete ladder.
 const PRIMARY_ENCODING: PixelEncoding = PixelEncoding::Quadrants;
 
 #[derive(Debug, Clone, Copy)]
@@ -451,12 +450,21 @@ mod tests {
                         } else {
                             format!(".{}", encoding.label())
                         };
-                        let golden_name = format!(
+                        let actual = render_snapshot(view, size, theme, encoding);
+                        let mut golden_names = vec![format!(
                             "{view_name}.{}.{size_name}{encoding_suffix}.golden",
                             theme_name(theme)
-                        );
-                        let actual = render_snapshot(view, size, theme, encoding);
-                        assert_golden(&golden_name, &actual);
+                        )];
+                        if encoding == PRIMARY_ENCODING {
+                            golden_names.push(format!(
+                                "{view_name}.{}.{size_name}.{}.golden",
+                                theme_name(theme),
+                                encoding.label()
+                            ));
+                        }
+                        for golden_name in golden_names {
+                            assert_golden(&golden_name, &actual);
+                        }
                     }
                 }
             }

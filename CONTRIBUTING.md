@@ -155,11 +155,15 @@ captures that SVG, and checks the resulting PNG dimensions before writing the
 output. This is the round-trip guard against the PNG and SVG paths drifting.
 CI uploads this directory as the `they-work-shots` build artifact.
 The exporter reads the normal golden as the 160×48 primary frame and the small
-golden as the 80×24 degraded frame. The contact sheet labels every dark and
-light panel with its terminal size and encoding, and each SVG title carries the
-same metadata for review outside the sheet. Current goldens default to
-`half-block`; a future golden can add `encoding=sextants` to its metadata and
-the same ladder will show that encoding without an unlabeled image.
+golden as the 80×24 degraded frame. Encoding-specific files use names such as
+`office.dark.normal.sextants.golden`; their metadata carries the same encoding
+in the depth field. Legacy unqualified goldens are treated as `half-blocks`.
+The contact sheet labels every dark and light panel with its terminal size and
+encoding, and each SVG title carries the same metadata for review outside the
+sheet. It discovers every encoding with a complete dark/light primary/degraded
+set, so the current complete ladder is `sextants`, `quadrants`, and
+`half-blocks`; partial sets are reported and left out until the missing frames
+exist.
 `docs/shots/` is gitignored, so a fresh clone has no contact sheet or rendered
 frames until `make shot` runs. Generate the bundle before opening the sheet;
 the CI artifact is the copy retained outside the working tree.

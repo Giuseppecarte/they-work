@@ -49,12 +49,13 @@ rasterizes the exact SVG through Google Chrome or Chromium, whose font fallback
 preserves spaces, bullets, and box-drawing characters. The generated PNGs are
 ordinary images and need no Rust or browser toolchain to view; set
 `THEYWORK_SVG_RASTERIZER` when the browser executable is not on `PATH`.
-The contact sheet shows the primary normal golden at 160×48 beside the degraded
-80×24 golden, and labels every rendered panel with its terminal size.
-It also labels the encoding for each resolution rung; the current terminal-cell
-goldens are `half-block`. Graphics-protocol output is not claimed yet because
-the exporter still needs a deterministic backend frame or recording, a fixed
-viewport and timestamp, and a protocol-aware capture/decoder to render one.
+The contact sheet puts the same surface at 160×48 and 80×24 for every complete
+encoding rung, and labels every rendered panel with its terminal size and
+encoding. The current complete ladder is `sextants`, `quadrants`, and
+`half-blocks`; the selected README aliases use the densest complete `sextants`
+rung. Graphics protocol output is not claimed yet because the exporter still
+needs a deterministic backend frame or recording, a fixed viewport and
+timestamp, and a protocol-aware capture/decoder to render one.
 
 The reviewed primary frames are included below. They are the selected dark
 compatibility exports from the same `make shot` run; rerun that one command
@@ -62,11 +63,11 @@ whenever frame art changes to keep the README art and review bundle aligned.
 
 <table>
   <tr>
-    <td><strong>Office floor · primary 160×48 · half-block</strong><br>
-      <img src="docs/shots/floor.png" alt="Rendered office floor using half-block encoding at terminal size 160×48" width="640">
+    <td><strong>Office floor · primary 160×48 · sextants</strong><br>
+      <img src="docs/shots/floor.png" alt="Rendered office floor using sextants encoding at terminal size 160×48" width="640">
     </td>
-    <td><strong>Desk detail · primary 160×48 · half-block</strong><br>
-      <img src="docs/shots/desk.png" alt="Rendered desk detail using half-block encoding at terminal size 160×48" width="640">
+    <td><strong>Desk detail · primary 160×48 · sextants</strong><br>
+      <img src="docs/shots/desk.png" alt="Rendered desk detail using sextants encoding at terminal size 160×48" width="640">
     </td>
   </tr>
 </table>

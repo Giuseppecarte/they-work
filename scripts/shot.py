@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export deterministic frames as SVGs and PNGs rasterized from those SVGs."""
+"""Export every complete encoding rung as deterministic SVG and PNG frames."""
 
 from __future__ import annotations
 
@@ -33,8 +33,18 @@ FRAME_PADDING = 4
 # height gives the SVG its full viewport; rasterize_svg crops that outer band.
 RASTERIZER_WINDOW_SLACK = 128
 PRIMARY_TARGET_SIZE = (160, 48)
-DEFAULT_ENCODING = "half-block"
+DEFAULT_ENCODING = "half-blocks"
+ENCODING_ORDER = ("sextants", "quadrants", "half-blocks")
 GOLDEN_VARIANTS = (("primary", "normal"), ("degraded", "small"))
+# The renderer assigns these Unicode code points by looking up the mask in
+# this table.  Keep the same map here so the exporter can draw sextants as
+# six deterministic rectangles when the rasterizer's font lacks the block.
+SEXTANT_MASKS = (
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+    40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+    59, 60, 61, 62,
+)
 
 SURFACES = {
     "floor": ("office", "Office floor"),
@@ -229,6 +239,21 @@ def parse_cell(token: str, theme: str) -> Cell:
     )
 
 
+def normalize_encoding(value: str) -> str:
+    normalized = value.strip().casefold()
+    aliases = {
+        "half": "half-blocks",
+        "halfblock": "half-blocks",
+        "half-block": "half-blocks",
+        "half-blocks": "half-blocks",
+        "quadrant": "quadrants",
+        "quadrants": "quadrants",
+        "sextant": "sextants",
+        "sextants": "sextants",
+    }
+    return aliases.get(normalized, normalized)
+
+
 def parse_metadata(line: str, path: Path) -> dict[str, str]:
     fields: dict[str, str] = {}
     for token in line.split():
@@ -245,17 +270,41 @@ def parse_metadata(line: str, path: Path) -> dict[str, str]:
         raise ValueError(f"invalid metadata size in {path}: {fields['size']!r}")
     if re.fullmatch(r"\d+", fields["now"]) is None:
         raise ValueError(f"invalid metadata timestamp in {path}: {fields['now']!r}")
-    encoding = fields.get("encoding", DEFAULT_ENCODING)
+    depth_encoding = fields["depth"].rsplit("+", 1)[-1] if "+" in fields["depth"] else ""
+    encoding = fields.get("encoding", depth_encoding or DEFAULT_ENCODING)
+    encoding = normalize_encoding(encoding)
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]*", encoding) is None:
         raise ValueError(f"invalid metadata encoding in {path}: {encoding!r}")
     fields["encoding"] = encoding
     return fields
 
 
+def golden_path(
+    renderer_view: str, theme: str, golden_variant: str, encoding: str
+) -> Path | None:
+    encoded = GOLDEN_DIR / f"{renderer_view}.{theme}.{golden_variant}.{encoding}.golden"
+    if encoded.is_file():
+        return encoded
+    if encoding == DEFAULT_ENCODING:
+        legacy = GOLDEN_DIR / f"{renderer_view}.{theme}.{golden_variant}.golden"
+        if legacy.is_file():
+            return legacy
+    return None
+
+
 def parse_golden(
-    surface: str, renderer_view: str, theme: str, golden_variant: str
+    surface: str,
+    renderer_view: str,
+    theme: str,
+    golden_variant: str,
+    encoding: str,
 ) -> Frame:
-    path = GOLDEN_DIR / f"{renderer_view}.{theme}.{golden_variant}.golden"
+    path = golden_path(renderer_view, theme, golden_variant, encoding)
+    if path is None:
+        expected = GOLDEN_DIR / (
+            f"{renderer_view}.{theme}.{golden_variant}.{encoding}.golden"
+        )
+        raise ValueError(f"missing {encoding} golden at {expected}")
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError as error:
@@ -270,6 +319,11 @@ def parse_golden(
         raise ValueError(
             f"golden metadata theme {metadata['theme']!r} does not match "
             f"requested {theme!r} in {path}"
+        )
+    if metadata["encoding"] != encoding:
+        raise ValueError(
+            f"golden metadata encoding {metadata['encoding']!r} does not match "
+            f"requested {encoding!r} in {path}"
         )
 
     width, height = (int(value) for value in metadata["size"].split("x"))
@@ -296,6 +350,101 @@ def parse_golden(
         now=int(metadata["now"]),
         rows=tuple(rows),
     )
+
+
+def discover_encodings() -> tuple[list[str], dict[str, int]]:
+    names = set(ENCODING_ORDER)
+    for path in GOLDEN_DIR.glob("*.golden"):
+        parts = path.name.removesuffix(".golden").split(".")
+        if len(parts) >= 4 and parts[-3] in {"dark", "light"} and parts[-2] in {
+            "normal",
+            "small",
+        }:
+            names.add(normalize_encoding(parts[-1]))
+
+    ordered = [encoding for encoding in ENCODING_ORDER if encoding in names]
+    ordered.extend(sorted(names - set(ENCODING_ORDER)))
+    complete: list[str] = []
+    partial: dict[str, int] = {}
+    required = len(GOLDEN_VARIANTS) * 2 * len(SURFACES)
+    for encoding in ordered:
+        present = 0
+        for _, golden_variant in GOLDEN_VARIANTS:
+            for theme in ("dark", "light"):
+                for _, (renderer_view, _) in SURFACES.items():
+                    if golden_path(renderer_view, theme, golden_variant, encoding):
+                        present += 1
+        if present == required:
+            complete.append(encoding)
+        elif present:
+            partial[encoding] = required - present
+    return complete, partial
+
+
+def load_frames(
+    encodings: list[str],
+) -> dict[str, dict[str, dict[str, dict[str, Frame]]]]:
+    return {
+        encoding: {
+            variant_name: {
+                theme: {
+                    surface: parse_golden(
+                        surface,
+                        renderer_view,
+                        theme,
+                        golden_variant,
+                        encoding,
+                    )
+                    for surface, (renderer_view, _) in SURFACES.items()
+                }
+                for theme in ("dark", "light")
+            }
+            for variant_name, golden_variant in GOLDEN_VARIANTS
+        }
+        for encoding in encodings
+    }
+
+
+def validate_frames(
+    frames_by_encoding: dict[str, dict[str, dict[str, dict[str, Frame]]]],
+) -> None:
+    all_frames = [
+        frame
+        for frames_by_variant in frames_by_encoding.values()
+        for frames_by_theme in frames_by_variant.values()
+        for frames in frames_by_theme.values()
+        for frame in frames.values()
+    ]
+    timestamps = {frame.now for frame in all_frames}
+    if len(timestamps) != 1:
+        raise ValueError("surface goldens do not share one fixed timestamp")
+    for encoding, frames_by_variant in frames_by_encoding.items():
+        for variant_name, frames_by_theme in frames_by_variant.items():
+            dimensions = {
+                (frame.width, frame.height)
+                for frames in frames_by_theme.values()
+                for frame in frames.values()
+            }
+            if len(dimensions) != 1:
+                raise ValueError(
+                    f"{encoding} {variant_name} goldens do not share one terminal size"
+                )
+            if variant_name == "primary" and dimensions != {PRIMARY_TARGET_SIZE}:
+                actual = ", ".join(
+                    f"{width}x{height}" for width, height in sorted(dimensions)
+                )
+                raise ValueError(
+                    f"{encoding} primary goldens must be 160x48; "
+                    f"found {actual}. Update the renderer golden before running make shot"
+                )
+            for theme, frames in frames_by_theme.items():
+                for surface, (renderer_view, _) in SURFACES.items():
+                    frame = frames[surface]
+                    if frame.renderer_view != renderer_view:
+                        raise ValueError(
+                            f"{encoding} {variant_name} {theme} golden for {surface} "
+                            f"describes {frame.renderer_view}, expected {renderer_view}"
+                        )
 
 
 def frame_text(frame: Frame) -> str:
@@ -492,6 +641,17 @@ def parse_light(value: str) -> bool:
     raise ValueError(f"unknown LIGHT={value!r}; use 0 or 1")
 
 
+def sextant_mask(symbol: str) -> int | None:
+    """Return the six-subcell mask for a renderer sextant glyph."""
+    if len(symbol) != 1:
+        return None
+    codepoint = ord(symbol)
+    index = codepoint - 0x1F_B00
+    if 0 <= index < len(SEXTANT_MASKS):
+        return SEXTANT_MASKS[index]
+    return None
+
+
 def render_svg(frame: Frame, light: bool) -> str:
     cell_width = CELL_WIDTH
     cell_height = CELL_HEIGHT
@@ -535,38 +695,67 @@ def render_svg(frame: Frame, light: bool) -> str:
             )
             if cell.symbol:
                 symbol = html.escape(cell.symbol, quote=False).replace(" ", "&#160;")
-                output.append(
-                    f'  <text x="{x + 1}" y="{y + 18}" fill="{cell.foreground}" '
-                    'font-family="Cascadia Mono, DejaVu Sans Mono, monospace" '
-                    'font-size="18" xml:space="preserve">'
-                    f"{symbol}</text>"
-                )
+                mask = sextant_mask(cell.symbol)
+                if mask is None:
+                    output.append(
+                        f'  <text x="{x + 1}" y="{y + 18}" fill="{cell.foreground}" '
+                        'font-family="Cascadia Mono, DejaVu Sans Mono, monospace" '
+                        'font-size="18" xml:space="preserve">'
+                        f"{symbol}</text>"
+                    )
+                else:
+                    # Preserve the exact glyph in the SVG text stream for the
+                    # round-trip guard, while using vector subcells for pixels.
+                    output.append(
+                        f'  <text x="{x + 1}" y="{y + 18}" fill="none" '
+                        'font-family="Cascadia Mono, DejaVu Sans Mono, monospace" '
+                        'font-size="18" xml:space="preserve">'
+                        f"{symbol}</text>"
+                    )
+                    subcell_width = cell_width / 2
+                    subcell_height = cell_height / 3
+                    for subcell in range(6):
+                        if mask & (1 << subcell):
+                            subcell_x = x + (subcell % 2) * subcell_width
+                            subcell_y = y + (subcell // 2) * subcell_height
+                            output.append(
+                                f'  <rect x="{subcell_x}" y="{subcell_y}" '
+                                f'width="{subcell_width}" height="{subcell_height}" '
+                                f'fill="{cell.foreground}"/>'
+                            )
 
     output.append("</svg>")
     return "\n".join(output) + "\n"
 
 
+def frame_stem(surface: str, theme: str, encoding: str, variant: str) -> str:
+    suffix = "" if variant == "primary" else "-small"
+    return f"{surface}-{theme}-{encoding}{suffix}"
+
+
 def render_index(
-    frames_by_variant: dict[str, dict[str, dict[str, Frame]]],
+    frames_by_encoding: dict[str, dict[str, dict[str, dict[str, Frame]]]],
+    encodings: list[str],
+    partial_encodings: dict[str, int],
     selected: str,
     selected_theme: str,
 ) -> str:
-    primary_frames = frames_by_variant["primary"]
-    degraded_frames = frames_by_variant["degraded"]
+    best_encoding = encodings[0]
+    best_frames = frames_by_encoding[best_encoding]
     first_surface = next(iter(SURFACES))
-    primary_example = primary_frames["dark"][first_surface]
-    degraded_example = degraded_frames["dark"][first_surface]
+    primary_example = best_frames["primary"]["dark"][first_surface]
+    degraded_example = best_frames["degraded"]["dark"][first_surface]
     timestamp = primary_example.now
 
     def output_panel(
         surface: str, label: str, frame: Frame, theme: str, variant: str
     ) -> str:
-        suffix = "" if variant == "primary" else "-small"
         variant_label = "Primary rung" if variant == "primary" else "Degraded rung"
         size = f"{frame.width}×{frame.height}"
         panel_class = "dark" if theme == "dark" else "light"
-        png_name = f"{surface}-{theme}{suffix}.png"
-        svg_name = f"{surface}-{theme}{suffix}.svg"
+        stem = frame_stem(surface, theme, frame.encoding, variant)
+        png_name = f"{stem}.png"
+        svg_name = f"{stem}.svg"
         return (
             f'<div class="panel {panel_class} {variant}">'
             f'<h3>{theme.title()} · {variant_label} · {frame.encoding} · terminal {size}</h3>'
@@ -594,25 +783,39 @@ def render_index(
             )
             reference_note = f"Source: {html.escape(asset.name)}"
 
-        primary_dark = primary_frames["dark"][surface]
-        primary_light = primary_frames["light"][surface]
-        degraded_dark = degraded_frames["dark"][surface]
-        degraded_light = degraded_frames["light"][surface]
+        ladder = []
+        for encoding in encodings:
+            primary = frames_by_encoding[encoding]["primary"]["dark"][surface]
+            degraded = frames_by_encoding[encoding]["degraded"]["dark"][surface]
+            ladder.append(
+                f"{encoding}: primary {primary.width}×{primary.height}, "
+                f"degraded {degraded.width}×{degraded.height}"
+            )
+        panels = [
+            '<div class="panel reference"><h3>Intended design</h3>',
+            f"{reference_markup}<p>{reference_note}</p></div>",
+        ]
+        for encoding in encodings:
+            for variant_name, _ in GOLDEN_VARIANTS:
+                for theme in ("dark", "light"):
+                    panels.append(
+                        output_panel(
+                            surface,
+                            label,
+                            frames_by_encoding[encoding][variant_name][theme][surface],
+                            theme,
+                            variant_name,
+                        )
+                    )
         cards.append(
             "".join(
                 [
                     '<article class="surface">',
                     f'<div class="surface-heading"><h2>{html.escape(label)}</h2>',
-                    f'<p>Fixed demo timestamp: {timestamp} · primary terminal: ',
-                    f'{primary_dark.width}×{primary_dark.height} ({primary_dark.encoding}) · degraded terminal: ',
-                    f'{degraded_dark.width}×{degraded_dark.height} ({degraded_dark.encoding})</p></div>',
+                    f'<p>Fixed demo timestamp: {timestamp} · complete encoding ladder: ',
+                    f'{html.escape(" · ".join(ladder))}</p></div>',
                     '<div class="comparison">',
-                    '<div class="panel reference"><h3>Intended design</h3>',
-                    f"{reference_markup}<p>{reference_note}</p></div>",
-                    output_panel(surface, label, primary_dark, "dark", "primary"),
-                    output_panel(surface, label, primary_light, "light", "primary"),
-                    output_panel(surface, label, degraded_dark, "dark", "degraded"),
-                    output_panel(surface, label, degraded_light, "light", "degraded"),
+                    *panels,
                     '</div></article>',
                 ]
             )
@@ -620,6 +823,18 @@ def render_index(
 
     primary_size = f"{primary_example.width}×{primary_example.height}"
     degraded_size = f"{degraded_example.width}×{degraded_example.height}"
+    partial_note = ""
+    if partial_encodings:
+        partial_summary = ", ".join(
+            f"{encoding} ({missing} missing frame{'s' if missing != 1 else ''})"
+            for encoding, missing in partial_encodings.items()
+        )
+        partial_note = (
+            " Partial golden rungs not shown because they are incomplete: "
+            f"{html.escape(partial_summary)}."
+        )
+    output_count = len(encodings) * len(GOLDEN_VARIANTS) * 2
+    complete_summary = html.escape(", ".join(encodings))
     return "\n".join(
         [
             "<!doctype html>",
@@ -634,7 +849,7 @@ def render_index(
             ".surface-heading{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}",
             "h1,h2,h3{margin-top:0}",
             ".surface-heading p,.panel>p{margin:.35rem 0;color:#a49dbe;font-size:.9rem}",
-            ".comparison{display:grid;grid-template-columns:minmax(15rem,1.15fr) repeat(4,minmax(11rem,1fr));gap:1rem}",
+            f".comparison{{display:grid;grid-template-columns:minmax(15rem,1.15fr) repeat({output_count},minmax(11rem,1fr));gap:1rem}}",
             ".panel{min-width:0;padding:.75rem;border-radius:.4rem;background:#0d0b14}",
             ".panel h3{margin-bottom:.6rem;font-size:.95rem}",
             ".panel img{display:block;width:100%;height:auto;image-rendering:pixelated;border:1px solid #4e4663}",
@@ -651,13 +866,14 @@ def render_index(
             "<h1>they-work art review contact sheet</h1>",
             f"<p>One page for every surface. Fixed demo timestamp: {timestamp}. "
             f"Primary outputs: terminal {primary_size}; degraded outputs: terminal {degraded_size}. "
-            f"Selected compatibility shot: {html.escape(selected)} ({selected_theme}). "
+            f"Complete encoding rungs: {complete_summary}. Best compatibility shot: "
+            f"{html.escape(best_encoding)} ({html.escape(selected)} / {selected_theme}). "
             "Every rendered panel carries its terminal size and encoding. "
-            "Each row repeats one surface at every available resolution rung. "
-            "Current goldens use terminal-cell half-block encoding. Graphics-protocol capture is "
-            "not available to this exporter: it needs a deterministic backend frame or recording, "
-            "a fixed terminal viewport and timestamp, and a protocol-aware capture/decoder. "
-            "Design-only reference boards remain in docs/references until a matching rendered surface exists.</p>",
+            "Each row repeats one surface at every available resolution and encoding rung."
+            f"{partial_note} Graphics-protocol capture is not available to this exporter: "
+            "it needs a deterministic backend frame or recording, a fixed terminal viewport "
+            "and timestamp, and a protocol-aware capture/decoder. Design-only reference boards "
+            "remain in docs/references until a matching rendered surface exists.</p>",
             "<main>",
             *cards,
             "</main></body></html>",
@@ -676,53 +892,14 @@ def main() -> int:
     try:
         selected = normalize_view(args.view)
         light = parse_light(args.light)
-        frames_by_variant = {
-            variant_name: {
-                theme: {
-                    surface: parse_golden(
-                        surface, renderer_view, theme, golden_variant
-                    )
-                    for surface, (renderer_view, _) in SURFACES.items()
-                }
-                for theme in ("dark", "light")
-            }
-            for variant_name, golden_variant in GOLDEN_VARIANTS
-        }
-        all_frames = [
-            frame
-            for frames_by_theme in frames_by_variant.values()
-            for frames in frames_by_theme.values()
-            for frame in frames.values()
-        ]
-        timestamps = {frame.now for frame in all_frames}
-        if len(timestamps) != 1:
-            raise ValueError("surface goldens do not share one fixed timestamp")
-        for variant_name, frames_by_theme in frames_by_variant.items():
-            dimensions = {
-                (frame.width, frame.height)
-                for frames in frames_by_theme.values()
-                for frame in frames.values()
-            }
-            if len(dimensions) != 1:
-                raise ValueError(
-                    f"{variant_name} goldens do not share one terminal size"
-                )
-            if variant_name == "primary" and dimensions != {PRIMARY_TARGET_SIZE}:
-                actual = ", ".join(
-                    f"{width}x{height}" for width, height in sorted(dimensions)
-                )
-                raise ValueError(
-                    "primary goldens must be 160x48; "
-                    f"found {actual}. Update the renderer golden before running make shot"
-                )
-            for theme, frames in frames_by_theme.items():
-                for surface, (renderer_view, _) in SURFACES.items():
-                    frame = frames[surface]
-                    if frame.renderer_view != renderer_view:
-                        raise ValueError(
-                            f"{variant_name} {theme} golden for {surface} "
-                            f"describes {frame.renderer_view}, expected {renderer_view}"
-                        )
+        encodings, partial_encodings = discover_encodings()
+        if not encodings:
+            raise ValueError(
+                "no complete encoding ladder found; each encoding needs every "
+                "dark/light primary/degraded surface golden"
+            )
+        frames_by_encoding = load_frames(encodings)
+        validate_frames(frames_by_encoding)
     except ValueError as error:
         parser.error(str(error))
 
@@ -732,69 +909,100 @@ def main() -> int:
         rasterizer = find_svg_rasterizer()
     except ValueError as error:
         parser.error(str(error))
-    rendered_by_variant: dict[str, dict[str, dict[str, str]]] = {}
-    for variant_name, frames_by_theme in frames_by_variant.items():
-        suffix = "" if variant_name == "primary" else "-small"
-        rendered_by_variant[variant_name] = {}
-        for theme, frames in frames_by_theme.items():
-            theme_light = theme == "light"
-            rendered_by_variant[variant_name][theme] = {}
-            for surface, frame in frames.items():
-                svg = render_svg(frame, theme_light)
-                rendered_by_variant[variant_name][theme][surface] = svg
-                svg_path = out_dir / f"{surface}-{theme}{suffix}.svg"
-                svg_path.write_text(svg, encoding="utf-8")
+    rendered_by_encoding: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
+    for encoding in encodings:
+        rendered_by_encoding[encoding] = {}
+        for variant_name, _ in GOLDEN_VARIANTS:
+            rendered_by_encoding[encoding][variant_name] = {}
+            for theme in ("dark", "light"):
+                theme_light = theme == "light"
+                frames = frames_by_encoding[encoding][variant_name][theme]
+                rendered_by_encoding[encoding][variant_name][theme] = {}
+                for surface, frame in frames.items():
+                    svg = render_svg(frame, theme_light)
+                    rendered_by_encoding[encoding][variant_name][theme][surface] = svg
+                    stem = frame_stem(surface, theme, encoding, variant_name)
+                    svg_path = out_dir / f"{stem}.svg"
+                    svg_path.write_text(svg, encoding="utf-8")
+                    rasterize_svg(
+                        svg_path,
+                        out_dir / f"{stem}.png",
+                        frame,
+                        rasterizer,
+                    )
+
+                selected_frame = frames[selected]
+                selected_stem = frame_stem("shot", theme, encoding, variant_name)
+                selected_svg_path = out_dir / f"{selected_stem}.svg"
+                selected_svg_path.write_text(
+                    rendered_by_encoding[encoding][variant_name][theme][selected],
+                    encoding="utf-8",
+                )
                 rasterize_svg(
-                    svg_path,
-                    out_dir / f"{surface}-{theme}{suffix}.png",
-                    frame,
+                    selected_svg_path,
+                    out_dir / f"{selected_stem}.png",
+                    selected_frame,
                     rasterizer,
                 )
 
-            selected_frame = frames[selected]
-            selected_svg_path = out_dir / f"shot-{theme}{suffix}.svg"
-            selected_svg_path.write_text(
-                rendered_by_variant[variant_name][theme][selected], encoding="utf-8"
-            )
+    selected_theme = "light" if light else "dark"
+    best_encoding = encodings[0]
+    for variant_name, _ in GOLDEN_VARIANTS:
+        suffix = "" if variant_name == "primary" else "-small"
+        for theme in ("dark", "light"):
+            selected_frames = frames_by_encoding[best_encoding][variant_name][theme]
+            rendered = rendered_by_encoding[best_encoding][variant_name][theme]
+            for surface, contents in rendered.items():
+                theme_alias = out_dir / f"{surface}-{theme}{suffix}.svg"
+                theme_alias.write_text(contents, encoding="utf-8")
+                rasterize_svg(
+                    theme_alias,
+                    out_dir / f"{surface}-{theme}{suffix}.png",
+                    selected_frames[surface],
+                    rasterizer,
+                )
+            shot_theme_alias = out_dir / f"shot-{theme}{suffix}.svg"
+            shot_theme_alias.write_text(rendered[selected], encoding="utf-8")
             rasterize_svg(
-                selected_svg_path,
+                shot_theme_alias,
                 out_dir / f"shot-{theme}{suffix}.png",
-                selected_frame,
+                selected_frames[selected],
                 rasterizer,
             )
 
-    selected_theme = "light" if light else "dark"
-    for variant_name, frames_by_theme in frames_by_variant.items():
-        suffix = "" if variant_name == "primary" else "-small"
-        selected_frames = frames_by_theme[selected_theme]
-        for surface, contents in rendered_by_variant[variant_name][
-            selected_theme
-        ].items():
-            svg_path = out_dir / f"{surface}{suffix}.svg"
-            svg_path.write_text(contents, encoding="utf-8")
+        selected_frames = frames_by_encoding[best_encoding][variant_name][selected_theme]
+        rendered = rendered_by_encoding[best_encoding][variant_name][selected_theme]
+        for surface, contents in rendered.items():
+            alias = out_dir / f"{surface}{suffix}.svg"
+            alias.write_text(contents, encoding="utf-8")
             rasterize_svg(
-                svg_path,
+                alias,
                 out_dir / f"{surface}{suffix}.png",
                 selected_frames[surface],
                 rasterizer,
             )
-        shot_svg_path = out_dir / f"shot{suffix}.svg"
-        shot_svg_path.write_text(
-            rendered_by_variant[variant_name][selected_theme][selected],
-            encoding="utf-8",
-        )
+        shot_alias = out_dir / f"shot{suffix}.svg"
+        shot_alias.write_text(rendered[selected], encoding="utf-8")
         rasterize_svg(
-            shot_svg_path,
+            shot_alias,
             out_dir / f"shot{suffix}.png",
             selected_frames[selected],
             rasterizer,
         )
     (out_dir / "index.html").write_text(
-        render_index(frames_by_variant, selected, selected_theme), encoding="utf-8"
+        render_index(
+            frames_by_encoding,
+            encodings,
+            partial_encodings,
+            selected,
+            selected_theme,
+        ),
+        encoding="utf-8",
     )
     print(
-        f"wrote {len(SURFACES)} surfaces in primary/degraded dark/light PNG+SVG to {out_dir} "
-        f"(selected: {selected}, {selected_theme})"
+        f"wrote {len(SURFACES)} surfaces across {len(encodings)} complete encodings "
+        f"in primary/degraded dark/light PNG+SVG to {out_dir} "
+        f"(best: {best_encoding}; selected: {selected}, {selected_theme})"
     )
     return 0
 

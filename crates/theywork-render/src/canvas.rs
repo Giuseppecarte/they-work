@@ -80,7 +80,7 @@ impl PixelEncoding {
         let sextants_hint = std::env::var("THEYWORK_SEXTANTS").ok();
         let quadrants_hint = std::env::var("THEYWORK_QUADRANTS").ok();
         let utf8 = locale_is_utf8();
-        let terminal_is_usable = terminal.as_deref().map_or(true, |value| {
+        let terminal_is_usable = terminal.as_deref().is_none_or(|value| {
             !value.eq_ignore_ascii_case("dumb") && !value.eq_ignore_ascii_case("cons25")
         });
         let sextants = truthy(sextants_hint.as_deref())
@@ -593,7 +593,7 @@ fn quantize_cell(encoding: PixelEncoding, samples: &[Option<Color>]) -> Quantize
                 let bit_count = mask.count_ones();
                 let is_better =
                     best.as_ref()
-                        .map_or(true, |(best_error, best_bits, best_mask, _)| {
+                        .is_none_or(|(best_error, best_bits, best_mask, _)| {
                             error < *best_error
                                 || (error == *best_error
                                     && (bit_count > *best_bits

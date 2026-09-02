@@ -14,7 +14,9 @@ curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/i
 
 The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
 `~/.claude` and `~/.codex` directories read-only, and skips either home that is
-missing. Pin a release when the image must not change underneath you:
+missing. It runs the image as the invoking UID/GID, so private `0600`
+transcripts remain readable without widening access. Pin a release when the
+image must not change underneath you:
 
 ~~~bash
 curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh \
@@ -55,6 +57,7 @@ This is the real-agent runtime command used by the Makefile:
 ~~~bash
 docker build -f docker/Dockerfile -t they-work:local .
 docker run --rm -it \
+  --user "$(id -u):$(id -g)" \
   --network none \
   --read-only \
   --cap-drop ALL \

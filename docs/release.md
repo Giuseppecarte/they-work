@@ -42,9 +42,10 @@ curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/i
     THEYWORK_CODEX_HOST=/mnt/c/Users/PC/.codex sh
 ~~~
 
-The running process still has `--network none`, a read-only root, dropped
-capabilities, no-new-privileges, and no writable agent mount. The exact policy
-and the optional project/configuration arguments are in [INSTALL.md](../INSTALL.md).
+The running process still has the invoking `--user UID:GID`, `--network none`,
+a read-only root, dropped capabilities, no-new-privileges, and no writable
+agent mount. The exact policy and the optional project/configuration arguments
+are in [INSTALL.md](../INSTALL.md).
 
 ## Clean-host probe
 
@@ -79,45 +80,12 @@ The staged installer exited with status 1 after 0.60 seconds. This is the
 current front-door finding: the public raw script is not reachable, and the
 `latest` GHCR package is denied.
 
-### Different-UID runtime probe
+### Detailed stranger transcript
 
-To exercise the installer body without the unavailable public image, the exact
-script was staged in the same clean temporary area and run with a local pull
-shim. The project-building process was UID 1000; the image's non-root runtime
-user was `watcher` UID 10001. The fixture transcript files were owned by UID
-1000 with mode `0600`. With the Codex home absent, the bounded `--once` launch
-reported:
-
-~~~text
-$ /usr/bin/time -p env PATH=/tmp/they-work-m9-installer.ypz6AY/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/tmp/they-work-m9-installer.ypz6AY/fixture/home THEYWORK_IMAGE=they-work:local THEYWORK_CLAUDE_HOST=/tmp/they-work-m9-installer.ypz6AY/fixture/claude THEYWORK_CODEX_HOST=/tmp/they-work-m9-installer.ypz6AY/fixture/missing-codex sh /tmp/they-work-m9-installer.ypz6AY/install.sh --once
-Pulling they-work:local ...
-Using local test image: they-work:local
-Codex home not found; continuing with Claude data only.
-they-work --once
-timestamp_ms=1788131040948
-projects=0 workers=0
-real 0.32
-user 0.01
-sys 0.02
-~~~
-
-It exited with status 0. The direct read-boundary check inside the same image
-made the permission failure explicit:
-
-~~~text
-uid=10001(watcher) gid=10001(watcher) groups=10001(watcher)
-beta
-alpha
-cat: /data/claude/projects/alpha/session-alpha.jsonl: Permission denied
-~~~
-
-The runtime could enumerate project directories but could not read either
-`0600` transcript. The no-argument interactive replay consequently showed the
-first-run screen with `claude_store=projects=2 threads=2 active=2`, then
-`PICK AN OFFICE` with `No active offices found yet.` and exited cleanly on `q`.
-This reproduces the different-UID behavior rather than implying that the
-private transcript data was ingested. After the first tag is published, the
-package is set Public, and the installer is present on the default branch,
-rerun the public probes. The intended successful experience is a Docker-only,
-no-checkout launch with existing homes mounted read-only or an empty office
-when neither home exists.
+The complete fresh-container transcript, including the public fetch failure,
+the UID correction, the interactive first screen, the direct permission check,
+and the judgement about what a new user would do next, is in
+[docs/installer-transcript.md](installer-transcript.md). After the script is
+published on the default branch and the GHCR package is public, rerun that
+transcript's public step; the local replay now passes the invoking UID/GID to
+the image.

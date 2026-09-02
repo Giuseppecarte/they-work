@@ -13,9 +13,10 @@ WORKDIR /src
 COPY Cargo.toml Cargo.lock* rust-toolchain.toml ./
 COPY crates/theywork-core/Cargo.toml    crates/theywork-core/
 COPY crates/theywork-collect/Cargo.toml crates/theywork-collect/
+COPY crates/theywork-terminal-image/Cargo.toml crates/theywork-terminal-image/
 COPY crates/theywork-render/Cargo.toml  crates/theywork-render/
 COPY crates/theywork-tui/Cargo.toml     crates/theywork-tui/
-RUN for c in core collect render tui; do \
+RUN for c in core collect terminal-image render tui; do \
       mkdir -p "crates/theywork-$c/src" && \
       echo "" > "crates/theywork-$c/src/lib.rs"; \
     done \

@@ -9,7 +9,7 @@ use rusqlite::{params, Connection, OpenFlags};
 use serde_json::{json, Value};
 use theywork_collect::{
     normalize_office_path, sources as build_sources, ClaudeSource, CodexSource, Config,
-    DEFAULT_ACTIVE_WITHIN,
+    DEFAULT_ACTIVE_WITHIN, NON_PROJECT_OFFICE,
 };
 use theywork_core::{Activity, Agent, Beat, Event, EventKind, Outcome, Source, World, HISTORY_LEN};
 
@@ -2040,6 +2040,38 @@ fn codex_reads_roster_items_and_turn_state_incrementally() {
     let filtered_events = filtered.poll(10_003).unwrap();
     assert!(has_worker(&filtered_events, "thread-active"));
     assert!(!has_worker(&filtered_events, "thread-other"));
+}
+
+#[test]
+fn codex_groups_home_and_conversation_cwds_under_one_non_project_office() {
+    let temp = TempDir::new();
+    create_codex_fixture(temp.path());
+    let state_path = temp.path().join("sqlite/state_5.sqlite");
+    let state = Connection::open(state_path).unwrap();
+    state
+        .execute(
+            "UPDATE threads SET cwd = CASE id
+                WHEN 'thread-active' THEN '/home/gc'
+                ELSE '/mnt/c/users/pc/documents/codex/2026-08-29/i-want-to-open-a-new'
+             END",
+            [],
+        )
+        .unwrap();
+    drop(state);
+
+    let mut source = CodexSource::new(temp.path());
+    let events = source.poll(10_000).unwrap();
+    assert!(!events.is_empty());
+    assert!(events.iter().all(|event| {
+        event.office.0 == NON_PROJECT_OFFICE && event.office_path == NON_PROJECT_OFFICE
+    }));
+
+    let mut world = World::new();
+    for event in events {
+        world.apply(event);
+    }
+    assert_eq!(world.office_count(), 1);
+    assert_eq!(world.offices().next().unwrap().path, NON_PROJECT_OFFICE);
 }
 
 #[test]

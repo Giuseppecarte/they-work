@@ -628,6 +628,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "theywork-terminal-image"
+version = "0.1.0"
+dependencies = [
+ "crossterm",
+ "libc",
+]
+
+[[package]]
 name = "theywork-tui"
 version = "0.1.0"
 dependencies = [
@@ -639,6 +647,7 @@ dependencies = [
  "theywork-collect",
  "theywork-core",
  "theywork-render",
+ "theywork-terminal-image",
 ]
 
 [[package]]

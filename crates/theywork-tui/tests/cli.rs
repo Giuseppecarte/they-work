@@ -336,7 +336,7 @@ fn doctor_fails_with_no_homes_and_explains_both_paths() {
 }
 
 #[test]
-fn once_lists_blocked_project_first_and_preserves_waiting_detail() {
+fn once_lists_blocked_project_first_and_reports_unknown_waiting_state() {
     let fixture = Fixture::new();
     let output = run(&fixture, &["--once"]);
     assert_success(&output);
@@ -345,8 +345,9 @@ fn once_lists_blocked_project_first_and_preserves_waiting_detail() {
     assert!(text.contains("projects=2 workers=3"));
     assert!(text.contains("workers=2"));
     assert!(text.contains("workers=1"));
-    assert!(text.contains("waiting_on=\"please fix the build\""));
+    assert!(text.contains("waiting_on=\"waiting, no pending command identified\""));
     assert!(text.contains("status=blocked"));
+    assert!(!text.contains("status=blocked activity=idle"));
     assert!(text.contains("status=idle"));
     assert!(
         text.find("office=").unwrap() < text.find("status=idle").unwrap(),

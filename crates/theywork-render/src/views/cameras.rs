@@ -220,10 +220,11 @@ fn draw_tile(
         let Some(marker) = status_marker(status) else {
             continue;
         };
-        let (marker_px, marker_py) = worker_marker_position(grid, index);
-        let marker_x = inner.x + marker_px.clamp(0, inner.width.saturating_sub(1) as i32) as u16;
+        let (marker_cell_x, marker_cell_y) = worker_marker_position(grid, index);
+        let marker_x =
+            inner.x + marker_cell_x.clamp(0, inner.width.saturating_sub(1) as i32) as u16;
         let marker_y =
-            inner.y + (marker_py / 2).clamp(0, inner.height.saturating_sub(1) as i32) as u16;
+            inner.y + marker_cell_y.clamp(0, inner.height.saturating_sub(1) as i32) as u16;
         let marker_area = Rect::new(marker_x, marker_y, 1, 1);
         let marker_style = status_style(status).bg(BACKGROUND);
         paint_opaque(frame, marker_area, marker_style);

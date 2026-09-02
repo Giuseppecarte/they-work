@@ -61,18 +61,18 @@ const ISO_ROOM_ROWS: usize = 4;
 const ISO_DESK_TILES: [(usize, usize); 10] = [
     (2, 0),
     (4, 1),
+    (4, 0),
     (0, 2),
     (2, 2),
-    (1, 2),
     (2, 1),
-    (4, 2),
+    (1, 2),
     (0, 1),
     (3, 3),
     (1, 3),
 ];
 const ISO_RUG_TILE: (usize, usize) = (1, 3);
 const ISO_PLANT_TILE: (usize, usize) = (0, 3);
-const ISO_COOLER_TILE: (usize, usize) = (4, 0);
+const ISO_COOLER_TILE: (usize, usize) = (1, 0);
 const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 3);
 
 fn outline_color(canvas: &Canvas) -> Color {
@@ -328,6 +328,47 @@ impl RoomScale {
         }
     }
 
+    fn monitor_size(self, grid: IsoGrid) -> (usize, usize) {
+        match self {
+            Self::Floor => (
+                (grid.tile_width / 4).clamp(
+                    7,
+                    if grid.encoding == PixelEncoding::HalfBlocks {
+                        12
+                    } else {
+                        18
+                    },
+                ) as usize,
+                grid.encoding.scale_half_height(5).clamp(
+                    4,
+                    if grid.encoding == PixelEncoding::HalfBlocks {
+                        8
+                    } else {
+                        10
+                    },
+                ),
+            ),
+            Self::Feed => (
+                (grid.tile_width / 5).clamp(
+                    3,
+                    if grid.encoding == PixelEncoding::HalfBlocks {
+                        6
+                    } else {
+                        9
+                    },
+                ) as usize,
+                grid.encoding.scale_half_height(3).clamp(
+                    3,
+                    if grid.encoding == PixelEncoding::HalfBlocks {
+                        5
+                    } else {
+                        7
+                    },
+                ),
+            ),
+        }
+    }
+
     fn plant_size(self, grid: IsoGrid) -> (usize, usize) {
         match self {
             Self::Floor => (
@@ -463,6 +504,14 @@ fn phase_ms(now: Millis, period: u64) -> u64 {
         return 0;
     }
     now.max(0) as u64 % period
+}
+
+fn desk_bounds(grid: IsoGrid, scale: RoomScale, slot: usize) -> (i32, i32, usize, usize) {
+    let (center_x, center_y) = grid.center(grid.desk_tile(slot).0, grid.desk_tile(slot).1);
+    let (width, height) = scale.desk_size(grid);
+    let x = center_x - width as i32 / 2;
+    let y = center_y + grid.tile_height / 3 - height as i32 / 2;
+    (x, y, width, height)
 }
 
 fn daylight_amount(now: Millis) -> u16 {
@@ -881,7 +930,7 @@ fn iso_wall_height(canvas: &Canvas) -> i32 {
     let base_height = canvas.encoding().half_space_height(canvas.height());
     canvas
         .encoding()
-        .scale_half_height((base_height / 6).clamp(8, 14)) as i32
+        .scale_half_height((base_height / 5).clamp(12, 20)) as i32
 }
 fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
     canvas.fill(super::BACKGROUND);
@@ -1618,15 +1667,20 @@ fn draw_item(
                 );
             }
         }
-        IsoKind::Desk(_) => {
-            let (width, height) = scale.desk_size(grid);
+        IsoKind::Desk(slot) => {
+            let (desk_x, desk_y, width, height) = desk_bounds(grid, scale, slot);
+            blit_scaled_signed(canvas, &sprites.desk, desk_x, desk_y, width, height);
+            let (monitor_width, monitor_height) = scale.monitor_size(grid);
+            let monitor_x = center_x - width as i32 / 4 - monitor_width as i32 / 2;
+            let monitor_y =
+                desk_y - monitor_height as i32 + grid.encoding.scale_half_height(2) as i32;
             blit_scaled_signed(
                 canvas,
-                &sprites.desk,
-                center_x - width as i32 / 2,
-                center_y + grid.tile_height / 3 - height as i32 / 2,
-                width,
-                height,
+                &sprites.monitor,
+                monitor_x,
+                monitor_y,
+                monitor_width,
+                monitor_height,
             );
         }
     }
@@ -2016,6 +2070,42 @@ fn draw_list_rows(
     }
 }
 
+fn physical_to_cell(value: i32, scale: usize) -> i32 {
+    value.div_euclid(scale.max(1) as i32)
+}
+
+fn worker_plate_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
+    let (center_x, _) = grid.center(grid.desk_tile(slot).0, grid.desk_tile(slot).1);
+    let (_, desk_y, _, desk_height) = desk_bounds(grid, RoomScale::Floor, slot);
+    let plate_y = desk_y
+        .saturating_add(desk_height as i32)
+        .saturating_add(grid.encoding.scale_half_height(1) as i32);
+    (
+        physical_to_cell(center_x, grid.encoding.width_per_cell()),
+        physical_to_cell(plate_y, grid.encoding.height_per_cell()),
+    )
+}
+
+fn worker_plate_width(body: Rect, grid: IsoGrid) -> u16 {
+    let tile_width_cells =
+        physical_to_cell(grid.tile_width, grid.encoding.width_per_cell()).max(12) as u16;
+    (tile_width_cells / 2).max(12).min(body.width)
+}
+
+fn worker_plate_rect(body: Rect, grid: IsoGrid, slot: usize) -> Rect {
+    let label_width = worker_plate_width(body, grid);
+    let (center_x, y) = worker_plate_position(grid, slot);
+    let x = (center_x - i32::from(label_width) / 2)
+        .clamp(0, i32::from(body.width.saturating_sub(label_width)));
+    let y = y.clamp(0, i32::from(body.height.saturating_sub(1)));
+    Rect::new(
+        body.x.saturating_add(x as u16),
+        body.y.saturating_add(y as u16),
+        label_width,
+        1,
+    )
+}
+
 #[allow(clippy::too_many_arguments)]
 fn draw_nameplates(
     frame: &mut Frame,
@@ -2030,11 +2120,8 @@ fn draw_nameplates(
     if body.width == 0 || body.height == 0 {
         return;
     }
-    let max_label_width = (grid.tile_width.max(12) as u16 / 2).max(12).min(body.width);
     for (slot, worker) in workers.iter().enumerate() {
-        let (center_x, center_y) = grid.desk_tile(slot);
-        let (center_x, center_y) = grid.center(center_x, center_y);
-        let label_width = max_label_width.min(body.width).max(1);
+        let rect = worker_plate_rect(body, grid, slot);
         let mut prefix = " ";
         let status = worker_status(worker, now);
         if start + slot == selected {
@@ -2046,41 +2133,18 @@ fn draw_nameplates(
         }
         let name = short_path(
             &worker_plate_name(&worker.name, office_name),
-            usize::from(label_width.saturating_sub(2)),
+            usize::from(rect.width.saturating_sub(2)),
         );
         let label = format!("{prefix} {name}");
-        let x = (center_x - i32::from(label_width) / 2)
-            .clamp(0, i32::from(body.width.saturating_sub(label_width)));
-        let y_px = center_y + grid.tile_height / 2 + 2;
-        let y = y_px
-            .div_euclid(2)
-            .clamp(0, i32::from(body.height.saturating_sub(1)));
         let style = if start + slot == selected {
             Style::default().fg(INK).bg(PANEL_HIGHLIGHT)
         } else {
             Style::default().fg(status_color(status)).bg(PANEL)
         };
-        paint_opaque(
-            frame,
-            Rect::new(
-                body.x.saturating_add(x as u16),
-                body.y.saturating_add(y as u16),
-                label_width,
-                1,
-            ),
-            style,
-        );
+        paint_opaque(frame, rect, style);
         Paragraph::new(Line::from(Span::styled(label, style)))
             .style(style)
-            .render(
-                Rect::new(
-                    body.x.saturating_add(x as u16),
-                    body.y.saturating_add(y as u16),
-                    label_width,
-                    1,
-                ),
-                frame.buffer_mut(),
-            );
+            .render(rect, frame.buffer_mut());
     }
 }
 
@@ -2392,7 +2456,13 @@ fn floor_corners(grid: IsoGrid) -> [(i32, i32); 4] {
 pub(crate) fn worker_marker_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
     let (tile_x, tile_y) = grid.desk_tile(slot);
     let (center_x, center_y) = grid.center(tile_x, tile_y);
-    (center_x, center_y + grid.tile_height / 2)
+    (
+        physical_to_cell(center_x, grid.encoding.width_per_cell()),
+        physical_to_cell(
+            center_y + grid.tile_height / 2,
+            grid.encoding.height_per_cell(),
+        ),
+    )
 }
 
 fn draw_floor_edges(canvas: &mut Canvas, grid: IsoGrid) {
@@ -2424,6 +2494,10 @@ fn draw_floor_edges(canvas: &mut Canvas, grid: IsoGrid) {
 
 #[cfg(test)]
 mod tests {
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use theywork_core::{Agent, OfficeId, WorkerId};
+
     use super::*;
 
     #[test]
@@ -2443,6 +2517,147 @@ mod tests {
         assert_eq!(layout.page_size, 6);
         assert_eq!(layout.pages, 1);
     }
+
+    #[test]
+    fn floor_worker_plates_stay_with_their_desks_at_every_encoding() {
+        let workers = (0..5)
+            .map(|slot| {
+                Worker::new(
+                    WorkerId(format!("/golden/sustain#worker-{slot}")),
+                    OfficeId("/golden/sustain".to_string()),
+                    if slot % 2 == 0 {
+                        Agent::Claude
+                    } else {
+                        Agent::Codex
+                    },
+                    format!("sustain worker {slot}"),
+                    0,
+                )
+            })
+            .collect::<Vec<_>>();
+        let visible_workers = workers.iter().collect::<Vec<_>>();
+        let body = Rect::new(0, 0, 160, 44);
+
+        for encoding in PixelEncoding::ALL {
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                0,
+                0,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            canvas.resize_for_cells(body.width as usize, body.height as usize);
+            let sprites = SpriteSet::new();
+            let looks = worker_looks(&workers);
+            let grid = draw_room_scene(
+                &mut canvas,
+                "/golden/sustain",
+                &visible_workers,
+                &looks,
+                &sprites,
+                0,
+                RoomScale::Floor,
+            );
+            let mut terminal =
+                Terminal::new(TestBackend::new(body.width, body.height)).expect("test terminal");
+            terminal
+                .draw(|frame| {
+                    canvas.render(frame.buffer_mut(), body);
+                    draw_nameplates(
+                        frame,
+                        body,
+                        grid,
+                        "/golden/sustain",
+                        &visible_workers,
+                        0,
+                        0,
+                        0,
+                    );
+                })
+                .expect("floor with worker plates");
+
+            let buffer = terminal.backend().buffer();
+            let mut plate_rects = Vec::new();
+            for slot in 0..workers.len() {
+                let needle = format!("worker {slot}");
+                let mut matches = Vec::new();
+                for y in body.y..body.y.saturating_add(body.height) {
+                    let needle_width = needle.chars().count();
+                    for x in body.x..body.x.saturating_add(body.width) {
+                        let mut candidate = String::new();
+                        for offset in 0..needle_width {
+                            let Some(cell) = buffer.cell((x.saturating_add(offset as u16), y))
+                            else {
+                                break;
+                            };
+                            candidate.push_str(cell.symbol());
+                        }
+                        if candidate == needle {
+                            matches.push((x, y));
+                        }
+                    }
+                }
+                assert_eq!(
+                    matches.len(),
+                    1,
+                    "{encoding:?} should render exactly one plate for worker {slot}"
+                );
+
+                let rect = worker_plate_rect(body, grid, slot);
+                plate_rects.push(rect);
+                assert_eq!(matches[0], (rect.x.saturating_add(2), rect.y));
+
+                let (_, desk_y, _, desk_height) = desk_bounds(grid, RoomScale::Floor, slot);
+                let desk_bottom =
+                    physical_to_cell(desk_y + desk_height as i32 - 1, encoding.height_per_cell())
+                        as u16;
+                assert!(
+                    rect.y >= body.y.saturating_add(desk_bottom)
+                        && rect.y <= body.y.saturating_add(desk_bottom).saturating_add(1),
+                    "{encoding:?} plate {slot} at row {} is detached from desk bottom {}",
+                    rect.y,
+                    body.y.saturating_add(desk_bottom)
+                );
+            }
+
+            for (index, first) in plate_rects.iter().enumerate() {
+                for second in plate_rects.iter().skip(index + 1) {
+                    let separated = first.x.saturating_add(first.width) <= second.x
+                        || second.x.saturating_add(second.width) <= first.x
+                        || first.y.saturating_add(first.height) <= second.y
+                        || second.y.saturating_add(second.height) <= first.y;
+                    assert!(
+                        separated,
+                        "{encoding:?} worker plates {index} and {} overlap",
+                        index + 1
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn worker_marker_positions_use_encoding_cell_density() {
+        for encoding in PixelEncoding::ALL {
+            let grid = make_grid_with_encoding(
+                encoding.scale_width(160),
+                encoding.height_per_cell() * 44,
+                ISO_ROOM_COLUMNS,
+                ISO_ROOM_ROWS,
+                encoding,
+            );
+            let (tile_x, tile_y) = grid.desk_tile(0);
+            let (center_x, center_y) = grid.center(tile_x, tile_y);
+            assert_eq!(
+                worker_marker_position(grid, 0),
+                (
+                    physical_to_cell(center_x, encoding.width_per_cell()),
+                    physical_to_cell(center_y + grid.tile_height / 2, encoding.height_per_cell(),),
+                ),
+                "{encoding:?} marker should be returned in terminal-cell coordinates"
+            );
+        }
+    }
+
     fn room_items(worker_count: usize) -> Vec<IsoItem> {
         let grid = make_grid(80, 38, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
         let mut items = Vec::with_capacity(worker_count.saturating_mul(2) + 4);
@@ -2608,14 +2823,16 @@ mod tests {
         let items = room_items(5);
         let bounds = items
             .iter()
-            .filter_map(|item| sprite_bounds(grid, *item))
+            .filter_map(|item| sprite_bounds(grid, *item).map(|bounds| (item.kind, bounds)))
             .collect::<Vec<_>>();
         for (first_index, first) in bounds.iter().enumerate() {
             for second in bounds.iter().skip(first_index + 1) {
-                let overlap = overlap_area(*first, *second);
+                let overlap = overlap_area(first.1, second.1);
                 assert!(
                     overlap <= 8,
-                    "room objects overlap by {overlap} pixels: {first:?} and {second:?}"
+                    "room objects overlap by {overlap} pixels: {:?} and {:?}",
+                    first.0,
+                    second.0
                 );
             }
         }

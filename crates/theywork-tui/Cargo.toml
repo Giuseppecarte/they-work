@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 theywork-core = { workspace = true }
 theywork-collect = { workspace = true }
+theywork-terminal-image = { path = "../theywork-terminal-image" }
 theywork-render = { workspace = true }
 ratatui = { workspace = true }
 crossterm = { workspace = true }

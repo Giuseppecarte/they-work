@@ -17,7 +17,9 @@ curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/i
 Pin a release with `THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3`.
 The installer mounts existing `~/.claude` and `~/.codex` directories read-only,
 skips homes that are absent, and starts an empty office when neither exists.
-Set `THEYWORK_CLAUDE_HOST` or `THEYWORK_CODEX_HOST` for non-standard host paths.
+It runs the container as the invoking UID/GID so private `0600` transcripts
+remain readable without widening access. Set `THEYWORK_CLAUDE_HOST` or
+`THEYWORK_CODEX_HOST` for non-standard host paths.
 See [`docs/release.md`](docs/release.md) for the release workflow and exact
 Windows/WSL example.
 

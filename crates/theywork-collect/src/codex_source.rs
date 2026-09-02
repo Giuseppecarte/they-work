@@ -11,7 +11,7 @@ use theywork_core::{
 
 use crate::util::{
     path_allowed, recency_cutoff, repository_root, short_id, truncate_detail,
-    truncate_timeline_text, unified_diff_counts,
+    truncate_timeline_text, unified_diff_counts, NON_PROJECT_OFFICE,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
@@ -124,6 +124,7 @@ impl CodexSource {
 
         let projects: HashSet<String> = all_threads
             .iter()
+            .filter(|thread| thread.office_path != NON_PROJECT_OFFICE)
             .map(|thread| thread.office_path.clone())
             .collect();
         report.readable = true;

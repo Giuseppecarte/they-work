@@ -1008,6 +1008,43 @@ mod m3_tests {
     }
 
     #[test]
+    fn encoding_frame_cost_stays_within_ten_fps_budget() {
+        let world = world_with_office_counts(&[5], false);
+        for encoding in PixelEncoding::ALL {
+            let mut ui = Ui::new();
+            ui.color_depth = ColorDepth::TrueColor;
+            ui.encoding = encoding;
+            let mut terminal =
+                Terminal::new(TestBackend::new(160, 48)).expect("large floor terminal");
+            for frame_index in 0..20 {
+                ui.tick(BLOCKED_AFTER_MS + frame_index as Millis);
+                terminal
+                    .draw(|frame| ui.draw(frame, &world))
+                    .expect("warm-up floor frame");
+            }
+
+            let started = Instant::now();
+            for frame_index in 20..120 {
+                ui.tick(BLOCKED_AFTER_MS + frame_index as Millis);
+                terminal
+                    .draw(|frame| ui.draw(frame, &world))
+                    .expect("measured floor frame");
+            }
+            let elapsed = started.elapsed();
+            eprintln!(
+                "encoding={} frames=100 total_ms={} per_frame_ms={:.2}",
+                encoding.label(),
+                elapsed.as_millis(),
+                elapsed.as_secs_f64() * 1_000.0 / 100.0
+            );
+            assert!(
+                elapsed < Duration::from_secs(5),
+                "{encoding:?} should keep 10-fps floor frames under 5 seconds"
+            );
+        }
+    }
+
+    #[test]
     fn failed_worker_floor_has_explicit_alert() {
         let mut world = world_with_office_counts(&[2], false);
         let failed = WorkerId("/workspace/office-0#worker-1".into());

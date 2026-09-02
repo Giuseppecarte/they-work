@@ -4,6 +4,9 @@
 //! encoding below keeps that trade-off explicit: dense cells are quantized to
 //! two colours, while the half-block floor remains exact and widely portable.
 
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
@@ -219,6 +222,9 @@ fn sextant_terminal(value: &str) -> bool {
     )
 }
 
+type QuantizationKey = (PixelEncoding, [Option<Color>; 6]);
+type QuantizedCache = RefCell<HashMap<QuantizationKey, QuantizedCell>>;
+
 /// An in-memory pixel surface whose pixels are terminal colours or transparent.
 #[derive(Debug, Clone)]
 pub struct Canvas {
@@ -228,6 +234,7 @@ pub struct Canvas {
     depth: ColorDepth,
     encoding: PixelEncoding,
     light_mode: bool,
+    quantized_cache: QuantizedCache,
 }
 
 impl Canvas {
@@ -263,6 +270,7 @@ impl Canvas {
             depth,
             encoding,
             light_mode: false,
+            quantized_cache: RefCell::new(HashMap::new()),
         };
         canvas.resize(width_px, height_px);
         canvas
@@ -421,7 +429,6 @@ impl Canvas {
             .height
             .div_ceil(self.encoding.height_per_cell())
             .min(area.height as usize);
-
         for cell_y in 0..cell_height {
             for cell_x in 0..pixel_width {
                 let (samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
@@ -459,7 +466,12 @@ impl Canvas {
                     }
                     continue;
                 }
-                let quantized = quantize_cell(self.encoding, &samples[..sample_count]);
+                let quantized = {
+                    let mut cache = self.quantized_cache.borrow_mut();
+                    *cache
+                        .entry((self.encoding, samples))
+                        .or_insert_with(|| quantize_cell(self.encoding, &samples[..sample_count]))
+                };
                 cell.set_char(quantized.symbol);
                 if let Some(foreground) = quantized.foreground {
                     cell.set_fg(foreground);

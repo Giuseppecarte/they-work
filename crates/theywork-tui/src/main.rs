@@ -28,6 +28,8 @@ use theywork_render::{Ui, UiCommand, View};
 /// a full building costs almost nothing.
 const FRAME: Duration = Duration::from_millis(100);
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
+const CLI_DETAIL_LIMIT: usize = 240;
+const UNKNOWN_WAITING_DETAIL: &str = "waiting, no pending command identified";
 
 const HELP: &str = "\
 they-work — a read-only terminal office for local agent activity
@@ -1214,20 +1216,25 @@ fn print_once(runtime: &Runtime) -> bool {
 fn print_worker(worker: &Worker, now: Millis) {
     let status = worker.status_at(now);
     print!(
-        "  worker name={} agent={} status={} activity={} idle_age={} tokens={}",
+        "  worker name={} agent={} status={}",
         quoted_value(&worker.name),
         worker.agent.label(),
         status.label(),
-        worker.activity.label(),
+    );
+    if status == WorkerStatus::Blocked {
+        let waiting_on = worker_waiting_detail(worker).unwrap_or(UNKNOWN_WAITING_DETAIL);
+        print!(" waiting_on={}", cli_quoted_value(waiting_on));
+    } else if let Some(detail) = worker_detail(worker) {
+        print!(" detail={}", cli_quoted_value(detail));
+    }
+    if status != WorkerStatus::Blocked {
+        print!(" activity={}", worker.activity.label());
+    }
+    print!(
+        " idle_age={} tokens={}",
         format_age(now.saturating_sub(worker.last_seen)),
         worker.tokens_used
     );
-    if status == WorkerStatus::Blocked {
-        let waiting_on = worker_detail(worker).unwrap_or("no recent output");
-        print!(" waiting_on={}", quoted_value(waiting_on));
-    } else if let Some(detail) = worker_detail(worker) {
-        print!(" detail={}", quoted_value(detail));
-    }
     println!();
 }
 
@@ -1243,6 +1250,24 @@ fn worker_detail(worker: &Worker) -> Option<&str> {
                 .rev()
                 .find_map(|beat| beat.activity.detail().filter(|detail| !detail.is_empty()))
         })
+}
+
+fn worker_waiting_detail(worker: &Worker) -> Option<&str> {
+    waiting_activity_detail(&worker.activity).filter(|detail| !detail.is_empty())
+}
+
+fn waiting_activity_detail(activity: &theywork_core::Activity) -> Option<&str> {
+    match activity {
+        theywork_core::Activity::Typing { detail }
+        | theywork_core::Activity::Reading { detail }
+        | theywork_core::Activity::Editing { detail }
+        | theywork_core::Activity::Searching { detail }
+        | theywork_core::Activity::Waiting { detail } => Some(detail),
+        theywork_core::Activity::Thinking
+        | theywork_core::Activity::Talking { .. }
+        | theywork_core::Activity::Idle
+        | theywork_core::Activity::Error { .. } => None,
+    }
 }
 
 fn office_rank(office: &theywork_core::Office, now: Millis) -> u8 {
@@ -1324,6 +1349,59 @@ fn quoted_value(value: &str) -> String {
     output
 }
 
+fn cli_quoted_value(value: &str) -> String {
+    let detail = cli_detail(value);
+    let mut output = String::with_capacity(detail.len().min(CLI_DETAIL_LIMIT) + 2);
+    output.push('"');
+    let mut used = 0;
+    for character in detail.chars() {
+        match character {
+            '\\' => {
+                if used + 2 > CLI_DETAIL_LIMIT {
+                    break;
+                }
+                output.push_str("\\\\");
+                used += 2;
+            }
+            '"' => {
+                if used + 2 > CLI_DETAIL_LIMIT {
+                    break;
+                }
+                output.push_str("\\\"");
+                used += 2;
+            }
+            character => {
+                if used >= CLI_DETAIL_LIMIT {
+                    break;
+                }
+                output.push(character);
+                used += 1;
+            }
+        }
+    }
+    output.push('"');
+    output
+}
+
+fn cli_detail(value: &str) -> String {
+    let mut output = String::new();
+    for word in value.split_whitespace() {
+        let separator = usize::from(!output.is_empty());
+        let available = CLI_DETAIL_LIMIT.saturating_sub(output.chars().count() + separator);
+        if available == 0 {
+            break;
+        }
+        if !output.is_empty() {
+            output.push(' ');
+        }
+        output.extend(word.chars().take(available));
+        if output.chars().count() >= CLI_DETAIL_LIMIT {
+            break;
+        }
+    }
+    output
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1382,5 +1460,33 @@ mod tests {
         assert_eq!(format_age(0), "0s");
         assert_eq!(format_age(3_723_000), "1h 2m 3s");
         assert_eq!(quoted_value("a\n\"b"), "\"a\\n\\\"b\"");
+    }
+
+    #[test]
+    fn cli_details_are_one_bounded_line() {
+        let detail = cli_quoted_value(&format!("first\nsecond\t{}", "x ".repeat(300)));
+        assert!(!detail.contains("\\n"));
+        assert!(!detail.contains("\\t"));
+        assert!(detail.chars().count() <= CLI_DETAIL_LIMIT + 2);
+    }
+
+    #[test]
+    fn blocked_output_does_not_relabel_old_history_as_pending() {
+        let mut worker = Worker::new(
+            theywork_core::WorkerId("worker".into()),
+            theywork_core::OfficeId("[non-project]".into()),
+            Agent::Codex,
+            "worker".into(),
+            0,
+        );
+        worker.turn_in_flight = true;
+        worker.remember(theywork_core::Beat {
+            at: 1,
+            activity: theywork_core::Activity::Typing {
+                detail: "an earlier command".into(),
+            },
+            outcome: Some(theywork_core::Outcome::Exited(0)),
+        });
+        assert_eq!(worker_waiting_detail(&worker), None);
     }
 }

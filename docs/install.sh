@@ -13,6 +13,7 @@ else
 fi
 THEYWORK_CLAUDE_HOST=${THEYWORK_CLAUDE_HOST:-$THEYWORK_DEFAULT_CLAUDE_HOST}
 THEYWORK_CODEX_HOST=${THEYWORK_CODEX_HOST:-$THEYWORK_DEFAULT_CODEX_HOST}
+THEYWORK_DOCKER_USER="$(id -u):$(id -g)"
 
 echo "Pulling $THEYWORK_IMAGE ..." >&2
 docker pull "$THEYWORK_IMAGE" >&2
@@ -31,6 +32,7 @@ fi
 run_container() {
     if [ -n "$THEYWORK_TTY_INPUT" ]; then
         exec docker run --rm -it \
+            --user "$THEYWORK_DOCKER_USER" \
             --network none \
             --read-only \
             --cap-drop ALL \
@@ -44,6 +46,7 @@ run_container() {
             "$@" <"$THEYWORK_TTY_INPUT"
     fi
     exec docker run --rm -it \
+        --user "$THEYWORK_DOCKER_USER" \
         --network none \
         --read-only \
         --cap-drop ALL \

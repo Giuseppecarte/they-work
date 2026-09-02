@@ -17,7 +17,7 @@ use std::time::Duration;
 
 pub use claude::ClaudeSource;
 pub use codex::CodexSource;
-pub use util::normalize_office_path;
+pub use util::{normalize_office_path, NON_PROJECT_OFFICE};
 
 use theywork_core::{Agent, Millis, Source};
 

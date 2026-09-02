@@ -79,6 +79,11 @@ fn is_windows_mount(path: &str) -> bool {
 pub(crate) const DETAIL_LIMIT: usize = 120;
 pub(crate) const TIMELINE_TEXT_LIMIT: usize = 2_000;
 
+/// All activity without a discoverable project root shares this explicitly
+/// labelled bucket. A cwd is evidence of where a process was, not evidence
+/// that the directory is a project, so it must never become an office id.
+pub const NON_PROJECT_OFFICE: &str = "[non-project]";
+
 /// Keep details useful in a desk caption without allowing an agent-controlled
 /// command or message to make the UI (or a collector's state) unbounded.
 pub(crate) fn truncate_detail(input: &str) -> String {
@@ -294,7 +299,9 @@ fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
 }
 
 /// Resolve a working directory to the nearest enclosing Git root once per
-/// normalized spelling.
+/// normalized spelling. Unknown paths are grouped rather than promoted to
+/// projects, so a home directory or a conversation scratch directory cannot
+/// become an office by accident.
 pub(crate) fn repository_root(input: &str, cache: &mut HashMap<String, String>) -> String {
     repository_root_with_project_hint(input, cache, None)
 }
@@ -302,8 +309,9 @@ pub(crate) fn repository_root(input: &str, cache: &mut HashMap<String, String>) 
 /// Resolve a working directory when the source's project directory encodes a
 /// root that is not mounted beside the collector. Claude stores transcripts
 /// below names such as `-home-gc-projects-demo`; matching that encoding against
-/// the recorded cwd preserves one office per repository in the read-only
-/// container while still preferring a real `.git` walk whenever it is visible.
+/// the recorded cwd preserves one office per recorded project while still
+/// preferring a real `.git` walk whenever it is visible. If neither source of
+/// project identity is available, return the shared non-project bucket.
 pub(crate) fn repository_root_with_project_hint(
     input: &str,
     cache: &mut HashMap<String, String>,
@@ -311,7 +319,7 @@ pub(crate) fn repository_root_with_project_hint(
 ) -> String {
     let normalized = normalize_office_path(input);
     if normalized.is_empty() {
-        return normalized;
+        return NON_PROJECT_OFFICE.to_string();
     }
     if let Some(cached) = cache.get(&normalized) {
         return cached.clone();
@@ -324,11 +332,46 @@ pub(crate) fn repository_root_with_project_hint(
         }
         if !current.pop() {
             break project_root_hint(&normalized, project_key)
-                .unwrap_or_else(|| normalized.clone());
+                .filter(|hint| !is_obvious_non_project_path(hint))
+                .unwrap_or_else(|| NON_PROJECT_OFFICE.to_string());
         }
     };
     cache.insert(normalized, result.clone());
     result
+}
+
+fn is_obvious_non_project_path(path: &str) -> bool {
+    let normalized = normalize_office_path(path);
+    if normalized.is_empty() {
+        return true;
+    }
+
+    if std::env::var("HOME")
+        .ok()
+        .is_some_and(|home| normalize_office_path(&home) == normalized)
+    {
+        return true;
+    }
+
+    let lower = normalized.to_ascii_lowercase();
+    if lower == "/root" || lower == "/home" || lower == "/users" {
+        return true;
+    }
+    let components: Vec<_> = lower.split('/').filter(|part| !part.is_empty()).collect();
+    if (components.first() == Some(&"home") || components.first() == Some(&"users"))
+        && components.len() == 2
+    {
+        return true;
+    }
+    if components.len() == 4
+        && components[0] == "mnt"
+        && components[1].len() == 1
+        && components[2] == "users"
+    {
+        return true;
+    }
+
+    lower.contains("/documents/codex/") || lower.ends_with("/documents/codex")
 }
 
 fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<String> {
@@ -424,6 +467,42 @@ mod tests {
         assert_eq!(
             repository_root_with_project_hint(&cwd, &mut cache, Some(project_key)),
             root
+        );
+    }
+
+    #[test]
+    fn unknown_paths_share_a_non_project_bucket() {
+        let mut cache = HashMap::new();
+        assert_eq!(repository_root("", &mut cache), NON_PROJECT_OFFICE);
+        assert_eq!(
+            repository_root("/home/example", &mut cache),
+            NON_PROJECT_OFFICE
+        );
+        assert_eq!(
+            repository_root(
+                "/mnt/c/users/pc/documents/codex/2026-08-29/conversation",
+                &mut cache,
+            ),
+            NON_PROJECT_OFFICE
+        );
+    }
+
+    #[test]
+    fn project_hint_cannot_promote_home_or_codex_conversation() {
+        let mut cache = HashMap::new();
+        assert_eq!(
+            repository_root_with_project_hint("/home/example", &mut cache, Some("-home-example")),
+            NON_PROJECT_OFFICE
+        );
+
+        let mut cache = HashMap::new();
+        assert_eq!(
+            repository_root_with_project_hint(
+                "/mnt/c/users/pc/documents/codex/2026-08-29/conversation",
+                &mut cache,
+                Some("-mnt-c-users-pc-documents-codex-2026-08-29-conversation"),
+            ),
+            NON_PROJECT_OFFICE
         );
     }
 

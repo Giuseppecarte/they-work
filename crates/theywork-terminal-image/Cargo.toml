@@ -1,0 +1,10 @@
+[package]
+name = "theywork-terminal-image"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Safe Kitty and Sixel image transport for terminal cell rectangles."
+
+[dependencies]
+crossterm = { workspace = true }
+libc = { workspace = true }

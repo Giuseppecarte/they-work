@@ -28,3 +28,7 @@ CLAUDE.md
 # publishes them as build artifacts, and docs/references/ is what review
 # compares against.
 /docs/shots/
+
+# Standup reports written by the collector thread. Working notes about
+# building the project, not part of it.
+/.standup/

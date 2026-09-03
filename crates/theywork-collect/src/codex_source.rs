@@ -11,8 +11,9 @@ use theywork_core::{
 };
 
 use crate::util::{
-    path_allowed, recency_cutoff, repository_root, short_id, truncate_detail,
-    truncate_timeline_text, unified_diff_counts, NON_PROJECT_OFFICE,
+    normalize_office_path, path_allowed, recency_cutoff, recorded_path_is_unresolved,
+    repository_root, short_id, truncate_detail, truncate_timeline_text, unified_diff_counts,
+    NON_PROJECT_OFFICE,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
@@ -238,8 +239,17 @@ impl CodexSource {
             .filter(|thread| thread.office_path != NON_PROJECT_OFFICE)
             .map(|thread| thread.office_path.clone())
             .collect();
+        let unresolved_paths: HashSet<String> = all_threads
+            .iter()
+            .filter(|thread| {
+                thread.office_path == NON_PROJECT_OFFICE
+                    && recorded_path_is_unresolved(&thread.raw_office_path)
+            })
+            .map(|thread| normalize_office_path(&thread.raw_office_path))
+            .collect();
         report.readable = true;
         report.projects = projects.len();
+        report.unresolved_paths = unresolved_paths.len();
         report.threads = all_threads.len();
         report.active_threads = active_threads.len();
         report

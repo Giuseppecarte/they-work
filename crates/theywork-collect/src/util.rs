@@ -374,6 +374,15 @@ fn is_obvious_non_project_path(path: &str) -> bool {
     lower.contains("/documents/codex/") || lower.ends_with("/documents/codex")
 }
 
+/// Whether a recorded cwd is unavailable to this reader and therefore cannot
+/// be classified as either a repository or a known non-project directory.
+pub(crate) fn recorded_path_is_unresolved(path: &str) -> bool {
+    let normalized = normalize_office_path(path);
+    !normalized.is_empty()
+        && !is_obvious_non_project_path(&normalized)
+        && !Path::new(&filesystem_path(path)).exists()
+}
+
 fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<String> {
     let project_key = project_key?.trim();
     if project_key.is_empty() {
@@ -442,14 +451,12 @@ mod tests {
     #[test]
     fn normalizes_real_office_path_spellings() {
         assert_eq!(
-            normalize_office_path("/home/gc/AIStudio/projects/hugo-ai"),
-            "/home/gc/AIStudio/projects/hugo-ai"
+            normalize_office_path("/home/dev/work/example-app"),
+            "/home/dev/work/example-app"
         );
         assert_eq!(
-            normalize_office_path(
-                r"\\wsl.localhost\Ubuntu-22.04\home\gc\AIStudio\projects\hugo-ai"
-            ),
-            "/home/gc/aistudio/projects/hugo-ai"
+            normalize_office_path(r"\\wsl.localhost\Ubuntu-22.04\home\dev\work\example-app"),
+            "/home/dev/work/example-app"
         );
         assert_eq!(
             normalize_office_path("/mnt/c/users/pc/onedrive/documentos/aistudio 2"),

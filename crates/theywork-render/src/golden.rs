@@ -135,7 +135,7 @@ fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme, encoding: Pixe
         SnapshotView::Phone => {
             ui.view = View::Cameras;
             ui.phone_open = true;
-            ui.phone_channel = crate::views::phone::PhoneChannel::Blocked;
+            ui.phone_channel = crate::views::phone::PhoneChannel::Standup;
             ui.phone_transition_at = 0;
         }
         SnapshotView::Help => {
@@ -337,8 +337,8 @@ fn snapshot_outcome(activity: &Activity) -> Option<Outcome> {
 
 fn snapshot_world() -> World {
     const OFFICES: [(&str, usize); 6] = [
-        ("/golden/sustain", 5),
-        ("/golden/giin-jalisco", 5),
+        ("/golden/they-work", 5),
+        ("/golden/beta-platform", 5),
         ("/golden/gamma-research", 4),
         ("/golden/delta-design", 3),
         ("/golden/epsilon-tools", 2),

@@ -60,20 +60,20 @@ const ISO_ROOM_COLUMNS: usize = 5;
 const ISO_ROOM_ROWS: usize = 4;
 const ISO_DESK_TILES: [(usize, usize); 10] = [
     (2, 0),
-    (4, 1),
+    (3, 2),
     (4, 0),
     (0, 2),
-    (2, 2),
-    (2, 1),
-    (1, 2),
+    (2, 3),
     (0, 1),
-    (3, 3),
     (1, 3),
+    (2, 1),
+    (2, 2),
+    (1, 2),
 ];
-const ISO_RUG_TILE: (usize, usize) = (1, 3);
-const ISO_PLANT_TILE: (usize, usize) = (0, 3);
+const ISO_RUG_TILE: (usize, usize) = (2, 3);
+const ISO_PLANT_TILE: (usize, usize) = (0, 0);
 const ISO_COOLER_TILE: (usize, usize) = (1, 0);
-const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 3);
+const ISO_MEETING_TABLE_TILE: (usize, usize) = (0, 3);
 
 fn outline_color(canvas: &Canvas) -> Color {
     if canvas.is_light_mode() {
@@ -247,6 +247,31 @@ impl IsoGrid {
             tile_y.min(self.rows.saturating_sub(1)),
         )
     }
+}
+
+fn manager_tile(grid: IsoGrid, worker_count: usize, blocked_slot: usize) -> (usize, usize) {
+    let blocked = grid.desk_tile(blocked_slot);
+    let preferred = (
+        blocked
+            .0
+            .saturating_add(1)
+            .min(grid.columns.saturating_sub(1)),
+        grid.rows.saturating_sub(1),
+    );
+    let occupied = (0..worker_count)
+        .map(|slot| grid.desk_tile(slot))
+        .collect::<Vec<_>>();
+
+    (0..grid.rows)
+        .flat_map(|tile_y| (0..grid.columns).map(move |tile_x| (tile_x, tile_y)))
+        .filter(|tile| !occupied.contains(tile))
+        .min_by_key(|&(tile_x, tile_y)| {
+            (
+                tile_x.abs_diff(preferred.0) + tile_y.abs_diff(preferred.1),
+                tile_x.abs_diff(blocked.0) + tile_y.abs_diff(blocked.1),
+            )
+        })
+        .unwrap_or(blocked)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1524,7 +1549,7 @@ fn draw_floor_plate(canvas: &mut Canvas, grid: IsoGrid) {
 }
 
 fn draw_table(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
-    let half_width = (grid.tile_width / 4).max(2);
+    let half_width = (grid.tile_width / 5).max(2);
     let half_height = (grid.tile_height / 2).max(1);
     draw_diamond(
         canvas,
@@ -1775,7 +1800,7 @@ pub(crate) fn draw_room_scene(
         .enumerate()
         .find(|(_, worker)| worker_status(worker, now) == WorkerStatus::Blocked)
     {
-        let (tile_x, tile_y) = grid.desk_tile(slot);
+        let (tile_x, tile_y) = manager_tile(grid, visible_workers.len(), slot);
         items.push(IsoItem {
             tile_x,
             tile_y,
@@ -2519,18 +2544,42 @@ mod tests {
     }
 
     #[test]
+    fn occupied_desk_tiles_are_unique_and_spread_across_the_plate() {
+        let grid = make_grid(160, 88, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
+        let tiles = (0..5).map(|slot| grid.desk_tile(slot)).collect::<Vec<_>>();
+        let occupied = tiles
+            .iter()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(occupied.len(), tiles.len(), "occupied desk tiles overlap");
+
+        let min_x = tiles.iter().map(|tile| tile.0).min().unwrap_or(0);
+        let max_x = tiles.iter().map(|tile| tile.0).max().unwrap_or(0);
+        let min_y = tiles.iter().map(|tile| tile.1).min().unwrap_or(0);
+        let max_y = tiles.iter().map(|tile| tile.1).max().unwrap_or(0);
+        assert!(max_x - min_x >= 3, "desks do not span the plate width");
+        assert!(max_y - min_y >= 3, "desks do not span the plate depth");
+
+        let manager = manager_tile(grid, tiles.len(), 0);
+        assert!(
+            !occupied.contains(&manager),
+            "manager shares occupied desk tile {manager:?}"
+        );
+    }
+
+    #[test]
     fn floor_worker_plates_stay_with_their_desks_at_every_encoding() {
         let workers = (0..5)
             .map(|slot| {
                 Worker::new(
-                    WorkerId(format!("/golden/sustain#worker-{slot}")),
-                    OfficeId("/golden/sustain".to_string()),
+                    WorkerId(format!("/golden/they-work#worker-{slot}")),
+                    OfficeId("/golden/they-work".to_string()),
                     if slot % 2 == 0 {
                         Agent::Claude
                     } else {
                         Agent::Codex
                     },
-                    format!("sustain worker {slot}"),
+                    format!("they-work worker {slot}"),
                     0,
                 )
             })
@@ -2550,7 +2599,7 @@ mod tests {
             let looks = worker_looks(&workers);
             let grid = draw_room_scene(
                 &mut canvas,
-                "/golden/sustain",
+                "/golden/they-work",
                 &visible_workers,
                 &looks,
                 &sprites,
@@ -2566,7 +2615,7 @@ mod tests {
                         frame,
                         body,
                         grid,
-                        "/golden/sustain",
+                        "/golden/they-work",
                         &visible_workers,
                         0,
                         0,
@@ -2740,7 +2789,7 @@ mod tests {
                 grid.tile_height.saturating_sub(1).clamp(3, 6),
             ),
             IsoKind::MeetingTable => {
-                let half_width = (grid.tile_width / 4).max(2);
+                let half_width = (grid.tile_width / 5).max(2);
                 let half_height = (grid.tile_height / 2).max(1);
                 return Some((
                     center_x - half_width,
@@ -2905,10 +2954,10 @@ mod tests {
 
     #[test]
     fn project_labels_are_safe_and_split_without_ellipsis() {
-        assert_eq!(project_label("/workspace/sustain"), "SUSTAIN");
-        let longish = project_label("/workspace/giin-jalisco");
-        assert_eq!(longish, "GIIN-JALISCO");
-        assert_eq!(sign_lines(&longish), vec!["GIIN-JALISCO"]);
+        assert_eq!(project_label("/workspace/they-work"), "THEY-WORK");
+        let longish = project_label("/workspace/beta-platform");
+        assert_eq!(longish, "BETA-PLATFORM");
+        assert_eq!(sign_lines(&longish), vec!["BETA-PLATFORM"]);
         assert!(block_text_width(&longish, 2) > 100);
         assert!(block_text_width(&longish, 1) <= 100);
         let label = project_label("/workspace/very-long-project-name/with spaces");
@@ -3045,7 +3094,7 @@ mod tests {
     #[test]
     fn worker_plate_names_preserve_distinguishing_suffixes() {
         let labels = (0..5)
-            .map(|index| worker_plate_name(&format!("sustain worker {index}"), "sustain"))
+            .map(|index| worker_plate_name(&format!("they-work worker {index}"), "they-work"))
             .collect::<Vec<_>>();
         assert_eq!(
             labels,

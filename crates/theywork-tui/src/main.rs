@@ -485,8 +485,11 @@ fn render_first_run(
         };
         let store_state = if report.readable {
             format!(
-                "readable projects={} threads={} active={}",
-                report.projects, report.threads, report.active_threads
+                "readable projects={}{} threads={} active={}",
+                project_metric(report),
+                unresolved_path_suffix(report),
+                report.threads,
+                report.active_threads
             )
         } else {
             format!(
@@ -605,14 +608,33 @@ fn print_store_report(report: &StoreReport) {
         "unavailable"
     };
     print!(
-        "{label}_store={store_state} projects={} threads={} active={}",
-        report.projects, report.threads, report.active_threads
+        "{label}_store={store_state} projects={}{} threads={} active={}",
+        project_metric(report),
+        unresolved_path_suffix(report),
+        report.threads,
+        report.active_threads
     );
     if let Some(error) = report.error.as_deref() {
         print!(" reason={}", plain_value(error));
     }
     print!(" {}", report_diagnostic(report));
     println!();
+}
+
+fn project_metric(report: &StoreReport) -> String {
+    match (report.projects, report.unresolved_paths) {
+        (0, unresolved) if unresolved > 0 => "unresolved".to_string(),
+        (projects, unresolved) if unresolved > 0 => format!("{projects}+unresolved"),
+        (projects, _) => projects.to_string(),
+    }
+}
+
+fn unresolved_path_suffix(report: &StoreReport) -> String {
+    if report.unresolved_paths == 0 {
+        String::new()
+    } else {
+        format!(" unresolved_paths={}", report.unresolved_paths)
+    }
 }
 
 fn report_diagnostic(report: &StoreReport) -> String {
@@ -1059,6 +1081,7 @@ impl Poller {
 
 fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u64>) -> Result<()> {
     let started = Instant::now();
+    let cpu_started = process_cpu_ticks();
     let deadline = started + duration;
     let (initial_offices, initial_workers, mut previous_workers) = roster_snapshot(&runtime.world);
     let mut seen_workers = previous_workers.clone();
@@ -1124,6 +1147,7 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
 
     poller.stop();
     let elapsed = started.elapsed();
+    let cpu_finished = process_cpu_ticks();
     let (final_offices, final_workers, _) = roster_snapshot(&runtime.world);
     let effective_fps = frames as f64 / elapsed.as_secs_f64().max(f64::EPSILON);
     println!("they-work --headless");
@@ -1159,6 +1183,12 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
         optional_metric(rss_after_initial_scan)
     );
     println!("rss_after_bytes={}", optional_metric(resident_bytes()));
+    match process_cpu_usage(cpu_started, cpu_finished, elapsed) {
+        Some((seconds, percent)) => {
+            println!("cpu_seconds={seconds:.3} cpu_average_percent={percent:.3}");
+        }
+        None => println!("cpu_seconds=unavailable cpu_average_percent=unavailable"),
+    }
     for error in errors {
         println!("collector_error={}", plain_value(&error));
     }
@@ -1178,7 +1208,47 @@ fn roster_snapshot(world: &World) -> (usize, usize, HashSet<String>) {
 fn resident_bytes() -> Option<u64> {
     let statm = fs::read_to_string("/proc/self/statm").ok()?;
     let pages = statm.split_whitespace().nth(1)?.parse::<u64>().ok()?;
-    pages.checked_mul(4_096)
+    pages.checked_mul(system_page_size()?)
+}
+
+fn system_page_size() -> Option<u64> {
+    // SAFETY: sysconf reads immutable process/system configuration and does
+    // not dereference pointers or mutate Rust-owned memory.
+    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
+    u64::try_from(page_size).ok().filter(|value| *value > 0)
+}
+
+fn process_cpu_ticks() -> Option<(u64, u64)> {
+    let stat = fs::read_to_string("/proc/self/stat").ok()?;
+    let ticks = parse_process_cpu_ticks(&stat)?;
+    // SAFETY: as above, this only queries the kernel's clock tick frequency.
+    let ticks_per_second = unsafe { libc::sysconf(libc::_SC_CLK_TCK) };
+    let ticks_per_second = u64::try_from(ticks_per_second)
+        .ok()
+        .filter(|value| *value > 0)?;
+    Some((ticks, ticks_per_second))
+}
+
+fn parse_process_cpu_ticks(stat: &str) -> Option<u64> {
+    let after_name = stat.rsplit_once(')')?.1;
+    let fields = after_name.split_whitespace().collect::<Vec<_>>();
+    let user = fields.get(11)?.parse::<u64>().ok()?;
+    let system = fields.get(12)?.parse::<u64>().ok()?;
+    user.checked_add(system)
+}
+
+fn process_cpu_usage(
+    started: Option<(u64, u64)>,
+    finished: Option<(u64, u64)>,
+    elapsed: Duration,
+) -> Option<(f64, f64)> {
+    let ((start_ticks, start_rate), (end_ticks, end_rate)) = (started?, finished?);
+    if start_rate != end_rate || elapsed.is_zero() {
+        return None;
+    }
+    let seconds = end_ticks.checked_sub(start_ticks)? as f64 / start_rate as f64;
+    let percent = seconds / elapsed.as_secs_f64() * 100.0;
+    Some((seconds, percent))
 }
 
 fn optional_metric(value: Option<u64>) -> String {
@@ -1664,6 +1734,16 @@ mod tests {
         assert!(!detail.contains("\\n"));
         assert!(!detail.contains("\\t"));
         assert!(detail.chars().count() <= CLI_DETAIL_LIMIT + 2);
+    }
+
+    #[test]
+    fn parses_linux_process_cpu_ticks_and_computes_average() {
+        let stat = "123 (a worker name) S 1 2 3 4 5 6 7 8 9 10 25 15 0 0";
+        assert_eq!(parse_process_cpu_ticks(stat), Some(40));
+        assert_eq!(
+            process_cpu_usage(Some((100, 100)), Some((125, 100)), Duration::from_secs(5)),
+            Some((0.25, 5.0))
+        );
     }
 
     #[test]

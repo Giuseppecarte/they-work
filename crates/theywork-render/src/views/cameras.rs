@@ -30,8 +30,16 @@ pub fn grid_layout(office_count: usize, width: u16, height: u16) -> GridLayout {
         return GridLayout::default();
     }
 
-    let max_columns = (width as usize / 26).max(1).min(office_count);
     let max_rows = (height as usize / 10).max(1);
+    let balanced_columns = if max_rows >= 2 && office_count >= 4 {
+        office_count.div_ceil(2)
+    } else {
+        office_count
+    };
+    let max_columns = (width as usize / 26)
+        .max(1)
+        .min(office_count)
+        .min(balanced_columns);
     let mut best = GridLayout {
         columns: 1,
         rows: office_count,
@@ -399,6 +407,24 @@ mod tests {
         assert_eq!(
             worker_status(&offices[2].workers[0], BLOCKED_AFTER_MS + 1),
             WorkerStatus::Failed
+        );
+    }
+
+    #[test]
+    fn wide_guard_office_keeps_feeds_in_balanced_rows() {
+        assert_eq!(
+            grid_layout(6, 160, 44),
+            GridLayout {
+                columns: 3,
+                rows: 2,
+            }
+        );
+        assert_eq!(
+            grid_layout(4, 160, 44),
+            GridLayout {
+                columns: 2,
+                rows: 2,
+            }
         );
     }
 }

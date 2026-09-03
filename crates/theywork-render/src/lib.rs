@@ -388,6 +388,7 @@ impl Ui {
                 f,
                 views::phone::PhoneDrawContext {
                     world,
+                    office,
                     channel: self.phone_channel,
                     now: self.now,
                     transition_at: self.phone_transition_at,
@@ -861,7 +862,7 @@ mod m3_tests {
             .draw(|frame| ui.draw(frame, &world))
             .expect("phone name plate should render");
         assert!(
-            buffer_text(&terminal).contains("MESSAGES"),
+            buffer_text(&terminal).contains("PHONE"),
             "phone first frame should already show its title"
         );
     }

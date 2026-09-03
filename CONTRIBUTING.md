@@ -23,8 +23,9 @@ should consume the existing world model rather than reaching into a source.
 
 The user-facing startup, project-switching, persistence, and setup-check
 behavior is specified in [`docs/project-selection.md`](docs/project-selection.md).
-The CLI owner wires `--project`, `--config-dir`, and `--check`; the collector
-owner supplies normalized project identities and the first-scan counts. Keep the
+The CLI exposes `--project`, `--config-dir`, and the non-rendering `--doctor`
+diagnostic; the collector owner supplies normalized project identities and
+first-scan counts. Keep the
 default path read-only and make every additional write require the explicit
 config-directory opt-in described there.
 
@@ -43,15 +44,17 @@ make demo
 ~~~
 
 <code>make fmt</code> formats files in place. <code>make fmt-check</code> is
-the non-mutating version for checking a clean tree, and <code>make check</code>
-runs formatting, strict Clippy, and the workspace tests. The release image is
+the non-mutating version. <code>make check</code> fetches the locked
+dependencies with explicit network access, then runs the formatting check,
+strict Clippy, and the workspace tests offline. The release image is
 built from <code>docker/Dockerfile</code>; its dependency layer copies the
 manifests and stub sources before the real sources, so ordinary source edits
 can reuse the registry and dependency layers.
 
 The Cargo container runs with Docker's <code>--network none</code> by default.
-On a fresh checkout, populate the ignored <code>.cargo-home</code> cache once
-with an explicit networked fetch, then run the normal commands offline:
+<code>make check</code> handles the fresh-checkout bootstrap. Before running
+individual Cargo commands in a fresh checkout, populate the ignored
+<code>.cargo-home</code> cache once with an explicit networked fetch:
 
 ~~~bash
 THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked

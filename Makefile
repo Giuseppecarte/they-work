@@ -43,7 +43,8 @@ DOCKER_DEMO_RUN = docker run --rm -it \
   $(DOCKER_ENV) \
   $(IMAGE) --demo
 
-.PHONY: help build run demo shot test fmt fmt-check lint check clean
+.PHONY: help build run demo shot fetch test fmt fmt-check lint check clean
+.NOTPARALLEL: check
 
 help: ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -61,6 +62,9 @@ demo: build ## Watch an imaginary company; reads nothing
 shot: ## Export labelled resolution-rung PNG/SVG frames and contact sheet
 	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)"
 
+fetch: ## Populate the locked Cargo cache (networked)
+	THEYWORK_CARGO_NETWORK=bridge $(CARGO) fetch --locked
+
 test: ## Run the test suite
 	$(CARGO) test --workspace
 
@@ -73,7 +77,7 @@ fmt-check: ## Check formatting without changing files
 lint: ## Clippy, warnings are errors
 	$(CARGO) clippy --workspace --all-targets -- -D warnings
 
-check: fmt lint test ## Everything CI runs
+check: fetch fmt-check lint test ## Bootstrap and run every local code check
 
 clean: ## Remove build output
 	rm -rf target .cargo-home

@@ -71,6 +71,9 @@ pub struct StoreReport {
     pub home_found: bool,
     pub readable: bool,
     pub projects: usize,
+    /// Distinct recorded working directories that could not be inspected on
+    /// this machine, so they cannot truthfully be counted as projects.
+    pub unresolved_paths: usize,
     pub threads: usize,
     pub active_threads: usize,
     pub error: Option<String>,
@@ -86,6 +89,7 @@ impl StoreReport {
             home_found: false,
             readable: false,
             projects: 0,
+            unresolved_paths: 0,
             threads: 0,
             active_threads: 0,
             error: None,
@@ -737,14 +741,14 @@ mod tests {
     #[test]
     fn windows_profile_spellings_map_to_wsl_mounts() {
         assert_eq!(
-            windows_path_to_unix(std::ffi::OsStr::new(r"C:\Users\PC\.codex")),
-            Some(PathBuf::from("/mnt/c/Users/PC/.codex"))
+            windows_path_to_unix(std::ffi::OsStr::new(r"C:\Users\Example\.codex")),
+            Some(PathBuf::from("/mnt/c/Users/Example/.codex"))
         );
         assert_eq!(
             windows_path_to_unix(std::ffi::OsStr::new(
-                r"\\wsl.localhost\Ubuntu-22.04\home\gc\.claude"
+                r"\\wsl.localhost\Ubuntu-22.04\home\dev\.claude"
             )),
-            Some(PathBuf::from("/home/gc/.claude"))
+            Some(PathBuf::from("/home/dev/.claude"))
         );
     }
 }

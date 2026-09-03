@@ -1,5 +1,10 @@
 # Release image and no-clone install
 
+> **Current status:** the repository is private, so the anonymous raw-script
+> URL returns HTTP 404, and the GHCR package is not public. The commands below
+> describe the post-publication release path; they are not a working anonymous
+> install today.
+
 Version tags publish the runtime image at:
 
 ~~~text
@@ -53,8 +58,8 @@ locations when they are not in the usual places:
   installer=$(mktemp)
   trap 'rm -f "$installer"' EXIT
   curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  THEYWORK_CLAUDE_HOST=/mnt/c/Users/PC/.claude \
-    THEYWORK_CODEX_HOST=/mnt/c/Users/PC/.codex sh "$installer"
+  THEYWORK_CLAUDE_HOST=/mnt/c/Users/Example/.claude \
+    THEYWORK_CODEX_HOST=/mnt/c/Users/Example/.codex sh "$installer"
 )
 ~~~
 

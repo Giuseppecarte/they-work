@@ -11,9 +11,9 @@ use crate::canvas::Canvas;
 use crate::sprite::{look_for_worker, SpriteSet};
 
 use super::{
-    below_tab_bar, draw_footer, draw_header, draw_panel, draw_tiny, fill_office_background,
-    has_area, human_tokens, render_worker_with_look, safe_display, short_path, status_style,
-    token_bar, worker_status, PixelRect, ACCENT, GOOD, INK, MUTED,
+    below_tab_bar, draw_footer, draw_header, draw_panel, draw_tiny, has_area, human_tokens,
+    paint_opaque, render_worker_with_look, safe_display, short_path, status_style, token_bar,
+    worker_status, PixelRect, ACCENT, BACKGROUND, GOOD, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
 };
 const TIMELINE_LIMIT: usize = 8;
 
@@ -157,52 +157,25 @@ pub(crate) fn draw(
         return;
     }
 
-    let left_width = if body.width >= 44 {
-        body.width.saturating_mul(5) / 11
-    } else {
-        body.width / 2
-    }
-    .max(1);
-    let left = Rect::new(body.x, body.y, left_width, body.height);
-    let right = Rect::new(
-        body.x.saturating_add(left_width),
-        body.y,
-        body.width.saturating_sub(left_width),
-        body.height,
-    );
-    let left_inner = draw_panel(frame, left, "LIVE FEED", true);
-    let right_inner = draw_panel(frame, right, "WORKER DETAILS", false);
-
-    if has_area(left_inner) {
-        canvas.resize_for_cells(left_inner.width as usize, left_inner.height as usize);
-        let floor_start = fill_office_background(canvas, sprites);
-        if canvas.width() >= sprites.plant.width() + 2 {
-            canvas.blit(&sprites.plant, 1, 1);
-        }
-        if canvas.width() >= sprites.water_cooler.width() + 2 {
-            canvas.blit(
-                &sprites.water_cooler,
-                canvas
-                    .width()
-                    .saturating_sub(sprites.water_cooler.width() + 1),
-                1,
-            );
-        }
-
+    paint_opaque(frame, body, Style::default().bg(BACKGROUND));
+    let profile_height = body
+        .height
+        .min(10)
+        .min(body.height.saturating_sub(3).max(1));
+    let profile = Rect::new(body.x, body.y, body.width, profile_height);
+    let avatar_width = profile.width.min(11);
+    let avatar = Rect::new(profile.x, profile.y, avatar_width, profile.height.min(7));
+    paint_opaque(frame, avatar, Style::default().bg(PANEL));
+    if has_area(avatar) {
+        canvas.resize_for_cells(avatar.width as usize, avatar.height as usize);
+        canvas.clear();
         let look = look_for_worker(&office.workers, worker);
-        let worker_sprite = sprites.worker_frame(worker, look, now);
-        let desk_height = canvas.height().clamp(1, 7);
-        let desk_y = canvas.height().saturating_sub(desk_height);
-        let worker_width = worker_sprite
-            .width()
-            .min(canvas.width().saturating_sub(2))
+        let width = canvas.encoding().scale_width(9).min(canvas.width()).max(1);
+        let height = canvas
+            .encoding()
+            .scale_half_height(12)
+            .min(canvas.height())
             .max(1);
-        let worker_height = worker_sprite
-            .height()
-            .min(desk_y.saturating_sub(1).max(1))
-            .max(1);
-        let worker_x = canvas.width().saturating_sub(worker_width) / 2;
-        let worker_y = floor_start.min(desk_y).saturating_sub(worker_height);
         render_worker_with_look(
             canvas,
             sprites,
@@ -210,31 +183,39 @@ pub(crate) fn draw(
             &look,
             now,
             PixelRect {
-                x: worker_x,
-                y: worker_y,
-                width: worker_width,
-                height: worker_height,
+                x: canvas.width().saturating_sub(width) / 2,
+                y: canvas.height().saturating_sub(height) / 2,
+                width,
+                height,
             },
         );
-        let desk_width = canvas.width().min(sprites.desk.width()).max(1);
-        canvas.blit_scaled(
-            &sprites.desk,
-            canvas.width().saturating_sub(desk_width) / 2,
-            desk_y,
-            desk_width,
-            desk_height,
-        );
-        canvas.render(frame.buffer_mut(), left_inner);
+        canvas.render(frame.buffer_mut(), avatar);
     }
 
-    if has_area(right_inner) {
+    let info = Rect::new(
+        profile.x.saturating_add(avatar_width).saturating_add(2),
+        profile.y,
+        profile.width.saturating_sub(avatar_width.saturating_add(2)),
+        profile.height,
+    );
+    if has_area(info) {
         let detail = worker.activity.detail().unwrap_or("no detail");
         let bar = token_bar(
             worker.tokens_used,
             max_tokens,
-            right_inner.width.saturating_sub(2) as usize,
+            info.width.saturating_sub(2) as usize,
         );
         let mut lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    worker.name.to_ascii_uppercase(),
+                    Style::default().fg(INK).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("  {}", worker.agent.label()),
+                    Style::default().fg(ACCENT),
+                ),
+            ]),
             Line::from(vec![
                 Span::styled(
                     status.label().to_ascii_uppercase(),
@@ -246,27 +227,9 @@ pub(crate) fn draw(
                 ),
             ]),
             Line::from(Span::styled(
-                short_path(detail, right_inner.width.saturating_sub(2) as usize),
-                Style::default().fg(INK),
-            )),
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("agent     {}", worker.agent.label()),
-                Style::default().fg(MUTED),
-            )),
-            Line::from(Span::styled(
-                format!("status    {}", status.label()),
-                status_style(status),
-            )),
-            Line::from(Span::styled(
-                format!("branch    {}", branch),
-                Style::default().fg(MUTED),
-            )),
-            Line::from(Span::styled(
                 format!(
-                    "tokens    {} / {} max",
-                    human_tokens(worker.tokens_used),
-                    human_tokens(max_tokens)
+                    "branch {branch}  ·  {} tokens",
+                    human_tokens(worker.tokens_used)
                 ),
                 Style::default().fg(MUTED),
             )),
@@ -274,24 +237,69 @@ pub(crate) fn draw(
         if !bar.is_empty() {
             lines.push(Line::from(Span::styled(bar, Style::default().fg(GOOD))));
         }
+        let attention_style = if status.needs_attention() {
+            Style::default().fg(INK).bg(PANEL_HIGHLIGHT)
+        } else {
+            Style::default().fg(INK).bg(PANEL)
+        };
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
-            "RECENT ACTIVITY",
-            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+            if status.needs_attention() {
+                " WAITING ON YOU "
+            } else {
+                " CURRENT WORK "
+            },
+            status_style(status)
+                .bg(if status.needs_attention() {
+                    PANEL_HIGHLIGHT
+                } else {
+                    PANEL
+                })
+                .add_modifier(Modifier::BOLD),
         )));
-        if worker.history.is_empty() {
-            lines.push(Line::from(Span::styled(
-                "  no recorded beats yet",
-                Style::default().fg(MUTED),
-            )));
-        } else {
-            let start = worker.history.len().saturating_sub(TIMELINE_LIMIT);
-            for beat in worker.history.iter().skip(start) {
-                lines.push(timeline_line(beat, right_inner.width as usize));
-            }
+        lines.push(Line::from(Span::styled(
+            format!(
+                " {}",
+                short_path(detail, info.width.saturating_sub(2) as usize)
+            ),
+            attention_style,
+        )));
+        Paragraph::new(Text::from(lines))
+            .style(Style::default().bg(BACKGROUND))
+            .wrap(Wrap { trim: false })
+            .render(info, frame.buffer_mut());
+    }
+
+    let thread = Rect::new(
+        body.x,
+        body.y.saturating_add(profile_height),
+        body.width,
+        body.height.saturating_sub(profile_height),
+    );
+    let thread_inner = draw_panel(frame, thread, "THIS THREAD · NEWEST LAST", false);
+    if has_area(thread_inner) {
+        let available = thread_inner.height as usize;
+        let start = worker
+            .history
+            .len()
+            .saturating_sub(available.min(TIMELINE_LIMIT));
+        let mut lines = worker
+            .history
+            .iter()
+            .skip(start)
+            .map(|beat| timeline_line(beat, thread_inner.width as usize))
+            .collect::<Vec<_>>();
+        if lines.is_empty() && lines.len() < available {
+            let current = Beat {
+                at: worker.last_seen,
+                activity: worker.activity.clone(),
+                outcome: None,
+            };
+            lines.push(timeline_line(&current, thread_inner.width as usize));
         }
         Paragraph::new(Text::from(lines))
+            .style(Style::default().bg(BACKGROUND))
             .wrap(Wrap { trim: false })
-            .render(right_inner, frame.buffer_mut());
+            .render(thread_inner, frame.buffer_mut());
     }
 }

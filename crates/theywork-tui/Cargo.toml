@@ -17,6 +17,7 @@ theywork-render = { workspace = true }
 ratatui = { workspace = true }
 crossterm = { workspace = true }
 anyhow = { workspace = true }
+libc = { workspace = true }
 
 [dev-dependencies]
 rusqlite = { workspace = true }

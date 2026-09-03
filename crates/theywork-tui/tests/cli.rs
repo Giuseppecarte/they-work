@@ -325,6 +325,30 @@ fn doctor_reports_fixture_homes() {
 }
 
 #[test]
+fn doctor_marks_unavailable_codex_working_directories_as_unresolved() {
+    let fixture = Fixture::new();
+    let state = Connection::open(fixture.codex_home.join("sqlite/state_5.sqlite")).unwrap();
+    state
+        .execute(
+            "UPDATE threads SET cwd = ?1",
+            [fixture
+                .temp
+                .path()
+                .join("not-mounted/project")
+                .to_string_lossy()],
+        )
+        .unwrap();
+
+    let output = run(&fixture, &["--doctor"]);
+    assert_success(&output);
+    let text = stdout(&output);
+    assert!(text.contains(
+        "codex_store=readable projects=unresolved unresolved_paths=1 threads=1 active=1"
+    ));
+    assert!(!text.contains("codex_store=readable projects=0 threads=1"));
+}
+
+#[test]
 fn doctor_fails_with_no_homes_and_explains_both_paths() {
     let fixture = Fixture::new();
     let claude = fixture.temp.path().join("missing-claude");
@@ -421,7 +445,7 @@ fn doctor_reports_owner_and_permissions_for_an_unreadable_home() {
 #[test]
 fn doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation() {
     let fixture = Fixture::new();
-    let unusual = PathBuf::from("/mnt/c/Users/PC/.codex");
+    let unusual = PathBuf::from("/mnt/c/Users/Example/.codex");
     let missing_claude = fixture.temp.path().join("missing-claude");
     let output = run_with_homes(&fixture, &["--doctor"], &missing_claude, &unusual);
     assert!(!output.status.success());
@@ -469,6 +493,8 @@ fn headless_exit_after_runs_the_full_polling_loop() {
     assert!(text.contains("roster initial_offices="));
     assert!(text.contains("rss_before_bytes="));
     assert!(text.contains("rss_after_bytes="));
+    assert!(text.contains("cpu_seconds="));
+    assert!(text.contains("cpu_average_percent="));
     assert!(!text.contains("THEY WORK — first run"));
 }
 

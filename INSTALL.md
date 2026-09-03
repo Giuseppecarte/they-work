@@ -4,9 +4,14 @@ The container is the recommended route. It keeps the Rust toolchain in the
 build image and gives the running program the read-only, no-network boundary
 described below.
 
-## Without a checkout
+## Without a checkout (not currently public)
 
-After a version tag is published, Docker is the only host requirement:
+The repository is currently private: anonymous access to the raw installer
+returns HTTP 404, and the GHCR package is not public. The following is the
+release procedure, not a working public entry point today. It deliberately
+downloads before invoking the script, so a failed download exits nonzero.
+Once the repository and package are public, Docker is the only host
+requirement:
 
 ~~~bash
 (
@@ -164,7 +169,7 @@ side while Docker runs in WSL:
 docker run --rm -it \
   --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges \
-  -v /mnt/c/Users/PC/.codex:/data/codex:ro \
+  -v /mnt/c/Users/Example/.codex:/data/codex:ro \
   -e THEYWORK_CODEX_HOME=/data/codex \
   they-work:local
 ~~~
@@ -174,21 +179,23 @@ short `-v` syntax, Docker can create a missing host path as an empty directory;
 use an existing path or long `--mount` syntax when you want a missing path to
 fail instead.
 
-## Setup check before the interactive view
+## Diagnose setup before the interactive view
 
-The planned `--check` mode performs one read-only collector scan without raw
-mode, an alternate screen, or any rendering. It prints both homes and counts:
+The implemented `--doctor` mode performs one read-only inspection without raw
+mode, an alternate screen, or rendering. It reports both configured homes,
+store readability, project/thread/activity counts, and actionable ownership or
+permission details when a store cannot be read.
 
 ~~~text
 claude_home=found path=/data/claude
 codex_home=missing path=/data/codex
-projects=2
-workers=6
+claude_store=readable projects=2 threads=2 active=2
+codex_store=unavailable reason="home is not a directory"
 ~~~
 
-Exit `0` means at least one home was available, `1` means neither home was
-available or a collector failed, and `2` means invalid arguments. The local
-image command will be:
+Exit `0` means at least one home exists and every existing home is readable;
+exit `1` means neither home exists or an existing home is unreadable. Invalid
+arguments exit `2`. The local-image command is:
 
 ~~~bash
 docker run --rm \
@@ -196,13 +203,11 @@ docker run --rm \
   --security-opt no-new-privileges \
   -v "$HOME/.claude:/data/claude:ro" \
   -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local --check
+  they-work:local --doctor
 ~~~
 
-`--check` is a documented CLI contract for the crate owner and is not
-implemented by this packaging change. See
-[`docs/project-selection.md`](docs/project-selection.md#non-rendering-setup-check)
-for acceptance details.
+See [`docs/project-selection.md`](docs/project-selection.md#non-rendering-setup-diagnosis)
+for the verified behavior.
 
 ## Build, test, and configure
 

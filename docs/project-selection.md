@@ -12,7 +12,7 @@ It does not change a crate by itself.
 Add one optional argument:
 
 ~~~text
-they-work [--project <path>] [--config-dir <path>] [--check] [--demo]
+they-work [--project <path>] [--config-dir <path>] [--demo]
 ~~~
 
 `--project` accepts one path. It may be relative to the process working
@@ -108,17 +108,16 @@ This trades the default zero-write guarantee for a narrowly scoped config
 directory that contains a project path, not agent transcripts. That trade is
 visible in the command and reversible by removing the mount and flag.
 
-## Non-rendering setup check
+## Non-rendering setup diagnosis
 
-Add `--check` as a non-interactive diagnostic mode. It must:
+The implemented `--doctor` diagnostic mode:
 
-- resolve and report both configured agent homes;
-- report `found` or `missing` for each home without treating one missing agent
-  as fatal;
-- perform one read-only collector scan and fold that scan into the world;
-- report the number of discovered projects and workers; and
-- never enter raw mode, create an alternate screen, initialize the renderer, or
-  draw anything.
+- resolves and reports both configured agent homes;
+- reports `found` or `missing` for each home without treating one missing
+  source as fatal;
+- inspects each store read-only and reports project, thread, and active counts;
+- reports owner and permission details for unreadable paths; and
+- exits without entering raw mode, creating an alternate screen, or drawing.
 
 Use stable key/value lines so the command is useful in a shell and readable by
 a person:
@@ -126,14 +125,13 @@ a person:
 ~~~text
 claude_home=found path=/data/claude
 codex_home=missing path=/data/codex
-projects=2
-workers=6
+claude_store=readable projects=2 threads=2 active=2
+codex_store=unavailable reason="home is not a directory"
 ~~~
 
-Exit status is `0` when at least one home is available, `1` when neither home
-is available or a collector reports an error, and `2` for invalid arguments.
-The worker count is the total after the first scan and before any interactive
-rendering.
+Exit status is `0` when at least one home exists and every existing home is
+readable, `1` when neither exists or an existing home is unreadable, and `2`
+for invalid arguments.
 
 The local-image command is:
 
@@ -143,8 +141,5 @@ docker run --rm \
   --security-opt no-new-privileges \
   -v "$HOME/.claude:/data/claude:ro" \
   -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local --check
+  they-work:local --doctor
 ~~~
-
-`--check` is specified here for the crate owner; it is not implemented by the
-packaging/docs change.

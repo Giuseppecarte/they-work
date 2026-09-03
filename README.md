@@ -1,38 +1,22 @@
 # they-work
 
-> A read-only terminal office for Claude Code and Codex: local agent activity becomes a small, explorable pixel-art world.
+> A virtual office for the AI coding agents already running on your machine.
 
-`they-work` observes local agent activity and renders it on screen. It does
-not start or stop agents, write to their files, or use the network.
+You start three agents on a project and they scatter into separate threads.
+`they-work` puts them back in one room: every thread is an employee at a desk,
+typing, reading, editing, or waiting on you — drawn as pixel art in your
+terminal. Every project you have open is another office, and one view is a wall
+of camera feeds so you can watch all of them at once.
 
-## Try it without a checkout
+It only ever reads. It cannot start or stop your agents, write to their files,
+or reach the network.
 
-Once a version tag has been published, its image is the fastest way to see the
-office. It requires Docker, but not Git, Rust, Make, or a local checkout:
+![The office floor](docs/office.png)
 
-~~~bash
-(
-  set -e
-  installer=$(mktemp)
-  trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  sh "$installer"
-)
-~~~
+## Start here
 
-Pin a release with `THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3`.
-The installer mounts existing `~/.claude` and `~/.codex` directories read-only,
-skips homes that are absent, and starts an empty office when neither exists.
-It runs the container as the invoking UID/GID so private `0600` transcripts
-remain readable without widening access. Set `THEYWORK_CLAUDE_HOST` or
-`THEYWORK_CODEX_HOST` for non-standard host paths.
-See [`docs/release.md`](docs/release.md) for the release workflow and exact
-Windows/WSL example.
-
-## Quick look from a checkout
-
-The current supported path requires Docker and a checkout. The deterministic
-demo is:
+Requires Docker and Git. Nothing else — no Rust, no toolchain, nothing installed
+on your machine.
 
 ~~~bash
 git clone https://github.com/Giuseppecarte/they-work
@@ -40,243 +24,153 @@ cd they-work
 make demo
 ~~~
 
-The demo mounts no agent directories and reads no local agent data.
+`make demo` shows an imaginary company and **reads nothing from your disk**, so
+it is the safe way to see what this is before pointing it at your own work.
 
-![A conceptual overview of the deterministic they-work office](docs/demo.svg)
-
-*A conceptual interface overview, not a renderer screenshot. It reads nobody's
-files.*
-
-## Reviewable frames
-
-Run `make shot` before opening this section's generated images or
-`docs/shots/index.html`. The frames are generated rather than stored, so a
-fresh clone has no sheet until that command runs, and the sheet always matches
-the code you have checked out. PNG export
-rasterizes the exact SVG through Google Chrome or Chromium, whose font fallback
-preserves spaces, bullets, and box-drawing characters. The generated PNGs are
-ordinary images and need no Rust or browser toolchain to view; set
-`THEYWORK_SVG_RASTERIZER` when the browser executable is not on `PATH`.
-The contact sheet puts the same surface at 160×48 and 80×24 for every complete
-encoding rung, and labels every rendered panel with its terminal size and
-encoding. The current complete ladder is `sextants`, `quadrants`, and
-`half-blocks`; the selected README aliases use the densest complete `sextants`
-rung. Graphics protocol output is not claimed yet because the exporter still
-needs a deterministic backend frame or recording, a fixed viewport and
-timestamp, and a protocol-aware capture/decoder to render one.
-
-The reviewed primary frames are included below. They are the selected dark
-compatibility exports from the same `make shot` run; rerun that one command
-whenever frame art changes to keep the README art and review bundle aligned.
-
-<table>
-  <tr>
-    <td><strong>Office floor · primary 160×48 · sextants</strong><br>
-      <img src="docs/shots/floor.png" alt="Rendered office floor using sextants encoding at terminal size 160×48" width="640">
-    </td>
-    <td><strong>Desk detail · primary 160×48 · sextants</strong><br>
-      <img src="docs/shots/desk.png" alt="Rendered desk detail using sextants encoding at terminal size 160×48" width="640">
-    </td>
-  </tr>
-</table>
-
-These two images are intentionally generated files. If the links do not resolve
-in a fresh checkout, run `make shot` first; CI retains the complete generated
-bundle as the `they-work-shots` artifact.
-
-## Watch your agents
-
-The local-data run explicitly mounts the two agent homes read-only:
+When you are happy:
 
 ~~~bash
 make run
 ~~~
 
-This is equivalent to mounting `~/.claude` at `/data/claude` and `~/.codex` at
-`/data/codex` with `:ro`, then starting the local image with the hardened
-runtime flags. The exact hand-run command is in [INSTALL.md](INSTALL.md).
+That mounts your agent directories read-only, with no network, and shows your
+real projects.
 
-## What it shows
+### Look before you leap
 
-The interface is organized around one selected project at a time:
+Two commands print and exit, without drawing anything:
 
-| View | What you see |
-| --- | --- |
-| Office floor (default) | One project, its desks, worker status, activity, branch, and token summary. |
-| Camera grid | Every discovered project as a compact feed, for comparing projects and switching the selected one. |
-| Desk detail | The selected worker's current activity and recent history inside the selected project. |
+~~~bash
+make build
+docker run --rm --user "$(id -u):$(id -g)" --network none \
+  -v "$HOME/.claude:/data/claude:ro" -v "$HOME/.codex:/data/codex:ro" \
+  they-work:local --doctor
+~~~
 
-Use `Tab` to switch between the selected office floor and the camera grid.
-In the grid, arrows or `h`/`j`/`k`/`l` select a project and `Enter` opens its
-floor. In the floor, `Enter` opens the selected desk; `Esc` or `Backspace`
-returns to the parent view. Press `p` for the phone overlay, whose channels are
-`#standup`, `#blocked`, `#shipping`, and `#watercooler`; choose them with
-`1`–`4` or the arrow/hjkl keys. Press `?` for the key-reference overlay.
+`--doctor` says which agents it found, where, how much they hold, and — when
+something is wrong — what to do about it. Swap `--doctor` for `--once` to get
+every office and worker as plain text, blocked ones first. Both are useful over
+SSH, in a pipe, or when the office looks emptier than you expected.
 
-## Which project am I looking at?
+## What you are looking at
 
-Use `--project <path>` to choose a project at startup. The path may be relative
-to the process working directory or absolute. It is normalized in the same way
-as collector paths, and a path inside a Git worktree resolves to that
-worktree's root. The selected root is matched against the normalized project
-identity reported by the collectors.
+| View | Key | What it is |
+| --- | --- | --- |
+| **The floor** | default | one project as an isometric office, a desk per thread |
+| **The guard office** | `Tab` or `0` | every project at once, each behind its own camera pane |
+| **A desk** | `Enter` | one worker up close, with their timeline |
+| **The phone** | `p` | a messaging app: standup, blocked, shipping, watercooler |
+| **Settings** | `s` | camera, light, theme, colour depth, motion |
+| **Help** | `?` | every key |
 
-Without `--project`, startup follows this order:
+Tabs across the top switch offices; `1`–`9` jump straight to one. A tab's dot
+turns amber the moment anyone in that project is blocked, even while you are
+looking somewhere else.
 
-1. If the current directory belongs to one discovered project, open that
-   project's office floor.
-2. Otherwise, if projects were discovered, show the project picker. It lists a
-   stable project name and full normalized path; `Enter` selects one.
-3. If there is no usable picker, or the picker is dismissed, show every
-   discovered project in the camera grid. If none were found, show an empty
-   grid and the setup hint instead of pretending a project exists.
+![A desk](docs/desk.png)
 
-The camera grid is also the switching mechanism after startup: `Tab` opens it,
-the movement keys select a different project, and `Enter` makes that project
-the single office floor. See the precise state and path-matching contract in
-[`docs/project-selection.md`](docs/project-selection.md).
+Colour means the same thing everywhere. **Shirt** is which agent — orange for
+Claude Code, blue for Codex. The **bar under a name** is status: green running,
+grey idle, amber blocked, red failed. Amber appears nowhere else in the
+interface, so if you see it, someone is waiting on you.
 
-### Remembering a choice
-
-The default is deliberately non-persistent. `--project` is the whole story,
-so the standard container still writes nothing and needs no writable config
-mount. The cost is that a user who works across several projects repeats the
-flag or selects from the grid on each run.
-
-The recommended opt-in extension is `--config-dir <path>`. When supplied, the
-program may read and update one small selection file in that directory; when it
-is absent, it must not read or write a preference anywhere. In the container,
-the user must explicitly mount that directory read-write. This trades one
-narrow, visible write permission for convenience; the file contains a project
-path, not agent transcripts. An explicit `--project` wins for the current run.
-See [the full persistence contract](docs/project-selection.md#remembering-a-choice).
-
-## What it reads and what you are agreeing to
+## What it reads, and what you are agreeing to
 
 The collectors have a narrow, read-only input boundary:
 
-- Claude Code: regular `.jsonl` session files below
-  `~/.claude/projects/`. Symlinks and non-JSONL files are skipped.
-- Codex: the SQLite databases `~/.codex/sqlite/state_5.sqlite` and
-  `~/.codex/sqlite/thread_history_1.sqlite`, opened with SQLite's read-only
-  mode.
+- **Claude Code** — regular `.jsonl` session files below `~/.claude/projects/`.
+  Symlinks and non-JSONL files are skipped.
+- **Codex** — the SQLite databases `~/.codex/sqlite/state_5.sqlite` and
+  `~/.codex/sqlite/thread_history_1.sqlite`, opened in SQLite's read-only mode.
 
-Those records can contain your prompts, commands, file paths, agent messages,
-thread titles, branches, token counts, and status metadata. The corresponding
-activity and message text is displayed in the terminal, so treat the screen as
-having the same sensitivity as those files. The collectors inspect filesystem
-metadata and `.git` directory markers to group activity under a project root;
-they do not read your project source files.
+Those records contain your prompts, the commands your agents ran, file paths,
+their messages back, thread titles, branches and token counts. All of it is
+displayed on screen, so treat the terminal as having the same sensitivity as
+those files. The collectors read filesystem metadata and `.git` markers to group
+activity under a project root; they never read your project's source.
 
-Missing homes are normal: the unavailable collector is skipped, the other one
-continues, and the camera grid can be empty. If a home lives somewhere unusual,
-set `THEYWORK_CLAUDE_HOME` or `THEYWORK_CODEX_HOME` to the path visible inside
-the container and mount that path read-only. For example, when Codex data is on
-the Windows side while Docker runs in WSL:
+A missing agent is normal — the other one carries on. If a store lives somewhere
+unusual, point `THEYWORK_CLAUDE_HOME` or `THEYWORK_CODEX_HOME` at it. Codex on
+the Windows side while you run in WSL is common enough that discovery looks for
+it under `/mnt/*/Users/*` on its own.
 
-~~~bash
-docker run --rm -it --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -v /mnt/c/Users/PC/.codex:/data/codex:ro \
-  -e THEYWORK_CODEX_HOME=/data/codex \
-  they-work:local
-~~~
+The flags in `make run` are deliberately visible:
 
-Use the path syntax understood by the Docker daemon. The path on the right of
-the mount is the value the program must receive. With Docker's short `-v`
-syntax, a missing host path can be created as an empty directory; use an
-explicit existing path or long `--mount` syntax if you want Docker to fail
-instead. The demo command avoids this issue because it mounts nothing.
+- `--network none` — the process has no network interface at all
+- `--read-only` — the container filesystem cannot be written
+- `--cap-drop ALL` and `--security-opt no-new-privileges`
+- `:ro` on both agent mounts
+- `--user` your own uid, so it reads exactly what you can read and no more
+- `--rm` — nothing persists when you quit
 
-The runtime flags are intentionally visible in the command above:
+Building the image uses Docker's normal network access to pull base images. That
+is separate from the running program, which has none.
 
-- `--network none` gives the process no network interface;
-- `--read-only` makes the container root filesystem read-only;
-- `--cap-drop ALL` drops all Linux capabilities;
-- `--security-opt no-new-privileges` prevents privilege elevation;
-- `:ro` makes both agent mounts read-only;
-- it runs as you, not root, so it can read exactly what you can read and no more; and
-- `--rm` removes the stopped container.
+## What is inside
 
-Image construction may need Docker's normal access to pull base images. That is
-separate from the running application's no-network boundary.
+Five crates. `theywork-core` is the contract; the collectors and the renderer
+both depend on it and neither depends on the other.
 
-## Check the setup before trusting it
+| Crate | Does |
+| --- | --- |
+| `theywork-core` | the domain model — offices, workers, activities, events, status |
+| `theywork-collect` | read-only readers for Claude Code and Codex |
+| `theywork-render` | the pixel canvas, sprites and views |
+| `theywork-terminal-image` | Kitty and Sixel transport for terminals that can show images |
+| `theywork-tui` | the binary: arguments, discovery, the frame loop |
 
-The planned non-rendering CLI check is `--check`. It performs one collector
-scan, never enters raw mode or the alternate screen, and prints stable lines of
-the following form:
+Data flows one way. A collector tails a transcript or reads a database and emits
+normalised events; `World` folds those into offices and workers; the renderer
+draws whatever `World` currently says. Nothing downstream parses an agent's
+format, and nothing upstream knows how anything is drawn.
 
-~~~text
-claude_home=found path=/data/claude
-codex_home=missing path=/data/codex
-projects=2
-workers=6
-~~~
+The picture is built from **half-block, quadrant or sextant characters**,
+whichever your terminal and font support — up to six pixels and two colours in
+every cell. On a 160×48 terminal that is a 320×144 image.
 
-It reports both configured homes, the discovered project count, and the worker
-count seen in that first scan. Exit status is `0` when at least one home is
-available, `1` when neither home is available or a collector fails, and `2` for
-invalid CLI arguments. Run it with the same read-only mounts before starting the
-interactive view:
-
-~~~bash
-docker run --rm \
-  --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -v "$HOME/.claude:/data/claude:ro" \
-  -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local --check
-~~~
-
-`--check` is a CLI contract for the crate owner to implement; it is specified
-here and intentionally is not implemented by this packaging change. Details
-and acceptance cases are in [`docs/project-selection.md`](docs/project-selection.md).
+The intended design for every surface lives in [`docs/design/`](docs/design) as
+plain HTML you can open in a browser. Where the code and a board disagree, the
+board is what was meant.
 
 ## Configuration
 
-The application reads these environment variables at startup:
-
-| Variable | Meaning |
+| Flag | |
 | --- | --- |
-| `THEYWORK_CLAUDE_HOME` | Claude data root. The container default is `/data/claude`. |
-| `THEYWORK_CODEX_HOME` | Codex data root. The container default is `/data/codex`. |
-| `THEYWORK_COLOR=none` | Force monochrome block rendering. |
-| `THEYWORK_COLOR=true` | Force truecolor rendering. |
-| `THEYWORK_COLOR=256` | Force the 256-color palette. |
-| `NO_COLOR` | Any presence forces monochrome and takes precedence over `THEYWORK_COLOR`. |
+| `--project <path>` | open one project |
+| `--all` | start on the guard office |
+| `--demo` | the imaginary company; reads nothing |
+| `--doctor` | report what was found, then exit |
+| `--once` | report every office and worker, then exit |
+| `--view iso\|top\|side` | starting camera |
+| `--light` / `--dark` | starting appearance |
+| `--color auto\|true\|256\|none` | colour depth |
+| `--config-dir <path>` | opt in to remembering settings |
+| `--headless --exit-after <dur>` | run the loop without a terminal |
 
-Without a forced color setting, `COLORTERM=truecolor` or `COLORTERM=24bit`
-selects truecolor; other terminals use the 256-color palette. For example:
+| Variable | |
+| --- | --- |
+| `THEYWORK_CLAUDE_HOME` | where Claude Code's data is |
+| `THEYWORK_CODEX_HOME` | where Codex's data is |
+| `THEYWORK_COLOR` | force a colour depth |
+| `NO_COLOR` | honoured above everything else |
+
+Nothing is written to disk unless you pass `--config-dir`.
+
+## Working on it
 
 ~~~bash
-THEYWORK_COLOR=none make run
-NO_COLOR=1 make run
+make check   # format, clippy, and the full test suite
+make shot    # render every surface beside its intended design
 ~~~
 
-## Contributor path
+`make shot` writes `docs/shots/index.html`, which puts each rendered view next to
+its design reference. That comparison is how visual changes get reviewed — the
+frames are generated rather than stored, so what you open is always the code you
+have checked out.
 
-If you want to build or change the project, clone it and use the containerized
-toolchain:
-
-~~~bash
-git clone https://github.com/Giuseppecarte/they-work
-cd they-work
-make demo
-~~~
-
-See [INSTALL.md](INSTALL.md) for Docker, source builds, and troubleshooting,
-and [CONTRIBUTING.md](CONTRIBUTING.md) for crate boundaries, collector safety,
-and the containerized checks.
-
-## Project metadata
-
-Description: A read-only terminal office for Claude Code and Codex, rendered as
-pixel art.
-
-Suggested topics: `rust` · `terminal-ui` · `tui` · `pixel-art` ·
-`developer-tools` · `observability` · `claude-code` · `codex`
+You do not need Rust installed; `scripts/cargo` runs the toolchain in a
+container as you. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-See [LICENSE](LICENSE).
+MIT

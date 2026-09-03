@@ -77,16 +77,54 @@ impl ClaudeSource {
             report.error = Some("home is not a directory".to_string());
             return report;
         }
+        if !crate::path_allows_read(home) {
+            report.error = Some(crate::unreadable_reason(
+                home,
+                "Claude home cannot be read",
+                &io::Error::from(io::ErrorKind::PermissionDenied),
+            ));
+            return report;
+        }
 
         let projects = home.join("projects");
-        let discovered = match discover_files(&projects) {
-            Ok(files) => files,
+        match fs::metadata(&projects) {
+            Ok(metadata) if !metadata.is_dir() => {
+                report.error = Some(format!(
+                    "Claude projects path is not a directory; {}",
+                    crate::metadata_access_details(&projects)
+                ));
+                return report;
+            }
+            Ok(_) if !crate::path_allows_read(&projects) => {
+                report.error = Some(crate::unreadable_reason(
+                    &projects,
+                    "Claude projects cannot be read",
+                    &io::Error::from(io::ErrorKind::PermissionDenied),
+                ));
+                return report;
+            }
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 report.readable = true;
                 return report;
             }
             Err(error) => {
-                report.error = Some(format!("could not scan projects: {error}"));
+                report.error = Some(crate::unreadable_reason(
+                    &projects,
+                    "could not inspect Claude projects",
+                    &error,
+                ));
+                return report;
+            }
+            Ok(_) => {}
+        }
+        let discovered = match discover_files(&projects) {
+            Ok(files) => files,
+            Err(error) => {
+                report.error = Some(crate::unreadable_reason(
+                    &projects,
+                    "could not scan Claude projects",
+                    &error,
+                ));
                 return report;
             }
         };

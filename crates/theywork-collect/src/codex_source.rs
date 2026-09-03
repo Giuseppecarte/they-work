@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -82,23 +83,122 @@ impl CodexSource {
             report.error = Some("home is not a directory".to_string());
             return report;
         }
+        if !crate::path_allows_read(home) {
+            report.error = Some(crate::unreadable_reason(
+                home,
+                "Codex home cannot be read",
+                &std::io::Error::from(std::io::ErrorKind::PermissionDenied),
+            ));
+            return report;
+        }
 
+        let sqlite = home.join("sqlite");
+        match fs::metadata(&sqlite) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                report.readable = true;
+                return report;
+            }
+            Err(error) => {
+                report.error = Some(crate::unreadable_reason(
+                    &sqlite,
+                    "could not inspect Codex SQLite directory",
+                    &error,
+                ));
+                return report;
+            }
+            Ok(metadata) if !metadata.is_dir() => {
+                report.error = Some(format!(
+                    "Codex SQLite path is not a directory; {}",
+                    crate::metadata_access_details(&sqlite)
+                ));
+                return report;
+            }
+            Ok(_) if !crate::path_allows_read(&sqlite) => {
+                report.error = Some(crate::unreadable_reason(
+                    &sqlite,
+                    "Codex SQLite directory cannot be read",
+                    &std::io::Error::from(std::io::ErrorKind::PermissionDenied),
+                ));
+                return report;
+            }
+            Ok(_) => {}
+        }
         let state_path = home.join("sqlite").join("state_5.sqlite");
         let history_path = home.join("sqlite").join("thread_history_1.sqlite");
-        if !state_path.is_file() || !history_path.is_file() {
-            report.error = Some("required SQLite stores are missing".to_string());
+        let state_metadata = match fs::metadata(&state_path) {
+            Ok(metadata) => Some(metadata),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => {
+                report.error = Some(crate::unreadable_reason(
+                    &state_path,
+                    "could not inspect Codex state database",
+                    &error,
+                ));
+                return report;
+            }
+        };
+        let history_metadata = match fs::metadata(&history_path) {
+            Ok(metadata) => Some(metadata),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => {
+                report.error = Some(crate::unreadable_reason(
+                    &history_path,
+                    "could not inspect Codex history database",
+                    &error,
+                ));
+                return report;
+            }
+        };
+        if state_metadata.is_none() || history_metadata.is_none() {
+            report.readable = true;
+            return report;
+        }
+        if !state_metadata
+            .as_ref()
+            .is_some_and(|metadata| metadata.is_file())
+            || !history_metadata
+                .as_ref()
+                .is_some_and(|metadata| metadata.is_file())
+        {
+            report.error = Some(format!(
+                "required Codex SQLite stores are not regular files; {}",
+                crate::metadata_access_details(&sqlite)
+            ));
+            return report;
+        }
+        if !crate::path_allows_read(&state_path) {
+            report.error = Some(crate::unreadable_reason(
+                &state_path,
+                "Codex state database cannot be read",
+                &std::io::Error::from(std::io::ErrorKind::PermissionDenied),
+            ));
+            return report;
+        }
+        if !crate::path_allows_read(&history_path) {
+            report.error = Some(crate::unreadable_reason(
+                &history_path,
+                "Codex history database cannot be read",
+                &std::io::Error::from(std::io::ErrorKind::PermissionDenied),
+            ));
             return report;
         }
 
         let Some(state) = open_read_only(&state_path) else {
-            report.error = Some("state database could not be opened read-only".to_string());
+            report.error = Some(format!(
+                "state database could not be opened read-only; {}",
+                crate::metadata_access_details(&state_path)
+            ));
             return report;
         };
         let mut office_cache = HashMap::new();
         let all_threads = match read_threads(&state, i64::MIN, &mut office_cache) {
             Ok(threads) => threads,
             Err(error) => {
-                report.error = Some(format!("thread roster query failed: {error}"));
+                report.error = Some(crate::unreadable_reason(
+                    &state_path,
+                    "thread roster query failed",
+                    &error,
+                ));
                 return report;
             }
         };
@@ -109,16 +209,27 @@ impl CodexSource {
         ) {
             Ok(threads) => threads,
             Err(error) => {
-                report.error = Some(format!("active roster query failed: {error}"));
+                report.error = Some(crate::unreadable_reason(
+                    &state_path,
+                    "active roster query failed",
+                    &error,
+                ));
                 return report;
             }
         };
         let Some(history) = open_read_only(&history_path) else {
-            report.error = Some("history database could not be opened read-only".to_string());
+            report.error = Some(format!(
+                "history database could not be opened read-only; {}",
+                crate::metadata_access_details(&history_path)
+            ));
             return report;
         };
         if let Err(error) = read_turns(&history) {
-            report.error = Some(format!("turn history query failed: {error}"));
+            report.error = Some(crate::unreadable_reason(
+                &history_path,
+                "turn history query failed",
+                &error,
+            ));
             return report;
         }
 

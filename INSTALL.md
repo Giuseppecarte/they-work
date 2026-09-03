@@ -9,7 +9,13 @@ described below.
 After a version tag is published, Docker is the only host requirement:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh | sh
+(
+  set -e
+  installer=$(mktemp)
+  trap 'rm -f "$installer"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
+  sh "$installer"
+)
 ~~~
 
 The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
@@ -19,8 +25,13 @@ transcripts remain readable without widening access. Pin a release when the
 image must not change underneath you:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh \
-  | THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3 sh
+(
+  set -e
+  installer=$(mktemp)
+  trap 'rm -f "$installer"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
+  THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3 sh "$installer"
+)
 ~~~
 
 Use `THEYWORK_CLAUDE_HOST` and `THEYWORK_CODEX_HOST` to point at host paths

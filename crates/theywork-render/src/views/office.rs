@@ -331,20 +331,20 @@ impl RoomScale {
     fn monitor_size(self, grid: IsoGrid) -> (usize, usize) {
         match self {
             Self::Floor => (
-                (grid.tile_width / 4).clamp(
-                    7,
+                (grid.tile_width * 2 / 5).clamp(
+                    10,
+                    if grid.encoding == PixelEncoding::HalfBlocks {
+                        16
+                    } else {
+                        22
+                    },
+                ) as usize,
+                grid.encoding.scale_half_height(9).clamp(
+                    8,
                     if grid.encoding == PixelEncoding::HalfBlocks {
                         12
                     } else {
-                        18
-                    },
-                ) as usize,
-                grid.encoding.scale_half_height(5).clamp(
-                    4,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        8
-                    } else {
-                        10
+                        16
                     },
                 ),
             ),
@@ -485,7 +485,7 @@ fn make_grid_with_encoding(
     let tile_width = encoding.scale_width(base_tile_width as usize) as i32;
     let tile_height = encoding.scale_half_height(base_tile_height as usize) as i32;
     let floor_depth = (floor_span as i32 * tile_height) / 2;
-    let floor_margin = encoding.scale_half_height((logical_height / 10).clamp(3, 6));
+    let floor_margin = encoding.scale_half_height((logical_height / 6).clamp(8, 12));
     let origin_y = height as i32 - floor_margin as i32 - floor_depth;
     let origin_x = width as i32 / 2 - (columns as i32 - rows as i32) * tile_width / 4;
     IsoGrid {
@@ -930,7 +930,7 @@ fn iso_wall_height(canvas: &Canvas) -> i32 {
     let base_height = canvas.encoding().half_space_height(canvas.height());
     canvas
         .encoding()
-        .scale_half_height((base_height / 5).clamp(12, 20)) as i32
+        .scale_half_height((base_height / 4).clamp(16, 24)) as i32
 }
 fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
     canvas.fill(super::BACKGROUND);

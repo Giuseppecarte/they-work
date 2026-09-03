@@ -8,8 +8,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use rusqlite::{params, Connection, OpenFlags};
 use serde_json::{json, Value};
 use theywork_collect::{
-    normalize_office_path, sources as build_sources, ClaudeSource, CodexSource, Config,
-    DEFAULT_ACTIVE_WITHIN, NON_PROJECT_OFFICE,
+    inspect as inspect_stores, normalize_office_path, sources as build_sources, ClaudeSource,
+    CodexSource, Config, DEFAULT_ACTIVE_WITHIN, NON_PROJECT_OFFICE,
 };
 use theywork_core::{Activity, Agent, Beat, Event, EventKind, Outcome, Source, World, HISTORY_LEN};
 
@@ -2647,6 +2647,51 @@ fn sources_wires_existing_homes_and_skips_missing_ones() {
         only_paths: Vec::new(),
     };
     assert!(build_sources(&missing).is_empty());
+}
+
+#[test]
+fn inspect_distinguishes_empty_homes_from_unreadable_stores() {
+    let temp = TempDir::new();
+    let empty_claude = temp.path().join("empty-claude");
+    let empty_codex = temp.path().join("empty-codex");
+    fs::create_dir_all(&empty_claude).unwrap();
+    fs::create_dir_all(&empty_codex).unwrap();
+    let empty_config = Config {
+        claude_home: Some(empty_claude),
+        codex_home: Some(empty_codex),
+        active_within: DEFAULT_ACTIVE_WITHIN,
+        only_paths: Vec::new(),
+    };
+    let empty_reports = inspect_stores(&empty_config, simulated_epoch_millis());
+    assert!(empty_reports.iter().all(|report| {
+        report.home_found
+            && report.readable
+            && report.projects == 0
+            && report.threads == 0
+            && report.error.is_none()
+    }));
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        let unreadable = temp.path().join("unreadable-claude");
+        fs::create_dir_all(&unreadable).unwrap();
+        fs::set_permissions(&unreadable, fs::Permissions::from_mode(0o000)).unwrap();
+        let config = Config {
+            claude_home: Some(unreadable),
+            codex_home: None,
+            active_within: DEFAULT_ACTIVE_WITHIN,
+            only_paths: Vec::new(),
+        };
+        let reports = inspect_stores(&config, simulated_epoch_millis());
+        let report = &reports[0];
+        assert!(report.home_found);
+        assert!(!report.readable);
+        let error = report.error.as_deref().unwrap_or_default();
+        assert!(error.contains("owner="));
+        assert!(error.contains("permissions=0o000"));
+    }
 }
 
 #[test]

@@ -11,7 +11,13 @@ Once a version tag has been published, its image is the fastest way to see the
 office. It requires Docker, but not Git, Rust, Make, or a local checkout:
 
 ~~~bash
-curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh | sh
+(
+  set -e
+  installer=$(mktemp)
+  trap 'rm -f "$installer"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
+  sh "$installer"
+)
 ~~~
 
 Pin a release with `THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3`.

@@ -13,6 +13,7 @@ pub mod views;
 
 #[cfg(test)]
 mod golden;
+pub use canvas::PixelFrame;
 use canvas::{Canvas, ColorDepth, PixelEncoding};
 use sprite::{look_for_worker, SpriteSet};
 
@@ -122,6 +123,14 @@ impl Ui {
     /// The active pixel packing used for the next frame.
     pub fn encoding(&self) -> PixelEncoding {
         self.encoding
+    }
+
+    /// Snapshot the latest canvas pixels for an external terminal-image presenter.
+    ///
+    /// The returned frame owns its RGBA bytes. Presentation protocol selection
+    /// and terminal I/O remain the caller's responsibility.
+    pub fn pixel_frame(&self) -> PixelFrame {
+        self.canvas.pixel_frame()
     }
 
     /// Whether the phone overlay is currently visible.
@@ -959,6 +968,23 @@ mod m3_tests {
             started.elapsed() < Duration::from_secs(5),
             "repeated floor rendering should remain bounded"
         );
+    }
+
+    #[test]
+    fn ui_pixel_frame_snapshots_the_latest_rendered_floor() {
+        let world = world_with_office_counts(&[5], false);
+        let mut ui = Ui::new();
+        ui.tick(BLOCKED_AFTER_MS + 1);
+        let mut terminal = Terminal::new(TestBackend::new(160, 48)).expect("floor terminal");
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("floor frame");
+
+        let frame = ui.pixel_frame();
+        assert!(frame.width() > 0 && frame.height() > 0);
+        assert_eq!(frame.rgba().len(), frame.width() * frame.height() * 4);
+        let area = frame.cell_area().expect("rendered floor cell rectangle");
+        assert!(area.width > 0 && area.height > 0);
     }
 
     #[test]

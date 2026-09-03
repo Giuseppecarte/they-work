@@ -19,10 +19,16 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use ratatui::backend::CrosstermBackend;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use ratatui::Terminal;
-use theywork_collect::{Config, StoreReport};
+use theywork_collect::{Config, DiscoveryKind, StoreReport};
 use theywork_core::{Agent, Event, Millis, Source, Worker, WorkerStatus, World};
 use theywork_render::{Ui, UiCommand, View};
+use theywork_terminal_image::{
+    detect_terminal_with_timeout, Capabilities, CellRect, ImageSurface, RgbaImage,
+    TerminalGeometry, DEFAULT_PROBE_TIMEOUT,
+};
 
 /// Redraw interval. Fast enough for smooth sprite animation, slow enough that
 /// a full building costs almost nothing.
@@ -54,7 +60,7 @@ OPTIONS:
   -h, --help               Show this help
 ";
 
-const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; symlinks and non-JSONL files are skipped. Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite, opened read-only. The collectors inspect filesystem metadata and .git directory markers to group activity under a project root; they do not read project source files.";
+const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; stores are opened read-only, symlinks and non-JSONL files are skipped, and project source files are never read.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartView {
@@ -355,12 +361,13 @@ fn main() -> Result<()> {
     }
 
     apply_color_mode(args.color);
+    let capabilities = detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT).unwrap_or_default();
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
-    let result = run(&mut terminal, &mut runtime, &args);
+    let result = run(&mut terminal, &mut runtime, &args, capabilities);
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -382,7 +389,7 @@ fn doctor() -> i32 {
     let found_home = reports.iter().any(|report| report.home_found);
     let broken_home = reports
         .iter()
-        .any(|report| report.home_found && report.error.is_some());
+        .any(|report| report.home_found && !report.readable);
     i32::from(!found_home || broken_home)
 }
 
@@ -478,7 +485,7 @@ fn render_first_run(
         };
         let store_state = if report.readable {
             format!(
-                "projects={} threads={} active={}",
+                "readable projects={} threads={} active={}",
                 report.projects, report.threads, report.active_threads
             )
         } else {
@@ -494,12 +501,19 @@ fn render_first_run(
         writeln!(stdout, "  {display}: {home_state}")?;
         writeln!(
             stdout,
-            "    {}_home={} path={}",
+            "    {}_home={} path={} discovery={}{}",
             report.agent.label(),
             home_state,
-            plain_value(&report.path.to_string_lossy())
+            plain_value(&report.path.to_string_lossy()),
+            report.discovery.label(),
+            unusual_report_suffix(report)
         )?;
-        writeln!(stdout, "    {}_store={store_state}", report.agent.label())?;
+        writeln!(
+            stdout,
+            "    {}_store={store_state} {}",
+            report.agent.label(),
+            report_diagnostic(report)
+        )?;
     }
     writeln!(stdout)?;
     writeln!(stdout, "WHAT THIS READS")?;
@@ -579,8 +593,10 @@ fn print_store_report(report: &StoreReport) {
         "missing"
     };
     println!(
-        "{label}_home={home_state} path={}",
-        plain_value(&report.path.to_string_lossy())
+        "{label}_home={home_state} path={} discovery={}{}",
+        plain_value(&report.path.to_string_lossy()),
+        report.discovery.label(),
+        unusual_report_suffix(report)
     );
 
     let store_state = if report.readable {
@@ -595,7 +611,89 @@ fn print_store_report(report: &StoreReport) {
     if let Some(error) = report.error.as_deref() {
         print!(" reason={}", plain_value(error));
     }
+    print!(" {}", report_diagnostic(report));
     println!();
+}
+
+fn report_diagnostic(report: &StoreReport) -> String {
+    if !report.home_found {
+        return format!(
+            "status=not_found looked={} override={} action=set_override{}",
+            candidate_paths(report),
+            override_name(report.agent),
+            unusual_diagnostic(report)
+        );
+    }
+    if !report.readable {
+        return format!(
+            "status=unreadable action=check_permissions_or_set_{}",
+            override_name(report.agent)
+        );
+    }
+    if report_is_empty(report) {
+        return format!(
+            "status=empty action=installed_never_run_here note=\"installed, never run here\"{}",
+            unusual_diagnostic(report)
+        );
+    }
+    format!(
+        "status=ready action=read_only{}",
+        unusual_diagnostic(report)
+    )
+}
+
+fn override_name(agent: Agent) -> &'static str {
+    match agent {
+        Agent::Claude => "THEYWORK_CLAUDE_HOME",
+        Agent::Codex => "THEYWORK_CODEX_HOME",
+    }
+}
+
+fn candidate_paths(report: &StoreReport) -> String {
+    let mut paths = report.candidates.iter().collect::<Vec<_>>();
+    if paths.is_empty() {
+        paths.push(&report.path);
+    }
+    paths
+        .into_iter()
+        .map(|path| plain_value(&path.to_string_lossy()))
+        .collect::<Vec<_>>()
+        .join("|")
+}
+
+fn report_is_empty(report: &StoreReport) -> bool {
+    report.readable && report.projects == 0 && report.threads == 0
+}
+
+fn unusual_report_suffix(report: &StoreReport) -> String {
+    if report.discovery == DiscoveryKind::WslCrossover || unusual_path(&report.path) {
+        " source=unusual".to_string()
+    } else {
+        String::new()
+    }
+}
+
+fn unusual_diagnostic(report: &StoreReport) -> String {
+    if report.discovery == DiscoveryKind::WslCrossover || unusual_path(&report.path) {
+        " source=unusual confirm_path=true".to_string()
+    } else {
+        String::new()
+    }
+}
+
+fn unusual_path(path: &Path) -> bool {
+    let lower = path
+        .to_string_lossy()
+        .replace('\\', "/")
+        .to_ascii_lowercase();
+    let components = lower
+        .split('/')
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>();
+    components.len() >= 5
+        && components[0] == "mnt"
+        && components[1].len() == 1
+        && components[2] == "users"
 }
 
 fn discovery_overrides() -> String {
@@ -1087,13 +1185,17 @@ fn optional_metric(value: Option<u64>) -> String {
     value.map_or_else(|| "unavailable".to_string(), |value| value.to_string())
 }
 
-fn run<B: ratatui::backend::Backend>(
-    terminal: &mut Terminal<B>,
+fn run(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     runtime: &mut Runtime,
     args: &Args,
+    capabilities: Capabilities,
 ) -> Result<()> {
     let mut ui = Ui::new();
     configure_ui(&mut ui, args, runtime.start_guard);
+    let terminal_cells = terminal.size()?;
+    let mut image_presenter =
+        TerminalImagePresenter::new(capabilities, (terminal_cells.width, terminal_cells.height));
     let poller = Poller::start(std::mem::take(&mut runtime.sources));
     let result = (|| -> Result<()> {
         loop {
@@ -1119,7 +1221,23 @@ fn run<B: ratatui::backend::Backend>(
             runtime.world.tick(now);
             ui.tick(now);
 
-            terminal.draw(|frame| ui.draw(frame, &runtime.world))?;
+            let terminal_cells = terminal.size()?;
+            image_presenter.resize(
+                terminal.backend_mut(),
+                (terminal_cells.width, terminal_cells.height),
+            )?;
+            let mut pixel_frame = None;
+            terminal.draw(|frame| {
+                ui.draw(frame, &runtime.world);
+                if image_presenter.enabled() {
+                    let snapshot = ui.pixel_frame();
+                    if let Some(area) = snapshot.cell_area() {
+                        skip_image_cells(frame.buffer_mut(), area);
+                    }
+                    pixel_frame = Some(snapshot);
+                }
+            })?;
+            image_presenter.present(terminal.backend_mut(), pixel_frame)?;
 
             if event::poll(FRAME)? {
                 if let TermEvent::Key(input) = event::read()? {
@@ -1137,6 +1255,82 @@ fn run<B: ratatui::backend::Backend>(
     poller.stop();
     result
 }
+
+struct TerminalImagePresenter {
+    surface: Option<ImageSurface>,
+}
+
+impl TerminalImagePresenter {
+    fn new(capabilities: Capabilities, cells: (u16, u16)) -> Self {
+        let protocol = capabilities.graphics;
+        let surface = protocol.can_transmit_pixels().then(|| {
+            ImageSurface::new(
+                protocol,
+                TerminalGeometry::new(cells.0, cells.1, capabilities.cell_size),
+            )
+        });
+        Self { surface }
+    }
+
+    fn enabled(&self) -> bool {
+        self.surface.is_some()
+    }
+
+    fn resize<W: Write>(&mut self, output: &mut W, cells: (u16, u16)) -> Result<()> {
+        let Some(surface) = self.surface.as_mut() else {
+            return Ok(());
+        };
+        let current = surface.geometry();
+        let geometry = TerminalGeometry::new(cells.0, cells.1, current.cell_size);
+        if current != geometry {
+            surface.resize(output, geometry)?;
+        }
+        Ok(())
+    }
+
+    fn present<W: Write>(
+        &mut self,
+        output: &mut W,
+        pixel_frame: Option<theywork_render::PixelFrame>,
+    ) -> Result<()> {
+        let Some(surface) = self.surface.as_mut() else {
+            return Ok(());
+        };
+        let Some(pixel_frame) = pixel_frame else {
+            surface.clear(output)?;
+            output.flush()?;
+            return Ok(());
+        };
+        let Some(area) = pixel_frame.cell_area() else {
+            surface.clear(output)?;
+            output.flush()?;
+            return Ok(());
+        };
+        let width = u32::try_from(pixel_frame.width())?;
+        let height = u32::try_from(pixel_frame.height())?;
+        let image = RgbaImage::new(width, height, pixel_frame.rgba().to_vec())?;
+        surface.draw(
+            output,
+            &image,
+            CellRect::new(area.x, area.y, area.width, area.height),
+        )?;
+        output.flush()?;
+        Ok(())
+    }
+}
+
+fn skip_image_cells(buffer: &mut Buffer, area: Rect) {
+    let right = area.x.saturating_add(area.width);
+    let bottom = area.y.saturating_add(area.height);
+    for y in area.y..bottom {
+        for x in area.x..right {
+            if let Some(cell) = buffer.cell_mut((x, y)) {
+                cell.set_skip(true);
+            }
+        }
+    }
+}
+
 fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> Result<()> {
     let (Some(config_dir), Some(project)) = (
         runtime.config_dir.as_deref(),
@@ -1405,6 +1599,8 @@ fn cli_detail(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ratatui::backend::TestBackend;
+    use theywork_terminal_image::{CellSize, GraphicsProtocol};
 
     fn parse(arguments: &[&str]) -> std::result::Result<Args, String> {
         parse_args(arguments.iter().map(|argument| (*argument).to_string()))
@@ -1488,5 +1684,47 @@ mod tests {
             outcome: Some(theywork_core::Outcome::Exited(0)),
         });
         assert_eq!(worker_waiting_detail(&worker), None);
+    }
+
+    #[test]
+    fn image_presenter_encodes_the_renderer_snapshot_when_supported() {
+        let mut world = World::new();
+        for event in theywork_core::demo::events(0) {
+            world.apply(event);
+        }
+        let mut ui = Ui::new();
+        ui.tick(0);
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).expect("test terminal");
+        let mut snapshot = None;
+        terminal
+            .draw(|frame| {
+                ui.draw(frame, &world);
+                snapshot = Some(ui.pixel_frame());
+            })
+            .expect("render demo frame");
+        let snapshot = snapshot.expect("renderer snapshot");
+        assert!(snapshot.cell_area().is_some());
+
+        let capabilities = Capabilities {
+            graphics: GraphicsProtocol::Sixel,
+            cell_size: Some(CellSize::new(8, 16)),
+            terminal_cells: Some((80, 24)),
+        };
+        let mut presenter = TerminalImagePresenter::new(capabilities, (80, 24));
+        let mut output = Vec::new();
+        presenter
+            .present(&mut output, Some(snapshot))
+            .expect("encode image frame");
+        assert!(output.windows(3).any(|window| window == b"\x1bPq"));
+    }
+
+    #[test]
+    fn image_presenter_is_a_noop_without_graphics_support() {
+        let mut presenter = TerminalImagePresenter::new(Capabilities::none(), (80, 24));
+        let mut output = Vec::new();
+        presenter
+            .present(&mut output, None)
+            .expect("disabled presenter");
+        assert!(output.is_empty());
     }
 }

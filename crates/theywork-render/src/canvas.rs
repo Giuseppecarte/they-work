@@ -4,7 +4,7 @@
 //! encoding below keeps that trade-off explicit: dense cells are quantized to
 //! two colours, while the half-block floor remains exact and widely portable.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
 use ratatui::buffer::Buffer;
@@ -225,6 +225,41 @@ fn sextant_terminal(value: &str) -> bool {
 type QuantizationKey = (PixelEncoding, [Option<Color>; 6]);
 type QuantizedCache = RefCell<HashMap<QuantizationKey, QuantizedCell>>;
 
+/// An owned RGBA8 snapshot of a canvas and its terminal-cell destination.
+///
+/// The snapshot owns its bytes, so callers can encode or retain it after the
+/// canvas is changed for a later frame. Transparent canvas pixels use an alpha
+/// value of zero. `cell_area` is `None` until the canvas has been rendered.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PixelFrame {
+    width: usize,
+    height: usize,
+    rgba: Vec<u8>,
+    cell_area: Option<Rect>,
+}
+
+impl PixelFrame {
+    /// Pixel width of this frame.
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    /// Pixel height of this frame.
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    /// Tightly packed RGBA8 pixels in row-major order.
+    pub fn rgba(&self) -> &[u8] {
+        &self.rgba
+    }
+
+    /// The exact terminal-cell rectangle last covered by this canvas.
+    pub fn cell_area(&self) -> Option<Rect> {
+        self.cell_area
+    }
+}
+
 /// An in-memory pixel surface whose pixels are terminal colours or transparent.
 #[derive(Debug, Clone)]
 pub struct Canvas {
@@ -235,6 +270,7 @@ pub struct Canvas {
     encoding: PixelEncoding,
     light_mode: bool,
     quantized_cache: QuantizedCache,
+    last_rendered_area: Cell<Option<Rect>>,
 }
 
 impl Canvas {
@@ -271,6 +307,7 @@ impl Canvas {
             encoding,
             light_mode: false,
             quantized_cache: RefCell::new(HashMap::new()),
+            last_rendered_area: Cell::new(None),
         };
         canvas.resize(width_px, height_px);
         canvas
@@ -308,6 +345,9 @@ impl Canvas {
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: PixelEncoding) {
+        if self.encoding != encoding {
+            self.last_rendered_area.set(None);
+        }
         self.encoding = encoding;
     }
 
@@ -338,6 +378,7 @@ impl Canvas {
         let len = width_px.checked_mul(height_px).unwrap_or(0);
         self.pixels.resize(len, None);
         self.pixels.fill(None);
+        self.last_rendered_area.set(None);
     }
 
     /// Make every pixel transparent.
@@ -370,6 +411,29 @@ impl Canvas {
     /// Inspect a pixel, primarily for tests and small custom view effects.
     pub fn pixel(&self, x: usize, y: usize) -> Option<Color> {
         self.pixels.get(self.index(x, y)?).copied().flatten()
+    }
+
+    /// Copy this canvas into an owned RGBA8 frame for a terminal-image encoder.
+    ///
+    /// This accessor deliberately does not select a graphics protocol or write
+    /// to the terminal; callers own presenting the returned frame.
+    pub fn pixel_frame(&self) -> PixelFrame {
+        let mut rgba = Vec::with_capacity(self.pixels.len().saturating_mul(4));
+        for pixel in &self.pixels {
+            match pixel {
+                Some(color) => {
+                    let (red, green, blue) = rgb_of_color(*color);
+                    rgba.extend_from_slice(&[red, green, blue, u8::MAX]);
+                }
+                None => rgba.extend_from_slice(&[0, 0, 0, 0]),
+            }
+        }
+        PixelFrame {
+            width: self.width,
+            height: self.height,
+            rgba,
+            cell_area: self.last_rendered_area.get(),
+        }
     }
 
     /// Blit a sprite at a pixel coordinate, preserving transparent sprite
@@ -429,6 +493,10 @@ impl Canvas {
             .height
             .div_ceil(self.encoding.height_per_cell())
             .min(area.height as usize);
+        self.last_rendered_area.set(
+            (pixel_width > 0 && cell_height > 0)
+                .then(|| Rect::new(area.x, area.y, pixel_width as u16, cell_height as u16)),
+        );
         for cell_y in 0..cell_height {
             for cell_x in 0..pixel_width {
                 let (samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
@@ -834,6 +902,25 @@ mod tests {
         assert_eq!(cell.symbol(), "▀");
         assert_eq!(cell.fg, top);
         assert_eq!(cell.bg, bottom);
+    }
+
+    #[test]
+    fn pixel_frame_owns_rgba_pixels_and_last_cell_area() {
+        let mut canvas = Canvas::with_color_depth(2, 1, ColorDepth::TrueColor);
+        canvas.set(0, 0, Color::Rgb(12, 34, 56));
+
+        let before_render = canvas.pixel_frame();
+        assert_eq!((before_render.width(), before_render.height()), (2, 1));
+        assert_eq!(before_render.rgba(), [12, 34, 56, 255, 0, 0, 0, 0]);
+        assert_eq!(before_render.cell_area(), None);
+
+        let mut buffer = Buffer::empty(Rect::new(5, 7, 2, 1));
+        canvas.render(&mut buffer, Rect::new(5, 7, 2, 1));
+        let frame = canvas.pixel_frame();
+        canvas.set(0, 0, Color::Rgb(90, 80, 70));
+
+        assert_eq!(frame.rgba(), [12, 34, 56, 255, 0, 0, 0, 0]);
+        assert_eq!(frame.cell_area(), Some(Rect::new(5, 7, 2, 1)));
     }
 
     #[test]

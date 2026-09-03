@@ -5,6 +5,9 @@ use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+
 use rusqlite::{params, Connection};
 use serde_json::{json, Value};
 
@@ -333,6 +336,100 @@ fn doctor_fails_with_no_homes_and_explains_both_paths() {
     assert!(text.contains("claude_home=missing"));
     assert!(text.contains("codex_home=missing"));
     assert_eq!(text.matches("reason=home is not a directory").count(), 2);
+}
+
+#[test]
+fn doctor_reports_an_installed_but_empty_home() {
+    let fixture = Fixture::new();
+    let empty_claude = fixture.temp.path().join("empty-claude");
+    let empty_codex = fixture.temp.path().join("empty-codex");
+    fs::create_dir_all(&empty_claude).unwrap();
+    fs::create_dir_all(&empty_codex).unwrap();
+
+    let output = run_with_homes(&fixture, &["--doctor"], &empty_claude, &empty_codex);
+    assert_success(&output);
+
+    let text = stdout(&output);
+    assert!(text.contains(
+        "claude_store=readable projects=0 threads=0 active=0 status=empty action=installed_never_run_here note=\"installed, never run here\""
+    ));
+    assert!(text.contains(
+        "codex_store=readable projects=0 threads=0 active=0 status=empty action=installed_never_run_here note=\"installed, never run here\""
+    ));
+
+    let output = run_with_homes(&fixture, &[], &empty_claude, &empty_codex);
+    assert_success(&output);
+    let text = stdout(&output);
+    assert!(text.contains("claude_store=readable projects=0 threads=0 active=0"));
+    assert!(text.contains("codex_store=readable projects=0 threads=0 active=0"));
+    assert!(text.contains("installed, never run here"));
+}
+
+#[test]
+fn doctor_reports_one_agent_without_treating_it_as_a_failure() {
+    let fixture = Fixture::new();
+    let missing_codex = fixture.temp.path().join("no-codex");
+    let output = run_with_homes(
+        &fixture,
+        &["--doctor"],
+        &fixture.claude_home,
+        &missing_codex,
+    );
+    assert_success(&output);
+
+    let text = stdout(&output);
+    assert!(text.contains("claude_store=readable projects=2 threads=2 active=2"));
+    assert!(text.contains("codex_home=missing"));
+    assert!(text.contains("override=THEYWORK_CODEX_HOME action=set_override"));
+}
+
+#[cfg(unix)]
+#[test]
+fn doctor_reports_owner_and_permissions_for_an_unreadable_home() {
+    let fixture = Fixture::new();
+    let unreadable = fixture.temp.path().join("unreadable-claude");
+    fs::create_dir_all(&unreadable).unwrap();
+    fs::set_permissions(&unreadable, fs::Permissions::from_mode(0o000)).unwrap();
+
+    let output = run_with_homes(&fixture, &["--doctor"], &unreadable, &fixture.codex_home);
+    assert!(!output.status.success());
+
+    let text = stdout(&output);
+    assert!(text.contains("claude_home=found"));
+    assert!(text.contains("status=unreadable action=check_permissions_or_set_THEYWORK_CLAUDE_HOME"));
+    assert!(text.contains("owner="));
+    assert!(text.contains("permissions=0o000"));
+
+    fs::set_permissions(
+        fixture.codex_home.join("sqlite/state_5.sqlite"),
+        fs::Permissions::from_mode(0o000),
+    )
+    .unwrap();
+    let output = run_with_homes(
+        &fixture,
+        &["--doctor"],
+        &fixture.claude_home,
+        &fixture.codex_home,
+    );
+    assert!(!output.status.success());
+    let text = stdout(&output);
+    assert!(text.contains("codex_store=unavailable"));
+    assert!(text.contains("Codex state database cannot be read"));
+    assert!(text.contains("permissions=0o000"));
+}
+
+#[test]
+fn doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation() {
+    let fixture = Fixture::new();
+    let unusual = PathBuf::from("/mnt/c/Users/PC/.codex");
+    let missing_claude = fixture.temp.path().join("missing-claude");
+    let output = run_with_homes(&fixture, &["--doctor"], &missing_claude, &unusual);
+    assert!(!output.status.success());
+
+    let text = stdout(&output);
+    assert!(text.contains("codex_home=missing"));
+    assert!(text.contains("source=unusual"));
+    assert!(text.contains("confirm_path=true"));
 }
 
 #[test]

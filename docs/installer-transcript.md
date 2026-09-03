@@ -219,3 +219,138 @@ transcripts are ingested. End-to-end success from the README still depends on
 publishing `docs/install.sh` on the default branch and making the GHCR package
 public; the fresh stranger cannot reach that success while either external
 condition remains false.
+
+## Current revalidation — 2026-09-02
+
+This is a second run against the current worktree and live public endpoints.
+Each test started a new Debian container as UID/GID 10001, in /tmp, with no
+repository or agent-data mount. The container received only read-only harness
+tooling (curl, the Docker CLI, its shared libraries, a certificate bundle,
+and—where a Docker operation was being tested—the Docker socket). The local
+installer replay additionally mounted the disposable fixture and
+docs/install.sh, both read-only.
+
+### 1. Current README command
+
+The first executable block in the current README downloads to a temporary file
+instead of piping into sh, so a failed download cannot be mistaken for a
+successful install:
+
+~~~text
+$ (
+  set -e
+  installer=$(mktemp)
+  trap 'rm -f "$installer"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
+  sh "$installer"
+)
+curl: (22) The requested URL returned error: 404
+installer_status=22
+~~~
+
+That block was run verbatim in the fresh container. There was no prompt,
+Docker pull, program screen, or wait; curl stopped at the public raw URL.
+Unlike the earlier pipeline form, this failure has a nonzero status.
+
+The documented image was then checked from the same fresh UID boundary:
+
+~~~text
+$ docker pull ghcr.io/giuseppecarte/they-work:latest
+Error response from daemon: error from registry: denied
+denied
+image_pull_status=1
+~~~
+
+### 2. Current private-data replay
+
+For the local installer body, a disposable Claude store held one JSONL file
+owned by UID/GID 10001 with mode 0600. The current local image was rebuilt
+first. A non-PTY invocation correctly refused to start:
+
+~~~text
+$ sh docs/install.sh --once
+Pulling they-work:local ...
+Using local test image: they-work:local
+an interactive terminal is required to run they-work
+installer_status=1
+~~~
+
+With a PTY attached, the identical UID 10001 user completed the bounded run:
+
+~~~text
+$ sh docs/install.sh --once
+Pulling they-work:local ...
+Using local test image: they-work:local
+Codex home not found; continuing with Claude data only.
+they-work --once
+timestamp_ms=1788383142122
+projects=1 workers=1
+office=[non-project] workers=1
+  worker name="UID boundary fixture" agent=claude status=running detail="read this private fixture" activity=idle idle_age=41s tokens=0
+installer_status=0
+~~~
+
+The only transcript was found and read without changing its ownership or
+permissions. The non-project office is expected: the fresh run mounts session
+data, not a source checkout or Git directory.
+
+The no-home branch was rerun with the same fresh identity:
+
+~~~text
+$ sh docs/install.sh --once
+Pulling they-work:local ...
+Using local test image: they-work:local
+No agent home found; starting the empty office.
+they-work --once
+timestamp_ms=1788383157023
+projects=0 workers=0
+installer_status=0
+~~~
+
+### 3. Current interactive replay
+
+The process displayed the following first screen, redrew it while waiting for
+input, and received q:
+
+~~~text
+$ sh docs/install.sh
+Pulling they-work:local ...
+Using local test image: they-work:local
+Codex home not found; continuing with Claude data only.
+THEY WORK — first run
+A read-only terminal office for the agents already running here.
+
+WHAT WAS FOUND
+  Claude Code: found
+    claude_home=found path=/data/claude
+    claude_store=projects=1 threads=1 active=1
+  Codex: missing
+    codex_home=missing path=/data/codex
+    codex_store=unavailable: home is not a directory
+
+PICK AN OFFICE
+> office="[non-project]" path="[non-project]" workers=1 status=blocked=0 failed=0 running=1 idle=0
+
+↑↓ choose   Enter open office   Tab guard office   q quit
+
+Input: q
+installer_status=0
+~~~
+
+### Current judgement
+
+I would stop at the first command. The public raw script remains a real 404,
+and the public image remains denied; neither reaches an installer prompt.
+The revised README command at least reports that failure accurately instead of
+returning success after a broken download.
+
+The local product path is now proven for a user who owns private transcripts:
+the fresh UID 10001 run reads its own 0600 data, the empty-home branch works,
+and the interactive picker waits for input and exits cleanly. The only
+hesitations were harness details—an unavailable Alpine package mirror, a
+private temporary shim directory, and a deliberate non-PTY control. They are
+not steps a user following the README would take.
+
+End-to-end installation from the published README is still not true. It needs
+the default branch to expose docs/install.sh and the GHCR package to be public;
+those are release and package settings outside this checkout.

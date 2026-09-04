@@ -7,9 +7,8 @@ use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 use theywork_core::{Millis, Office, WorkerStatus, World};
 
-use super::office::{draw_room_scene, worker_marker_position, RoomScale};
 use crate::canvas::Canvas;
-use crate::sprite::{worker_looks, SpriteSet};
+use crate::sprite::SpriteSet;
 
 use super::{
     below_tab_bar, draw_footer, draw_header, draw_tiny, grid_rect, has_area, inset, paint_opaque,
@@ -209,17 +208,7 @@ fn draw_tile(
     }
 
     canvas.resize_for_cells(inner.width as usize, inner.height as usize);
-    let workers = office.workers.iter().collect::<Vec<_>>();
-    let looks = worker_looks(&office.workers);
-    let grid = draw_room_scene(
-        canvas,
-        &office.name,
-        &workers,
-        &looks,
-        sprites,
-        now,
-        RoomScale::Feed,
-    );
+    let markers = super::guard_scene::draw(canvas, office, sprites, now);
     canvas.render(frame.buffer_mut(), inner);
     paint_scanlines(frame.buffer_mut(), inner, now);
 
@@ -228,7 +217,9 @@ fn draw_tile(
         let Some(marker) = status_marker(status) else {
             continue;
         };
-        let (marker_cell_x, marker_cell_y) = worker_marker_position(grid, index);
+        let Some(&(marker_cell_x, marker_cell_y)) = markers.get(index) else {
+            continue;
+        };
         let marker_x =
             inner.x + marker_cell_x.clamp(0, inner.width.saturating_sub(1) as i32) as u16;
         let marker_y =
@@ -254,7 +245,15 @@ fn draw_tile(
     } else {
         WorkerStatus::Idle
     };
-    let status = if blocked_count > 0 {
+    let status = if inner.width < 36 {
+        if blocked_count > 0 {
+            format!("{blocked_count} BLOCKED")
+        } else if failed_count > 0 {
+            format!("{failed_count} FAILED")
+        } else {
+            format!("{}/{} busy", office.busy_count(), office.workers.len())
+        }
+    } else if blocked_count > 0 {
         format!(
             "! {} blocked • {} / {} busy",
             blocked_count,
@@ -277,7 +276,12 @@ fn draw_tile(
         )
     };
 
-    let status_area = Rect::new(inner.x, inner.y, inner.width, inner.height.min(1));
+    let status_width = if inner.width >= 9 && inner.height >= 2 {
+        inner.width.saturating_sub(8)
+    } else {
+        inner.width
+    };
+    let status_area = Rect::new(inner.x, inner.y, status_width, inner.height.min(1));
     let status_text_style = Style::default()
         .fg(status_color(summary_status))
         .bg(BACKGROUND);

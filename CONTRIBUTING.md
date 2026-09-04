@@ -36,11 +36,13 @@ Rust is not required on the host. <code>./scripts/cargo</code> builds
 <code>/src</code>, and runs Cargo as the invoking user:
 
 ~~~bash
+make fetch
 ./scripts/cargo fmt --all -- --check
 ./scripts/cargo clippy --workspace --all-targets -- -D warnings
 ./scripts/cargo test --workspace
 make build
 make demo
+python3 scripts/test-install.py
 ~~~
 
 <code>make fmt</code> formats files in place. <code>make fmt-check</code> is

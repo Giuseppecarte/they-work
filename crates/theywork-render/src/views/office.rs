@@ -277,7 +277,6 @@ fn manager_tile(grid: IsoGrid, worker_count: usize, blocked_slot: usize) -> (usi
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RoomScale {
     Floor,
-    Feed,
 }
 
 impl RoomScale {
@@ -286,24 +285,6 @@ impl RoomScale {
             Self::Floor => (
                 grid.encoding.scale_width(9),
                 grid.encoding.scale_half_height(12),
-            ),
-            Self::Feed => (
-                (grid.tile_width / 2).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        6
-                    } else {
-                        12
-                    },
-                ) as usize,
-                (grid.tile_height + 1).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        6
-                    } else {
-                        10
-                    },
-                ) as usize,
             ),
         }
     }
@@ -330,26 +311,6 @@ impl RoomScale {
                         },
                     ) as usize,
             ),
-            Self::Feed => (
-                (grid.tile_width * 3 / 4).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        9
-                    } else {
-                        14
-                    },
-                ) as usize,
-                grid.tile_height
-                    .saturating_sub(grid.encoding.scale_half_height(1) as i32)
-                    .clamp(
-                        2,
-                        if grid.encoding == PixelEncoding::HalfBlocks {
-                            4
-                        } else {
-                            8
-                        },
-                    ) as usize,
-            ),
         }
     }
 
@@ -370,24 +331,6 @@ impl RoomScale {
                         12
                     } else {
                         16
-                    },
-                ),
-            ),
-            Self::Feed => (
-                (grid.tile_width / 5).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        6
-                    } else {
-                        9
-                    },
-                ) as usize,
-                grid.encoding.scale_half_height(3).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        5
-                    } else {
-                        7
                     },
                 ),
             ),
@@ -414,24 +357,6 @@ impl RoomScale {
                     },
                 ) as usize,
             ),
-            Self::Feed => (
-                (grid.tile_width / 2).clamp(
-                    2,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        5
-                    } else {
-                        10
-                    },
-                ) as usize,
-                (grid.tile_height + grid.encoding.scale_half_height(2) as i32).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        6
-                    } else {
-                        9
-                    },
-                ) as usize,
-            ),
         }
     }
 
@@ -452,24 +377,6 @@ impl RoomScale {
                         9
                     } else {
                         14
-                    },
-                ) as usize,
-            ),
-            Self::Feed => (
-                (grid.tile_width / 2).clamp(
-                    2,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        5
-                    } else {
-                        10
-                    },
-                ) as usize,
-                (grid.tile_height + grid.encoding.scale_half_height(1) as i32).clamp(
-                    3,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
-                        6
-                    } else {
-                        9
                     },
                 ) as usize,
             ),
@@ -2478,7 +2385,8 @@ fn floor_corners(grid: IsoGrid) -> [(i32, i32); 4] {
     ]
 }
 
-pub(crate) fn worker_marker_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
+#[cfg(test)]
+fn worker_marker_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
     let (tile_x, tile_y) = grid.desk_tile(slot);
     let (center_x, center_y) = grid.center(tile_x, tile_y);
     (

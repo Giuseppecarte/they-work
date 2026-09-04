@@ -15,6 +15,9 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Test installer failure boundaries
+        run: python3 scripts/test-install.py
+
       - name: Render design references
         run: scripts/render-design.sh
 

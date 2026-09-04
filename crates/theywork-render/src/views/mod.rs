@@ -2,6 +2,7 @@
 
 pub mod cameras;
 pub mod desk;
+mod guard_scene;
 pub mod help;
 pub mod office;
 pub mod phone;
@@ -13,7 +14,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
-use theywork_core::{Activity, Millis, Office, Worker, WorkerStatus};
+use theywork_core::{Millis, Office, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
 use crate::sprite::{SpriteSet, WorkerLook};
@@ -23,6 +24,7 @@ pub(crate) const WALL: Color = Color::Rgb(58, 51, 88);
 pub(crate) const FLOOR: Color = Color::Rgb(220, 201, 164);
 pub(crate) const PANEL: Color = Color::Rgb(23, 20, 37);
 pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(42, 36, 64);
+pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(46, 36, 16);
 pub(crate) const INK: Color = Color::Rgb(232, 226, 214);
 pub(crate) const MUTED: Color = Color::Rgb(138, 130, 153);
 pub(crate) const ACCENT: Color = Color::Rgb(88, 214, 232);
@@ -54,6 +56,8 @@ pub(crate) fn light_color(color: Color) -> Color {
         LIGHT_BACKGROUND
     } else if color == PANEL {
         LIGHT_PANEL
+    } else if color == ATTENTION_PANEL {
+        Color::Rgb(237, 219, 176)
     } else if color == PANEL_HIGHLIGHT || color == SCANLINE {
         LIGHT_LINE
     } else if color == INK {
@@ -404,17 +408,6 @@ pub(crate) fn grid_rect(area: Rect, index: usize, columns: usize, rows: usize) -
     )
 }
 
-pub(crate) fn activity_style(activity: &Activity) -> Style {
-    let color = match activity {
-        Activity::Error { .. } => HOT,
-        Activity::Waiting { .. } => INK,
-        Activity::Idle => MUTED,
-        Activity::Thinking => ACCENT,
-        _ => GOOD,
-    };
-    Style::default().fg(color)
-}
-
 pub(crate) fn worker_status(worker: &Worker, now: Millis) -> WorkerStatus {
     worker.status_at(now)
 }
@@ -451,26 +444,6 @@ pub(crate) fn duration_label(milliseconds: Millis) -> String {
     } else {
         format!("{}m {:02}s", seconds / 60, seconds % 60)
     }
-}
-
-pub(crate) fn token_bar(tokens: u64, max_tokens: u64, width: usize) -> String {
-    if width < 4 {
-        return String::new();
-    }
-    let slots = width.saturating_sub(2).max(1);
-    let filled = if tokens == 0 || max_tokens == 0 {
-        0
-    } else if tokens >= max_tokens {
-        slots
-    } else {
-        let ratio = tokens as f64 / max_tokens as f64;
-        (ratio * slots as f64).ceil().clamp(1.0, slots as f64) as usize
-    };
-    format!(
-        "[{}{}]",
-        "#".repeat(filled),
-        ".".repeat(slots.saturating_sub(filled))
-    )
 }
 
 pub(crate) fn human_tokens(tokens: u64) -> String {
@@ -568,18 +541,6 @@ mod tests {
         assert_eq!(human_tokens(136_934_015), "136.9M");
         assert_eq!(human_tokens(4_900_000), "4.9M");
         assert_eq!(human_tokens(0), "0");
-    }
-
-    #[test]
-    fn token_bar_scales_against_the_office_maximum() {
-        let maximum = 136_934_015;
-        assert_eq!(token_bar(0, maximum, 10), "[........]");
-        assert_eq!(token_bar(maximum, maximum, 10), "[########]");
-        assert!(
-            token_bar(1_000, maximum, 10).contains('#'),
-            "small nonzero token counts should remain visible"
-        );
-        assert_eq!(token_bar(125_000, 155_000, 10), "[#######.]");
     }
 
     #[test]

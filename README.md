@@ -15,21 +15,28 @@ or reach the network.
 
 ## Start here
 
-Requires Docker and Git. Nothing else — no Rust, no toolchain, nothing installed
-on your machine.
+Requires Docker and an interactive terminal. No checkout, Git, Make, or Rust.
+The first release contains a Linux/amd64 image; other architectures need Docker
+emulation and have not been verified.
+
+~~~bash
+docker run --rm -it --network none --read-only --cap-drop ALL \
+  --security-opt no-new-privileges -e TERM -e COLORTERM \
+  ghcr.io/giuseppecarte/they-work:v0.1.0 --demo
+~~~
+
+This shows an imaginary company and **mounts nothing from your disk**. Press
+`q` to quit. Docker downloads the image first; the running office has no external
+network access. See the [verified installer procedure](INSTALL.md#without-a-checkout)
+to use your own agent data, including checksum verification before running any
+downloaded shell code.
+
+If you prefer building from source, install Git and GNU Make as well:
 
 ~~~bash
 git clone https://github.com/Giuseppecarte/they-work
 cd they-work
 make demo
-~~~
-
-`make demo` shows an imaginary company and **reads nothing from your disk**, so
-it is the safe way to see what this is before pointing it at your own work.
-
-When you are happy:
-
-~~~bash
 make run
 ~~~
 
@@ -96,7 +103,7 @@ it under `/mnt/*/Users/*` on its own.
 
 The flags in `make run` are deliberately visible:
 
-- `--network none` — the process has no network interface at all
+- `--network none` — no external network connectivity; container loopback remains
 - `--read-only` — the container filesystem cannot be written
 - `--cap-drop ALL` and `--security-opt no-new-privileges`
 - `:ro` on both agent mounts

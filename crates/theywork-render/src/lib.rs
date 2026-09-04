@@ -50,6 +50,10 @@ pub struct Ui {
     phone_open: bool,
     phone_channel: views::phone::PhoneChannel,
     phone_transition_at: Millis,
+    phone_selected: usize,
+    phone_workers: Vec<Option<theywork_core::WorkerId>>,
+    phone_pending_worker: Option<theywork_core::WorkerId>,
+    desk_scroll: usize,
     help_open: bool,
     guard_all: bool,
     settings_open: bool,
@@ -85,6 +89,10 @@ impl Ui {
             phone_open: false,
             phone_channel: views::phone::PhoneChannel::Standup,
             phone_transition_at: 0,
+            phone_selected: 0,
+            phone_workers: Vec::new(),
+            phone_pending_worker: None,
+            desk_scroll: 0,
             help_open: false,
             guard_all: false,
             settings_open: false,
@@ -343,6 +351,23 @@ impl Ui {
         let offices = views::cameras::ordered_offices(world, self.now);
         self.known_office_count = offices.len();
         self.sync_office_selection(&offices);
+        if let Some(id) = self.phone_pending_worker.take() {
+            if let Some((office_index, worker_index)) =
+                offices.iter().enumerate().find_map(|(index, office)| {
+                    office
+                        .workers
+                        .iter()
+                        .position(|worker| worker.id == id)
+                        .map(|worker| (index, worker))
+                })
+            {
+                self.selected_office = office_index;
+                self.selected_office_id = Some(offices[office_index].id.clone());
+                self.selected_worker = worker_index;
+                self.guard_all = false;
+                self.view = View::Desk;
+            }
+        }
         let office = offices.get(self.selected_office).copied();
         self.known_worker_count = office.map_or(0, |value| value.workers.len());
         if self.known_worker_count == 0 {
@@ -380,16 +405,31 @@ impl Ui {
             }
             View::Desk => {
                 let worker = office.and_then(|value| value.workers.get(self.selected_worker));
-                views::desk::draw(f, office, worker, &mut self.canvas, &self.sprites, self.now);
+                views::desk::draw(
+                    f,
+                    office,
+                    worker,
+                    &mut self.canvas,
+                    &self.sprites,
+                    self.now,
+                    &mut self.desk_scroll,
+                );
             }
         }
         if self.phone_open {
+            let phone_office = if self.guard_all { None } else { office };
+            self.phone_workers =
+                views::phone::message_workers(self.phone_channel, world, phone_office, self.now);
+            self.phone_selected = self
+                .phone_selected
+                .min(self.phone_workers.len().saturating_sub(1));
             views::phone::draw(
                 f,
                 views::phone::PhoneDrawContext {
                     world,
-                    office,
+                    office: phone_office,
                     channel: self.phone_channel,
+                    selected: self.phone_selected,
                     now: self.now,
                     transition_at: self.phone_transition_at,
                     canvas: &mut self.canvas,
@@ -460,16 +500,48 @@ impl Ui {
         };
         if let Some(channel) = direct {
             self.phone_channel = channel;
+            self.phone_selected = 0;
+            self.phone_workers.clear();
             return true;
         }
 
         match code {
-            KeyCode::Left | KeyCode::Up | KeyCode::Char('h') | KeyCode::Char('k') => {
+            KeyCode::Left | KeyCode::Char('h') => {
                 self.phone_channel = self.phone_channel.previous();
+                self.phone_selected = 0;
+                self.phone_workers.clear();
                 true
             }
-            KeyCode::Right | KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('l') => {
+            KeyCode::Right | KeyCode::Char('l') => {
                 self.phone_channel = self.phone_channel.next();
+                self.phone_selected = 0;
+                self.phone_workers.clear();
+                true
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                self.phone_selected = self.phone_selected.saturating_sub(1);
+                true
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                self.phone_selected = self
+                    .phone_selected
+                    .saturating_add(1)
+                    .min(self.phone_workers.len().saturating_sub(1));
+                true
+            }
+            KeyCode::Enter => {
+                self.phone_pending_worker = self
+                    .phone_workers
+                    .get(self.phone_selected)
+                    .cloned()
+                    .flatten();
+                if self.phone_pending_worker.is_some() {
+                    self.phone_open = false;
+                }
+                true
+            }
+            KeyCode::Esc | KeyCode::Backspace | KeyCode::Char('p') => {
+                self.phone_open = false;
                 true
             }
             _ => false,
@@ -481,7 +553,20 @@ impl Ui {
             View::Cameras => {
                 self.move_office_selection(code, self.camera_columns.max(1));
             }
-            View::Office | View::Desk => {
+            View::Desk => match code {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    self.desk_scroll = self.desk_scroll.saturating_add(1)
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    self.desk_scroll = self.desk_scroll.saturating_sub(1)
+                }
+                _ => {
+                    self.selected_worker =
+                        move_grid_index(self.selected_worker, self.known_worker_count, 1, code);
+                    self.desk_scroll = 0;
+                }
+            },
+            View::Office => {
                 self.selected_worker = move_grid_index(
                     self.selected_worker,
                     self.known_worker_count,
@@ -650,6 +735,37 @@ mod phone_tests {
 
         ui.handle_key(press(KeyCode::Char('p')));
         assert!(!ui.phone_open());
+    }
+
+    #[test]
+    fn phone_scroll_opens_the_selected_thread_and_escape_only_closes_overlay() {
+        let world = demo_world(0);
+        let mut ui = Ui::new();
+        ui.guard_all = true;
+        ui.phone_open = true;
+        ui.tick(1_000);
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert_eq!(ui.phone_workers.len(), world.worker_count());
+        for _ in 0..world.worker_count() {
+            ui.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        }
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        let target = ui.phone_workers.last().unwrap().clone().unwrap();
+        assert_eq!(ui.phone_selected, world.worker_count() - 1);
+        ui.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert!(!ui.phone_open);
+        assert_eq!(ui.view, View::Desk);
+        let offices = views::cameras::ordered_offices(&world, ui.now);
+        assert_eq!(
+            offices[ui.selected_office].workers[ui.selected_worker].id,
+            target
+        );
+        ui.handle_key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
+        ui.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+        assert!(!ui.phone_open);
+        assert_eq!(ui.view, View::Desk);
     }
 }
 #[cfg(test)]

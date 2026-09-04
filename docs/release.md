@@ -1,72 +1,59 @@
 # Release image and no-clone install
 
-> **Status checked 2026-09-03:** the repository and raw installer are now
-> publicly readable. The `latest` GHCR manifest request still returned `denied`.
-> The commands below describe the release path; anonymous installation is not
-> yet verified. Earlier 404 results below record the former private state.
+## v0.1.0 publication
 
-Version tags publish the runtime image at:
+[Release run 33824108031](https://github.com/Giuseppecarte/they-work/actions/runs/33824108031)
+succeeded on its first attempt. Tag `v0.1.0` points to
+`f100965df74f48a5a852fcf79e83f90fbbd409b7`. Both
+`ghcr.io/giuseppecarte/they-work:v0.1.0` and `latest` are anonymously readable.
+
+Published index digest:
 
 ~~~text
-ghcr.io/giuseppecarte/they-work:<version>
-ghcr.io/giuseppecarte/they-work:latest
+sha256:b8bf5a70b41ceafcc3331fd790c411e3fd808d3541074dff75ec36858f8ba214
 ~~~
 
-The [`release.yml`](../.github/workflows/release.yml) workflow runs only for a
-semantic version tag such as `v1.2.3`. It builds `docker/Dockerfile`, publishes
-the version tag and updates `latest`. Pull requests and ordinary branch pushes
-never receive package-publishing permissions.
+The runnable platform is Linux/amd64. The second manifest is a provenance
+attestation, not another CPU architecture. See the
+[M11 transcript](release-v0.1.0-transcript.md) for commands, results, and the
+successful fresh-container installer test as UID 10002.
 
-Before the first release, set the GHCR package visibility to **Public** in the
-repository's package settings. The workflow only needs `packages:write` to
-push the image; it does not store a personal token or change account settings.
-The installer below is intentionally anonymous after that one-time package
-setting is in place.
+Use the [Docker-only README command](../README.md#start-here) to see a demo.
+For local data, use the single [checksum-verified installer procedure](../INSTALL.md#without-a-checkout).
+It needs a POSIX shell, curl, sha256sum, and Docker. Do not use an unverified
+`curl | sh` pipeline or skip checksum verification.
 
-After a release exists, anyone with Docker can run the current image without a
-checkout:
+To select the release or nonstandard data directories, export these variables
+before running that verified block:
 
-~~~bash
-(
-  set -e
-  installer=$(mktemp)
-  trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  sh "$installer"
-)
+~~~sh
+export THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v0.1.0
+export THEYWORK_CLAUDE_HOST=/mnt/c/Users/Example/.claude
+export THEYWORK_CODEX_HOST=/mnt/c/Users/Example/.codex
 ~~~
 
-Pin a release instead of `latest` when reproducibility matters:
+Use only paths that exist on the Docker daemon's host. Demo mode needs no data
+mounts. Live mode with no stores shows setup guidance rather than an office.
 
-~~~bash
-(
-  set -e
-  installer=$(mktemp)
-  trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3 sh "$installer"
-)
-~~~
+## Future releases
 
-The installer requires Docker, pulls only the selected image, mounts existing
-agent homes read-only, and skips a home that is absent. Override the host-side
-locations when they are not in the usual places:
+The [release workflow](../.github/workflows/release.yml) triggers on tags matching
+`v*.*.*`; this glob is not semantic-version validation. It builds the tagged
+source, pushes the version and `latest`, and runs with package-write permission.
+No workflow changes were made to obtain the v0.1.0 success.
 
-~~~bash
-(
-  set -e
-  installer=$(mktemp)
-  trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  THEYWORK_CLAUDE_HOST=/mnt/c/Users/Example/.claude \
-    THEYWORK_CODEX_HOST=/mnt/c/Users/Example/.codex sh "$installer"
-)
-~~~
+After each release, verify both publication and anonymous access separately.
+A `denied` response alone cannot distinguish an unpublished package from a
+restricted one. Once a successful publish is established, denied anonymous
+access requires checking package visibility/permissions. A nonexistent tag
+in the now-public package was tested and returned `not found`, exit 1.
+The v0.1.0 package is neither missing nor restricted to authenticated clients.
 
-The running process still has the invoking `--user UID:GID`, `--network none`,
-a read-only root, dropped capabilities, no-new-privileges, and no writable
-agent mount. The exact policy and the optional project/configuration arguments
-are in [INSTALL.md](../INSTALL.md).
+The running process uses the invoking UID/GID, no external network, a read-only
+root, dropped capabilities, no-new-privileges, and read-only agent mounts.
+The direct demo image defaults to non-root UID 10001.
+
+The following older probes are historical evidence, not current install commands.
 
 ## Clean-host probe
 

@@ -16,21 +16,7 @@ THEYWORK_CODEX_HOST=${THEYWORK_CODEX_HOST:-$THEYWORK_DEFAULT_CODEX_HOST}
 THEYWORK_DOCKER_USER="$(id -u):$(id -g)"
 
 echo "Pulling $THEYWORK_IMAGE ..." >&2
-if THEYWORK_PULL_OUTPUT=$(docker pull "$THEYWORK_IMAGE" 2>&1); then
-    printf '%s\n' "$THEYWORK_PULL_OUTPUT" >&2
-else
-    THEYWORK_PULL_STATUS=$?
-    printf '%s\n' "$THEYWORK_PULL_OUTPUT" >&2
-    case "$THEYWORK_PULL_OUTPUT" in
-        *"manifest unknown"*|*"manifest not found"*|*"not found"*)
-            echo "Image pull failed: image or tag not found: $THEYWORK_IMAGE" >&2 ;;
-        *denied*|*unauthorized*)
-            echo "Image pull failed: registry access denied for $THEYWORK_IMAGE. A denied response alone cannot distinguish an unpublished package from a restricted one; check the release run and package visibility." >&2 ;;
-        *)
-            echo "Image pull failed for $THEYWORK_IMAGE (Docker exit $THEYWORK_PULL_STATUS); see the Docker error above." >&2 ;;
-    esac
-    exit "$THEYWORK_PULL_STATUS"
-fi
+docker pull "$THEYWORK_IMAGE" >&2
 
 if [ -t 0 ]; then
     THEYWORK_TTY_INPUT=
@@ -106,6 +92,6 @@ elif [ -d "$THEYWORK_CODEX_HOST" ]; then
     echo "Claude home not found; continuing with Codex data only." >&2
     run_with_codex_home "$@"
 else
-    echo "No agent home found; live mode shows setup guidance. Use --demo to see the imaginary company." >&2
+    echo "No agent home found; starting the empty office." >&2
     run_without_agent_homes "$@"
 fi

@@ -254,6 +254,15 @@ impl PixelFrame {
         &self.rgba
     }
 
+    /// Tightly packed RGB8 pixels in row-major order, with transparent pixels black.
+    /// Use `rgba` instead when the consumer supports transparency.
+    pub fn rgb(&self) -> Vec<u8> {
+        self.rgba
+            .chunks_exact(4)
+            .flat_map(|pixel| [pixel[0], pixel[1], pixel[2]])
+            .collect()
+    }
+
     /// The exact terminal-cell rectangle last covered by this canvas.
     pub fn cell_area(&self) -> Option<Rect> {
         self.cell_area

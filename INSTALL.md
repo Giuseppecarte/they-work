@@ -4,40 +4,48 @@ The container is the recommended route. It keeps the Rust toolchain in the
 build image and gives the running program the read-only, no-network boundary
 described below.
 
-## Without a checkout (image publication pending verification)
+## Without a checkout
 
-At the 2026-09-03 audit, the repository and raw installer became publicly
-readable, but the `latest` GHCR manifest request still returned `denied`.
-The following is the release procedure, not yet a verified public entry point.
-It deliberately downloads before invoking the script, so a failed download
-exits nonzero. Once the runtime image is publicly available, Docker is the
-only host requirement:
+Release `v0.1.0` was published successfully and both `v0.1.0` and `latest` are
+anonymously readable. For a Docker-only demo with no data mounts, use the
+[README command](README.md#start-here). To inspect local agent data, use the
+verified shell download below. A fresh machine with no agent stores should
+use the demo: the live program shows setup guidance, not an empty office.
 
 ~~~bash
 (
   set -e
   installer=$(mktemp)
   trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
+  if ! curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/v0.1.0/docs/install.sh -o "$installer"; then
+    echo "Installer download failed; nothing was executed." >&2
+    exit 1
+  fi
+  if ! printf '%s  %s\n' '2a665a28b75d9fa22f07b7ae8aa686a3bfd6e263309eb45b522cd8a9221fa2d4' "$installer" | sha256sum -c -; then
+    echo "Installer verification failed: truncated or modified download; nothing was executed." >&2
+    exit 1
+  fi
   sh "$installer"
 )
 ~~~
 
+This shell route needs `curl`, `sha256sum`, and standard POSIX utilities in
+addition to Docker. The checksum pins the complete installer shipped in
+`v0.1.0`; do not replace it with a checksum fetched from the same unverified
+download. `sh -n` alone cannot reject a truncated file that is valid shell.
+
+To exercise the installer on a machine with no agent stores, change only the
+final `sh "$installer"` line in the verified block to `sh "$installer" --demo`.
+Keep the download and checksum checks unchanged. Press `q` to quit the demo.
+
 The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
 `~/.claude` and `~/.codex` directories read-only, and skips either home that is
 missing. It runs the image as the invoking UID/GID, so private `0600`
-transcripts remain readable without widening access. Pin a release when the
-image must not change underneath you (`v1.2.3` below is an example, not a
-verified published tag):
+transcripts remain readable without widening access. To pin the runtime as
+well as the installer, set this before running the verified block above:
 
 ~~~bash
-(
-  set -e
-  installer=$(mktemp)
-  trap 'rm -f "$installer"' EXIT
-  curl -fsSL https://raw.githubusercontent.com/Giuseppecarte/they-work/main/docs/install.sh -o "$installer"
-  THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v1.2.3 sh "$installer"
-)
+export THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v0.1.0
 ~~~
 
 Use `THEYWORK_CLAUDE_HOST` and `THEYWORK_CODEX_HOST` to point at host paths
@@ -100,7 +108,7 @@ docker run --rm -it \
 
 The `make demo` target uses the same security flags but omits both mounts. The
 image build itself may use Docker's normal access to download base images; the
-running program has no network interface.
+running program has no external network connectivity.
 
 ## Selecting a project
 
@@ -118,7 +126,8 @@ spellings, and match it to the collector's normalized project identity.
 Without the flag, the current directory wins when it is a discovered project;
 otherwise a picker lists discovered projects. Dismissing or being unable to
 show the picker falls back to the full camera grid. With no discovered projects,
-show an empty grid and the setup hint. `Tab` switches between the selected floor
+the interactive first-run screen shows setup guidance and waits for input.
+`Tab` switches between the selected floor
 and grid; movement keys select; `Enter` opens the selected project or desk; and
 `Esc`/`Backspace` returns to the parent view.
 

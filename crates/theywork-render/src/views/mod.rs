@@ -309,24 +309,16 @@ pub(crate) fn fill_office_background(canvas: &mut Canvas, sprites: &SpriteSet) -
             canvas.set(x, y, FLOOR);
         }
     }
-    let wall_width = canvas
-        .encoding()
-        .scale_width(sprites.wall_tile.width().max(1));
-    let wall_height_tile = canvas
-        .encoding()
-        .scale_half_height(sprites.wall_tile.height().max(1));
+    let wall_width = canvas.scale_width(sprites.wall_tile.width().max(1));
+    let wall_height_tile = canvas.scale_half_height(sprites.wall_tile.height().max(1));
     for y in (0..floor_start).step_by(wall_height_tile) {
         for x in (0..canvas.width()).step_by(wall_width) {
             canvas.blit_scaled(&sprites.wall_tile, x, y, wall_width, wall_height_tile);
         }
     }
 
-    let floor_width = canvas
-        .encoding()
-        .scale_width(sprites.floor_tile.width().max(1));
-    let floor_height = canvas
-        .encoding()
-        .scale_half_height(sprites.floor_tile.height().max(1));
+    let floor_width = canvas.scale_width(sprites.floor_tile.width().max(1));
+    let floor_height = canvas.scale_half_height(sprites.floor_tile.height().max(1));
     for y in (floor_start..canvas.height()).step_by(floor_height) {
         for x in (0..canvas.width()).step_by(floor_width) {
             canvas.blit_scaled(&sprites.floor_tile, x, y, floor_width, floor_height);

@@ -25,6 +25,7 @@ use the demo: the live program shows setup guidance, not an empty office.
     echo "Installer verification failed: truncated or modified download; nothing was executed." >&2
     exit 1
   fi
+  sh "$installer" --doctor
   sh "$installer"
 )
 ~~~
@@ -34,9 +35,14 @@ addition to Docker. The checksum pins the complete installer shipped in
 `v0.1.0`; do not replace it with a checksum fetched from the same unverified
 download. `sh -n` alone cannot reject a truncated file that is valid shell.
 
-To exercise the installer on a machine with no agent stores, change only the
-final `sh "$installer"` line in the verified block to `sh "$installer" --demo`.
-Keep the download and checksum checks unchanged. Press `q` to quit the demo.
+The first invocation checks store readability and exits nonzero on a missing
+or unreadable setup. Because the block uses `set -e`, the interactive office
+is not started after a failed check. Keep the reported Docker/permission error;
+do not dismiss it as an empty office.
+
+For a machine with no agent stores, use the Docker-only README demo. To test
+the installer itself in demo mode, replace both final installer invocations
+with one `sh "$installer" --demo`; retain the download and checksum checks.
 
 The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
 `~/.claude` and `~/.codex` directories read-only, and skips either home that is
@@ -49,7 +55,25 @@ export THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v0.1.0
 ~~~
 
 Use `THEYWORK_CLAUDE_HOST` and `THEYWORK_CODEX_HOST` to point at host paths
-outside the usual locations. The installer uses the same `--network none`,
+outside the usual locations. For example, before the verified block:
+
+~~~sh
+export THEYWORK_CLAUDE_HOST=/absolute/path/to/your/claude-home
+~~~
+
+That directory must contain `projects/`, not be one individual project folder.
+It must exist on the Docker daemon's host; when invoking Docker from another
+container, make it visible there at the same absolute path too. A remote daemon
+does not see files just because they exist on the CLI machine.
+
+The installer runs with your numeric UID/GID. Your account must be able to read
+the session files, not merely list their directories. Private `0600` files owned
+by another UID will fail. Use your own account and owned data; do not widen live
+store permissions to make a test work. Windows/WSL mounts may expose different
+ownership semantics. The `--doctor` output is the check, not a guarantee based
+on the pathname alone.
+
+The installer uses the same `--network none`,
 `--read-only`, `--cap-drop ALL`, `--security-opt no-new-privileges`, and `:ro`
 mount policy as the local command below. The release process is documented in
 [`docs/release.md`](docs/release.md).

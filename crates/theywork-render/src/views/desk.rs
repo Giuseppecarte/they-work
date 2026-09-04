@@ -207,12 +207,8 @@ pub(crate) fn draw(
         canvas.resize_for_cells(avatar.width as usize, avatar.height as usize);
         canvas.fill(PANEL);
         let look = look_for_worker(&office.workers, worker);
-        let width = canvas.encoding().scale_width(9).min(canvas.width()).max(1);
-        let height = canvas
-            .encoding()
-            .scale_half_height(12)
-            .min(canvas.height())
-            .max(1);
+        let width = canvas.scale_width(9).min(canvas.width()).max(1);
+        let height = canvas.scale_half_height(12).min(canvas.height()).max(1);
         render_worker_with_look(
             canvas,
             sprites,

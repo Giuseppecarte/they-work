@@ -13,6 +13,16 @@ Published index digest:
 sha256:b8bf5a70b41ceafcc3331fd790c411e3fd808d3541074dff75ec36858f8ba214
 ~~~
 
+**Download size: 30,057,713 bytes (28.67 MiB)** of compressed Linux/amd64
+image layers, before cache reuse. This is the sum of registry layer sizes
+(28,232,655 + 3,316 + 1,821,742 bytes), not the unpacked disk footprint.
+Config/manifest metadata and the provenance attestation add a small transfer
+overhead. The number can be checked without pulling layers:
+
+~~~sh
+docker buildx imagetools inspect ghcr.io/giuseppecarte/they-work@sha256:c0e82c59fb8169fda150e6fb34bc7d4f64fcded9d415e6441a419b07e3390334 --raw
+~~~
+
 The runnable platform is Linux/amd64. The second manifest is a provenance
 attestation, not another CPU architecture. See the
 [M11 transcript](release-v0.1.0-transcript.md) for commands, results, and the

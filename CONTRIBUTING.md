@@ -180,10 +180,41 @@ and `chromium-browser` in that order. If none is available, it fails with
 `cannot rasterize SVG: install Google Chrome/Chromium or set
 THEYWORK_SVG_RASTERIZER to its executable`.
 
-The graphics-protocol backend is not captured by this exporter yet. Adding a
-panel requires a deterministic backend frame or recording, a fixed viewport
-and timestamp, and a protocol-aware capture/decoder; it must not be represented
-by a guessed or silently missing PNG.
+The optional graphics-protocol panels are separate from the cell exporter.
+They appear only when `make shot IMAGE_FRAME_DIR=/path/to/dump` receives a
+complete renderer-backed image-frame dump. The dump root contains
+`manifest.json`, whose required shape is:
+
+~~~json
+{
+  "version": 1,
+  "source": "renderer-pixel-frame",
+  "timestamp": 192000,
+  "viewport": {"columns": 160, "rows": 48, "cell_width": 10, "cell_height": 20},
+  "frames": [{
+    "surface": "floor",
+    "theme": "dark",
+    "png": "floor-dark.png",
+    "width": 1600,
+    "height": 960,
+    "packets": {
+      "kitty-direct": "floor-dark.kitty-direct.bin",
+      "sixel": "floor-dark.sixel.bin",
+      "iterm2": "floor-dark.iterm2.bin"
+    }
+  }]
+}
+~~~
+
+It must include every rendered surface (`floor`, `guard-office`, `desk`, and
+`phone`) in both themes. The timestamp must match the cell goldens. The
+exporter verifies every PNG header against the declared physical dimensions
+and against the terminal cell geometry, checks that each protocol packet is
+present and non-empty, copies only the verified PNGs into `docs/shots/`, and
+places them beside the primary character-cell panels. It rejects a partial
+dump, an external path, or a synthetic encoder sample. The protocol packets
+remain binary evidence in the supplied dump; the contact sheet does not render
+terminal control bytes as text.
 
 Reference images belong in [`docs/references`](docs/references/README.md) as
 `floor.png`, `guard-office.png`, `desk.png`, or `phone.png` (JPEG, WebP, and

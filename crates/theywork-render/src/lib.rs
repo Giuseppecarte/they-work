@@ -133,6 +133,17 @@ impl Ui {
         self.encoding
     }
 
+    /// Select the real pixel dimensions of one terminal cell for image output.
+    ///
+    /// `None` retains the character encoding's native density. A zero dimension
+    /// is treated as unavailable terminal geometry and also restores that path.
+    pub fn set_image_cell_size(&mut self, cell_pixel_size: Option<(u16, u16)>) {
+        let cell_pixel_size = cell_pixel_size
+            .filter(|&(width, height)| width > 0 && height > 0)
+            .map(|(width, height)| (usize::from(width), usize::from(height)));
+        self.canvas.set_cell_pixel_size(cell_pixel_size);
+    }
+
     /// Snapshot the latest canvas pixels for an external terminal-image presenter.
     ///
     /// The returned frame owns its RGBA bytes. Presentation protocol selection
@@ -1102,6 +1113,51 @@ mod m3_tests {
         assert_eq!(frame.rgba().len(), frame.width() * frame.height() * 4);
         let area = frame.cell_area().expect("rendered floor cell rectangle");
         assert!(area.width > 0 && area.height > 0);
+    }
+
+    #[test]
+    fn image_density_floor_has_native_dimensions_palette_and_checksum() {
+        use std::collections::HashSet;
+
+        let world = world_with_office_counts(&[5], false);
+        let mut ui = Ui::new();
+        ui.color_depth = ColorDepth::TrueColor;
+        ui.encoding = PixelEncoding::Sextants;
+        ui.set_image_cell_size(Some((10, 20)));
+        ui.tick(BLOCKED_AFTER_MS + 1);
+        let mut terminal = Terminal::new(TestBackend::new(160, 48)).expect("floor terminal");
+        terminal
+            .draw(|frame| ui.draw(frame, &world))
+            .expect("native-density floor frame");
+
+        let frame = ui.pixel_frame();
+        let area = frame.cell_area().expect("rendered floor cell rectangle");
+        assert_eq!(frame.width(), usize::from(area.width) * 10);
+        assert_eq!(frame.height(), usize::from(area.height) * 20);
+        let colors = frame
+            .rgba()
+            .chunks_exact(4)
+            .filter(|pixel| pixel[3] != 0)
+            .map(|pixel| [pixel[0], pixel[1], pixel[2]])
+            .collect::<HashSet<_>>();
+        assert!(
+            colors.len() < 256,
+            "native-density office uses {} colours",
+            colors.len()
+        );
+        let checksum = frame
+            .rgba()
+            .iter()
+            .fold(0xcbf29ce484222325_u64, |hash, byte| {
+                (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
+            });
+        eprintln!(
+            "native-density frame={}x{} colors={} checksum={checksum:#018x}",
+            frame.width(),
+            frame.height(),
+            colors.len()
+        );
+        assert_eq!(checksum, 0x0b74_b4b5_2322_ff0f);
     }
 
     #[test]

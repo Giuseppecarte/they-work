@@ -227,6 +227,35 @@ pub(crate) struct IsoGrid {
     origin_x: i32,
     origin_y: i32,
     encoding: PixelEncoding,
+    pixels_per_cell: (usize, usize),
+}
+
+impl IsoGrid {
+    fn scale_width(self, value: usize) -> usize {
+        value.saturating_mul(self.pixels_per_cell.0)
+    }
+
+    fn scale_half_height(self, value: usize) -> usize {
+        value
+            .saturating_mul(self.pixels_per_cell.1)
+            .saturating_add(1)
+            / 2
+    }
+
+    fn scale_legacy_width(self, value: i32) -> i32 {
+        value
+            .saturating_mul(self.pixels_per_cell.0 as i32)
+            .checked_div(self.encoding.width_per_cell() as i32)
+            .unwrap_or(value)
+    }
+
+    fn scale_legacy_height(self, value: i32) -> i32 {
+        let divisor = self.encoding.height_per_cell() as i32;
+        value
+            .saturating_mul(self.pixels_per_cell.1 as i32)
+            .saturating_add(divisor - 1)
+            / divisor
+    }
 }
 
 impl IsoGrid {
@@ -282,10 +311,7 @@ pub(crate) enum RoomScale {
 impl RoomScale {
     fn worker_size(self, grid: IsoGrid) -> (usize, usize) {
         match self {
-            Self::Floor => (
-                grid.encoding.scale_width(9),
-                grid.encoding.scale_half_height(12),
-            ),
+            Self::Floor => (grid.scale_width(9), grid.scale_half_height(12)),
         }
     }
 
@@ -294,21 +320,21 @@ impl RoomScale {
             Self::Floor => (
                 (grid.tile_width * 2 / 3).clamp(
                     5,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
                         14
                     } else {
                         28
-                    },
+                    }),
                 ) as usize,
                 grid.tile_height
-                    .saturating_sub(grid.encoding.scale_half_height(1) as i32)
+                    .saturating_sub(grid.scale_half_height(1) as i32)
                     .clamp(
                         3,
-                        if grid.encoding == PixelEncoding::HalfBlocks {
+                        grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
                             6
                         } else {
                             12
-                        },
+                        }),
                     ) as usize,
             ),
         }
@@ -319,19 +345,19 @@ impl RoomScale {
             Self::Floor => (
                 (grid.tile_width * 2 / 5).clamp(
                     10,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
                         16
                     } else {
                         22
-                    },
+                    }),
                 ) as usize,
-                grid.encoding.scale_half_height(9).clamp(
+                grid.scale_half_height(9).clamp(
                     8,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
                         12
                     } else {
                         16
-                    },
+                    }) as usize,
                 ),
             ),
         }
@@ -342,19 +368,19 @@ impl RoomScale {
             Self::Floor => (
                 (grid.tile_width / 2).clamp(
                     4,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
                         10
                     } else {
                         20
-                    },
+                    }),
                 ) as usize,
-                (grid.tile_height + grid.encoding.scale_half_height(2) as i32).clamp(
+                (grid.tile_height + grid.scale_half_height(2) as i32).clamp(
                     5,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
                         10
                     } else {
                         16
-                    },
+                    }),
                 ) as usize,
             ),
         }
@@ -365,19 +391,19 @@ impl RoomScale {
             Self::Floor => (
                 (grid.tile_width / 3).clamp(
                     4,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
                         8
                     } else {
                         16
-                    },
+                    }),
                 ) as usize,
-                (grid.tile_height + grid.encoding.scale_half_height(1) as i32).clamp(
+                (grid.tile_height + grid.scale_half_height(1) as i32).clamp(
                     5,
-                    if grid.encoding == PixelEncoding::HalfBlocks {
+                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
                         9
                     } else {
                         14
-                    },
+                    }),
                 ) as usize,
             ),
         }
@@ -390,7 +416,14 @@ impl RoomScale {
 
 #[cfg(test)]
 fn make_grid(width: usize, height: usize, columns: usize, rows: usize) -> IsoGrid {
-    make_grid_with_encoding(width, height, columns, rows, PixelEncoding::HalfBlocks)
+    make_grid_with_encoding(
+        width,
+        height,
+        columns,
+        rows,
+        PixelEncoding::HalfBlocks,
+        (1, 2),
+    )
 }
 
 fn make_grid_with_encoding(
@@ -399,12 +432,13 @@ fn make_grid_with_encoding(
     columns: usize,
     rows: usize,
     encoding: PixelEncoding,
+    pixels_per_cell: (usize, usize),
 ) -> IsoGrid {
     let columns = columns.max(1);
     let rows = rows.max(1);
     let floor_span = columns.saturating_add(rows).saturating_sub(1).max(1);
-    let logical_width = width / encoding.width_per_cell();
-    let logical_height = encoding.half_space_height(height);
+    let logical_width = width / pixels_per_cell.0.max(1);
+    let logical_height = height.saturating_mul(2) / pixels_per_cell.1.max(1);
     let base_tile_width = logical_width
         .saturating_mul(8)
         .div_ceil(floor_span.saturating_mul(5).max(1))
@@ -414,10 +448,15 @@ fn make_grid_with_encoding(
     } else {
         (base_tile_width * 2 / 5).clamp(3, 10)
     };
-    let tile_width = encoding.scale_width(base_tile_width as usize) as i32;
-    let tile_height = encoding.scale_half_height(base_tile_height as usize) as i32;
+    let tile_width = base_tile_width.saturating_mul(pixels_per_cell.0 as i32);
+    let tile_height = (base_tile_height as usize)
+        .saturating_mul(pixels_per_cell.1)
+        .div_ceil(2) as i32;
     let floor_depth = (floor_span as i32 * tile_height) / 2;
-    let floor_margin = encoding.scale_half_height((logical_height / 6).clamp(8, 12));
+    let floor_margin = (logical_height / 6)
+        .clamp(8, 12)
+        .saturating_mul(pixels_per_cell.1)
+        .div_ceil(2);
     let origin_y = height as i32 - floor_margin as i32 - floor_depth;
     let origin_x = width as i32 / 2 - (columns as i32 - rows as i32) * tile_width / 4;
     IsoGrid {
@@ -428,6 +467,7 @@ fn make_grid_with_encoding(
         origin_x,
         origin_y,
         encoding,
+        pixels_per_cell,
     }
 }
 
@@ -859,10 +899,8 @@ fn draw_wall_window(
 }
 
 fn iso_wall_height(canvas: &Canvas) -> i32 {
-    let base_height = canvas.encoding().half_space_height(canvas.height());
-    canvas
-        .encoding()
-        .scale_half_height((base_height / 4).clamp(16, 24)) as i32
+    let base_height = canvas.half_space_height(canvas.height());
+    canvas.scale_half_height((base_height / 4).clamp(16, 24)) as i32
 }
 fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
     canvas.fill(super::BACKGROUND);
@@ -947,8 +985,8 @@ fn compact_sign_lines(label: &str, width: usize) -> Vec<String> {
 }
 
 fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
-    let x_scale = canvas.encoding().width_per_cell();
-    let y_scale = canvas.encoding().scale_half_height(1);
+    let x_scale = canvas.pixels_per_cell().0;
+    let y_scale = canvas.scale_half_height(1);
     let width = canvas.width().saturating_sub(x_scale.saturating_mul(2));
     let lines = compact_sign_lines(label, width / x_scale.max(1));
     let line_height = 6_i32.saturating_mul(y_scale as i32);
@@ -1074,8 +1112,8 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
         draw_compact_sign(canvas, label, wall_top);
         return;
     };
-    let x_scale = canvas.encoding().width_per_cell();
-    let y_scale = canvas.encoding().scale_half_height(1);
+    let x_scale = canvas.pixels_per_cell().0;
+    let y_scale = canvas.scale_half_height(1);
     let glyph_pitch = (SIGN_GLYPH_PITCH as usize).saturating_mul(x_scale);
     let face_width = line
         .chars()
@@ -1604,8 +1642,7 @@ fn draw_item(
             blit_scaled_signed(canvas, &sprites.desk, desk_x, desk_y, width, height);
             let (monitor_width, monitor_height) = scale.monitor_size(grid);
             let monitor_x = center_x - width as i32 / 4 - monitor_width as i32 / 2;
-            let monitor_y =
-                desk_y - monitor_height as i32 + grid.encoding.scale_half_height(2) as i32;
+            let monitor_y = desk_y - monitor_height as i32 + grid.scale_half_height(2) as i32;
             blit_scaled_signed(
                 canvas,
                 &sprites.monitor,
@@ -1634,6 +1671,7 @@ pub(crate) fn draw_room_scene(
         ISO_ROOM_COLUMNS,
         ISO_ROOM_ROWS,
         canvas.encoding(),
+        canvas.pixels_per_cell(),
     );
     draw_isometric_backdrop(canvas, grid, now);
     let [back, ..] = floor_corners(grid);
@@ -2011,10 +2049,10 @@ fn worker_plate_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
     let (_, desk_y, _, desk_height) = desk_bounds(grid, RoomScale::Floor, slot);
     let plate_y = desk_y
         .saturating_add(desk_height as i32)
-        .saturating_add(grid.encoding.scale_half_height(1) as i32);
+        .saturating_add(grid.scale_half_height(1) as i32);
     (
-        physical_to_cell(center_x, grid.encoding.width_per_cell()),
-        physical_to_cell(plate_y, grid.encoding.height_per_cell()),
+        physical_to_cell(center_x, grid.pixels_per_cell.0),
+        physical_to_cell(plate_y, grid.pixels_per_cell.1),
     )
 }
 
@@ -2596,11 +2634,12 @@ mod tests {
     fn worker_marker_positions_use_encoding_cell_density() {
         for encoding in PixelEncoding::ALL {
             let grid = make_grid_with_encoding(
-                encoding.scale_width(160),
+                160usize.saturating_mul(encoding.width_per_cell()),
                 encoding.height_per_cell() * 44,
                 ISO_ROOM_COLUMNS,
                 ISO_ROOM_ROWS,
                 encoding,
+                (encoding.width_per_cell(), encoding.height_per_cell()),
             );
             let (tile_x, tile_y) = grid.desk_tile(0);
             let (center_x, center_y) = grid.center(tile_x, tile_y);

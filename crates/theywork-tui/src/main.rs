@@ -1264,6 +1264,12 @@ fn run(
     let mut ui = Ui::new();
     configure_ui(&mut ui, args, runtime.start_guard);
     let terminal_cells = terminal.size()?;
+    let image_cell_size = capabilities
+        .graphics
+        .can_transmit_pixels()
+        .then_some(capabilities.cell_size)
+        .flatten();
+    ui.set_image_cell_size(image_cell_size.map(|size| (size.width, size.height)));
     let mut image_presenter =
         TerminalImagePresenter::new(capabilities, (terminal_cells.width, terminal_cells.height));
     let poller = Poller::start(std::mem::take(&mut runtime.sources));
@@ -1328,18 +1334,25 @@ fn run(
 
 struct TerminalImagePresenter {
     surface: Option<ImageSurface>,
+    next_frame: Instant,
+    last_area: Option<Rect>,
 }
 
 impl TerminalImagePresenter {
     fn new(capabilities: Capabilities, cells: (u16, u16)) -> Self {
         let protocol = capabilities.graphics;
-        let surface = protocol.can_transmit_pixels().then(|| {
-            ImageSurface::new(
-                protocol,
-                TerminalGeometry::new(cells.0, cells.1, capabilities.cell_size),
-            )
-        });
-        Self { surface }
+        let surface =
+            (protocol.can_transmit_pixels() && capabilities.cell_size.is_some()).then(|| {
+                ImageSurface::new(
+                    protocol,
+                    TerminalGeometry::new(cells.0, cells.1, capabilities.cell_size),
+                )
+            });
+        Self {
+            surface,
+            next_frame: Instant::now(),
+            last_area: None,
+        }
     }
 
     fn enabled(&self) -> bool {
@@ -1354,6 +1367,8 @@ impl TerminalImagePresenter {
         let geometry = TerminalGeometry::new(cells.0, cells.1, current.cell_size);
         if current != geometry {
             surface.resize(output, geometry)?;
+            self.next_frame = Instant::now();
+            self.last_area = None;
         }
         Ok(())
     }
@@ -1368,25 +1383,49 @@ impl TerminalImagePresenter {
         };
         let Some(pixel_frame) = pixel_frame else {
             surface.clear(output)?;
+            self.last_area = None;
             output.flush()?;
             return Ok(());
         };
         let Some(area) = pixel_frame.cell_area() else {
             surface.clear(output)?;
+            self.last_area = None;
             output.flush()?;
             return Ok(());
         };
-        let width = u32::try_from(pixel_frame.width())?;
-        let height = u32::try_from(pixel_frame.height())?;
-        let image = RgbaImage::new(width, height, pixel_frame.rgba().to_vec())?;
-        surface.draw(
-            output,
-            &image,
-            CellRect::new(area.x, area.y, area.width, area.height),
-        )?;
+        let rectangle = CellRect::new(area.x, area.y, area.width, area.height);
+        let frame_size = (
+            u32::try_from(pixel_frame.width())?,
+            u32::try_from(pixel_frame.height())?,
+        );
+        if surface.geometry().pixel_size(rectangle) != Some(frame_size) {
+            surface.clear(output)?;
+            self.last_area = None;
+            output.flush()?;
+            return Ok(());
+        }
+        let started = Instant::now();
+        if self.last_area == Some(area) && started < self.next_frame {
+            return Ok(());
+        }
+        let image = RgbaImage::new(frame_size.0, frame_size.1, pixel_frame.rgba().to_vec())?;
+        let report = surface.draw(output, &image, rectangle)?;
         output.flush()?;
+        self.last_area = Some(area);
+        if surface.protocol() == theywork_terminal_image::GraphicsProtocol::Sixel {
+            self.next_frame =
+                started + sixel_frame_interval(report.written_bytes, started.elapsed());
+        }
         Ok(())
     }
+}
+
+fn sixel_frame_interval(bytes: usize, write_time: Duration) -> Duration {
+    // Conservative pacing, not a claim about a particular terminal's parser.
+    // Drop intermediate animation frames; never build a transmission backlog.
+    Duration::from_millis(200)
+        .max(Duration::from_secs_f64(bytes as f64 / 8_000_000.0))
+        .max(write_time.saturating_mul(2))
 }
 
 fn skip_image_cells(buffer: &mut Buffer, area: Rect) {
@@ -1773,6 +1812,7 @@ mod tests {
             world.apply(event);
         }
         let mut ui = Ui::new();
+        ui.set_image_cell_size(Some((8, 16)));
         ui.tick(0);
         let mut terminal = Terminal::new(TestBackend::new(80, 24)).expect("test terminal");
         let mut snapshot = None;
@@ -1783,7 +1823,9 @@ mod tests {
             })
             .expect("render demo frame");
         let snapshot = snapshot.expect("renderer snapshot");
-        assert!(snapshot.cell_area().is_some());
+        let area = snapshot.cell_area().expect("pixel frame area");
+        assert_eq!(snapshot.width(), usize::from(area.width) * 8);
+        assert_eq!(snapshot.height(), usize::from(area.height) * 16);
 
         let capabilities = Capabilities {
             graphics: GraphicsProtocol::Sixel,
@@ -1806,5 +1848,32 @@ mod tests {
             .present(&mut output, None)
             .expect("disabled presenter");
         assert!(output.is_empty());
+    }
+
+    #[test]
+    fn image_presenter_falls_back_to_cells_without_pixel_geometry() {
+        let capabilities = Capabilities {
+            graphics: GraphicsProtocol::Sixel,
+            cell_size: None,
+            terminal_cells: Some((80, 24)),
+        };
+        let presenter = TerminalImagePresenter::new(capabilities, (80, 24));
+        assert!(!presenter.enabled());
+    }
+
+    #[test]
+    fn sixel_pacing_limits_rate_bytes_and_slow_writes() {
+        assert_eq!(
+            sixel_frame_interval(10_000, Duration::from_millis(10)),
+            Duration::from_millis(200)
+        );
+        assert_eq!(
+            sixel_frame_interval(8_000_000, Duration::ZERO),
+            Duration::from_secs(1)
+        );
+        assert_eq!(
+            sixel_frame_interval(1, Duration::from_secs(2)),
+            Duration::from_secs(4)
+        );
     }
 }

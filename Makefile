@@ -2,6 +2,7 @@
 IMAGE ?= they-work:local
 DEV_IMAGE ?= they-work-dev:local
 SHOT_DIR ?= docs/shots
+IMAGE_FRAME_DIR ?=
 # scripts/cargo runs the toolchain container as the invoking user, so build
 # output is owned by you and not by root. Contributors need no local Rust.
 CARGO = THEYWORK_DEV_IMAGE=$(DEV_IMAGE) ./scripts/cargo
@@ -59,8 +60,8 @@ run: build ## Watch your real agents (read-only)
 demo: build ## Watch an imaginary company; reads nothing
 	$(DOCKER_DEMO_RUN)
 
-shot: ## Export labelled resolution-rung PNG/SVG frames and contact sheet
-	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)"
+shot: ## Export labelled cell/image frames and contact sheet
+	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)" --image-frame-dir "$(IMAGE_FRAME_DIR)"
 
 fetch: ## Populate the locked Cargo cache (networked)
 	THEYWORK_CARGO_NETWORK=bridge $(CARGO) fetch --locked

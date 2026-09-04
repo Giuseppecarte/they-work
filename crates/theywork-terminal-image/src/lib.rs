@@ -3,6 +3,27 @@
 //! The block renderer remains independent of this crate. This crate only owns
 //! terminal capability probing, protocol bytes, and the lifetime of images
 //! placed by its surface.
+//!
+//! Expected terminals: Kitty transport for kitty, Ghostty and WezTerm; inline
+//! PNG for iTerm2; Sixel for Windows Terminal 1.22+. Terminal.app and terminals
+//! without a positive graphics capability use the unchanged cell renderer.
+//! Actual interactive testing here is limited to an xterm-256color PTY without
+//! graphics replies. Protocol tests capture bytes; they are not evidence of
+//! graphical playback on Windows or macOS.
+//!
+//! For inspectable synthetic frames, run the `measure` example in release mode
+//! with `--dump /src/new-dump-directory` (and optionally `--noise`). It creates
+//! a PNG and exact first-frame `.bin` transmissions for each protocol. The
+//! directory must not already exist. These bytes contain terminal controls:
+//! inspect them as binary data unless intentionally testing a compatible terminal.
+//! Measurements exclude terminal parsing and display; a high encoder frame rate
+//! does not establish end-to-end throughput. At 1600x960 the high-detail Sixel
+//! baseline was 7.21 MB/frame, requiring about 72 MB/s at ten frames per second.
+//! The TUI therefore caps Sixel at five updates/second and spaces large frames
+//! against a conservative 8 MB/s budget, also allowing twice the observed write
+//! duration. Intermediate animation frames are dropped rather than queued.
+//! This policy still needs Windows Terminal playback validation; the first
+//! large synchronous write can exceed the interactive frame budget.
 
 use std::fmt;
 use std::io::{self, Write};
@@ -20,12 +41,15 @@ pub const KITTY_DIRECT_QUERY: &[u8] = b"\x1b_Gi=31,s=1,v=1,a=q,t=d,f=32;AAAA\x1b
 pub const KITTY_FILE_QUERY: &[u8] = b"\x1b_Gi=32,s=1,v=1,a=q,t=f,f=32;AAAA\x1b\\";
 pub const SIXEL_QUERY: &[u8] = b"\x1b[c";
 pub const CELL_SIZE_QUERY: &[u8] = b"\x1b[16t\x1b[14t\x1b[18t";
+pub const TERMINAL_VERSION_QUERY: &[u8] = b"\x1b[>q";
 
 /// The image protocol selected for a terminal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GraphicsProtocol {
     /// Kitty graphics with direct (inline) transmission.
     Kitty { direct_transmission: bool },
+    /// iTerm2 inline PNG images (OSC 1337).
+    Iterm2,
     /// DEC Sixel graphics.
     Sixel,
     /// No supported image protocol was detected.
@@ -48,7 +72,8 @@ impl GraphicsProtocol {
             self,
             Self::Kitty {
                 direct_transmission: true
-            } | Self::Sixel
+            } | Self::Iterm2
+                | Self::Sixel
         )
     }
 }
@@ -228,6 +253,7 @@ pub enum ImageError {
     PixelDataLength { expected: usize, actual: usize },
     InvalidMeasurementCount,
     UnsupportedProtocol,
+    PngEncoding(String),
 }
 
 impl fmt::Display for ImageError {
@@ -242,6 +268,7 @@ impl fmt::Display for ImageError {
                 formatter.write_str("measurement count must be positive")
             }
             Self::UnsupportedProtocol => formatter.write_str("protocol cannot transmit pixels"),
+            Self::PngEncoding(error) => write!(formatter, "PNG encoding failed: {error}"),
         }
     }
 }
@@ -314,6 +341,7 @@ impl CapabilityDetector {
         query.extend_from_slice(KITTY_FILE_QUERY);
         query.extend_from_slice(SIXEL_QUERY);
         query.extend_from_slice(CELL_SIZE_QUERY);
+        query.extend_from_slice(TERMINAL_VERSION_QUERY);
         io.send(&query)?;
 
         let started = Instant::now();
@@ -352,6 +380,11 @@ pub fn parse_capabilities(response: &[u8]) -> Capabilities {
         GraphicsProtocol::Kitty {
             direct_transmission: true,
         }
+    } else if response
+        .windows(b"\x1bP>|iTerm2".len())
+        .any(|window| window == b"\x1bP>|iTerm2")
+    {
+        GraphicsProtocol::Iterm2
     } else if sixel {
         GraphicsProtocol::Sixel
     } else if kitty_seen {
@@ -534,7 +567,22 @@ pub fn detect_terminal_with_timeout(timeout: Duration) -> io::Result<Capabilitie
     crossterm::terminal::enable_raw_mode()?;
     let _raw_mode = RawModeGuard;
     let mut terminal = NativeProbeIo { stdin, stdout };
-    CapabilityDetector::new(timeout).detect(&mut terminal)
+    let mut capabilities = CapabilityDetector::new(timeout).detect(&mut terminal)?;
+    // Older iTerm2 versions identify themselves through the environment rather
+    // than XTVERSION. Do not infer passthrough support inside multiplexers.
+    if std::env::var("TERM_PROGRAM").as_deref() == Ok("iTerm.app")
+        && std::env::var_os("TMUX").is_none()
+        && std::env::var_os("STY").is_none()
+        && !matches!(
+            capabilities.graphics,
+            GraphicsProtocol::Kitty {
+                direct_transmission: true
+            }
+        )
+    {
+        capabilities.graphics = GraphicsProtocol::Iterm2;
+    }
+    Ok(capabilities)
 }
 
 #[cfg(not(unix))]
@@ -623,6 +671,7 @@ pub struct ImageSurface {
     geometry: TerminalGeometry,
     next_image_id: u32,
     active: Option<ActiveImage>,
+    last_frame: Option<(RgbaImage, CellRect)>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -639,6 +688,7 @@ impl ImageSurface {
             geometry,
             next_image_id: 1,
             active: None,
+            last_frame: None,
         }
     }
 
@@ -671,6 +721,7 @@ impl ImageSurface {
     }
 
     pub fn clear<W: Write>(&mut self, output: &mut W) -> io::Result<usize> {
+        self.last_frame = None;
         let Some(active) = self.active else {
             return Ok(0);
         };
@@ -678,7 +729,7 @@ impl ImageSurface {
             GraphicsProtocol::Kitty {
                 direct_transmission: true,
             } => kitty_delete(active.image_id),
-            GraphicsProtocol::Sixel => sixel_clear(active.rectangle),
+            GraphicsProtocol::Sixel | GraphicsProtocol::Iterm2 => sixel_clear(active.rectangle),
             GraphicsProtocol::Kitty {
                 direct_transmission: false,
             }
@@ -695,6 +746,17 @@ impl ImageSurface {
         image: &RgbaImage,
         rectangle: CellRect,
     ) -> Result<FrameReport, SurfaceError> {
+        if self
+            .last_frame
+            .as_ref()
+            .is_some_and(|(previous, area)| previous == image && *area == rectangle)
+        {
+            return Ok(FrameReport {
+                encoded_bytes: 0,
+                written_bytes: 0,
+                encode_time: Duration::ZERO,
+            });
+        }
         let clear_bytes = self.clear(output).map_err(SurfaceError::Io)?;
         let Some(rectangle) = rectangle.clipped(self.geometry) else {
             return Ok(FrameReport {
@@ -711,13 +773,10 @@ impl ImageSurface {
             GraphicsProtocol::Kitty {
                 direct_transmission: true,
             } => kitty_encode(image, rectangle, image_id),
+            GraphicsProtocol::Iterm2 => encode_iterm2(image, rectangle)?,
             GraphicsProtocol::Sixel => {
-                let (width, height) = self
-                    .geometry
-                    .pixel_size(rectangle)
-                    .unwrap_or((image.width(), image.height()));
                 let mut output = cursor_position(rectangle);
-                output.extend(encode_sixel_scaled(image, width, height)?);
+                output.extend(encode_sixel(image));
                 output
             }
             GraphicsProtocol::Kitty {
@@ -733,6 +792,9 @@ impl ImageSurface {
             image_id,
             rectangle,
         });
+        if can_draw {
+            self.last_frame = Some((image.clone(), rectangle));
+        }
         Ok(FrameReport {
             encoded_bytes,
             written_bytes: clear_bytes + encoded_bytes,
@@ -830,13 +892,45 @@ pub fn encode_sixel(image: &RgbaImage) -> Vec<u8> {
         .expect("a validated image can be encoded at its own dimensions")
 }
 
+/// Encode a full-colour PNG suitable for inspection or inline transmission.
+pub fn encode_png(image: &RgbaImage) -> Result<Vec<u8>, ImageError> {
+    let mut bytes = Vec::new();
+    {
+        let mut encoder = png::Encoder::new(&mut bytes, image.width(), image.height());
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_depth(png::BitDepth::Eight);
+        encoder.set_compression(png::Compression::Fast);
+        let mut writer = encoder
+            .write_header()
+            .map_err(|error| ImageError::PngEncoding(error.to_string()))?;
+        writer
+            .write_image_data(image.pixels())
+            .map_err(|error| ImageError::PngEncoding(error.to_string()))?;
+    }
+    Ok(bytes)
+}
+
+/// Place an inline PNG at a cell rectangle without advancing the text cursor.
+pub fn encode_iterm2(image: &RgbaImage, rectangle: CellRect) -> Result<Vec<u8>, ImageError> {
+    let png = encode_png(image)?;
+    let mut output = b"\x1b7".to_vec();
+    output.extend(cursor_position(rectangle));
+    output.extend(format!(
+        "\x1b]1337;File=inline=1;size={};width={};height={};preserveAspectRatio=0;doNotMoveCursor=1:",
+        png.len(), rectangle.width, rectangle.height,
+    ).as_bytes());
+    output.extend(base64(&png));
+    output.extend_from_slice(b"\x07\x1b8");
+    Ok(output)
+}
+
 pub fn encode_sixel_scaled(
     image: &RgbaImage,
     width: u32,
     height: u32,
 ) -> Result<Vec<u8>, ImageError> {
     let image = image.resized_nearest(width, height)?;
-    let indexed = palette_indices(&image);
+    let (palette, indexed) = sixel_palette(&image);
     let width_usize = width as usize;
     let mut output = Vec::new();
     output.extend_from_slice(b"\x1bPq\"1;1;");
@@ -844,18 +938,15 @@ pub fn encode_sixel_scaled(
     output.push(b';');
     append_decimal(&mut output, height);
 
-    for color in 0..SIXEL_COLORS {
+    for (color, rgb) in palette.iter().enumerate() {
         output.push(b'#');
         append_decimal(&mut output, color as u32);
         output.extend_from_slice(b";2;");
-        let red = color / 36;
-        let green = color / 6 % 6;
-        let blue = color % 6;
-        append_decimal(&mut output, (red * 20) as u32);
+        append_decimal(&mut output, u32::from(rgb[0]));
         output.push(b';');
-        append_decimal(&mut output, (green * 20) as u32);
+        append_decimal(&mut output, u32::from(rgb[1]));
         output.push(b';');
-        append_decimal(&mut output, (blue * 20) as u32);
+        append_decimal(&mut output, u32::from(rgb[2]));
     }
 
     let mut masks = vec![0_u8; SIXEL_COLORS * width_usize];
@@ -901,7 +992,7 @@ pub fn measure_encoding(
     protocol: GraphicsProtocol,
     image: &RgbaImage,
     rectangle: CellRect,
-    geometry: TerminalGeometry,
+    _geometry: TerminalGeometry,
     iterations: usize,
 ) -> Result<EncodingMeasurement, ImageError> {
     if iterations == 0 {
@@ -914,12 +1005,8 @@ pub fn measure_encoding(
             GraphicsProtocol::Kitty {
                 direct_transmission: true,
             } => encode_kitty(image, rectangle, iteration as u32 + 1),
-            GraphicsProtocol::Sixel => {
-                let (width, height) = geometry
-                    .pixel_size(rectangle)
-                    .unwrap_or((image.width(), image.height()));
-                encode_sixel_scaled(image, width, height)?
-            }
+            GraphicsProtocol::Iterm2 => encode_iterm2(image, rectangle)?,
+            GraphicsProtocol::Sixel => encode_sixel(image),
             GraphicsProtocol::Kitty {
                 direct_transmission: false,
             }
@@ -1030,6 +1117,41 @@ fn append_sixel_columns(output: &mut Vec<u8>, masks: &[u8]) {
     }
 }
 
+fn sixel_palette(image: &RgbaImage) -> (Vec<[u8; 3]>, Vec<u8>) {
+    // Office scenes usually fit in the register budget. Preserve their colours
+    // to Sixel's percentage precision instead of always snapping to a cube.
+    let mut palette = Vec::new();
+    let mut lookup = std::collections::HashMap::new();
+    let mut indices = Vec::with_capacity(image.pixels.len() / 4);
+    for pixel in image.pixels.chunks_exact(4) {
+        let rgb = [0, 1, 2].map(|channel| {
+            ((u16::from(composite_channel(pixel[channel], pixel[3])) * 100 + 127) / 255) as u8
+        });
+        let index = if let Some(index) = lookup.get(&rgb) {
+            *index
+        } else {
+            if palette.len() == SIXEL_COLORS {
+                let cube = (0..SIXEL_COLORS)
+                    .map(|color| {
+                        [
+                            (color / 36 * 20) as u8,
+                            (color / 6 % 6 * 20) as u8,
+                            (color % 6 * 20) as u8,
+                        ]
+                    })
+                    .collect();
+                return (cube, palette_indices(image));
+            }
+            let index = palette.len() as u8;
+            palette.push(rgb);
+            lookup.insert(rgb, index);
+            index
+        };
+        indices.push(index);
+    }
+    (palette, indices)
+}
+
 fn palette_indices(image: &RgbaImage) -> Vec<u8> {
     image
         .pixels
@@ -1080,6 +1202,98 @@ fn base64(bytes: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn small_sixel_palettes_keep_source_colours_at_percentage_precision() {
+        let image = RgbaImage::new(2, 1, vec![17, 29, 43, 255, 20, 32, 46, 255]).unwrap();
+        let (palette, indices) = sixel_palette(&image);
+        assert_eq!(palette, vec![[7, 11, 17], [8, 13, 18]]);
+        assert_eq!(indices, vec![0, 1]);
+        let bytes = encode_sixel(&image);
+        assert!(bytes
+            .windows(b"#0;2;7;11;17".len())
+            .any(|part| part == b"#0;2;7;11;17"));
+        let noise = RgbaImage::new(
+            256,
+            1,
+            (0..256)
+                .flat_map(|n| [n as u8, (n * 13) as u8, (n * 31) as u8, 255])
+                .collect(),
+        )
+        .unwrap();
+        let (palette, indices) = sixel_palette(&noise);
+        assert_eq!(palette.len(), SIXEL_COLORS);
+        assert_eq!(indices.len(), 256);
+        assert!(indices
+            .iter()
+            .all(|index| usize::from(*index) < palette.len()));
+    }
+
+    #[test]
+    fn iterm2_png_preserves_rgba_and_places_in_cells() {
+        let image = RgbaImage::new(2, 1, vec![17, 29, 43, 255, 101, 151, 201, 255]).unwrap();
+        let png = encode_png(&image).unwrap();
+        let mut reader = png::Decoder::new(std::io::Cursor::new(&png))
+            .read_info()
+            .unwrap();
+        let mut decoded = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut decoded).unwrap();
+        assert_eq!((info.width, info.height), (2, 1));
+        assert_eq!(&decoded[..info.buffer_size()], image.pixels());
+        let bytes = encode_iterm2(&image, CellRect::new(3, 4, 8, 6)).unwrap();
+        assert!(bytes.starts_with(b"\x1b7\x1b[5;4H\x1b]1337;File=inline=1;"));
+        assert!(bytes
+            .windows(b"width=8;height=6;".len())
+            .any(|window| window == b"width=8;height=6;"));
+        assert!(bytes.ends_with(b"\x07\x1b8"));
+        assert!(bytes
+            .windows(base64(&png).len())
+            .any(|window| window == base64(&png)));
+    }
+
+    #[test]
+    fn protocol_preference_is_kitty_then_iterm2_then_sixel() {
+        let mut response = b"\x1b[?1;2;4c\x1bP>|iTerm2 3.5\x1b\\".to_vec();
+        assert_eq!(
+            parse_capabilities(&response).graphics,
+            GraphicsProtocol::Iterm2
+        );
+        response.extend_from_slice(b"\x1b_Gi=31;OK\x1b\\");
+        assert_eq!(
+            parse_capabilities(&response).graphics,
+            GraphicsProtocol::Kitty {
+                direct_transmission: true
+            }
+        );
+        assert_eq!(
+            parse_capabilities(b"\x1b[?1;2;4c").graphics,
+            GraphicsProtocol::Sixel
+        );
+        assert_eq!(parse_capabilities(b"").graphics, GraphicsProtocol::None);
+    }
+
+    #[test]
+    fn identical_frames_skip_transmission_and_resize_invalidates_cache() {
+        for protocol in [
+            GraphicsProtocol::Iterm2,
+            GraphicsProtocol::Sixel,
+            GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+        ] {
+            let mut surface = ImageSurface::new(protocol, TerminalGeometry::new(80, 24, None));
+            let image = RgbaImage::solid(2, 2, [23, 47, 91, 255]).unwrap();
+            let area = CellRect::new(0, 0, 2, 2);
+            assert!(!surface.capture(&image, area).unwrap().is_empty());
+            assert!(surface.capture(&image, area).unwrap().is_empty());
+            let mut cleared = Vec::new();
+            surface
+                .resize(&mut cleared, TerminalGeometry::new(40, 12, None))
+                .unwrap();
+            assert!(!cleared.is_empty());
+            assert!(!surface.capture(&image, area).unwrap().is_empty());
+        }
+    }
 
     struct MockProbe {
         response: Vec<u8>,
@@ -1134,7 +1348,7 @@ mod tests {
             .writes
             .windows(SIXEL_QUERY.len())
             .any(|window| window == SIXEL_QUERY));
-        assert!(probe.writes.ends_with(CELL_SIZE_QUERY));
+        assert!(probe.writes.ends_with(TERMINAL_VERSION_QUERY));
     }
 
     #[test]

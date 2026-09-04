@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the documented bootstrap and installer failure boundaries offline."""
 import os
+import pty
 from pathlib import Path
 import subprocess
 import tempfile
@@ -37,6 +38,14 @@ pathlib.Path(sys.argv[sys.argv.index("-o") + 1]).write_bytes(payload)
 import os, pathlib, sys
 base = pathlib.Path(os.environ["INSTALL_TEST_DIR"])
 (base / "docker-called").write_text(" ".join(sys.argv[1:]))
+if os.environ["INSTALL_TEST_MODE"] == "unreadable":
+    if sys.argv[1] == "pull":
+        sys.exit(0)
+    if "--doctor" in sys.argv:
+        print("claude_store=unavailable status=unreadable reason=Permission denied", file=sys.stderr)
+        sys.exit(1)
+    (base / "interactive-started").touch()
+    sys.exit(0)
 print(os.environ["INSTALL_TEST_ERROR"], file=sys.stderr)
 sys.exit(17)
 ''')
@@ -89,6 +98,24 @@ sys.exit(17)
         result = self.run_script(["sh", str(ROOT / "docs/install.sh")])
         self.assertEqual(result.returncode, 17)
         self.assertIn("Docker exit 17", result.stdout)
+
+    def test_unreadable_data_stops_before_interactive_office(self):
+        self.env["INSTALL_TEST_MODE"] = "unreadable"
+        master, slave = pty.openpty()
+        try:
+            result = subprocess.run(
+                ["sh", "-c", BOOTSTRAP], cwd=self.base, env=self.env,
+                stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, timeout=10,
+            )
+        finally:
+            os.close(slave)
+            os.close(master)
+        print(f"\n{self.id()}: exit={result.returncode}\n{result.stdout}", end="")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Permission denied", result.stdout)
+        self.assertIn("--doctor", (self.base / "docker-called").read_text())
+        self.assertFalse((self.base / "interactive-started").exists())
 
 
 if __name__ == "__main__":

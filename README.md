@@ -131,9 +131,30 @@ normalised events; `World` folds those into offices and workers; the renderer
 draws whatever `World` currently says. Nothing downstream parses an agent's
 format, and nothing upstream knows how anything is drawn.
 
-The picture is built from **half-block, quadrant or sextant characters**,
-whichever your terminal and font support — up to six pixels and two colours in
-every cell. On a 160×48 terminal that is a 320×144 image.
+Without a graphics protocol, the picture is built from **half-block, quadrant
+or sextant characters**, whichever your terminal and font supports. That is a
+logical 320×144 canvas on a 160×48 terminal at the densest character encoding;
+it is not a claim about the physical pixels displayed by every terminal.
+
+When a graphics protocol is negotiated and the terminal reports its cell
+geometry, the renderer makes one source pixel per physical terminal pixel in
+the covered rectangle. Sixel, Kitty graphics, and iTerm2 inline PNG all receive
+that renderer frame. For example, a full 160×48 terminal reporting 10×20-pixel
+cells produces a 1600×960 image. If the cell geometry is unavailable, the
+program keeps the character renderer; the final dimensions always come from
+the terminal report, not this example.
+
+| Platform path | Status tested in this worktree |
+| --- | --- |
+| Windows Terminal under WSL, Sixel | Sixel encoding and the true-density renderer frame are covered by tests, but visual output was **not tested** here: this WSL session is `xterm-256color`, not Windows Terminal. |
+| macOS, Kitty protocol | Kitty encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no macOS/Kitty machine was available. |
+| macOS, iTerm2 inline images | iTerm2 encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no macOS/iTerm2 machine was available. |
+
+To verify a real terminal, run the demo in that terminal and look for a clean
+pixel image rather than the character fallback. The diagnostics and supported
+protocol selection are automatic; no protocol flag is required. Please report
+the terminal application, version, cell size, image dimensions, and whether
+the image appears or falls back to characters.
 
 The intended design for every surface lives in [`docs/design/`](docs/design) as
 plain HTML you can open in a browser. Where the code and a board disagree, the

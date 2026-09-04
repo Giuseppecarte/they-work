@@ -6,6 +6,7 @@
 
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -134,24 +135,6 @@ impl PixelEncoding {
         Self::ALL[next]
     }
 
-    pub(crate) const fn scale_width(self, value: usize) -> usize {
-        value.saturating_mul(self.width_per_cell())
-    }
-
-    /// Convert a length expressed in the old two-row pixel space to this
-    /// encoding's physical pixel space. Sextants are the only non-integral
-    /// scale, so round up to keep one-pixel outlines visible.
-    pub(crate) const fn scale_half_height(self, value: usize) -> usize {
-        value
-            .saturating_mul(self.height_per_cell())
-            .saturating_add(1)
-            / 2
-    }
-
-    pub(crate) const fn half_space_height(self, value: usize) -> usize {
-        value.saturating_mul(2) / self.height_per_cell()
-    }
-
     pub(crate) const fn width_per_cell(self) -> usize {
         match self {
             Self::Sextants | Self::Quadrants => 2,
@@ -234,7 +217,7 @@ type QuantizedCache = RefCell<HashMap<QuantizationKey, QuantizedCell>>;
 pub struct PixelFrame {
     width: usize,
     height: usize,
-    rgba: Vec<u8>,
+    rgba: Arc<Vec<u8>>,
     cell_area: Option<Rect>,
 }
 
@@ -275,8 +258,10 @@ pub struct Canvas {
     width: usize,
     height: usize,
     pixels: Vec<Option<Color>>,
+    rgba: Arc<Vec<u8>>,
     depth: ColorDepth,
     encoding: PixelEncoding,
+    cell_pixel_size: Option<(usize, usize)>,
     light_mode: bool,
     quantized_cache: QuantizedCache,
     last_rendered_area: Cell<Option<Rect>>,
@@ -312,8 +297,10 @@ impl Canvas {
             width: 0,
             height: 0,
             pixels: Vec::new(),
+            rgba: Arc::new(Vec::new()),
             depth,
             encoding,
+            cell_pixel_size: None,
             light_mode: false,
             quantized_cache: RefCell::new(HashMap::new()),
             last_rendered_area: Cell::new(None),
@@ -360,11 +347,51 @@ impl Canvas {
         self.encoding = encoding;
     }
 
+    pub(crate) fn set_cell_pixel_size(&mut self, size: Option<(usize, usize)>) {
+        if self.cell_pixel_size != size {
+            self.last_rendered_area.set(None);
+        }
+        self.cell_pixel_size = size;
+    }
+
+    pub(crate) fn pixels_per_cell(&self) -> (usize, usize) {
+        self.cell_pixel_size.unwrap_or((
+            self.encoding.width_per_cell(),
+            self.encoding.height_per_cell(),
+        ))
+    }
+
+    pub(crate) fn scale_width(&self, value: usize) -> usize {
+        value.saturating_mul(self.pixels_per_cell().0)
+    }
+
+    pub(crate) fn scale_half_height(&self, value: usize) -> usize {
+        value
+            .saturating_mul(self.pixels_per_cell().1)
+            .saturating_add(1)
+            / 2
+    }
+
+    pub(crate) fn half_space_height(&self, value: usize) -> usize {
+        value.saturating_mul(2) / self.pixels_per_cell().1
+    }
+
+    pub(crate) fn scale_image_sprite_width(&self, value: usize) -> usize {
+        self.cell_pixel_size
+            .map_or(value, |_| self.scale_width(value))
+    }
+
+    pub(crate) fn scale_image_sprite_height(&self, value: usize) -> usize {
+        self.cell_pixel_size
+            .map_or(value, |_| self.scale_half_height(value))
+    }
+
     /// Resize the surface to exactly fill a terminal-cell rectangle.
     pub fn resize_for_cells(&mut self, width_cells: usize, height_cells: usize) {
+        let (width_per_cell, height_per_cell) = self.pixels_per_cell();
         self.resize(
-            width_cells.saturating_mul(self.encoding.width_per_cell()),
-            height_cells.saturating_mul(self.encoding.height_per_cell()),
+            width_cells.saturating_mul(width_per_cell),
+            height_cells.saturating_mul(height_per_cell),
         );
     }
 
@@ -387,33 +414,53 @@ impl Canvas {
         let len = width_px.checked_mul(height_px).unwrap_or(0);
         self.pixels.resize(len, None);
         self.pixels.fill(None);
+        let rgba = Arc::make_mut(&mut self.rgba);
+        rgba.resize(len.saturating_mul(4), 0);
+        rgba.fill(0);
         self.last_rendered_area.set(None);
     }
 
     /// Make every pixel transparent.
     pub fn clear(&mut self) {
         self.pixels.fill(None);
+        Arc::make_mut(&mut self.rgba).fill(0);
     }
 
     /// Fill the surface with one opaque colour.
     pub fn fill(&mut self, color: Color) {
         let color = self.convert_color(color);
         self.pixels.fill(Some(color));
+        let (red, green, blue) = rgb_of_color(color);
+        for pixel in Arc::make_mut(&mut self.rgba).chunks_exact_mut(4) {
+            pixel.copy_from_slice(&[red, green, blue, u8::MAX]);
+        }
     }
 
     /// Set one opaque pixel. Out-of-bounds writes are deliberately ignored so
     /// a sprite can be clipped at a terminal edge without a special branch.
     pub fn set(&mut self, x: usize, y: usize, color: Color) {
         let color = self.convert_color(color);
-        if let Some(pixel) = self.pixel_mut(x, y) {
+        if let Some(index) = self.index(x, y) {
+            let pixel = &mut self.pixels[index];
             *pixel = Some(color);
+            let (red, green, blue) = rgb_of_color(color);
+            let offset = index.saturating_mul(4);
+            Arc::make_mut(&mut self.rgba)[offset..offset + 4].copy_from_slice(&[
+                red,
+                green,
+                blue,
+                u8::MAX,
+            ]);
         }
     }
 
     /// Clear one pixel without disturbing its neighbours.
     pub fn clear_pixel(&mut self, x: usize, y: usize) {
-        if let Some(pixel) = self.pixel_mut(x, y) {
+        if let Some(index) = self.index(x, y) {
+            let pixel = &mut self.pixels[index];
             *pixel = None;
+            let offset = index.saturating_mul(4);
+            Arc::make_mut(&mut self.rgba)[offset..offset + 4].fill(0);
         }
     }
 
@@ -427,20 +474,10 @@ impl Canvas {
     /// This accessor deliberately does not select a graphics protocol or write
     /// to the terminal; callers own presenting the returned frame.
     pub fn pixel_frame(&self) -> PixelFrame {
-        let mut rgba = Vec::with_capacity(self.pixels.len().saturating_mul(4));
-        for pixel in &self.pixels {
-            match pixel {
-                Some(color) => {
-                    let (red, green, blue) = rgb_of_color(*color);
-                    rgba.extend_from_slice(&[red, green, blue, u8::MAX]);
-                }
-                None => rgba.extend_from_slice(&[0, 0, 0, 0]),
-            }
-        }
         PixelFrame {
             width: self.width,
             height: self.height,
-            rgba,
+            rgba: Arc::clone(&self.rgba),
             cell_area: self.last_rendered_area.get(),
         }
     }
@@ -494,13 +531,11 @@ impl Canvas {
 
     /// Emit the surface as encoded cells into a ratatui buffer.
     pub fn render(&self, buffer: &mut Buffer, area: Rect) {
-        let pixel_width = self
-            .width
-            .div_ceil(self.encoding.width_per_cell())
-            .min(area.width as usize);
+        let (width_per_cell, height_per_cell) = self.pixels_per_cell();
+        let pixel_width = self.width.div_ceil(width_per_cell).min(area.width as usize);
         let cell_height = self
             .height
-            .div_ceil(self.encoding.height_per_cell())
+            .div_ceil(height_per_cell)
             .min(area.height as usize);
         self.last_rendered_area.set(
             (pixel_width > 0 && cell_height > 0)
@@ -561,26 +596,32 @@ impl Canvas {
     }
 
     fn samples_for_cell(&self, cell_x: usize, cell_y: usize) -> ([Option<Color>; 6], usize) {
-        let width = self.encoding.width_per_cell();
-        let height = self.encoding.height_per_cell();
-        let origin_x = cell_x.saturating_mul(width);
-        let origin_y = cell_y.saturating_mul(height);
+        let sample_width = self.encoding.width_per_cell();
+        let sample_height = self.encoding.height_per_cell();
+        let (cell_width, cell_height) = self.pixels_per_cell();
+        let origin_x = cell_x.saturating_mul(cell_width);
+        let origin_y = cell_y.saturating_mul(cell_height);
         let mut samples = [None; 6];
         for (index, sample) in samples
             .iter_mut()
             .enumerate()
             .take(self.encoding.sample_count())
         {
-            let x = origin_x + index % width;
-            let y = origin_y + index / width;
+            let sample_x = index % sample_width;
+            let sample_y = index / sample_width;
+            let x = origin_x
+                + sample_x
+                    .saturating_mul(cell_width)
+                    .checked_div(sample_width)
+                    .unwrap_or(0);
+            let y = origin_y
+                + sample_y
+                    .saturating_mul(cell_height)
+                    .checked_div(sample_height)
+                    .unwrap_or(0);
             *sample = self.pixel(x, y);
         }
         (samples, self.encoding.sample_count())
-    }
-
-    fn pixel_mut(&mut self, x: usize, y: usize) -> Option<&mut Option<Color>> {
-        let index = self.index(x, y)?;
-        self.pixels.get_mut(index)
     }
 
     fn index(&self, x: usize, y: usize) -> Option<usize> {
@@ -930,6 +971,37 @@ mod tests {
 
         assert_eq!(frame.rgba(), [12, 34, 56, 255, 0, 0, 0, 0]);
         assert_eq!(frame.cell_area(), Some(Rect::new(5, 7, 2, 1)));
+    }
+
+    #[test]
+    fn requested_cell_density_controls_canvas_dimensions() {
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            ColorDepth::TrueColor,
+            PixelEncoding::Sextants,
+        );
+        canvas.set_cell_pixel_size(Some((10, 20)));
+        canvas.resize_for_cells(160, 48);
+        assert_eq!((canvas.width(), canvas.height()), (1_600, 960));
+
+        canvas.set_cell_pixel_size(None);
+        canvas.resize_for_cells(160, 48);
+        assert_eq!((canvas.width(), canvas.height()), (320, 144));
+    }
+
+    #[test]
+    fn dropped_pixel_frames_reuse_the_rgba_allocation() {
+        let mut canvas = Canvas::with_color_depth(1_600, 960, ColorDepth::TrueColor);
+        canvas.fill(Color::Rgb(12, 34, 56));
+        let first = canvas.pixel_frame();
+        let allocation = first.rgba().as_ptr();
+        drop(first);
+
+        canvas.clear();
+        canvas.set(0, 0, Color::Rgb(90, 80, 70));
+        let second = canvas.pixel_frame();
+        assert_eq!(second.rgba().as_ptr(), allocation);
     }
 
     #[test]

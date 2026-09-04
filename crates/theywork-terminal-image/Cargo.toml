@@ -8,3 +8,4 @@ description = "Safe Kitty and Sixel image transport for terminal cell rectangles
 [dependencies]
 crossterm = { workspace = true }
 libc = { workspace = true }
+png = "0.17"

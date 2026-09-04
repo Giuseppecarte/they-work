@@ -165,9 +165,12 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
             let floor_start = fill_office_background(canvas, sprites);
             if let Some((worker, look)) = worker {
                 let sprite = sprites.worker_frame(worker, look, now);
-                let width = sprite.width().min(canvas.width().saturating_sub(2)).max(1);
-                let height = sprite
-                    .height()
+                let width = canvas
+                    .scale_image_sprite_width(sprite.width())
+                    .min(canvas.width().saturating_sub(2))
+                    .max(1);
+                let height = canvas
+                    .scale_image_sprite_height(sprite.height())
                     .min(floor_start.saturating_sub(1).max(1))
                     .max(1);
                 let worker_x = canvas.width().saturating_sub(width) / 2;
@@ -186,8 +189,14 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
                     },
                 );
             }
-            let desk_width = sprites.desk.width().min(canvas.width()).max(1);
-            let desk_height = sprites.desk.height().min(canvas.height()).max(1);
+            let desk_width = canvas
+                .scale_image_sprite_width(sprites.desk.width())
+                .min(canvas.width())
+                .max(1);
+            let desk_height = canvas
+                .scale_image_sprite_height(sprites.desk.height())
+                .min(canvas.height())
+                .max(1);
             canvas.blit_scaled(
                 &sprites.desk,
                 canvas.width().saturating_sub(desk_width) / 2,

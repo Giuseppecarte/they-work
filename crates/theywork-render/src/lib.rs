@@ -1058,11 +1058,23 @@ mod m3_tests {
                     .expect("measured floor frame");
             }
             let elapsed = started.elapsed();
+            let area = ui
+                .canvas
+                .pixel_frame()
+                .cell_area()
+                .expect("rendered floor area");
+            let mut buffer = ratatui::buffer::Buffer::empty(area);
+            let packing_started = Instant::now();
+            for _ in 0..100 {
+                ui.canvas.render(&mut buffer, area);
+            }
+            let packing_elapsed = packing_started.elapsed();
             eprintln!(
-                "encoding={} frames=100 total_ms={} per_frame_ms={:.2}",
+                "encoding={} frames=100 total_ms={} per_frame_ms={:.2} cached_packing_ms={:.2}",
                 encoding.label(),
                 elapsed.as_millis(),
-                elapsed.as_secs_f64() * 1_000.0 / 100.0
+                elapsed.as_secs_f64() * 1_000.0 / 100.0,
+                packing_elapsed.as_secs_f64() * 1_000.0 / 100.0
             );
             assert!(
                 elapsed < Duration::from_secs(5),

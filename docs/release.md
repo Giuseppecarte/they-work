@@ -1,9 +1,9 @@
 # Release image and no-clone install
 
-> **Current status:** the repository is private, so the anonymous raw-script
-> URL returns HTTP 404, and the GHCR package is not public. The commands below
-> describe the post-publication release path; they are not a working anonymous
-> install today.
+> **Status checked 2026-09-03:** the repository and raw installer are now
+> publicly readable. The `latest` GHCR manifest request still returned `denied`.
+> The commands below describe the release path; anonymous installation is not
+> yet verified. Earlier 404 results below record the former private state.
 
 Version tags publish the runtime image at:
 

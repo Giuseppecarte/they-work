@@ -4,14 +4,14 @@ The container is the recommended route. It keeps the Rust toolchain in the
 build image and gives the running program the read-only, no-network boundary
 described below.
 
-## Without a checkout (not currently public)
+## Without a checkout (image publication pending verification)
 
-The repository is currently private: anonymous access to the raw installer
-returns HTTP 404, and the GHCR package is not public. The following is the
-release procedure, not a working public entry point today. It deliberately
-downloads before invoking the script, so a failed download exits nonzero.
-Once the repository and package are public, Docker is the only host
-requirement:
+At the 2026-09-03 audit, the repository and raw installer became publicly
+readable, but the `latest` GHCR manifest request still returned `denied`.
+The following is the release procedure, not yet a verified public entry point.
+It deliberately downloads before invoking the script, so a failed download
+exits nonzero. Once the runtime image is publicly available, Docker is the
+only host requirement:
 
 ~~~bash
 (
@@ -27,7 +27,8 @@ The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
 `~/.claude` and `~/.codex` directories read-only, and skips either home that is
 missing. It runs the image as the invoking UID/GID, so private `0600`
 transcripts remain readable without widening access. Pin a release when the
-image must not change underneath you:
+image must not change underneath you (`v1.2.3` below is an example, not a
+verified published tag):
 
 ~~~bash
 (
@@ -89,7 +90,7 @@ docker run --rm -it \
 
 | Setting | Effect |
 | --- | --- |
-| `--network none` | The application has no network interface. |
+| `--network none` | No external network connectivity; only container loopback remains. |
 | `--read-only` | The container root filesystem is read-only. |
 | `--cap-drop ALL` | Linux capabilities are dropped. |
 | `--security-opt no-new-privileges` | The process cannot gain additional privileges. |
@@ -214,11 +215,12 @@ for the verified behavior.
 The containerized toolchain is pinned to Rust 1.90 and requires no local Rust:
 
 ~~~bash
-./scripts/cargo fmt --all -- --check
-./scripts/cargo clippy --workspace --all-targets -- -D warnings
-./scripts/cargo test --workspace
+make check
 make build
 ~~~
+
+`make check` first fetches locked dependencies with network access, then checks
+formatting, strict Clippy, and tests with the toolchain container offline.
 
 The release Dockerfile copies workspace manifests and stub sources before the
 real source tree, so source-only edits reuse the dependency layer. If Rust is

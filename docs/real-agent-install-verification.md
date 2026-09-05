@@ -126,27 +126,68 @@ they-work scene.
 To add image frames beside the existing cell frames, the graphics owner needs
 to supply a deterministic renderer-backed dump with all of the following:
 
-- the fixed 160×48 viewport and fixed demo timestamp used by the golden-frame
-  exporter;
+- the fixed 160×86 comparison viewport and fixed demo timestamp, plus matching
+  primary character goldens;
 - the terminal-reported cell geometry used for the image frame (for example,
   10×20 pixels), the covered cell rectangle, and the resulting PNG dimensions;
 - one RGBA PNG for each rendered surface and dark/light variant; and
 - the exact Kitty, Sixel, and iTerm2 first-frame byte streams produced from
   that PNG, retained as binary evidence rather than displayed as text.
 
-For the 160×48 / 10×20 example, each full-viewport source PNG must be labelled
-`1600×960`; a label such as `320×144` would describe only the character
-fallback's logical canvas, not the graphics image. A manifest that records the
-viewport, cell geometry, frame dimensions, fixed timestamp, surface, theme,
-and protocol filenames gives the contact-sheet exporter enough information to
-validate and place the image panel beside its cell counterpart.
+For the 160×86 / 10×10 comparison target, each full-viewport source PNG must
+be labelled `1600×860`; a label such as `320×144` would describe neither that
+character presentation nor the graphics image. The source's 160×86 primary
+character golden must land with the image dump: the exporter requires matching
+viewports rather than comparing frames of different terminal heights. A
+manifest that records the viewport, cell geometry, frame dimensions, fixed
+timestamp, surface, theme, and protocol filenames gives the contact-sheet
+exporter enough information to validate and place the image panel beside its
+cell counterpart.
 
-The current renderer and TUI now produce that physical-pixel frame, but the
-only `--dump` interface currently available emits a synthetic benchmark image.
-There is therefore still no deterministic, renderer-backed eight-panel dump to
-add to the contact sheet. The exporter, Make target, and manifest contract are
-ready for it; supplying that dump will place verified PNGs beside the primary
-cell panels without representing a benchmark pattern as office art.
+The renderer owner supplied
+`target/renderer-dark-floor-1600x860.bmp`: a top-down 32-bit 1600×860 BMP from
+the dark floor at the fixed snapshot time. Its captured cell rectangle is
+`Rect(0,3,160,86)` in a 160×91 terminal; the RGBA FNV-1a checksum is
+`0xc1261bafff5c1448` and the BMP SHA-256 is
+`301eff144552d68d4199c3c361543845749ae1ff20aaeb07818d7e5c0d799ccc`.
+
+`make shot IMAGE_FRAME=target/renderer-dark-floor-1600x860.bmp` converts that
+source capture to `docs/shots/image-floor-dark-1600x860.png` and places it
+beside the matching dark character panel. Both panels label the comparison:
+the character canvas is 160×86 and the renderer image is 1600×860 pixels. This
+is source-buffer visual evidence, not graphical playback by a Windows or macOS
+terminal. A full surface/theme manifest with exact protocol bytes remains the
+route for expanding the comparison beyond the captured dark floor.
+
+## Published-image locale handoff
+
+The currently published `v0.1.0` image was inspected directly with
+`docker run --rm --entrypoint /usr/bin/env ghcr.io/giuseppecarte/they-work:v0.1.0`.
+It contained `TERM=xterm-256color` and the two data-home variables, but neither
+`LANG`, `LC_ALL`, nor `LC_CTYPE`. This explains the half-block fallback in a
+container even when the host supports UTF-8: the renderer selects quadrants
+only when one of those locale variables advertises UTF-8.
+
+`TERM_PROGRAM` has two distinct uses in the current crate implementation. The
+renderer uses values such as `kitty` only to select sextants over quadrants for
+the character fallback; the graphics transport instead selects Kitty, Sixel,
+or iTerm2 from actual terminal probe replies and reported cell geometry.
+`TERM_PROGRAM=iTerm.app` is additionally an iTerm2 fallback, intentionally
+disabled inside tmux and screen. Therefore the packaging change needs a baked
+UTF-8 locale; forwarding `TERM_PROGRAM` through the installer is a separate
+crate-owner policy decision, not a prerequisite for graphics negotiation.
+
+The release workflow now pulls its just-published immutable digest and runs
+`scripts/test-published-image.py`. That verifier checks the container's baked
+locale, runs `--demo` in a 160×48 PTY that replies as a Kitty terminal with
+8×16-pixel cells, and confirms an actual Kitty image transmission. A second
+no-reply UTF-8 PTY proves the conservative character fallback by requiring
+quadrant-specific glyphs. Upper and lower half-block glyphs can legitimately
+occur as two masks in the quadrant alphabet, so their raw presence is reported
+but is not misclassified as half-block mode. It also replies as iTerm2 and
+requires an inline-image packet, preventing a release from silently omitting
+that source capability. This is a protocol simulation, not visual playback on
+Windows or macOS.
 
 ## Remaining proof
 

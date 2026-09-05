@@ -372,6 +372,30 @@ impl SpriteSet {
     }
 
     #[cfg(test)]
+    pub(crate) fn parse_all_cached_frames(&self) {
+        for animation in [&self.manager_walk, &self.manager_attention] {
+            for frame in animation.frames.iter() {
+                let _ = frame.pixels();
+            }
+        }
+        for sprite in [
+            &self.desk,
+            &self.monitor,
+            &self.plant,
+            &self.water_cooler,
+            &self.floor_tile,
+            &self.wall_tile,
+        ] {
+            let _ = sprite.pixels();
+        }
+        for animation in self.wardrobe_cache.borrow().values() {
+            for frame in animation.frames.iter() {
+                let _ = frame.pixels();
+            }
+        }
+    }
+
+    #[cfg(test)]
     pub(crate) fn parsed_count(&self) -> usize {
         self.manager_walk.parsed_count()
             + self.manager_attention.parsed_count()

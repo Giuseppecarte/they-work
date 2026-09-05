@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .h1 { font-family: 'Press Start 2P', monospace; font-size: 17px; color: #e8342c;
+          text-shadow: 2px 2px 0 #8e1a15; }
+    .sub { font-size: 11px; color: #6f6885; }
+    .card { background: #131126; border: 1px solid #241f3d; }
+    .lab { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
+    .body { font-size: 11px; color: #b4aec2; line-height: 1.85; }
+    .cap { font-size: 10px; color: #6f6885; line-height: 1.7; }
+  </style>
+</helmet>
+<div style="width:1640px;height:1000px;background:#0d0b14;font-family:'JetBrains Mono',ui-monospace,monospace;color:#e8e2d6;padding:28px 32px;box-sizing:border-box">
+  <div style="display:flex;align-items:baseline;gap:16px">
+    <div class="h1">THE&nbsp;AGREEMENT</div>
+    <div class="sub">what we are building, in the three languages it has to be true in</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:24px">
+    <div class="card" style="border-left:3px solid #58d6e8;padding:17px 19px"><div class="lab" style="color:#58d6e8">TECHNICAL — WHAT THE DEVS BUILD</div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#58d6e8;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>One authored size.</b> Characters and props are drawn at 24 &times; 34 units. Nothing is redrawn per rung.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#58d6e8;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Integer scaling only.</b> &times;4 at the graphics rung, &times;1 at sextants. Nearest neighbour, never smoothing &mdash; a blurred upscale is worse than fewer pixels.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#58d6e8;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>The graphics rung is the design target.</b> A worker gets ~142 &times; 192 real pixels there. Sextants get ~35 &times; 36, which carries silhouette, shirt and hair and nothing finer. Half-blocks get a reduced sprite.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#58d6e8;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Parts, not sprites.</b> Six slots assembled at draw time from a thread-id hash, so a face is stable forever and the art stays a few dozen pieces rather than hundreds.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#58d6e8;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Three tones per material</b> plus one shared outline. That is the whole shading system, and it keeps the palette inside Sixel's 256 registers.</div></div></div><div class="card" style="border-left:3px solid #e8342c;padding:17px 19px"><div class="lab" style="color:#e8342c">DESIGN — WHAT IS NOT NEGOTIABLE</div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#e8342c;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Shirt hue is the agent.</b> Orange Claude, blue Codex, grey contractor. Nothing else may use those hues for anything else.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#e8342c;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Amber means blocked, everywhere, only.</b> Not a theme colour, not an accent, not a highlight.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#e8342c;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Status lives on the plate, never on the body.</b> The character shows identity; the chip beneath shows state.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#e8342c;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>The room recedes, the people come forward.</b> Walls and floor stay low-contrast. No gradients, no texture competing with faces.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#e8342c;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Recognition before reading.</b> If you cannot tell two workers apart with the name plates covered, the wardrobe has failed.</div></div></div><div class="card" style="border-left:3px solid #f0b429;padding:17px 19px"><div class="lab" style="color:#f0b429">POSITIONING — WHAT WE SAY IT IS</div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#f0b429;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>The line:</b> you started five agents and lost track of them. This puts them in one room where you can see who is working, who is idle, and who is waiting on you.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#f0b429;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Who it is for:</b> someone running several agent threads at once who is tired of opening each one to find out what happened.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#f0b429;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>The moment it earns its place:</b> a tab dot turns amber and you know, without reading anything, that someone has been sitting on an approval prompt for three minutes.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#f0b429;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>What it is not:</b> not a dashboard of metrics, not a chat client, not a controller. It reads and it draws. It cannot start, stop or answer an agent.</div></div><div style="display:flex;gap:9px;margin-top:11px"><div style="color:#f0b429;font-size:11px;flex-shrink:0">&#9632;</div><div class="body" style="margin:0"><b>Why it looks like this:</b> the charm is the argument. A list of thread states already exists &mdash; <code style='color:#8a8299'>--once</code> prints one. People will run the office because it is a pleasure to look at.</div></div></div>
+  </div>
+  
+  <div class="card" style="padding:17px 19px;margin-top:18px">
+    <div class="lab" style="color:#8a8299">MOTION — HOW THINGS MOVE</div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;margin-top:13px">
+      <div><div style="font-size:11px;font-weight:700;color:#e8e2d6">Two frames, not twelve</div>
+        <div class="cap" style="margin-top:6px">Every activity is a two-frame loop at roughly 400ms. Typing alternates hands, thinking blinks, idle breathes. Cheap, readable, and it never looks broken at a low frame rate.</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#e8e2d6">Motion means state, never decoration</div>
+        <div class="cap" style="margin-top:6px">If something moves, something is happening. An idle worker is nearly still. Nothing animates for atmosphere alone &mdash; the eye must be able to trust movement.</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#e8e2d6">The manager is the exception</div>
+        <div class="cap" style="margin-top:6px">One figure walks the floor and stops beside whoever is blocked. It is the only sustained movement in the room, which is exactly why it draws the eye to the thing that needs you.</div></div>
+      <div><div style="font-size:11px;font-weight:700;color:#e8e2d6">Time drives it, not frames</div>
+        <div class="cap" style="margin-top:6px">Animation is a function of the clock, so it is identical on every machine and can be tested by asserting a frame at a fixed timestamp.</div></div>
+    </div>
+  </div>
+  
+  <div class="card" style="border-left:3px solid #6f6885;padding:17px 19px;margin-top:18px">
+    <div class="lab" style="color:#6f6885">STILL OPEN — DECIDE BEFORE BUILDING</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:13px">
+      <div class="body">1. Do idle workers keep their desks, or drift to a coffee machine? Drifting is charming and costs a walk cycle plus somewhere to drift to.</div>
+      <div class="body">2. Are per-project office themes worth four times the art to keep good, now that the wardrobe carries most of the variety?</div>
+      <div class="body">3. Does the half-block rung get a reduced cast, or does it drop to the list view entirely? Nobody has looked at a 17&times;24 version of this character.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

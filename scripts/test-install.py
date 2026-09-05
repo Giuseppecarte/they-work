@@ -38,6 +38,17 @@ pathlib.Path(sys.argv[sys.argv.index("-o") + 1]).write_bytes(payload)
 import os, pathlib, sys
 base = pathlib.Path(os.environ["INSTALL_TEST_DIR"])
 (base / "docker-called").write_text(" ".join(sys.argv[1:]))
+if os.environ["INSTALL_TEST_MODE"] == "noninteractive_diagnostic":
+    if sys.argv[1] == "pull":
+        sys.exit(0)
+    if "-it" in sys.argv:
+        print("diagnostic unexpectedly requested a TTY", file=sys.stderr)
+        sys.exit(99)
+    if "--doctor" in sys.argv or "--once" in sys.argv:
+        print("diagnostic completed")
+        sys.exit(0)
+    print("unexpected diagnostic invocation", file=sys.stderr)
+    sys.exit(98)
 if os.environ["INSTALL_TEST_MODE"] == "unreadable":
     if sys.argv[1] == "pull":
         sys.exit(0)
@@ -116,6 +127,21 @@ sys.exit(17)
         self.assertIn("Permission denied", result.stdout)
         self.assertIn("--doctor", (self.base / "docker-called").read_text())
         self.assertFalse((self.base / "interactive-started").exists())
+
+    def test_doctor_and_once_work_without_a_terminal(self):
+        self.env["INSTALL_TEST_MODE"] = "noninteractive_diagnostic"
+        for argument in ("--doctor", "--once"):
+            result = subprocess.run(
+                ["sh", str(ROOT / "docs/install.sh"), argument], cwd=self.base, env=self.env,
+                stdin=subprocess.DEVNULL, text=True, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, timeout=10,
+            )
+            print(f"\n{self.id()} {argument}: exit={result.returncode}\n{result.stdout}", end="")
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("diagnostic completed", result.stdout)
+            invocation = (self.base / "docker-called").read_text()
+            self.assertIn(argument, invocation)
+            self.assertNotIn("-it", invocation)
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and publish the release image
+        id: publish
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -44,3 +45,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Verify the published image through a capable PTY
+        run: >-
+          python3 scripts/test-published-image.py
+          --image ghcr.io/${{ github.repository }}@${{ steps.publish.outputs.digest }}

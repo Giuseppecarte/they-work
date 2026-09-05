@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+    .row { display: grid; grid-template-columns: 42px 1fr 200px 118px; gap: 16px; align-items: start;
+           padding: 14px 0; border-bottom: 1px solid #1c1830; }
+    .n { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #3f3a55; }
+    .t { font-size: 12px; font-weight: 700; color: #e8e2d6; }
+    .d { font-size: 10px; color: #8a8299; line-height: 1.75; margin-top: 5px; }
+    .w { font-size: 10px; color: #6f6885; line-height: 1.7; }
+    .tag { font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 4px 8px; display: inline-block; }
+  </style>
+</helmet>
+
+<div style="width: 1640px; height: 900px; background: #0d0b14; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6; padding: 28px 30px; box-sizing: border-box;">
+
+  <div style="display: flex; align-items: baseline; gap: 16px;">
+    <div style="font-family: 'Press Start 2P', monospace; font-size: 17px; color: #e8342c; text-shadow: 2px 2px 0 #8e1a15;">CLOSING&nbsp;IT</div>
+    <div style="font-size: 11px; color: #6f6885;">what stands between the two pictures, in the order it should be fixed</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 42px 1fr 200px 118px; gap: 16px; margin-top: 22px; padding-bottom: 8px; border-bottom: 1px solid #2a2440;">
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px;">#</div>
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px;">WHAT IS WRONG</div>
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px;">WHERE</div>
+    <div style="font-size: 9px; color: #5c566e; letter-spacing: 1px;">COST</div>
+  </div>
+
+  <div class="row">
+    <div class="n" style="color: #e8342c;">01</div>
+    <div>
+      <div class="t">The published image has no locale</div>
+      <div class="d">The renderer gates quadrants on a UTF-8 locale. The runtime container sets none, so every user lands on half-blocks &mdash; the worst rung &mdash; regardless of their terminal. One line in the Dockerfile moves everyone up two rungs.</div>
+    </div>
+    <div class="w">docker/Dockerfile</div>
+    <div><span class="tag" style="background: #1e5b2a; color: #9ff0b0;">ONE LINE</span></div>
+  </div>
+
+  <div class="row">
+    <div class="n" style="color: #e8342c;">02</div>
+    <div>
+      <div class="t">Sextants are gated on a variable containers never get</div>
+      <div class="d">The check reads TERM_PROGRAM, which Docker does not forward and the documented command does not pass. In a container it is always absent, so the best character rung can never be selected by the people who actually run this.</div>
+    </div>
+    <div class="w">theywork-render<br>canvas.rs</div>
+    <div><span class="tag" style="background: #1e5b2a; color: #9ff0b0;">SMALL</span></div>
+  </div>
+
+  <div class="row">
+    <div class="n" style="color: #f0b429;">03</div>
+    <div>
+      <div class="t">The sign renders the wrong letters</div>
+      <div class="d">THEY-WORK draws as THEY-HOAI! &mdash; W becomes H, R becomes A, K becomes an exclamation. The letterform table is correct, so diagonals are being lost when glyph pixels are drawn. It is the largest text in the product and the first thing anyone reads.</div>
+    </div>
+    <div class="w">theywork-render<br>views/office.rs</div>
+    <div><span class="tag" style="background: #4a3a12; color: #f0d78a;">MEDIUM</span></div>
+  </div>
+
+  <div class="row">
+    <div class="n" style="color: #f0b429;">04</div>
+    <div>
+      <div class="t">Nothing verifies what we publish</div>
+      <div class="d">Every check runs against a local build, where the locale and terminal checks happen to pass. Both defects above existed only in the artefact. A gate that pulls the published tag, runs it through a pty and asserts on what it draws would have caught them the day they shipped.</div>
+    </div>
+    <div class="w">CI<br>scripts/</div>
+    <div><span class="tag" style="background: #4a3a12; color: #f0d78a;">MEDIUM</span></div>
+  </div>
+
+  <div class="row">
+    <div class="n">05</div>
+    <div>
+      <div class="t">The extra pixels are not buying detail</div>
+      <div class="d">At the graphics rung a worker is ten times larger but no richer: no glasses, beanie, headphones or desk objects, and the five look alike. The wardrobe's whole premise is recognising someone before you read their name plate. Walls also render near-black where the design has them violet.</div>
+    </div>
+    <div class="w">theywork-render<br>sprite.rs</div>
+    <div><span class="tag" style="background: #241f3d; color: #b4aec2;">REAL WORK</span></div>
+  </div>
+
+  <div class="row" style="border-bottom: none;">
+    <div class="n">06</div>
+    <div>
+      <div class="t">Nobody has watched a graphics frame on a terminal</div>
+      <div class="d">Kitty, Sixel and iTerm2 are covered only by byte-level tests. The frame in this dashboard was captured from the renderer, not from a window. Until someone runs it in Windows Terminal or on a Mac, the top rung is theory.</div>
+    </div>
+    <div class="w">a human, once</div>
+    <div><span class="tag" style="background: #241f3d; color: #b4aec2;">MINUTES</span></div>
+  </div>
+
+  <div style="display: flex; gap: 18px; margin-top: 26px;">
+    <div style="flex: 1; background: #131126; border: 1px solid #241f3d; border-left: 3px solid #56c26a; padding: 16px 18px;">
+      <div style="font-size: 10px; font-weight: 700; color: #56c26a; letter-spacing: 1.5px;">THE FIRST TWO ARE NEARLY FREE</div>
+      <div style="font-size: 11px; color: #b4aec2; line-height: 1.85; margin-top: 9px;">
+        A locale line and a capability check. Together they take the shipped picture from
+        <span style="color: #e8e2d6;">160&times;96</span> to <span style="color: #e8e2d6;">320&times;144</span>
+        without touching a single sprite &mdash; and on a Sixel-capable terminal, straight to the top rung.
+        That is most of the visible gap, closed by packaging.
+      </div>
+    </div>
+    <div style="flex: 1; background: #131126; border: 1px solid #241f3d; padding: 16px 18px;">
+      <div style="font-size: 10px; font-weight: 700; color: #8a8299; letter-spacing: 1.5px;">THE LAST ONE IS THE ACTUAL DESIGN WORK</div>
+      <div style="font-size: 11px; color: #b4aec2; line-height: 1.85; margin-top: 9px;">
+        Everything above is a defect. Number five is not &mdash; it is the gap between having the pixels and
+        spending them. That is where the design boards in
+        <span style="color: #e8e2d6;">docs/design/</span> stop being aspirational, and it is the only item
+        here that needs judgement rather than a fix.
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

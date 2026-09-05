@@ -32,20 +32,33 @@ else
     exit "$THEYWORK_PULL_STATUS"
 fi
 
+THEYWORK_NONINTERACTIVE=
+case " $* " in
+    *" --doctor "*|*" --once "*) THEYWORK_NONINTERACTIVE=1 ;;
+esac
+
 if [ -t 0 ]; then
     THEYWORK_TTY_INPUT=
 elif [ -r /dev/tty ] && [ -t 1 ]; then
     # `curl ... | sh` pipes the script's stdin; reconnect the application to
     # the caller's terminal when one is available.
     THEYWORK_TTY_INPUT=/dev/tty
-else
+elif [ -z "$THEYWORK_NONINTERACTIVE" ]; then
     echo "an interactive terminal is required to run they-work" >&2
     exit 1
+else
+    THEYWORK_TTY_INPUT=
+fi
+
+if [ -n "$THEYWORK_NONINTERACTIVE" ]; then
+    THEYWORK_DOCKER_TTY=
+else
+    THEYWORK_DOCKER_TTY=-it
 fi
 
 run_container() {
     if [ -n "$THEYWORK_TTY_INPUT" ]; then
-        exec docker run --rm -it \
+        exec docker run --rm $THEYWORK_DOCKER_TTY \
             --user "$THEYWORK_DOCKER_USER" \
             --network none \
             --read-only \
@@ -53,13 +66,15 @@ run_container() {
             --security-opt no-new-privileges \
             -e TERM="${TERM:-xterm-256color}" \
             -e COLORTERM="${COLORTERM:-truecolor}" \
+            -e TERM_PROGRAM \
             -e THEYWORK_CLAUDE_HOME=/data/claude \
             -e THEYWORK_CODEX_HOME=/data/codex \
+            -e THEYWORK_ENCODING \
             -e THEYWORK_COLOR \
             -e NO_COLOR \
             "$@" <"$THEYWORK_TTY_INPUT"
     fi
-    exec docker run --rm -it \
+    exec docker run --rm $THEYWORK_DOCKER_TTY \
         --user "$THEYWORK_DOCKER_USER" \
         --network none \
         --read-only \
@@ -67,8 +82,10 @@ run_container() {
         --security-opt no-new-privileges \
         -e TERM="${TERM:-xterm-256color}" \
         -e COLORTERM="${COLORTERM:-truecolor}" \
+        -e TERM_PROGRAM \
         -e THEYWORK_CLAUDE_HOME=/data/claude \
         -e THEYWORK_CODEX_HOME=/data/codex \
+        -e THEYWORK_ENCODING \
         -e THEYWORK_COLOR \
         -e NO_COLOR "$@"
 }

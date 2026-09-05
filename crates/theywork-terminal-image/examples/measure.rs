@@ -1,7 +1,7 @@
 use std::io::Write;
 use theywork_terminal_image::{
-    encode_png, measure_encoding, CellRect, CellSize, GraphicsProtocol, ImageSurface, RgbaImage,
-    TerminalGeometry,
+    decode_transmission, encode_png, measure_encoding, CellRect, CellSize, GraphicsProtocol,
+    ImageSurface, RgbaImage, TerminalGeometry,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,20 +62,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         GraphicsProtocol::Iterm2,
     ] {
         let measurement = measure_encoding(protocol, &image, rectangle, geometry, 30)?;
+        let bytes = ImageSurface::new(protocol, geometry).capture(&image, rectangle)?;
+        let decoded = decode_transmission(protocol, &bytes)?;
+        let max_channel_error =
+            max_channel_error(&image, &decoded, protocol == GraphicsProtocol::Sixel);
+        let allowed_error = if protocol == GraphicsProtocol::Sixel {
+            26
+        } else {
+            0
+        };
+        if max_channel_error > allowed_error {
+            return Err(format!(
+                "{} reconstruction error {max_channel_error} exceeds {allowed_error}",
+                protocol_name(protocol)
+            )
+            .into());
+        }
         if let Some(directory) = dump {
-            let bytes = ImageSurface::new(protocol, geometry).capture(&image, rectangle)?;
             write_new(
                 std::path::Path::new(directory).join(format!("{}.bin", protocol_name(protocol))),
                 &bytes,
             )?;
+            write_new(
+                std::path::Path::new(directory)
+                    .join(format!("{}-decoded.png", protocol_name(protocol))),
+                &encode_png(&decoded)?,
+            )?;
         }
         println!(
-            "protocol={} bytes_per_frame={} encode_us_per_frame={} total_bytes={} iterations={}",
+            "protocol={} bytes_per_frame={} encode_us_per_frame={} total_bytes={} iterations={} decoded={}x{} max_channel_error={}",
             protocol_name(protocol),
             measurement.bytes_per_frame,
             measurement.per_frame_time().as_micros(),
             measurement.total_bytes,
             measurement.iterations,
+            decoded.width(),
+            decoded.height(),
+            max_channel_error,
         );
     }
     Ok(())
@@ -87,6 +110,19 @@ fn write_new(path: std::path::PathBuf, bytes: &[u8]) -> std::io::Result<()> {
         .create_new(true)
         .open(path)?
         .write_all(bytes)
+}
+
+fn max_channel_error(source: &RgbaImage, decoded: &RgbaImage, ignore_alpha: bool) -> u8 {
+    source
+        .pixels()
+        .chunks_exact(4)
+        .zip(decoded.pixels().chunks_exact(4))
+        .flat_map(|(source, decoded)| {
+            let channels = if ignore_alpha { 3 } else { 4 };
+            (0..channels).map(move |channel| source[channel].abs_diff(decoded[channel]))
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 fn protocol_name(protocol: GraphicsProtocol) -> &'static str {

@@ -1,0 +1,32 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",      "x": 0, "y": 0,    "w": 1640, "h": 900,  "title": "The cast" },
+    { "file": "Floor.dc.html",     "x": 0, "y": 1100, "w": 1640, "h": 1080, "title": "The floor" },
+    { "file": "Wardrobe.dc.html",  "x": 0, "y": 2380, "w": 1640, "h": 820,  "title": "The wardrobe" },
+    { "file": "Phone.dc.html",     "x": 0, "y": 3400, "w": 1640, "h": 900,  "title": "The phone" },
+    { "file": "Agreement.dc.html", "x": 0, "y": 4500, "w": 1640, "h": 1000, "title": "The agreement" }
+  ],
+  "annotations": [
+    {
+      "id": "the-bar",
+      "x": 1760, "y": 0, "w": 460,
+      "text": "THE BAR THIS IS DRAWN TO\n\nThe reference is Fungies and Tiny Tower: characters you tell apart at a glance, three tones and a hard outline, no realism.\n\nMeasured against our own canvas, that bar is comfortably reachable. At the graphics rung a worker gets about 142x192 real pixels; a Tiny Tower bitizen is roughly 32x48. We have four times the room.\n\nWhat was missing was never resolution. It was that the art had never been redrawn to use it."
+    },
+    {
+      "id": "what-changed",
+      "x": 1760, "y": 1100, "w": 460,
+      "text": "WHAT ACTUALLY CHANGED\n\nBefore: a worker was two eye pixels on a coloured rectangle, about 16 units tall, with no arms.\n\nNow: 24 x 34 units carrying brows, eyes, nose, mouth, framed hair, a torso with arms that end in hands, legs and shoes. Six wardrobe slots still assemble it from parts.\n\nThe floor board is the same room with those people in it, drawn at 4x. Nothing about the room changed except that you can now see who is in it."
+    },
+    {
+      "id": "honest-limits",
+      "x": 1760, "y": 2380, "w": 460,
+      "text": "WHAT THIS CANVAS IS AND IS NOT\n\nThese are proposals rendered from real pixel maps, not mockups painted by hand - the same maps can be ported straight into the renderer.\n\nThey are not final art. Faces have one expression, there is no walk cycle here, and the props each worker holds are specified but not drawn.\n\nThe guard office and the settings screen are not covered at all."
+    },
+    {
+      "id": "one-decision",
+      "x": 1760, "y": 4500, "w": 460,
+      "text": "THE ONE DECISION THAT GATES EVERYTHING\n\nThis quality needs the graphics rung. At sextants a worker is 35x36 and carries silhouette, shirt and hair but not a face; at half-blocks it is 17x24 and carries almost nothing.\n\nSo either the graphics path becomes the product and characters degrade deliberately below it, or the design targets 35x36 and stays much simpler than the reference.\n\nEverything on these boards assumes the first. That is the choice to confirm before anyone builds."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

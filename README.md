@@ -8,8 +8,11 @@ typing, reading, editing, or waiting on you — drawn as pixel art in your
 terminal. Every project you have open is another office, and one view is a wall
 of camera feeds so you can watch all of them at once.
 
-It only ever reads. It cannot start or stop your agents, write to their files,
-or reach the network.
+It reads agent transcripts and main database contents. It cannot start or stop
+your agents, alter those records, or reach the network. On a writable native
+SQLite store, SQLite may update an already-existing `-shm` coordination sidecar;
+the container mounts stores read-only, and a cold WAL store without its existing
+sidecars is refused rather than created.
 
 ![The office floor](docs/office.png)
 
@@ -21,7 +24,7 @@ emulation and have not been verified.
 
 ~~~bash
 docker run --rm -it --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges -e TERM -e COLORTERM \
+  --security-opt no-new-privileges -e TERM -e COLORTERM -e TERM_PROGRAM -e THEYWORK_ENCODING \
   ghcr.io/giuseppecarte/they-work:v0.1.0 --demo
 ~~~
 
@@ -90,6 +93,11 @@ The collectors have a narrow, read-only input boundary:
 - **Codex** — the SQLite databases `~/.codex/sqlite/state_5.sqlite` and
   `~/.codex/sqlite/thread_history_1.sqlite`, opened in SQLite's read-only mode.
 
+The main databases and transcripts are not changed. SQLite can coordinate
+through an existing `-shm` sidecar when a native store is writable; the Docker
+commands mount stores read-only, and the program refuses a cold WAL-mode store
+whose required `-wal`/`-shm` sidecars are absent rather than creating them.
+
 Those records contain your prompts, the commands your agents ran, file paths,
 their messages back, thread titles, branches and token counts. All of it is
 displayed on screen, so treat the terminal as having the same sensitivity as
@@ -132,17 +140,17 @@ draws whatever `World` currently says. Nothing downstream parses an agent's
 format, and nothing upstream knows how anything is drawn.
 
 Without a graphics protocol, the picture is built from **half-block, quadrant
-or sextant characters**, whichever your terminal and font supports. That is a
-logical 320×144 canvas on a 160×48 terminal at the densest character encoding;
-it is not a claim about the physical pixels displayed by every terminal.
+or sextant characters**, whichever your terminal and font supports. At the
+captured office region, that remains a 160×86 character canvas; it is not a
+claim about the physical pixels displayed by every terminal.
 
 When a graphics protocol is negotiated and the terminal reports its cell
 geometry, the renderer makes one source pixel per physical terminal pixel in
 the covered rectangle. Sixel, Kitty graphics, and iTerm2 inline PNG all receive
-that renderer frame. For example, a full 160×48 terminal reporting 10×20-pixel
-cells produces a 1600×960 image. If the cell geometry is unavailable, the
-program keeps the character renderer; the final dimensions always come from
-the terminal report, not this example.
+that renderer frame. For example, a 160×86 covered cell rectangle in a
+terminal reporting 10×10-pixel cells produces a 1600×860 image. If the cell
+geometry is unavailable, the program keeps the character renderer; the final
+dimensions always come from the terminal report, not this example.
 
 | Platform path | Status tested in this worktree |
 | --- | --- |
@@ -179,6 +187,8 @@ board is what was meant.
 | --- | --- |
 | `THEYWORK_CLAUDE_HOME` | where Claude Code's data is |
 | `THEYWORK_CODEX_HOME` | where Codex's data is |
+| `TERM_PROGRAM` | forwarded to retain iTerm2's older capability fallback |
+| `THEYWORK_ENCODING` | override character art: `sextants`, `quadrants`, or `half-blocks` |
 | `THEYWORK_COLOR` | force a colour depth |
 | `NO_COLOR` | honoured above everything else |
 

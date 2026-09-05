@@ -124,17 +124,21 @@ suite, and the release image build on pushes and pull requests.
 Create and push a semantic version tag such as `v1.2.3`. The tag-only
 [`release workflow`](.github/workflows/release.yml) builds `docker/Dockerfile`
 and publishes both `ghcr.io/giuseppecarte/they-work:v1.2.3` and `latest`. It
-has `packages:write` only in that tag-triggered workflow; CI for branches and
-pull requests remains read-only. The no-checkout install command and image
-pinning rules are in [`docs/release.md`](docs/release.md).
+then pulls the published digest through a 160×48 Kitty-capable PTY, checking
+the baked UTF-8 locale, a graphics transmission, and quadrant-specific output
+when the terminal does not answer the graphics probe. It has `packages:write`
+only in that tag-triggered workflow; CI for branches and pull requests remains
+read-only. Re-shoot the README stills from that published digest after the
+check passes. The no-checkout install command and image pinning rules are in
+[`docs/release.md`](docs/release.md).
 
 ## Reviewing art
 
 The renderer is a pixel canvas whose resolution is the terminal size. A design
 drawn at desktop resolution does not survive scaling down to 80 columns. The
-primary review target is 160×48; the degraded 80×24 golden remains beside it so
-the smaller view is still reviewable. A screenshot without its terminal size
-attached cannot be judged.
+primary review target is the common size recorded in the normal goldens; the
+degraded golden remains beside it so the smaller view is still reviewable. A
+screenshot without its terminal size attached cannot be judged.
 
 When a board under `docs/design` changes, run `scripts/render-design.sh` first.
 CI runs that same source-to-reference step before `make shot`, so the sheet
@@ -159,8 +163,10 @@ PNG path does not redraw cells: it checks that the SVG text matches the frame,
 captures that SVG, and checks the resulting PNG dimensions before writing the
 output. This is the round-trip guard against the PNG and SVG paths drifting.
 CI uploads this directory as the `they-work-shots` build artifact.
-The exporter reads the normal golden as the 160×48 primary frame and the small
-golden as the 80×24 degraded frame. Encoding-specific files use names such as
+The exporter reads the normal golden as the primary frame and the small golden
+as the degraded frame. It verifies that each group has one shared terminal
+size, then requires any image-frame manifest to use that same primary size.
+Encoding-specific files use names such as
 `office.dark.normal.sextants.golden`; their metadata carries the same encoding
 in the depth field. Legacy unqualified goldens are treated as `half-blocks`.
 The contact sheet labels every dark and light panel with its terminal size and
@@ -190,13 +196,13 @@ complete renderer-backed image-frame dump. The dump root contains
   "version": 1,
   "source": "renderer-pixel-frame",
   "timestamp": 192000,
-  "viewport": {"columns": 160, "rows": 48, "cell_width": 10, "cell_height": 20},
+  "viewport": {"columns": 160, "rows": 86, "cell_width": 10, "cell_height": 10},
   "frames": [{
     "surface": "floor",
     "theme": "dark",
     "png": "floor-dark.png",
     "width": 1600,
-    "height": 960,
+    "height": 860,
     "packets": {
       "kitty-direct": "floor-dark.kitty-direct.bin",
       "sixel": "floor-dark.sixel.bin",
@@ -207,14 +213,26 @@ complete renderer-backed image-frame dump. The dump root contains
 ~~~
 
 It must include every rendered surface (`floor`, `guard-office`, `desk`, and
-`phone`) in both themes. The timestamp must match the cell goldens. The
-exporter verifies every PNG header against the declared physical dimensions
-and against the terminal cell geometry, checks that each protocol packet is
-present and non-empty, copies only the verified PNGs into `docs/shots/`, and
-places them beside the primary character-cell panels. It rejects a partial
-dump, an external path, or a synthetic encoder sample. The protocol packets
-remain binary evidence in the supplied dump; the contact sheet does not render
-terminal control bytes as text.
+`phone`) in both themes. The timestamp and cell viewport must match the primary
+character goldens. The 160×86 / 10×10 example therefore labels its PNG
+`1600×860`. The exporter verifies every PNG header against the declared
+physical dimensions and terminal cell geometry, checks that each protocol
+packet is present and non-empty, copies only the verified PNGs into
+`docs/shots/`, and places them beside the primary character-cell panels. It
+rejects a partial dump, a viewport mismatch, an external path, or a synthetic
+encoder sample. The protocol packets remain binary evidence in the supplied
+dump; the contact sheet does not render terminal control bytes as text.
+
+For a single renderer-owned BMP or PNG capture, use:
+
+~~~bash
+make shot IMAGE_FRAME=/path/to/renderer-frame.bmp
+~~~
+
+The exporter converts the captured 32-bit BMP to a sheet PNG and adds it only
+to the matching dark floor comparison. A 1600×860 renderer source frame is
+paired with a 160×86 character canvas; it is visual evidence of the source
+image, not a claim that a particular terminal played the packet successfully.
 
 Reference images belong in [`docs/references`](docs/references/README.md) as
 `floor.png`, `guard-office.png`, `desk.png`, or `phone.png` (JPEG, WebP, and

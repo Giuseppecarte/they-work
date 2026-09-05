@@ -7,27 +7,29 @@ use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
 use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
+use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
-use crossterm::cursor::MoveTo;
+use crossterm::cursor::{MoveTo, Show};
 use crossterm::event::{self, Event as TermEvent, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use ratatui::backend::CrosstermBackend;
+use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::Terminal;
 use theywork_collect::{Config, DiscoveryKind, StoreReport};
 use theywork_core::{Agent, Event, Millis, Source, Worker, WorkerStatus, World};
-use theywork_render::{Ui, UiCommand, View};
+use theywork_render::{ColorDepth, RendererDiagnostics, Ui, UiCommand, View};
 use theywork_terminal_image::{
-    detect_terminal_with_timeout, Capabilities, CellRect, ImageSurface, RgbaImage,
-    TerminalGeometry, DEFAULT_PROBE_TIMEOUT,
+    detect_terminal_with_timeout, Capabilities, CellRect, GraphicsProtocol, ImageSurface,
+    RgbaImage, TerminalGeometry, DEFAULT_PROBE_TIMEOUT,
 };
 
 /// Redraw interval. Fast enough for smooth sprite animation, slow enough that
@@ -36,6 +38,10 @@ const FRAME: Duration = Duration::from_millis(100);
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
 const CLI_DETAIL_LIMIT: usize = 240;
 const UNKNOWN_WAITING_DETAIL: &str = "waiting, no pending command identified";
+const DOCTOR_PROBE_TIMEOUT: Duration = Duration::from_millis(150);
+
+#[cfg(unix)]
+static TERMINATION_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
 const HELP: &str = "\
 they-work — a read-only terminal office for local agent activity
@@ -60,7 +66,7 @@ OPTIONS:
   -h, --help               Show this help
 ";
 
-const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; stores are opened read-only, symlinks and non-JSONL files are skipped, and project source files are never read.";
+const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartView {
@@ -314,6 +320,7 @@ fn main() -> Result<()> {
     }
 
     if args.doctor {
+        apply_color_mode(args.color);
         let status = doctor();
         if status != 0 {
             std::process::exit(status);
@@ -327,6 +334,9 @@ fn main() -> Result<()> {
         None
     };
     let mut runtime = build_runtime(&args)?;
+    if !args.once && !args.headless {
+        install_termination_handlers()?;
+    }
     if let (Some(config_dir), Some(project)) = (&runtime.config_dir, args.project.as_ref()) {
         write_selection(config_dir, &normalize_cli_path(project)?)?;
     }
@@ -362,17 +372,104 @@ fn main() -> Result<()> {
 
     apply_color_mode(args.color);
     let capabilities = detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT).unwrap_or_default();
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
+    let mut terminal_guard = TerminalModeGuard::enter_alternate()?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
 
     let result = run(&mut terminal, &mut runtime, &args, capabilities);
-
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    drop(terminal);
+    terminal_guard.restore()?;
     result
+}
+
+struct TerminalModeGuard {
+    raw: bool,
+    alternate: bool,
+}
+
+impl TerminalModeGuard {
+    fn enter_raw() -> Result<Self> {
+        enable_raw_mode()?;
+        Ok(Self {
+            raw: true,
+            alternate: false,
+        })
+    }
+
+    fn enter_alternate() -> Result<Self> {
+        let mut guard = Self::enter_raw()?;
+        execute!(io::stdout(), EnterAlternateScreen)?;
+        guard.alternate = true;
+        Ok(guard)
+    }
+
+    fn restore(&mut self) -> Result<()> {
+        let raw_result = if self.raw {
+            disable_raw_mode().map_err(anyhow::Error::from)
+        } else {
+            Ok(())
+        };
+        self.raw = false;
+        let screen_result = if self.alternate {
+            execute!(io::stdout(), LeaveAlternateScreen, Show).map_err(anyhow::Error::from)
+        } else {
+            Ok(())
+        };
+        self.alternate = false;
+        raw_result.and(screen_result)
+    }
+}
+
+impl Drop for TerminalModeGuard {
+    fn drop(&mut self) {
+        let _ = self.restore();
+    }
+}
+
+#[cfg(unix)]
+extern "C" fn record_termination_signal(signal: libc::c_int) {
+    TERMINATION_SIGNAL.store(signal, Ordering::Relaxed);
+}
+
+#[cfg(unix)]
+fn install_termination_handlers() -> Result<()> {
+    for signal in [libc::SIGINT, libc::SIGTERM, libc::SIGHUP] {
+        // SAFETY: sigaction is initialized completely before registration;
+        // the handler only performs a lock-free atomic store.
+        let result = unsafe {
+            let mut action: libc::sigaction = std::mem::zeroed();
+            action.sa_sigaction = record_termination_signal as usize;
+            libc::sigemptyset(&mut action.sa_mask);
+            libc::sigaction(signal, &action, std::ptr::null_mut())
+        };
+        if result != 0 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+    }
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn install_termination_handlers() -> Result<()> {
+    Ok(())
+}
+
+#[cfg(unix)]
+fn requested_termination_signal() -> Option<i32> {
+    let signal = TERMINATION_SIGNAL.load(Ordering::Relaxed);
+    (signal != 0).then_some(signal)
+}
+
+#[cfg(not(unix))]
+fn requested_termination_signal() -> Option<i32> {
+    None
+}
+
+fn termination_error() -> Option<anyhow::Error> {
+    requested_termination_signal().map(|signal| anyhow!("terminated by signal {signal}"))
+}
+
+fn is_ctrl_c(input: KeyEvent) -> bool {
+    input.code == KeyCode::Char('c') && input.modifiers.contains(KeyModifiers::CONTROL)
 }
 
 fn doctor() -> i32 {
@@ -380,6 +477,7 @@ fn doctor() -> i32 {
     let reports = theywork_collect::inspect(&config, now_ms());
 
     println!("they-work doctor");
+    print_terminal_report();
     for report in &reports {
         print_store_report(report);
     }
@@ -391,6 +489,165 @@ fn doctor() -> i32 {
         .iter()
         .any(|report| report.home_found && !report.readable);
     i32::from(!found_home || broken_home)
+}
+
+fn print_terminal_report() {
+    println!(
+        "terminal_env TERM={} COLORTERM={} TERM_PROGRAM={} LANG={} LC_ALL={} LC_CTYPE={}",
+        environment_value("TERM"),
+        environment_value("COLORTERM"),
+        environment_value("TERM_PROGRAM"),
+        environment_value("LANG"),
+        environment_value("LC_ALL"),
+        environment_value("LC_CTYPE"),
+    );
+
+    let is_terminal = io::stdin().is_terminal() && io::stdout().is_terminal();
+    let (capabilities, probe) = if is_terminal {
+        match detect_terminal_with_timeout(DOCTOR_PROBE_TIMEOUT) {
+            Ok(capabilities) => (capabilities, "completed".to_string()),
+            Err(error) => (
+                Capabilities::none(),
+                format!("failed:{}", single_line(&error.to_string())),
+            ),
+        }
+    } else {
+        (Capabilities::none(), "skipped:not_a_tty".to_string())
+    };
+    let terminal_cells = capabilities
+        .terminal_cells
+        .or_else(|| {
+            is_terminal
+                .then(crossterm::terminal::size)
+                .and_then(Result::ok)
+        })
+        .filter(|(columns, rows)| *columns > 0 && *rows > 0);
+    let ui = Ui::new();
+    let renderer = ui.diagnostics();
+    println!(
+        "terminal_color depth={} reason={}",
+        color_depth_label(renderer.color_depth),
+        cli_quoted_value(&renderer.color_reason),
+    );
+    println!(
+        "terminal_encoding encoding={} reason={}",
+        renderer.encoding.label(),
+        cli_quoted_value(&renderer.encoding_reason),
+    );
+    println!(
+        "terminal_graphics protocol={} probe={} cells={} cell_pixels={}",
+        graphics_protocol_label(capabilities.graphics),
+        cli_quoted_value(&probe),
+        terminal_cells.map_or_else(
+            || "unknown".to_string(),
+            |(columns, rows)| { format!("{columns}x{rows}") }
+        ),
+        capabilities.cell_size.map_or_else(
+            || "unknown".to_string(),
+            |cell| format!("{}x{}", cell.width, cell.height),
+        ),
+    );
+    match terminal_cells.and_then(|cells| diagnostic_frame(ui, capabilities, cells)) {
+        Some(frame) => println!(
+            "terminal_frame mode={} covered_cells={}x{} source_pixels={}x{}",
+            frame.mode, frame.area.width, frame.area.height, frame.width, frame.height,
+        ),
+        None => println!(
+            "terminal_frame mode={} covered_cells=unknown source_pixels=unknown",
+            if capabilities.graphics.can_transmit_pixels() && capabilities.cell_size.is_some() {
+                "graphics"
+            } else {
+                "cells"
+            }
+        ),
+    }
+    println!("terminal_action={}", terminal_action(&renderer));
+}
+
+struct DiagnosticFrame {
+    mode: &'static str,
+    area: Rect,
+    width: usize,
+    height: usize,
+}
+
+fn diagnostic_frame(
+    mut ui: Ui,
+    capabilities: Capabilities,
+    cells: (u16, u16),
+) -> Option<DiagnosticFrame> {
+    if cells.0 == 0 || cells.1 == 0 || cells.0 > 500 || cells.1 > 200 {
+        return None;
+    }
+    let image_cell_size = capabilities
+        .graphics
+        .can_transmit_pixels()
+        .then_some(capabilities.cell_size)
+        .flatten();
+    ui.set_image_cell_size(image_cell_size.map(|cell| (cell.width, cell.height)));
+    let mut world = World::new();
+    let now = 192_000;
+    for event in theywork_core::demo::events(now) {
+        world.apply(event);
+    }
+    world.tick(now);
+    ui.tick(now);
+    let mut terminal = Terminal::new(TestBackend::new(cells.0, cells.1)).ok()?;
+    terminal.draw(|frame| ui.draw(frame, &world)).ok()?;
+    let frame = ui.pixel_frame();
+    Some(DiagnosticFrame {
+        mode: if image_cell_size.is_some() {
+            "graphics"
+        } else {
+            "cells"
+        },
+        area: frame.cell_area()?,
+        width: frame.width(),
+        height: frame.height(),
+    })
+}
+
+fn environment_value(name: &str) -> String {
+    std::env::var_os(name).map_or_else(
+        || "unset".to_string(),
+        |value| cli_quoted_value(&single_line(&value.to_string_lossy())),
+    )
+}
+
+fn single_line(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+fn color_depth_label(depth: ColorDepth) -> &'static str {
+    match depth {
+        ColorDepth::TrueColor => "truecolor",
+        ColorDepth::Palette256 => "palette256",
+        ColorDepth::None => "none",
+    }
+}
+
+fn graphics_protocol_label(protocol: GraphicsProtocol) -> &'static str {
+    match protocol {
+        GraphicsProtocol::Kitty {
+            direct_transmission: true,
+        } => "kitty-direct",
+        GraphicsProtocol::Kitty {
+            direct_transmission: false,
+        } => "kitty-no-direct",
+        GraphicsProtocol::Iterm2 => "iterm2",
+        GraphicsProtocol::Sixel => "sixel",
+        GraphicsProtocol::None => "none",
+    }
+}
+
+fn terminal_action(renderer: &RendererDiagnostics) -> &'static str {
+    if renderer.encoding != theywork_render::PixelEncoding::Sextants {
+        "set_THEYWORK_ENCODING=sextants"
+    } else if renderer.color_depth != ColorDepth::TrueColor {
+        "set_THEYWORK_COLOR=true"
+    } else {
+        "none"
+    }
 }
 
 fn should_show_first_run(args: &Args, runtime: &Runtime) -> bool {
@@ -412,10 +669,13 @@ fn first_run_screen(runtime: &Runtime) -> Result<FirstRunAction> {
     }
 
     let has_home = reports.iter().any(|report| report.home_found);
-    enable_raw_mode()?;
+    let mut terminal_guard = TerminalModeGuard::enter_raw()?;
     let result = (|| -> Result<FirstRunAction> {
         let mut selected = 0;
         loop {
+            if let Some(error) = termination_error() {
+                return Err(error);
+            }
             render_first_run(&reports, &runtime.world, runtime.now, selected, true)?;
             if !event::poll(FRAME)? {
                 continue;
@@ -424,6 +684,9 @@ fn first_run_screen(runtime: &Runtime) -> Result<FirstRunAction> {
             let TermEvent::Key(input) = input else {
                 continue;
             };
+            if is_ctrl_c(input) {
+                return Ok(FirstRunAction::Quit);
+            }
             let offices = first_run_offices(&runtime.world, runtime.now);
             match input.code {
                 KeyCode::Up | KeyCode::Char('k') => {
@@ -446,10 +709,10 @@ fn first_run_screen(runtime: &Runtime) -> Result<FirstRunAction> {
             }
         }
     })();
-    let restored = disable_raw_mode();
+    let restored = terminal_guard.restore();
     match (result, restored) {
         (Err(error), _) => Err(error),
-        (Ok(_), Err(error)) => Err(error.into()),
+        (Ok(_), Err(error)) => Err(error),
         (Ok(action), Ok(())) => Ok(action),
     }
 }
@@ -986,11 +1249,9 @@ fn apply_color_mode(mode: Option<ColorMode>) {
             std::env::remove_var("THEYWORK_COLOR");
         }
         Some(ColorMode::True) => {
-            std::env::remove_var("NO_COLOR");
             std::env::set_var("THEYWORK_COLOR", "true");
         }
         Some(ColorMode::Palette256) => {
-            std::env::remove_var("NO_COLOR");
             std::env::set_var("THEYWORK_COLOR", "256");
         }
         Some(ColorMode::None) => {
@@ -1275,6 +1536,9 @@ fn run(
     let poller = Poller::start(std::mem::take(&mut runtime.sources));
     let result = (|| -> Result<()> {
         loop {
+            if let Some(error) = termination_error() {
+                return Err(error);
+            }
             let now = now_ms();
 
             if runtime.demo {
@@ -1317,6 +1581,9 @@ fn run(
 
             if event::poll(FRAME)? {
                 if let TermEvent::Key(input) = event::read()? {
+                    if is_ctrl_c(input) {
+                        return Ok(());
+                    }
                     let previous_view = ui.view();
                     if ui.handle_key(input) == Some(UiCommand::Quit) {
                         return Ok(());
@@ -1859,6 +2126,22 @@ mod tests {
         };
         let presenter = TerminalImagePresenter::new(capabilities, (80, 24));
         assert!(!presenter.enabled());
+    }
+
+    #[test]
+    fn doctor_frame_uses_the_real_renderer_destination() {
+        let capabilities = Capabilities {
+            graphics: GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+            cell_size: Some(CellSize::new(10, 20)),
+            terminal_cells: Some((160, 48)),
+        };
+        let frame = diagnostic_frame(Ui::new(), capabilities, (160, 48))
+            .expect("diagnostic renderer frame");
+        assert_eq!(frame.mode, "graphics");
+        assert_eq!((frame.area.width, frame.area.height), (160, 43));
+        assert_eq!((frame.width, frame.height), (1_600, 860));
     }
 
     #[test]

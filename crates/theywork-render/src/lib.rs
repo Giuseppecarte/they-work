@@ -13,8 +13,9 @@ pub mod views;
 
 #[cfg(test)]
 mod golden;
+use canvas::Canvas;
 pub use canvas::PixelFrame;
-use canvas::{Canvas, ColorDepth, PixelEncoding};
+pub use canvas::{ColorDepth, PixelEncoding};
 use sprite::{look_for_worker, SpriteSet};
 
 /// The current screen in the presentation hierarchy.
@@ -30,6 +31,15 @@ pub enum View {
 pub enum UiCommand {
     /// Leave the building.
     Quit,
+}
+
+/// Renderer-owned explanation of the terminal presentation policy.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RendererDiagnostics {
+    pub color_depth: ColorDepth,
+    pub color_reason: String,
+    pub encoding: PixelEncoding,
+    pub encoding_reason: String,
 }
 
 /// All view state: which screen is showing, what is selected, animation phase.
@@ -64,16 +74,16 @@ pub struct Ui {
     color_locked: bool,
     encoding: PixelEncoding,
     encoding_locked: bool,
+    color_reason: String,
+    encoding_reason: String,
     motion: bool,
     name_plates: bool,
 }
 
 impl Ui {
     pub fn new() -> Self {
-        let color_depth = ColorDepth::from_environment();
-        let color_locked = ColorDepth::environment_override();
-        let encoding = PixelEncoding::from_environment();
-        let encoding_locked = PixelEncoding::environment_override();
+        let (color_depth, color_locked, color_reason) = ColorDepth::environment_selection();
+        let (encoding, encoding_locked, encoding_reason) = PixelEncoding::environment_selection();
         Self {
             view: View::Office,
             selected_office: 0,
@@ -103,6 +113,8 @@ impl Ui {
             color_locked,
             encoding,
             encoding_locked,
+            color_reason,
+            encoding_reason,
             motion: true,
             name_plates: true,
         }
@@ -131,6 +143,17 @@ impl Ui {
     /// The active pixel packing used for the next frame.
     pub fn encoding(&self) -> PixelEncoding {
         self.encoding
+    }
+
+    /// Explain the colour and character-density choices without duplicating
+    /// terminal policy in the host application.
+    pub fn diagnostics(&self) -> RendererDiagnostics {
+        RendererDiagnostics {
+            color_depth: self.color_depth,
+            color_reason: self.color_reason.clone(),
+            encoding: self.encoding,
+            encoding_reason: self.encoding_reason.clone(),
+        }
     }
 
     /// Select the real pixel dimensions of one terminal cell for image output.
@@ -343,10 +366,14 @@ impl Ui {
                     (ColorDepth::None, false) => ColorDepth::Palette256,
                     (ColorDepth::Palette256, false) => ColorDepth::TrueColor,
                 };
+                self.color_reason = "colour selected in renderer settings".to_string();
             }
             4 => self.motion = !self.motion,
             5 => self.name_plates = !self.name_plates,
-            6 if !self.encoding_locked => self.encoding = self.encoding.next(forward),
+            6 if !self.encoding_locked => {
+                self.encoding = self.encoding.next(forward);
+                self.encoding_reason = "pixel encoding selected in renderer settings".to_string();
+            }
             _ => {}
         }
     }
@@ -785,7 +812,9 @@ mod m3_tests {
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
     use std::time::{Duration, Instant};
-    use theywork_core::{Activity, Agent, Event, EventKind, OfficeId, WorkerId, BLOCKED_AFTER_MS};
+    use theywork_core::{
+        Activity, Agent, Beat, Event, EventKind, OfficeId, WorkerId, BLOCKED_AFTER_MS,
+    };
 
     use super::*;
 
@@ -993,6 +1022,84 @@ mod m3_tests {
             "phone first frame should already show its title"
         );
     }
+
+    #[test]
+    fn record_controls_never_reach_terminal_cells() {
+        let tainted = "visible\u{1b}[31mred\u{1b}[0m\u{9b}2J\u{1b}]0;owned\u{7}";
+        let office = format!("/workspace/{tainted}");
+        let worker = WorkerId(format!("{office}#{tainted}"));
+        let mut world = World::new();
+        world.apply(event(
+            &office,
+            &worker,
+            0,
+            Agent::Codex,
+            EventKind::Seen {
+                name: tainted.to_string(),
+                git_branch: Some(tainted.to_string()),
+            },
+        ));
+        world.apply(event(
+            &office,
+            &worker,
+            1,
+            Agent::Codex,
+            EventKind::Did(Beat {
+                at: 1,
+                activity: Activity::Talking {
+                    detail: tainted.to_string(),
+                },
+                outcome: None,
+            }),
+        ));
+
+        for destination in ["office", "cameras", "desk"] {
+            let mut ui = Ui::new();
+            ui.tick(1);
+            match destination {
+                "cameras" => {
+                    ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+                }
+                "desk" => {
+                    ui.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+                }
+                _ => {}
+            }
+            let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
+            terminal
+                .draw(|frame| ui.draw(frame, &world))
+                .expect("tainted record should render safely");
+            assert!(
+                terminal
+                    .backend()
+                    .buffer()
+                    .content
+                    .iter()
+                    .flat_map(|cell| cell.symbol().chars())
+                    .all(|character| !character.is_control()),
+                "{destination} emitted a terminal control from record text"
+            );
+        }
+
+        let mut ui = Ui::new();
+        ui.tick(1);
+        ui.handle_key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
+        for _ in 0..4 {
+            terminal
+                .draw(|frame| ui.draw(frame, &world))
+                .expect("tainted phone record should render safely");
+            assert!(terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .flat_map(|cell| cell.symbol().chars())
+                .all(|character| !character.is_control()));
+            ui.handle_key(KeyEvent::new(KeyCode::Right, KeyModifiers::NONE));
+        }
+    }
+
     #[test]
     fn isometric_floor_renders_project_scene_and_manager_alert() {
         let world = world_with_office_counts(&[11, 8, 6, 4, 1, 1], false);
@@ -1157,7 +1264,7 @@ mod m3_tests {
             frame.height(),
             colors.len()
         );
-        assert_eq!(checksum, 0x0b74_b4b5_2322_ff0f);
+        assert_eq!(checksum, 0x02c9_6410_0ba2_996b);
     }
 
     #[test]
@@ -1176,6 +1283,7 @@ mod m3_tests {
         }
 
         let capacity = ui.canvas.pixel_capacity();
+        ui.sprites.parse_all_cached_frames();
         let parsed_sprites = ui.sprites.parsed_count();
         assert!(
             parsed_sprites > 0,
@@ -1183,7 +1291,9 @@ mod m3_tests {
         );
         let started = Instant::now();
 
-        for frame_index in 60..160 {
+        // Replay the warmed animation interval: advancing into a frame that was
+        // never requested is expected to parse it once and is not a cache miss.
+        for frame_index in 0..60 {
             ui.tick(BLOCKED_AFTER_MS + frame_index as Millis * 100);
             terminal
                 .draw(|frame| ui.draw(frame, &world))

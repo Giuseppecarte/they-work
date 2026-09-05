@@ -26,15 +26,25 @@ pub enum ColorDepth {
 }
 
 impl ColorDepth {
-    pub(crate) fn from_environment() -> Self {
+    pub(crate) fn environment_selection() -> (Self, bool, String) {
         let no_color = std::env::var_os("NO_COLOR").is_some();
         let forced = std::env::var("THEYWORK_COLOR").ok();
         let colorterm = std::env::var("COLORTERM").ok();
-        Self::resolve(no_color, forced.as_deref(), colorterm.as_deref())
+        let depth = Self::resolve(no_color, forced.as_deref(), colorterm.as_deref());
+        let reason = if no_color {
+            "colour disabled by NO_COLOR".to_string()
+        } else if let Some(value) = forced.as_deref() {
+            format!("colour selected by THEYWORK_COLOR={value}")
+        } else if depth == Self::TrueColor {
+            "truecolor selected from COLORTERM".to_string()
+        } else {
+            "256-colour palette selected because truecolor was not advertised".to_string()
+        };
+        (depth, no_color || forced.is_some(), reason)
     }
 
-    pub(crate) fn environment_override() -> bool {
-        std::env::var_os("NO_COLOR").is_some() || std::env::var_os("THEYWORK_COLOR").is_some()
+    pub(crate) fn from_environment() -> Self {
+        Self::environment_selection().0
     }
 
     fn resolve(no_color: bool, forced: Option<&str>, colorterm: Option<&str>) -> Self {
@@ -77,32 +87,23 @@ impl PixelEncoding {
     /// The encodings in preference order, from most to least dense.
     pub(crate) const ALL: [Self; 3] = [Self::Sextants, Self::Quadrants, Self::HalfBlocks];
 
-    pub(crate) fn from_environment() -> Self {
+    pub(crate) fn environment_selection() -> (Self, bool, String) {
         let forced = std::env::var("THEYWORK_ENCODING").ok();
         let terminal = std::env::var("TERM").ok();
         let terminal_program = std::env::var("TERM_PROGRAM").ok();
         let sextants_hint = std::env::var("THEYWORK_SEXTANTS").ok();
         let quadrants_hint = std::env::var("THEYWORK_QUADRANTS").ok();
-        let utf8 = locale_is_utf8();
-        let terminal_is_usable = terminal.as_deref().is_none_or(|value| {
-            !value.eq_ignore_ascii_case("dumb") && !value.eq_ignore_ascii_case("cons25")
-        });
-        let sextants = truthy(sextants_hint.as_deref())
-            || terminal_program.as_deref().is_some_and(sextant_terminal);
-        let quadrants = truthy(quadrants_hint.as_deref()) || (utf8 && terminal_is_usable);
-        Self::resolve(
+        Self::select(
             forced.as_deref(),
-            EncodingCapabilities {
-                sextants,
-                quadrants,
-            },
+            terminal.as_deref(),
+            terminal_program.as_deref(),
+            sextants_hint.as_deref(),
+            quadrants_hint.as_deref(),
         )
     }
 
-    pub(crate) fn environment_override() -> bool {
-        std::env::var_os("THEYWORK_ENCODING").is_some()
-            || std::env::var_os("THEYWORK_SEXTANTS").is_some()
-            || std::env::var_os("THEYWORK_QUADRANTS").is_some()
+    pub(crate) fn from_environment() -> Self {
+        Self::environment_selection().0
     }
 
     fn resolve(forced: Option<&str>, capabilities: EncodingCapabilities) -> Self {
@@ -114,7 +115,57 @@ impl PixelEncoding {
         }
     }
 
-    pub(crate) const fn label(self) -> &'static str {
+    fn select(
+        forced: Option<&str>,
+        terminal: Option<&str>,
+        terminal_program: Option<&str>,
+        sextants_hint: Option<&str>,
+        quadrants_hint: Option<&str>,
+    ) -> (Self, bool, String) {
+        if let Some(encoding) = forced.and_then(parse_encoding) {
+            return (
+                encoding,
+                true,
+                format!("{} selected by THEYWORK_ENCODING", encoding.label()),
+            );
+        }
+
+        let terminal_is_usable = terminal.is_none_or(|value| {
+            !value.eq_ignore_ascii_case("dumb") && !value.eq_ignore_ascii_case("cons25")
+        });
+        let sextants = truthy(sextants_hint) || terminal_program.is_some_and(sextant_terminal);
+        let quadrants = truthy(quadrants_hint) || terminal_is_usable;
+        let encoding = Self::resolve(
+            None,
+            EncodingCapabilities {
+                sextants,
+                quadrants,
+            },
+        );
+        let reason = match encoding {
+            Self::Sextants if truthy(sextants_hint) => {
+                "sextants selected by THEYWORK_SEXTANTS terminal hint".to_string()
+            }
+            Self::Sextants => "sextants selected for a known compatible terminal".to_string(),
+            Self::Quadrants => concat!(
+                "quadrants selected for a usable terminal; sextant glyph coverage cannot be ",
+                "queried, so force it with THEYWORK_ENCODING=sextants"
+            )
+            .to_string(),
+            Self::HalfBlocks => concat!(
+                "half-blocks selected because TERM is dumb or cons25; sextant glyph coverage ",
+                "cannot be queried, so force it with THEYWORK_ENCODING=sextants"
+            )
+            .to_string(),
+        };
+        (
+            encoding,
+            forced.is_some() || sextants_hint.is_some() || quadrants_hint.is_some(),
+            reason,
+        )
+    }
+
+    pub const fn label(self) -> &'static str {
         match self {
             Self::Sextants => "sextants",
             Self::Quadrants => "quadrants",
@@ -186,15 +237,6 @@ fn truthy(value: Option<&str>) -> bool {
             value.to_ascii_lowercase().as_str(),
             "1" | "true" | "yes" | "on"
         )
-    })
-}
-
-fn locale_is_utf8() -> bool {
-    ["LC_ALL", "LC_CTYPE", "LANG"].into_iter().any(|name| {
-        std::env::var(name).ok().is_some_and(|value| {
-            value.to_ascii_lowercase().contains("utf-8")
-                || value.to_ascii_lowercase().contains("utf8")
-        })
     })
 }
 
@@ -361,6 +403,10 @@ impl Canvas {
         ))
     }
 
+    pub(crate) fn has_image_density(&self) -> bool {
+        self.cell_pixel_size.is_some()
+    }
+
     pub(crate) fn scale_width(&self, value: usize) -> usize {
         value.saturating_mul(self.pixels_per_cell().0)
     }
@@ -428,9 +474,10 @@ impl Canvas {
 
     /// Fill the surface with one opaque colour.
     pub fn fill(&mut self, color: Color) {
-        let color = self.convert_color(color);
-        self.pixels.fill(Some(color));
-        let (red, green, blue) = rgb_of_color(color);
+        let image_color = self.themed_color(color);
+        let cell_color = self.convert_color(image_color);
+        self.pixels.fill(Some(cell_color));
+        let (red, green, blue) = rgb_of_color(image_color);
         for pixel in Arc::make_mut(&mut self.rgba).chunks_exact_mut(4) {
             pixel.copy_from_slice(&[red, green, blue, u8::MAX]);
         }
@@ -439,11 +486,12 @@ impl Canvas {
     /// Set one opaque pixel. Out-of-bounds writes are deliberately ignored so
     /// a sprite can be clipped at a terminal edge without a special branch.
     pub fn set(&mut self, x: usize, y: usize, color: Color) {
-        let color = self.convert_color(color);
+        let image_color = self.themed_color(color);
+        let cell_color = self.convert_color(image_color);
         if let Some(index) = self.index(x, y) {
             let pixel = &mut self.pixels[index];
-            *pixel = Some(color);
-            let (red, green, blue) = rgb_of_color(color);
+            *pixel = Some(cell_color);
+            let (red, green, blue) = rgb_of_color(image_color);
             let offset = index.saturating_mul(4);
             Arc::make_mut(&mut self.rgba)[offset..offset + 4].copy_from_slice(&[
                 red,
@@ -628,12 +676,15 @@ impl Canvas {
         (x < self.width && y < self.height).then(|| y * self.width + x)
     }
 
-    fn convert_color(&self, color: Color) -> Color {
-        let color = if self.light_mode {
+    fn themed_color(&self, color: Color) -> Color {
+        if self.light_mode {
             crate::views::light_color(color)
         } else {
             color
-        };
+        }
+    }
+
+    fn convert_color(&self, color: Color) -> Color {
         match self.depth {
             ColorDepth::TrueColor | ColorDepth::None => color,
             ColorDepth::Palette256 => palette_color(color),
@@ -1021,8 +1072,9 @@ mod tests {
     #[test]
     fn palette_mode_is_fixed_and_maps_rgb_to_indexed_colour() {
         let mut canvas = Canvas::with_color_depth(1, 1, ColorDepth::Palette256);
-        canvas.set(0, 0, Color::Rgb(255, 0, 0));
+        canvas.set(0, 0, Color::Rgb(58, 51, 88));
         assert!(matches!(canvas.pixel(0, 0), Some(Color::Indexed(_))));
+        assert_eq!(canvas.pixel_frame().rgba(), [58, 51, 88, 255]);
     }
 
     #[test]
@@ -1122,6 +1174,31 @@ mod tests {
             Some(PixelEncoding::HalfBlocks)
         );
         assert_eq!(parse_encoding("QUADRANTS"), Some(PixelEncoding::Quadrants));
+    }
+
+    #[test]
+    fn locale_less_terminals_use_the_conservative_dense_fallback() {
+        let (encoding, locked, reason) = PixelEncoding::select(None, None, None, None, None);
+        assert_eq!(encoding, PixelEncoding::Quadrants);
+        assert!(!locked);
+        assert!(reason.contains("THEYWORK_ENCODING=sextants"));
+
+        for terminal in ["dumb", "cons25", "DUMB"] {
+            let (encoding, locked, reason) =
+                PixelEncoding::select(None, Some(terminal), None, None, None);
+            assert_eq!(encoding, PixelEncoding::HalfBlocks);
+            assert!(!locked);
+            assert!(reason.contains("dumb or cons25"));
+        }
+    }
+
+    #[test]
+    fn explicit_sextants_override_is_reported() {
+        let (encoding, locked, reason) =
+            PixelEncoding::select(Some("sextants"), Some("dumb"), None, None, None);
+        assert_eq!(encoding, PixelEncoding::Sextants);
+        assert!(locked);
+        assert_eq!(reason, "sextants selected by THEYWORK_ENCODING");
     }
 
     #[test]

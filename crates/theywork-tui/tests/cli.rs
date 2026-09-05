@@ -325,7 +325,103 @@ fn doctor_reports_fixture_homes() {
 }
 
 #[test]
-fn doctor_marks_unavailable_codex_working_directories_as_unresolved() {
+fn once_never_emits_transcript_terminal_controls() {
+    let fixture = Fixture::new();
+    let transcript = fixture
+        .claude_home
+        .join("projects/fixture-b/session-b.jsonl");
+    let osc_title = "\u{1b}]0;AUDIT_TITLE\u{7}";
+    append_jsonl(
+        &transcript,
+        json!({
+            "type": "assistant",
+            "timestamp": now_ms() + 1,
+            "sessionId": "claude-b",
+            "cwd": fixture.project_b.to_string_lossy(),
+            "customTitle": osc_title,
+            "message": {"content": [{
+                "type": "tool_use",
+                "id": "malicious",
+                "name": "Bash",
+                "input": {"command": "\u{1b}]52;c;ZGFuZ2Vy\u{7}"}
+            }]}
+        }),
+    );
+
+    let output = run(&fixture, &["--once"]);
+    assert_success(&output);
+    assert!(!output.stdout.contains(&0x1b), "{:?}", output.stdout);
+    let text = stdout(&output);
+    assert!(text.contains("␛]0;AUDIT_TITLE␇"), "{text}");
+    assert!(text.contains("␛]52;c;ZGFuZ2Vy␇"), "{text}");
+}
+
+#[test]
+fn doctor_explains_the_published_container_terminal_fallback() {
+    let fixture = Fixture::new();
+    let output = Command::new(binary())
+        .current_dir(fixture.temp.path())
+        .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
+        .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
+        .env("TERM", "xterm-256color")
+        .env_remove("COLORTERM")
+        .env_remove("TERM_PROGRAM")
+        .env_remove("LANG")
+        .env_remove("LC_ALL")
+        .env_remove("LC_CTYPE")
+        .env_remove("NO_COLOR")
+        .env_remove("THEYWORK_COLOR")
+        .env_remove("THEYWORK_ENCODING")
+        .env_remove("THEYWORK_SEXTANTS")
+        .env_remove("THEYWORK_QUADRANTS")
+        .arg("--doctor")
+        .output()
+        .unwrap();
+    assert_success(&output);
+
+    let text = stdout(&output);
+    assert!(text.contains(
+        "terminal_env TERM=\"xterm-256color\" COLORTERM=unset TERM_PROGRAM=unset LANG=unset LC_ALL=unset LC_CTYPE=unset"
+    ));
+    assert!(text.contains("terminal_color depth=palette256"));
+    assert!(text.contains("terminal_encoding encoding=quadrants"));
+    assert!(text.contains("sextant glyph coverage cannot be queried"));
+    assert!(text.contains("terminal_graphics protocol=none probe=\"skipped:not_a_tty\""));
+    assert!(text.contains("terminal_frame mode=cells covered_cells=unknown source_pixels=unknown"));
+    assert!(text.contains("terminal_action=set_THEYWORK_ENCODING=sextants"));
+}
+
+#[test]
+fn doctor_explains_an_explicit_color_override() {
+    let fixture = Fixture::new();
+    let output = run(&fixture, &["--doctor", "--color", "true"]);
+    assert_success(&output);
+
+    let text = stdout(&output);
+    assert!(text.contains("terminal_color depth=truecolor"));
+    assert!(text.contains("reason=\"colour selected by THEYWORK_COLOR=true\""));
+}
+
+#[test]
+fn no_color_remains_authoritative_over_explicit_truecolor() {
+    let fixture = Fixture::new();
+    let output = Command::new(binary())
+        .current_dir(fixture.temp.path())
+        .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
+        .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
+        .env("NO_COLOR", "1")
+        .args(["--doctor", "--color", "true"])
+        .output()
+        .unwrap();
+    assert_success(&output);
+
+    let text = stdout(&output);
+    assert!(text.contains("terminal_color depth=none"), "{text}");
+    assert!(text.contains("NO_COLOR"), "{text}");
+}
+
+#[test]
+fn doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted() {
     let fixture = Fixture::new();
     let state = Connection::open(fixture.codex_home.join("sqlite/state_5.sqlite")).unwrap();
     state
@@ -342,10 +438,8 @@ fn doctor_marks_unavailable_codex_working_directories_as_unresolved() {
     let output = run(&fixture, &["--doctor"]);
     assert_success(&output);
     let text = stdout(&output);
-    assert!(text.contains(
-        "codex_store=readable projects=unresolved unresolved_paths=1 threads=1 active=1"
-    ));
-    assert!(!text.contains("codex_store=readable projects=0 threads=1"));
+    assert!(text.contains("codex_store=readable projects=1 threads=1 active=1"));
+    assert!(!text.contains("projects=unresolved"));
 }
 
 #[test]

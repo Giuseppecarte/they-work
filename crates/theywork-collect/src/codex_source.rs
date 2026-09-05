@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -11,9 +12,8 @@ use theywork_core::{
 };
 
 use crate::util::{
-    normalize_office_path, path_allowed, recency_cutoff, recorded_path_is_unresolved,
-    repository_root, short_id, truncate_detail, truncate_timeline_text, unified_diff_counts,
-    NON_PROJECT_OFFICE,
+    path_allowed, recency_cutoff, repository_root_or_recorded_project, sanitize_terminal_text,
+    short_id, truncate_detail, truncate_timeline_text, unified_diff_counts, NON_PROJECT_OFFICE,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
@@ -68,9 +68,15 @@ impl CodexSource {
 
     pub(crate) fn sqlite_exists(home: &Path) -> bool {
         let sqlite = home.join("sqlite");
-        sqlite.is_dir()
-            && sqlite.join("state_5.sqlite").is_file()
-            && sqlite.join("thread_history_1.sqlite").is_file()
+        fs::symlink_metadata(&sqlite)
+            .is_ok_and(|metadata| !metadata.file_type().is_symlink() && metadata.is_dir())
+            && ["state_5.sqlite", "thread_history_1.sqlite"]
+                .iter()
+                .all(|name| {
+                    fs::symlink_metadata(sqlite.join(name)).is_ok_and(|metadata| {
+                        !metadata.file_type().is_symlink() && metadata.is_file()
+                    })
+                })
     }
 
     pub(crate) fn inspect_home(
@@ -94,7 +100,7 @@ impl CodexSource {
         }
 
         let sqlite = home.join("sqlite");
-        match fs::metadata(&sqlite) {
+        match fs::symlink_metadata(&sqlite) {
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 report.readable = true;
                 return report;
@@ -126,7 +132,7 @@ impl CodexSource {
         }
         let state_path = home.join("sqlite").join("state_5.sqlite");
         let history_path = home.join("sqlite").join("thread_history_1.sqlite");
-        let state_metadata = match fs::metadata(&state_path) {
+        let state_metadata = match fs::symlink_metadata(&state_path) {
             Ok(metadata) => Some(metadata),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
             Err(error) => {
@@ -138,7 +144,7 @@ impl CodexSource {
                 return report;
             }
         };
-        let history_metadata = match fs::metadata(&history_path) {
+        let history_metadata = match fs::symlink_metadata(&history_path) {
             Ok(metadata) => Some(metadata),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
             Err(error) => {
@@ -150,8 +156,20 @@ impl CodexSource {
                 return report;
             }
         };
-        if state_metadata.is_none() || history_metadata.is_none() {
+        if state_metadata.is_none() && history_metadata.is_none() {
             report.readable = true;
+            return report;
+        }
+        if state_metadata.is_none() || history_metadata.is_none() {
+            let missing = if state_metadata.is_none() {
+                "state_5.sqlite"
+            } else {
+                "thread_history_1.sqlite"
+            };
+            report.error = Some(format!(
+                "incomplete Codex SQLite store: required {missing} is missing; {}",
+                crate::metadata_access_details(&sqlite)
+            ));
             return report;
         }
         if !state_metadata
@@ -184,12 +202,15 @@ impl CodexSource {
             return report;
         }
 
-        let Some(state) = open_read_only(&state_path) else {
-            report.error = Some(format!(
-                "state database could not be opened read-only; {}",
-                crate::metadata_access_details(&state_path)
-            ));
-            return report;
+        let state = match open_read_only(&state_path) {
+            Ok(connection) => connection,
+            Err(reason) => {
+                report.error = Some(format!(
+                    "state database could not be opened read-only: {reason}; {}",
+                    crate::metadata_access_details(&state_path)
+                ));
+                return report;
+            }
         };
         let mut office_cache = HashMap::new();
         let all_threads = match read_threads(&state, i64::MIN, &mut office_cache) {
@@ -218,12 +239,15 @@ impl CodexSource {
                 return report;
             }
         };
-        let Some(history) = open_read_only(&history_path) else {
-            report.error = Some(format!(
-                "history database could not be opened read-only; {}",
-                crate::metadata_access_details(&history_path)
-            ));
-            return report;
+        let history = match open_read_only(&history_path) {
+            Ok(connection) => connection,
+            Err(reason) => {
+                report.error = Some(format!(
+                    "history database could not be opened read-only: {reason}; {}",
+                    crate::metadata_access_details(&history_path)
+                ));
+                return report;
+            }
         };
         if let Err(error) = read_turns(&history) {
             report.error = Some(crate::unreadable_reason(
@@ -239,17 +263,9 @@ impl CodexSource {
             .filter(|thread| thread.office_path != NON_PROJECT_OFFICE)
             .map(|thread| thread.office_path.clone())
             .collect();
-        let unresolved_paths: HashSet<String> = all_threads
-            .iter()
-            .filter(|thread| {
-                thread.office_path == NON_PROJECT_OFFICE
-                    && recorded_path_is_unresolved(&thread.raw_office_path)
-            })
-            .map(|thread| normalize_office_path(&thread.raw_office_path))
-            .collect();
         report.readable = true;
         report.projects = projects.len();
-        report.unresolved_paths = unresolved_paths.len();
+        report.unresolved_paths = 0;
         report.threads = all_threads.len();
         report.active_threads = active_threads.len();
         report
@@ -309,8 +325,9 @@ impl Source for CodexSource {
 
     fn poll(&mut self, now: Millis) -> Result<Vec<Event>, SourceError> {
         let cutoff_ms = recency_cutoff(now, self.active_within);
-        let Some(state) = open_read_only(&self.state_path()) else {
-            return Ok(self.unavailable_poll("state database could not be opened read-only"));
+        let state = match open_read_only(&self.state_path()) {
+            Ok(connection) => connection,
+            Err(reason) => return Ok(self.unavailable_poll(&reason)),
         };
         let Ok(roster) = read_threads(&state, cutoff_ms, &mut self.office_cache) else {
             return Ok(self.unavailable_poll("thread roster query failed"));
@@ -321,8 +338,9 @@ impl Source for CodexSource {
             .map(|thread| thread.id.clone())
             .collect();
         let edges = read_spawn_edges(&state, &assessor_ids).unwrap_or_default();
-        let Some(history) = open_read_only(&self.history_path()) else {
-            return Ok(self.unavailable_poll("history database could not be opened read-only"));
+        let history = match open_read_only(&self.history_path()) {
+            Ok(connection) => connection,
+            Err(reason) => return Ok(self.unavailable_poll(&reason)),
         };
         let turns = match read_turns(&history) {
             Ok(turns) => turns,
@@ -589,7 +607,7 @@ impl ThreadRecord {
             at,
             office: OfficeId(self.office_path.clone()),
             office_path: self.office_path.clone(),
-            worker: WorkerId(self.id.clone()),
+            worker: WorkerId(sanitize_terminal_text(&self.id)),
             agent: Agent::Codex,
             kind,
         }
@@ -634,10 +652,75 @@ struct TurnState {
     error_detail: Option<String>,
 }
 
-fn open_read_only(path: &Path) -> Option<Connection> {
-    let connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY).ok()?;
-    connection.busy_timeout(Duration::ZERO).ok()?;
-    Some(connection)
+fn open_read_only(path: &Path) -> Result<Connection, String> {
+    require_regular_non_symlink(path, "database")?;
+    if let Some(parent) = path.parent() {
+        let metadata = fs::symlink_metadata(parent)
+            .map_err(|error| format!("could not inspect SQLite directory: {error}"))?;
+        if metadata.file_type().is_symlink() || !metadata.is_dir() {
+            return Err(
+                "SQLite directory is not a real directory inside the configured store".into(),
+            );
+        }
+    }
+
+    let wal = sidecar_path(path, "-wal");
+    let shm = sidecar_path(path, "-shm");
+    let wal_exists = require_optional_regular_non_symlink(&wal, "WAL")?;
+    let shm_exists = require_optional_regular_non_symlink(&shm, "shared-memory")?;
+    let wal_mode = database_uses_wal(path)?;
+    if (wal_mode || wal_exists) && (!wal_exists || !shm_exists) {
+        return Err(
+            "WAL database lacks complete WAL/shared-memory sidecars; refusing to create files in the agent store"
+                .into(),
+        );
+    }
+
+    let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NOFOLLOW;
+    let connection = Connection::open_with_flags(path, flags)
+        .map_err(|error| format!("SQLite open failed: {error}"))?;
+    connection
+        .busy_timeout(Duration::ZERO)
+        .map_err(|error| format!("could not set SQLite busy timeout: {error}"))?;
+    Ok(connection)
+}
+
+fn database_uses_wal(path: &Path) -> Result<bool, String> {
+    let mut file = fs::File::open(path)
+        .map_err(|error| format!("could not read SQLite database header: {error}"))?;
+    let mut header = [0_u8; 20];
+    match file.read_exact(&mut header) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(false),
+        Err(error) => return Err(format!("could not read SQLite database header: {error}")),
+    }
+    Ok(&header[..16] == b"SQLite format 3\0" && (header[18] == 2 || header[19] == 2))
+}
+
+fn sidecar_path(path: &Path, suffix: &str) -> PathBuf {
+    let mut name = path.as_os_str().to_os_string();
+    name.push(suffix);
+    PathBuf::from(name)
+}
+
+fn require_regular_non_symlink(path: &Path, label: &str) -> Result<(), String> {
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|error| format!("could not inspect SQLite {label}: {error}"))?;
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        return Err(format!("SQLite {label} is not a regular non-symlink file"));
+    }
+    Ok(())
+}
+
+fn require_optional_regular_non_symlink(path: &Path, label: &str) -> Result<bool, String> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if !metadata.file_type().is_symlink() && metadata.is_file() => Ok(true),
+        Ok(_) => Err(format!(
+            "SQLite {label} sidecar is not a regular non-symlink file"
+        )),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(format!("could not inspect SQLite {label} sidecar: {error}")),
+    }
 }
 
 fn table_has_column(connection: &Connection, table: &str, wanted: &str) -> rusqlite::Result<bool> {
@@ -1079,7 +1162,7 @@ fn decode_thread_row(
     else {
         return Ok(None);
     };
-    let office_path = repository_root(&raw_office_path, office_cache);
+    let office_path = repository_root_or_recorded_project(&raw_office_path, office_cache);
     if office_path.is_empty() {
         return Ok(None);
     }
@@ -1098,7 +1181,8 @@ fn decode_thread_row(
     let tokens_used = row.get::<_, Option<i64>>(7)?.unwrap_or_default().max(0) as u64;
     let git_branch = row
         .get::<_, Option<String>>(8)?
-        .filter(|branch| !branch.trim().is_empty());
+        .filter(|branch| !branch.trim().is_empty())
+        .map(|branch| truncate_detail(&branch));
     let updated_at_ms = row.get::<_, Option<i64>>(9)?.unwrap_or_default();
 
     Ok(Some(ThreadRecord {

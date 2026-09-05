@@ -15,8 +15,8 @@ use theywork_core::{
 
 use crate::util::{
     normalize_office_path, path_allowed, recency_cutoff, repository_root,
-    repository_root_with_project_hint, short_id, text_line_count, timestamp_value, truncate_detail,
-    truncate_timeline_text, unified_diff_counts,
+    repository_root_with_project_hint, sanitize_terminal_text, short_id, text_line_count,
+    timestamp_value, truncate_detail, truncate_timeline_text, unified_diff_counts,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 
@@ -678,7 +678,7 @@ fn parse_line(
         office_cache,
         Some(&state.metadata.project_key),
     );
-    let worker = WorkerId(state.metadata.worker_id());
+    let worker = WorkerId(sanitize_terminal_text(&state.metadata.worker_id()));
     let office = OfficeId(office_path.clone());
     let make_event = |kind| Event {
         at,
@@ -691,7 +691,7 @@ fn parse_line(
 
     events.push(make_event(EventKind::Seen {
         name: state.metadata.display_name(),
-        git_branch: state.metadata.git_branch.clone(),
+        git_branch: state.metadata.git_branch.as_deref().map(truncate_detail),
     }));
     if object.get("type").and_then(Value::as_str) == Some("assistant") {
         let increment = usage_tokens(&value);

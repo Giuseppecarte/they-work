@@ -34,7 +34,10 @@ FROM debian:bookworm-slim AS runtime
 RUN useradd --create-home --uid 10001 watcher
 COPY --from=build /src/target/release/they-work /usr/local/bin/they-work
 USER watcher
-ENV TERM=xterm-256color \
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    LC_CTYPE=C.UTF-8 \
+    TERM=xterm-256color \
     THEYWORK_CLAUDE_HOME=/data/claude \
     THEYWORK_CODEX_HOME=/data/codex
 ENTRYPOINT ["/usr/local/bin/they-work"]

@@ -79,6 +79,29 @@ fn is_windows_mount(path: &str) -> bool {
 pub(crate) const DETAIL_LIMIT: usize = 120;
 pub(crate) const TIMELINE_TEXT_LIMIT: usize = 2_000;
 
+/// Replace terminal control characters with visible, inert text before any
+/// record-derived string enters collector state. In particular, an ESC at a
+/// truncation boundary must never remain available to introduce bytes that a
+/// later rendering layer appends.
+pub(crate) fn sanitize_terminal_text(input: &str) -> String {
+    let mut output = String::with_capacity(input.len());
+    for character in input.chars() {
+        let code = character as u32;
+        match code {
+            0x00..=0x1f => {
+                output.push(char::from_u32(0x2400 + code).expect("control picture is valid"));
+            }
+            0x7f => output.push('\u{2421}'),
+            0x80..=0x9f => {
+                use std::fmt::Write as _;
+                let _ = write!(output, "\\u{{{code:04X}}}");
+            }
+            _ => output.push(character),
+        }
+    }
+    output
+}
+
 /// All activity without a discoverable project root shares this explicitly
 /// labelled bucket. A cwd is evidence of where a process was, not evidence
 /// that the directory is a project, so it must never become an office id.
@@ -87,11 +110,12 @@ pub const NON_PROJECT_OFFICE: &str = "[non-project]";
 /// Keep details useful in a desk caption without allowing an agent-controlled
 /// command or message to make the UI (or a collector's state) unbounded.
 pub(crate) fn truncate_detail(input: &str) -> String {
-    let mut output = String::with_capacity(input.len().min(DETAIL_LIMIT));
+    let sanitized = sanitize_terminal_text(input);
+    let mut output = String::with_capacity(sanitized.len().min(DETAIL_LIMIT));
     let mut count = 0;
     let mut pending_space = false;
 
-    for ch in input.chars() {
+    for ch in sanitized.chars() {
         if ch.is_whitespace() {
             if !output.is_empty() {
                 pending_space = true;
@@ -123,7 +147,10 @@ pub(crate) fn truncate_detail(input: &str) -> String {
 /// unit here so a cap never cuts through a UTF-8 code point or destroys the
 /// text the desk view is meant to show.
 pub(crate) fn truncate_timeline_text(input: &str) -> String {
-    input.chars().take(TIMELINE_TEXT_LIMIT).collect()
+    sanitize_terminal_text(input)
+        .chars()
+        .take(TIMELINE_TEXT_LIMIT)
+        .collect()
 }
 
 pub(crate) fn text_line_count(input: &str) -> u32 {
@@ -154,7 +181,7 @@ pub(crate) fn unified_diff_counts(input: &str) -> Option<(u32, u32)> {
 }
 
 pub(crate) fn short_id(id: &str) -> String {
-    let shortened: String = id.chars().take(8).collect();
+    let shortened: String = sanitize_terminal_text(id).chars().take(8).collect();
     if shortened.is_empty() {
         "worker".to_string()
     } else {
@@ -306,6 +333,29 @@ pub(crate) fn repository_root(input: &str, cache: &mut HashMap<String, String>) 
     repository_root_with_project_hint(input, cache, None)
 }
 
+/// Codex records a project cwd directly in its thread roster. When the
+/// observer boundary intentionally does not mount project files, retain that
+/// normalized recorded identity instead of collapsing every valid thread into
+/// the non-project office. Known home and conversation scratch paths remain
+/// non-project.
+pub(crate) fn repository_root_or_recorded_project(
+    input: &str,
+    cache: &mut HashMap<String, String>,
+) -> String {
+    let resolved = repository_root(input, cache);
+    if resolved != NON_PROJECT_OFFICE {
+        return resolved;
+    }
+
+    let normalized = normalize_office_path(input);
+    if normalized.is_empty() || is_obvious_non_project_path(&normalized) {
+        return NON_PROJECT_OFFICE.to_string();
+    }
+    let safe = sanitize_terminal_text(&normalized);
+    cache.insert(normalized, safe.clone());
+    safe
+}
+
 /// Resolve a working directory when the source's project directory encodes a
 /// root that is not mounted beside the collector. Claude stores transcripts
 /// below names such as `-home-gc-projects-demo`; matching that encoding against
@@ -328,11 +378,12 @@ pub(crate) fn repository_root_with_project_hint(
     let mut current = PathBuf::from(filesystem_path(input));
     let result = loop {
         if current.join(".git").exists() {
-            break normalize_office_path(&current.to_string_lossy());
+            break sanitize_terminal_text(&normalize_office_path(&current.to_string_lossy()));
         }
         if !current.pop() {
             break project_root_hint(&normalized, project_key)
                 .filter(|hint| !is_obvious_non_project_path(hint))
+                .map(|hint| sanitize_terminal_text(&hint))
                 .unwrap_or_else(|| NON_PROJECT_OFFICE.to_string());
         }
     };
@@ -372,15 +423,6 @@ fn is_obvious_non_project_path(path: &str) -> bool {
     }
 
     lower.contains("/documents/codex/") || lower.ends_with("/documents/codex")
-}
-
-/// Whether a recorded cwd is unavailable to this reader and therefore cannot
-/// be classified as either a repository or a known non-project directory.
-pub(crate) fn recorded_path_is_unresolved(path: &str) -> bool {
-    let normalized = normalize_office_path(path);
-    !normalized.is_empty()
-        && !is_obvious_non_project_path(&normalized)
-        && !Path::new(&filesystem_path(path)).exists()
 }
 
 fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<String> {
@@ -442,10 +484,34 @@ mod tests {
     #[test]
     fn normalizes_and_caps_details() {
         let detail = truncate_detail("  one\n two\tthree  ");
-        assert_eq!(detail, "one two three");
+        assert_eq!(detail, "one␊ two␉three");
 
         let long = "x".repeat(DETAIL_LIMIT + 10);
         assert_eq!(truncate_detail(&long).chars().count(), DETAIL_LIMIT);
+    }
+
+    #[test]
+    fn terminal_controls_are_visible_and_inert_before_truncation() {
+        let payloads = [
+            "title\u{1b}]0;AUDIT_TITLE\u{7}",
+            "clipboard\u{1b}]52;c;ZGFuZ2Vy\u{7}",
+            "dcs\u{1b}P1;2|payload\u{1b}\\",
+            "csi\u{1b}[2Jforged\u{9b}31m",
+            &format!("{}\u{1b}]52;c;QQ==\u{7}", "x".repeat(DETAIL_LIMIT - 1)),
+        ];
+
+        for payload in payloads {
+            let detail = truncate_detail(payload);
+            let timeline = truncate_timeline_text(payload);
+            for sanitized in [&detail, &timeline] {
+                assert!(!sanitized.chars().any(char::is_control), "{sanitized:?}");
+                assert!(!sanitized.contains('\u{1b}'), "{sanitized:?}");
+            }
+        }
+
+        assert_eq!(truncate_detail("\u{1b}]52;c;QQ==\u{7}"), "␛]52;c;QQ==␇");
+        assert!(truncate_timeline_text("\u{1b}Ppayload\u{1b}\\").starts_with("␛P"));
+        assert!(truncate_timeline_text("\u{9b}31m").starts_with("\\u{009B}"));
     }
 
     #[test]
@@ -509,6 +575,19 @@ mod tests {
                 &mut cache,
                 Some("-mnt-c-users-pc-documents-codex-2026-08-29-conversation"),
             ),
+            NON_PROJECT_OFFICE
+        );
+    }
+
+    #[test]
+    fn codex_recorded_project_survives_a_store_only_mount() {
+        let mut cache = HashMap::new();
+        assert_eq!(
+            repository_root_or_recorded_project("/audit/fixtures/project", &mut cache),
+            "/audit/fixtures/project"
+        );
+        assert_eq!(
+            repository_root_or_recorded_project("/home/example", &mut cache),
             NON_PROJECT_OFFICE
         );
     }

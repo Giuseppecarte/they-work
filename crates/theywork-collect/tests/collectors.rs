@@ -322,7 +322,7 @@ fn claude_maps_tools_text_turns_and_names() {
     assert!(has_activity(
         &events,
         &Activity::Talking {
-            detail: "finished\nwith details".into()
+            detail: "finished␊with details".into()
         }
     ));
     assert!(events
@@ -1829,22 +1829,22 @@ fn collector_acceptance_fixtures() {
             _ => None,
         })
         .collect();
-    let long_messages_with_newlines = long_messages
+    let long_messages_with_line_markers = long_messages
         .iter()
-        .filter(|detail| detail.contains('\n'))
+        .filter(|detail| detail.contains('␊'))
         .count();
     report.record(
         12,
         "remembered messages preserve fuller source text",
-        if !long_messages.is_empty() && long_messages_with_newlines > 0 {
+        if !long_messages.is_empty() && long_messages_with_line_markers > 0 {
             AcceptanceStatus::Pass
         } else {
             AcceptanceStatus::Fail
         },
         format!(
-            "{} talking beats exceed the caption limit; {} preserve newlines",
+            "{} talking beats exceed the caption limit; {} preserve visible line boundaries",
             long_messages.len(),
-            long_messages_with_newlines
+            long_messages_with_line_markers
         ),
     );
 
@@ -2265,16 +2265,14 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
     }
     lock.execute_batch("ROLLBACK").unwrap();
     drop(lock);
-    {
-        let history = Connection::open(&history_path).unwrap();
-        insert_item(
-            &history,
-            "thread-active",
-            800,
-            "agentMessage",
-            json!({"message": "after lock"}),
-        );
-    }
+    let history = Connection::open(&history_path).unwrap();
+    insert_item(
+        &history,
+        "thread-active",
+        800,
+        "agentMessage",
+        json!({"message": "after lock"}),
+    );
     let recovered = source.poll(10_008).unwrap();
     assert!(has_activity(
         &recovered,
@@ -2283,17 +2281,12 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
         }
     ));
 
-    {
-        let history = Connection::open(&history_path).unwrap();
-        history.execute("DROP TABLE thread_items", []).unwrap();
-    }
+    history.execute("DROP TABLE thread_items", []).unwrap();
     assert!(source.poll(10_009).unwrap().is_empty());
 
-    {
-        let history = Connection::open(&history_path).unwrap();
-        history
-            .execute_batch(
-                "CREATE TABLE thread_items (
+    history
+        .execute_batch(
+            "CREATE TABLE thread_items (
                     thread_id TEXT,
                     turn_id TEXT,
                     item_id TEXT,
@@ -2301,16 +2294,15 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
                     item_type TEXT,
                     item_json TEXT
                 );",
-            )
-            .unwrap();
-        insert_item(
-            &history,
-            "thread-active",
-            900,
-            "agentMessage",
-            json!({"message": "recovered"}),
-        );
-    }
+        )
+        .unwrap();
+    insert_item(
+        &history,
+        "thread-active",
+        900,
+        "agentMessage",
+        json!({"message": "recovered"}),
+    );
     let recovered = source.poll(10_010).unwrap();
     assert!(has_activity(
         &recovered,
@@ -2318,6 +2310,7 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
             detail: "recovered".into()
         }
     ));
+    drop(history);
 }
 
 #[test]
@@ -2692,6 +2685,182 @@ fn inspect_distinguishes_empty_homes_from_unreadable_stores() {
         assert!(error.contains("owner="));
         assert!(error.contains("permissions=0o000"));
     }
+}
+
+#[test]
+fn inspect_rejects_an_incomplete_codex_store() {
+    let temp = TempDir::new();
+    let codex_home = temp.path().join("partial-codex");
+    create_codex_fixture(&codex_home);
+    fs::remove_file(codex_home.join("sqlite/thread_history_1.sqlite")).unwrap();
+    let config = Config {
+        claude_home: None,
+        codex_home: Some(codex_home),
+        active_within: DEFAULT_ACTIVE_WITHIN,
+        only_paths: Vec::new(),
+    };
+
+    let reports = inspect_stores(&config, simulated_epoch_millis());
+    let report = reports
+        .iter()
+        .find(|report| report.agent == Agent::Codex)
+        .unwrap();
+    assert!(report.home_found);
+    assert!(!report.readable);
+    assert!(report
+        .error
+        .as_deref()
+        .is_some_and(|error| error.contains("required thread_history_1.sqlite is missing")));
+}
+
+#[cfg(unix)]
+#[test]
+fn codex_database_symlinks_cannot_escape_the_configured_home() {
+    use std::os::unix::fs::symlink;
+
+    let temp = TempDir::new();
+    let target = temp.path().join("outside");
+    create_codex_fixture(&target);
+    let codex_home = temp.path().join("symlink-codex");
+    fs::create_dir_all(codex_home.join("sqlite")).unwrap();
+    for name in ["state_5.sqlite", "thread_history_1.sqlite"] {
+        symlink(
+            target.join("sqlite").join(name),
+            codex_home.join("sqlite").join(name),
+        )
+        .unwrap();
+    }
+    let config = Config {
+        claude_home: None,
+        codex_home: Some(codex_home),
+        active_within: DEFAULT_ACTIVE_WITHIN,
+        only_paths: Vec::new(),
+    };
+
+    assert!(build_sources(&config).is_empty());
+    let reports = inspect_stores(&config, simulated_epoch_millis());
+    let report = reports
+        .iter()
+        .find(|report| report.agent == Agent::Codex)
+        .unwrap();
+    assert!(!report.readable);
+    assert!(report
+        .error
+        .as_deref()
+        .is_some_and(|error| error.contains("not regular files")));
+}
+
+#[test]
+fn cold_wal_snapshots_are_rejected_without_creating_shm() {
+    let temp = TempDir::new();
+    let writer = temp.path().join("writer/sqlite");
+    fs::create_dir_all(&writer).unwrap();
+    let state = Connection::open(writer.join("state_5.sqlite")).unwrap();
+    let history = Connection::open(writer.join("thread_history_1.sqlite")).unwrap();
+    for connection in [&state, &history] {
+        assert_eq!(
+            connection
+                .query_row("PRAGMA journal_mode=WAL", [], |row| row.get::<_, String>(0))
+                .unwrap(),
+            "wal"
+        );
+        connection
+            .execute_batch("PRAGMA wal_autocheckpoint=0")
+            .unwrap();
+    }
+    state
+        .execute_batch(
+            "CREATE TABLE threads (
+                id TEXT, cwd TEXT, title TEXT, tokens_used INTEGER,
+                git_branch TEXT, updated_at INTEGER, archived INTEGER
+            );
+            INSERT INTO threads VALUES ('audit', '/audit/project', 'Audit', 0, 'main', 1, 0);",
+        )
+        .unwrap();
+    history
+        .execute_batch(
+            "CREATE TABLE thread_items (
+                thread_id TEXT, turn_id TEXT, item_id TEXT, created_at_ms INTEGER,
+                item_type TEXT, item_json TEXT
+            );
+            CREATE TABLE thread_turns (
+                thread_id TEXT, turn_id TEXT, status TEXT, started_at INTEGER,
+                completed_at INTEGER, duration_ms INTEGER, error_json TEXT
+            );",
+        )
+        .unwrap();
+
+    let cold_home = temp.path().join("cold");
+    let cold = cold_home.join("sqlite");
+    fs::create_dir_all(&cold).unwrap();
+    for name in [
+        "state_5.sqlite",
+        "state_5.sqlite-wal",
+        "thread_history_1.sqlite",
+        "thread_history_1.sqlite-wal",
+    ] {
+        fs::copy(writer.join(name), cold.join(name)).unwrap();
+    }
+    assert!(!cold.join("state_5.sqlite-shm").exists());
+    assert!(!cold.join("thread_history_1.sqlite-shm").exists());
+
+    let config = Config {
+        claude_home: None,
+        codex_home: Some(cold_home),
+        active_within: DEFAULT_ACTIVE_WITHIN,
+        only_paths: Vec::new(),
+    };
+    let reports = inspect_stores(&config, 10_000);
+    let report = reports
+        .iter()
+        .find(|report| report.agent == Agent::Codex)
+        .unwrap();
+    assert!(!report.readable);
+    assert!(report
+        .error
+        .as_deref()
+        .is_some_and(|error| error.contains("refusing to create files")));
+    assert!(!cold.join("state_5.sqlite-shm").exists());
+    assert!(!cold.join("thread_history_1.sqlite-shm").exists());
+}
+
+#[test]
+fn clean_wal_database_is_rejected_without_recreating_sidecars() {
+    let temp = TempDir::new();
+    let codex_home = temp.path().join("clean-wal");
+    create_codex_fixture(&codex_home);
+    for name in ["state_5.sqlite", "thread_history_1.sqlite"] {
+        let path = codex_home.join("sqlite").join(name);
+        let connection = Connection::open(path).unwrap();
+        assert_eq!(
+            connection
+                .query_row("PRAGMA journal_mode=WAL", [], |row| row.get::<_, String>(0))
+                .unwrap(),
+            "wal"
+        );
+    }
+    let sqlite = codex_home.join("sqlite");
+    assert!(!sqlite.join("state_5.sqlite-wal").exists());
+    assert!(!sqlite.join("state_5.sqlite-shm").exists());
+
+    let config = Config {
+        claude_home: None,
+        codex_home: Some(codex_home),
+        active_within: DEFAULT_ACTIVE_WITHIN,
+        only_paths: Vec::new(),
+    };
+    let reports = inspect_stores(&config, simulated_epoch_millis());
+    let report = reports
+        .iter()
+        .find(|report| report.agent == Agent::Codex)
+        .unwrap();
+    assert!(!report.readable);
+    assert!(report
+        .error
+        .as_deref()
+        .is_some_and(|error| error.contains("refusing to create files")));
+    assert!(!sqlite.join("state_5.sqlite-wal").exists());
+    assert!(!sqlite.join("state_5.sqlite-shm").exists());
 }
 
 #[test]

@@ -33,7 +33,6 @@ FRAME_PADDING = 4
 # Headless Chrome reserves part of --window-size for its outer window. Extra
 # height gives the SVG its full viewport; rasterize_svg crops that outer band.
 RASTERIZER_WINDOW_SLACK = 128
-PRIMARY_TARGET_SIZE = (160, 48)
 DEFAULT_ENCODING = "half-blocks"
 ENCODING_ORDER = ("sextants", "quadrants", "half-blocks")
 GOLDEN_VARIANTS = (("primary", "normal"), ("degraded", "small"))
@@ -124,6 +123,8 @@ class ImageFrame:
     cell_width: int
     cell_height: int
     packets: tuple[tuple[str, Path], ...]
+    character_width: int | None = None
+    character_height: int | None = None
 
 
 def split_unescaped_pipes(token: str) -> list[str]:
@@ -446,14 +447,6 @@ def validate_frames(
                 raise ValueError(
                     f"{encoding} {variant_name} goldens do not share one terminal size"
                 )
-            if variant_name == "primary" and dimensions != {PRIMARY_TARGET_SIZE}:
-                actual = ", ".join(
-                    f"{width}x{height}" for width, height in sorted(dimensions)
-                )
-                raise ValueError(
-                    f"{encoding} primary goldens must be 160x48; "
-                    f"found {actual}. Update the renderer golden before running make shot"
-                )
             for theme, frames in frames_by_theme.items():
                 for surface, (renderer_view, _) in SURFACES.items():
                     frame = frames[surface]
@@ -501,9 +494,64 @@ def find_svg_rasterizer() -> str:
 
 
 def png_dimensions(data: bytes) -> tuple[int, int]:
-    if not data.startswith(b"\x89PNG\r\n\x1a\n") or data[12:16] != b"IHDR":
-        raise ValueError("SVG rasterizer did not produce a PNG")
+    if len(data) < 24 or not data.startswith(b"\x89PNG\r\n\x1a\n") or data[12:16] != b"IHDR":
+        raise ValueError("not a PNG image")
     return struct.unpack(">II", data[16:24])
+
+
+def bmp_dimensions(data: bytes) -> tuple[int, int]:
+    if len(data) < 54 or data[:2] != b"BM":
+        raise ValueError("not a BMP image")
+    offset = struct.unpack("<I", data[10:14])[0]
+    header_size = struct.unpack("<I", data[14:18])[0]
+    width, signed_height = struct.unpack("<ii", data[18:26])
+    planes, bits_per_pixel = struct.unpack("<HH", data[26:30])
+    compression = struct.unpack("<I", data[30:34])[0]
+    height = abs(signed_height)
+    if (
+        header_size < 40
+        or width <= 0
+        or height == 0
+        or planes != 1
+        or bits_per_pixel != 32
+        or compression != 0
+        or offset + width * height * 4 > len(data)
+    ):
+        raise ValueError("unsupported BMP image; need an uncompressed 32-bit bitmap")
+    return width, height
+
+
+def image_dimensions(path: Path) -> tuple[int, int]:
+    data = path.read_bytes()
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return png_dimensions(data)
+    return bmp_dimensions(data)
+
+
+def bmp_as_png(data: bytes) -> bytes:
+    width, height = bmp_dimensions(data)
+    offset = struct.unpack("<I", data[10:14])[0]
+    signed_height = struct.unpack("<i", data[22:26])[0]
+    raw = bytearray()
+    for row in range(height):
+        source_row = row if signed_height < 0 else height - 1 - row
+        source = offset + source_row * width * 4
+        raw.append(0)
+        for pixel in range(source, source + width * 4, 4):
+            blue, green, red, alpha = data[pixel : pixel + 4]
+            raw.extend((red, green, blue, alpha))
+    header = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + png_chunk(b"IHDR", header) + png_chunk(
+        b"IDAT", zlib.compress(raw, level=9)
+    ) + png_chunk(b"IEND", b"")
+
+
+def image_as_png(path: Path) -> bytes:
+    data = path.read_bytes()
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        png_dimensions(data)
+        return data
+    return bmp_as_png(data)
 
 
 def image_input_path(root: Path, relative: object, description: str) -> Path:
@@ -530,7 +578,9 @@ def manifest_positive_int(value: object, description: str) -> int:
 
 
 def load_image_frames(
-    image_frame_dir: str, expected_timestamp: int
+    image_frame_dir: str,
+    expected_timestamp: int,
+    expected_viewport: tuple[int, int],
 ) -> dict[tuple[str, str], ImageFrame]:
     """Load a complete, deterministic graphics-frame dump when one is supplied.
 
@@ -569,9 +619,11 @@ def load_image_frames(
     rows = manifest_positive_int(viewport.get("rows"), "viewport.rows")
     cell_width = manifest_positive_int(viewport.get("cell_width"), "viewport.cell_width")
     cell_height = manifest_positive_int(viewport.get("cell_height"), "viewport.cell_height")
-    if (columns, rows) != PRIMARY_TARGET_SIZE:
+    if (columns, rows) != expected_viewport:
+        expected_columns, expected_rows = expected_viewport
         raise ValueError(
-            "image-frame manifest viewport must be 160x48 to sit beside the primary cell frames"
+            "image-frame manifest viewport must be "
+            f"{expected_columns}x{expected_rows} to sit beside the primary cell frames"
         )
     frames = manifest.get("frames")
     if not isinstance(frames, list):
@@ -632,6 +684,47 @@ def load_image_frames(
 
 def image_frame_stem(frame: ImageFrame) -> str:
     return f"image-{frame.surface}-{frame.theme}-{frame.width}x{frame.height}"
+
+
+def parse_dimensions(value: str, description: str) -> tuple[int, int]:
+    match = re.fullmatch(r"([1-9]\d*)x([1-9]\d*)", value)
+    if match is None:
+        raise ValueError(f"{description} must use WIDTHxHEIGHT, got {value!r}")
+    return int(match.group(1)), int(match.group(2))
+
+
+def load_captured_image(path_value: str, character_canvas: str) -> dict[tuple[str, str], ImageFrame]:
+    """Load the renderer-owned capture used for the first image-path review."""
+    if not path_value:
+        return {}
+    path = Path(path_value).resolve()
+    if not path.is_file():
+        raise ValueError(f"captured image does not exist: {path}")
+    width, height = image_dimensions(path)
+    character_width, character_height = parse_dimensions(
+        character_canvas, "captured character canvas"
+    )
+    if (width, height) != (character_width * 10, character_height * 10):
+        raise ValueError(
+            f"captured image is {width}x{height}, not a 10× source expansion of "
+            f"the declared {character_width}x{character_height} character canvas"
+        )
+    return {
+        ("floor", "dark"): ImageFrame(
+            surface="floor",
+            theme="dark",
+            png=path,
+            width=width,
+            height=height,
+            columns=character_width,
+            rows=character_height,
+            cell_width=10,
+            cell_height=10,
+            packets=(),
+            character_width=character_width,
+            character_height=character_height,
+        )
+    }
 
 
 def png_chunk(kind: bytes, data: bytes) -> bytes:
@@ -898,32 +991,52 @@ def render_index(
     ) -> str:
         variant_label = "Primary rung" if variant == "primary" else "Degraded rung"
         size = f"{frame.width}×{frame.height}"
+        captured = image_frames.get((surface, theme)) if variant == "primary" else None
+        character_canvas = ""
+        if captured and captured.character_width and captured.character_height:
+            character_canvas = (
+                f" · character canvas {captured.character_width}×{captured.character_height}"
+            )
         panel_class = "dark" if theme == "dark" else "light"
         stem = frame_stem(surface, theme, frame.encoding, variant)
         png_name = f"{stem}.png"
         svg_name = f"{stem}.svg"
         return (
             f'<div class="panel {panel_class} {variant}">'
-            f'<h3>{theme.title()} · {variant_label} · {frame.encoding} · terminal {size}</h3>'
+            f'<h3>{theme.title()} · {variant_label} · {frame.encoding} · terminal {size}{character_canvas}</h3>'
             f'<a href="{png_name}"><img loading="lazy" src="{png_name}" '
             f'alt="{theme.title()} {variant_label.lower()} {html.escape(label, quote=True)} output with {frame.encoding} encoding at terminal {size}"></a>'
             f'<p><a href="{png_name}">PNG</a> · <a href="{svg_name}">SVG</a> · '
-            f'{frame.encoding} encoding · terminal {size} · time {frame.now}</p></div>'
+            f'{frame.encoding} encoding · terminal {size}{character_canvas} · time {frame.now}</p></div>'
         )
 
     def image_panel(surface: str, label: str, frame: ImageFrame) -> str:
         panel_class = "dark" if frame.theme == "dark" else "light"
         png_name = f"{image_frame_stem(frame)}.png"
         packets = ", ".join(protocol for protocol, _ in frame.packets)
-        cell_size = f"{frame.columns}×{frame.rows} cells @ {frame.cell_width}×{frame.cell_height} px"
+        if frame.character_width is not None and frame.character_height is not None:
+            source_label = (
+                f"character canvas {frame.character_width}×{frame.character_height} · "
+                "10× source expansion"
+            )
+        else:
+            source_label = (
+                f"terminal {frame.columns}×{frame.rows} cells @ "
+                f"{frame.cell_width}×{frame.cell_height} px"
+            )
         dimensions = f"{frame.width}×{frame.height} px"
+        packet_note = (
+            f"packets retained: {html.escape(packets)}"
+            if packets
+            else "renderer source capture; protocol bytes are covered separately"
+        )
         return (
             f'<div class="panel {panel_class} image-protocol primary">'
             f'<h3>{frame.theme.title()} · Image protocol · source {dimensions}</h3>'
             f'<a href="{png_name}"><img loading="lazy" src="{png_name}" '
             f'alt="{frame.theme.title()} {html.escape(label, quote=True)} renderer image frame at {dimensions}"></a>'
             f'<p><a href="{png_name}">PNG</a> · renderer pixels {dimensions} · '
-            f'{cell_size} · packets retained: {html.escape(packets)}</p></div>'
+            f'{source_label} · {packet_note}</p></div>'
         )
 
     cards = []
@@ -968,7 +1081,11 @@ def render_index(
                             variant_name,
                         )
                     )
-                    if image_frames and encoding == best_encoding and variant_name == "primary":
+                    if (
+                        (surface, theme) in image_frames
+                        and encoding == best_encoding
+                        and variant_name == "primary"
+                    ):
                         panels.append(image_panel(surface, label, image_frames[(surface, theme)]))
         cards.append(
             "".join(
@@ -996,7 +1113,11 @@ def render_index(
             " Partial golden rungs not shown because they are incomplete: "
             f"{html.escape(partial_summary)}."
         )
-    output_count = len(encodings) * len(GOLDEN_VARIANTS) * 2 + (2 if image_frames else 0)
+    image_panels_per_surface = max(
+        (sum((surface, theme) in image_frames for theme in ("dark", "light")) for surface in SURFACES),
+        default=0,
+    )
+    output_count = len(encodings) * len(GOLDEN_VARIANTS) * 2 + image_panels_per_surface
     complete_summary = html.escape(", ".join(encodings))
     image_summary = (
         "The renderer-backed image-protocol PNGs sit beside the primary "
@@ -1060,6 +1181,16 @@ def main() -> int:
         default="",
         help="directory containing a renderer-pixel-frame manifest.json and matching PNG/packet files",
     )
+    parser.add_argument(
+        "--captured-image",
+        default="",
+        help="renderer-owned PNG or 32-bit BMP capture for the dark floor panel",
+    )
+    parser.add_argument(
+        "--captured-character-canvas",
+        default="160x86",
+        help="character canvas paired with --captured-image, as WIDTHxHEIGHT",
+    )
     args = parser.parse_args()
 
     try:
@@ -1076,7 +1207,20 @@ def main() -> int:
         primary_timestamp = next(
             iter(frames_by_encoding[encodings[0]]["primary"]["dark"].values())
         ).now
-        image_frames = load_image_frames(args.image_frame_dir, primary_timestamp)
+        primary_example = next(
+            iter(frames_by_encoding[encodings[0]]["primary"]["dark"].values())
+        )
+        if args.image_frame_dir and args.captured_image:
+            raise ValueError("use either --image-frame-dir or --captured-image, not both")
+        image_frames = (
+            load_captured_image(args.captured_image, args.captured_character_canvas)
+            if args.captured_image
+            else load_image_frames(
+                args.image_frame_dir,
+                primary_timestamp,
+                (primary_example.width, primary_example.height),
+            )
+        )
     except ValueError as error:
         parser.error(str(error))
 
@@ -1084,7 +1228,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     for image_frame in image_frames.values():
         destination = out_dir / f"{image_frame_stem(image_frame)}.png"
-        shutil.copyfile(image_frame.png, destination)
+        destination.write_bytes(image_as_png(image_frame.png))
     try:
         rasterizer = find_svg_rasterizer()
     except ValueError as error:

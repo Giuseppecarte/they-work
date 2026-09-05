@@ -1,0 +1,25 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",  "x": 0, "y": 0,    "w": 1640, "h": 980, "title": "The gap" },
+    { "file": "Rungs.dc.html", "x": 0, "y": 1180, "w": 1640, "h": 760, "title": "Four rungs" },
+    { "file": "Fixes.dc.html", "x": 0, "y": 2140, "w": 1640, "h": 900, "title": "Closing it" }
+  ],
+  "annotations": [
+    {
+      "id": "how-measured",
+      "x": 1760, "y": 0, "w": 460,
+      "text": "HOW THESE WERE MEASURED\n\nEvery picture here came from running the program, not from a mock.\n\nThe shipped frame was captured by driving the published v0.1.0 image through a pseudo-terminal at 160x48 and counting glyphs: 9,975 half-blocks, 0 quadrants, 0 sextants.\n\nThe graphics frame came from the renderer's own pixel buffer at 8x16 cell geometry. It has never been displayed by a terminal - only encoded."
+    },
+    {
+      "id": "not-your-terminal",
+      "x": 1760, "y": 1180, "w": 460,
+      "text": "IT IS NOT YOUR TERMINAL\n\nWhen the office looked bad in Windows Terminal, the natural conclusion was that WSL or the font was at fault.\n\nIt was neither. The published container reports no UTF-8 locale, so the renderer refuses quadrants; and sextants are gated on TERM_PROGRAM, which Docker never forwards. Both checks fail inside every container, so the release always picks the worst rung.\n\nIt would have looked the same in kitty."
+    },
+    {
+      "id": "what-is-missing",
+      "x": 1760, "y": 2140, "w": 460,
+      "text": "WHAT THIS DASHBOARD DOES NOT SHOW\n\nOnly the office floor. The guard office, the desk, the phone and the settings screen have had far less design attention and are not compared here.\n\nNo macOS, Kitty, iTerm2 or Windows Terminal window was available, so no rung above characters has been visually confirmed by anyone."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

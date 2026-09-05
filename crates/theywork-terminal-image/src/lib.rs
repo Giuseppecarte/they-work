@@ -13,8 +13,9 @@
 //!
 //! For inspectable synthetic frames, run the `measure` example in release mode
 //! with `--dump /src/new-dump-directory` (and optionally `--noise`). It creates
-//! a PNG and exact first-frame `.bin` transmissions for each protocol. The
-//! directory must not already exist. These bytes contain terminal controls:
+//! a source PNG, exact first-frame `.bin` transmissions, and PNGs reconstructed
+//! from each protocol stream. The directory must not already exist. The `.bin`
+//! files contain terminal controls:
 //! inspect them as binary data unless intentionally testing a compatible terminal.
 //! Measurements exclude terminal parsing and display; a high encoder frame rate
 //! does not establish end-to-end throughput. At 1600x960 the high-detail Sixel
@@ -32,7 +33,9 @@ use std::time::{Duration, Instant};
 #[cfg(unix)]
 use std::io::{IsTerminal, Read, Stdin, Stdout};
 
-pub const DEFAULT_PROBE_TIMEOUT: Duration = Duration::from_millis(8);
+/// Startup allowance for a terminal reply, including a container/PTY hop.
+/// Unsupported terminals add at most a tenth of a second before cell fallback.
+pub const DEFAULT_PROBE_TIMEOUT: Duration = Duration::from_millis(100);
 const KITTY_CHUNK_BYTES: usize = 4_096;
 const SIXEL_COLORS: usize = 216;
 const MAX_PROBE_RESPONSE_BYTES: usize = 64 * 1024;
@@ -254,6 +257,8 @@ pub enum ImageError {
     InvalidMeasurementCount,
     UnsupportedProtocol,
     PngEncoding(String),
+    InvalidTransmission(&'static str),
+    PngDecoding(String),
 }
 
 impl fmt::Display for ImageError {
@@ -269,6 +274,8 @@ impl fmt::Display for ImageError {
             }
             Self::UnsupportedProtocol => formatter.write_str("protocol cannot transmit pixels"),
             Self::PngEncoding(error) => write!(formatter, "PNG encoding failed: {error}"),
+            Self::InvalidTransmission(error) => write!(formatter, "invalid transmission: {error}"),
+            Self::PngDecoding(error) => write!(formatter, "PNG decoding failed: {error}"),
         }
     }
 }
@@ -924,6 +931,308 @@ pub fn encode_iterm2(image: &RgbaImage, rectangle: CellRect) -> Result<Vec<u8>, 
     Ok(output)
 }
 
+/// Decode one captured image transmission back into RGBA pixels.
+///
+/// This accepts the exact byte stream returned by [`ImageSurface::capture`].
+/// Kitty and iTerm2 are lossless. Sixel reconstructs the palette-quantized,
+/// opaque image a terminal receives after alpha compositing.
+pub fn decode_transmission(
+    protocol: GraphicsProtocol,
+    transmission: &[u8],
+) -> Result<RgbaImage, ImageError> {
+    match protocol {
+        GraphicsProtocol::Kitty {
+            direct_transmission: true,
+        } => decode_kitty(transmission),
+        GraphicsProtocol::Iterm2 => decode_iterm2(transmission),
+        GraphicsProtocol::Sixel => decode_sixel(transmission),
+        GraphicsProtocol::Kitty {
+            direct_transmission: false,
+        }
+        | GraphicsProtocol::None => Err(ImageError::UnsupportedProtocol),
+    }
+}
+
+fn decode_kitty(transmission: &[u8]) -> Result<RgbaImage, ImageError> {
+    let mut cursor = 0;
+    let mut width = None;
+    let mut height = None;
+    let mut encoded = Vec::new();
+    while let Some(start) = find_bytes(&transmission[cursor..], b"\x1b_G") {
+        let start = cursor + start + 3;
+        let end = find_bytes(&transmission[start..], b"\x1b\\")
+            .map(|offset| start + offset)
+            .ok_or(ImageError::InvalidTransmission("unterminated Kitty chunk"))?;
+        let chunk = &transmission[start..end];
+        let separator = chunk
+            .iter()
+            .position(|byte| *byte == b';')
+            .ok_or(ImageError::InvalidTransmission("missing Kitty payload"))?;
+        let control = &chunk[..separator];
+        if width.is_none() {
+            width = kitty_parameter(control, b's');
+            height = kitty_parameter(control, b'v');
+        }
+        encoded.extend_from_slice(&chunk[separator + 1..]);
+        cursor = end + 2;
+    }
+    let width = width.ok_or(ImageError::InvalidTransmission("missing Kitty width"))?;
+    let height = height.ok_or(ImageError::InvalidTransmission("missing Kitty height"))?;
+    RgbaImage::new(width, height, decode_base64(&encoded)?)
+}
+
+fn kitty_parameter(control: &[u8], name: u8) -> Option<u32> {
+    control.split(|byte| *byte == b',').find_map(|parameter| {
+        let separator = parameter.iter().position(|byte| *byte == b'=')?;
+        (parameter[..separator] == [name])
+            .then(|| parse_decimal(&parameter[separator + 1..]))
+            .flatten()
+    })
+}
+
+fn decode_iterm2(transmission: &[u8]) -> Result<RgbaImage, ImageError> {
+    let start = find_bytes(transmission, b"\x1b]1337;File=").ok_or(
+        ImageError::InvalidTransmission("missing iTerm2 File command"),
+    )?;
+    let command = &transmission[start..];
+    let payload = command
+        .iter()
+        .position(|byte| *byte == b':')
+        .map(|separator| &command[separator + 1..])
+        .ok_or(ImageError::InvalidTransmission("missing iTerm2 payload"))?;
+    let end =
+        payload
+            .iter()
+            .position(|byte| *byte == b'\x07')
+            .ok_or(ImageError::InvalidTransmission(
+                "unterminated iTerm2 payload",
+            ))?;
+    decode_png(&decode_base64(&payload[..end])?)
+}
+
+fn decode_png(bytes: &[u8]) -> Result<RgbaImage, ImageError> {
+    let decoder = png::Decoder::new(std::io::Cursor::new(bytes));
+    let mut reader = decoder
+        .read_info()
+        .map_err(|error| ImageError::PngDecoding(error.to_string()))?;
+    let mut pixels = vec![0; reader.output_buffer_size()];
+    let info = reader
+        .next_frame(&mut pixels)
+        .map_err(|error| ImageError::PngDecoding(error.to_string()))?;
+    if info.color_type != png::ColorType::Rgba || info.bit_depth != png::BitDepth::Eight {
+        return Err(ImageError::InvalidTransmission("PNG is not RGBA8"));
+    }
+    pixels.truncate(info.buffer_size());
+    RgbaImage::new(info.width, info.height, pixels)
+}
+
+fn decode_sixel(transmission: &[u8]) -> Result<RgbaImage, ImageError> {
+    const RASTER_START: &[u8] = b"\x1bPq\"1;1;";
+    let start = find_bytes(transmission, RASTER_START)
+        .map(|offset| offset + RASTER_START.len())
+        .ok_or(ImageError::InvalidTransmission(
+            "missing Sixel raster attributes",
+        ))?;
+    let end = find_bytes(&transmission[start..], b"\x1b\\")
+        .map(|offset| start + offset)
+        .ok_or(ImageError::InvalidTransmission("unterminated Sixel data"))?;
+    let data = &transmission[start..end];
+    let mut cursor = 0;
+    let width = take_decimal(data, &mut cursor)?;
+    expect_byte(data, &mut cursor, b';')?;
+    let height = take_decimal(data, &mut cursor)?;
+    let width_usize = usize::try_from(width).map_err(|_| ImageError::DimensionsOverflow)?;
+    let height_usize = usize::try_from(height).map_err(|_| ImageError::DimensionsOverflow)?;
+    let pixel_count = width_usize
+        .checked_mul(height_usize)
+        .ok_or(ImageError::DimensionsOverflow)?;
+    let byte_count = pixel_count
+        .checked_mul(4)
+        .ok_or(ImageError::DimensionsOverflow)?;
+    let mut pixels = vec![0_u8; byte_count];
+    for pixel in pixels.chunks_exact_mut(4) {
+        pixel[3] = u8::MAX;
+    }
+    let mut palette = [[0_u8; 3]; SIXEL_COLORS];
+    let mut selected = 0_usize;
+    let (mut x, mut band_y) = (0_usize, 0_usize);
+    while cursor < data.len() {
+        match data[cursor] {
+            b'#' => {
+                cursor += 1;
+                let register = usize::try_from(take_decimal(data, &mut cursor)?)
+                    .map_err(|_| ImageError::InvalidTransmission("Sixel register overflow"))?;
+                if register >= SIXEL_COLORS {
+                    return Err(ImageError::InvalidTransmission(
+                        "Sixel register out of range",
+                    ));
+                }
+                selected = register;
+                if data.get(cursor) == Some(&b';') {
+                    cursor += 1;
+                    if take_decimal(data, &mut cursor)? != 2 {
+                        return Err(ImageError::InvalidTransmission(
+                            "unsupported Sixel colour model",
+                        ));
+                    }
+                    for channel in 0..3 {
+                        expect_byte(data, &mut cursor, b';')?;
+                        let percent = take_decimal(data, &mut cursor)?.min(100);
+                        palette[register][channel] = ((percent * 255 + 50) / 100) as u8;
+                    }
+                }
+            }
+            b'$' => {
+                cursor += 1;
+                x = 0;
+            }
+            b'-' => {
+                cursor += 1;
+                x = 0;
+                band_y = band_y.saturating_add(6);
+            }
+            b'!' => {
+                cursor += 1;
+                let count = take_decimal(data, &mut cursor)?;
+                let sixel = *data.get(cursor).ok_or(ImageError::InvalidTransmission(
+                    "missing repeated Sixel byte",
+                ))?;
+                cursor += 1;
+                for _ in 0..count {
+                    paint_sixel(
+                        &mut pixels,
+                        width_usize,
+                        height_usize,
+                        x,
+                        band_y,
+                        sixel,
+                        palette[selected],
+                    )?;
+                    x = x.saturating_add(1);
+                }
+            }
+            sixel @ b'?'..=b'~' => {
+                cursor += 1;
+                paint_sixel(
+                    &mut pixels,
+                    width_usize,
+                    height_usize,
+                    x,
+                    band_y,
+                    sixel,
+                    palette[selected],
+                )?;
+                x = x.saturating_add(1);
+            }
+            _ => return Err(ImageError::InvalidTransmission("unsupported Sixel command")),
+        }
+    }
+    RgbaImage::new(width, height, pixels)
+}
+
+fn paint_sixel(
+    pixels: &mut [u8],
+    width: usize,
+    height: usize,
+    x: usize,
+    band_y: usize,
+    sixel: u8,
+    color: [u8; 3],
+) -> Result<(), ImageError> {
+    if !(b'?'..=b'~').contains(&sixel) || x >= width {
+        return Err(ImageError::InvalidTransmission(
+            "Sixel pixel is out of bounds",
+        ));
+    }
+    let mask = sixel - b'?';
+    for bit in 0..6 {
+        let y = band_y + bit;
+        if y < height && mask & (1 << bit) != 0 {
+            let offset = (y * width + x) * 4;
+            pixels[offset..offset + 3].copy_from_slice(&color);
+        }
+    }
+    Ok(())
+}
+
+fn take_decimal(bytes: &[u8], cursor: &mut usize) -> Result<u32, ImageError> {
+    let start = *cursor;
+    while bytes.get(*cursor).is_some_and(u8::is_ascii_digit) {
+        *cursor += 1;
+    }
+    if start == *cursor {
+        return Err(ImageError::InvalidTransmission("missing decimal value"));
+    }
+    parse_decimal(&bytes[start..*cursor])
+        .ok_or(ImageError::InvalidTransmission("decimal value overflow"))
+}
+
+fn expect_byte(bytes: &[u8], cursor: &mut usize, expected: u8) -> Result<(), ImageError> {
+    if bytes.get(*cursor) != Some(&expected) {
+        return Err(ImageError::InvalidTransmission("unexpected separator"));
+    }
+    *cursor += 1;
+    Ok(())
+}
+
+fn parse_decimal(bytes: &[u8]) -> Option<u32> {
+    std::str::from_utf8(bytes).ok()?.parse().ok()
+}
+
+fn find_bytes(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    haystack
+        .windows(needle.len())
+        .position(|window| window == needle)
+}
+
+fn decode_base64(encoded: &[u8]) -> Result<Vec<u8>, ImageError> {
+    if encoded.is_empty() || !encoded.len().is_multiple_of(4) {
+        return Err(ImageError::InvalidTransmission("invalid base64 length"));
+    }
+    let mut decoded = Vec::with_capacity(encoded.len() / 4 * 3);
+    for (chunk_index, chunk) in encoded.chunks_exact(4).enumerate() {
+        let last = chunk_index + 1 == encoded.len() / 4;
+        let a = base64_value(chunk[0])?;
+        let b = base64_value(chunk[1])?;
+        let c = if chunk[2] == b'=' {
+            0
+        } else {
+            base64_value(chunk[2])?
+        };
+        let d = if chunk[3] == b'=' {
+            0
+        } else {
+            base64_value(chunk[3])?
+        };
+        let third_is_padding = chunk[2] == b'=';
+        let fourth_is_padding = chunk[3] == b'=';
+        let padding_before_last_chunk = !last && (third_is_padding || fourth_is_padding);
+        let invalid_padding_order = third_is_padding && !fourth_is_padding;
+        if padding_before_last_chunk || invalid_padding_order {
+            return Err(ImageError::InvalidTransmission("invalid base64 padding"));
+        }
+        decoded.push((a << 2) | (b >> 4));
+        if chunk[2] != b'=' {
+            decoded.push((b << 4) | (c >> 2));
+        }
+        if chunk[3] != b'=' {
+            decoded.push((c << 6) | d);
+        }
+    }
+    Ok(decoded)
+}
+
+fn base64_value(byte: u8) -> Result<u8, ImageError> {
+    match byte {
+        b'A'..=b'Z' => Ok(byte - b'A'),
+        b'a'..=b'z' => Ok(byte - b'a' + 26),
+        b'0'..=b'9' => Ok(byte - b'0' + 52),
+        b'+' => Ok(62),
+        b'/' => Ok(63),
+        _ => Err(ImageError::InvalidTransmission("invalid base64 byte")),
+    }
+}
+
 pub fn encode_sixel_scaled(
     image: &RgbaImage,
     width: u32,
@@ -1273,6 +1582,74 @@ mod tests {
     }
 
     #[test]
+    fn captured_protocol_streams_decode_back_to_pixels() {
+        let (width, height) = (64_u32, 17_u32);
+        let mut pixels = Vec::with_capacity((width * height * 4) as usize);
+        for y in 0..height {
+            for x in 0..width {
+                pixels.extend_from_slice(&[
+                    (x * 255 / width) as u8,
+                    (y * 255 / height) as u8,
+                    ((x * 17 + y * 31) % 256) as u8,
+                    u8::MAX,
+                ]);
+            }
+        }
+        let source = RgbaImage::new(width, height, pixels).unwrap();
+        let geometry = TerminalGeometry::new(80, 24, Some(CellSize::new(8, 16)));
+        let rectangle = CellRect::new(2, 3, 8, 2);
+        for protocol in [
+            GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+            GraphicsProtocol::Iterm2,
+            GraphicsProtocol::Sixel,
+        ] {
+            let transmission = ImageSurface::new(protocol, geometry)
+                .capture(&source, rectangle)
+                .unwrap();
+            let decoded = decode_transmission(protocol, &transmission).unwrap();
+            assert_eq!((decoded.width(), decoded.height()), (width, height));
+            let max_error = source
+                .pixels()
+                .chunks_exact(4)
+                .zip(decoded.pixels().chunks_exact(4))
+                .flat_map(|(source, decoded)| {
+                    let channels = if protocol == GraphicsProtocol::Sixel {
+                        3
+                    } else {
+                        4
+                    };
+                    (0..channels).map(move |channel| source[channel].abs_diff(decoded[channel]))
+                })
+                .max()
+                .unwrap();
+            let allowed_error = if protocol == GraphicsProtocol::Sixel {
+                26
+            } else {
+                0
+            };
+            assert!(
+                max_error <= allowed_error,
+                "{protocol:?} reconstruction error {max_error} exceeds {allowed_error}"
+            );
+        }
+    }
+
+    #[test]
+    fn malformed_captures_are_rejected_without_panicking() {
+        for protocol in [
+            GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+            GraphicsProtocol::Iterm2,
+            GraphicsProtocol::Sixel,
+        ] {
+            assert!(decode_transmission(protocol, b"not a transmission").is_err());
+        }
+    }
+
+    #[test]
     fn identical_frames_skip_transmission_and_resize_invalidates_cache() {
         for protocol in [
             GraphicsProtocol::Iterm2,
@@ -1335,6 +1712,10 @@ mod tests {
 
     #[test]
     fn unsupported_probe_is_bounded_and_emits_all_queries_once() {
+        assert_eq!(
+            CapabilityDetector::default().timeout(),
+            Duration::from_millis(100)
+        );
         let mut probe = MockProbe {
             response: Vec::new(),
             writes: Vec::new(),

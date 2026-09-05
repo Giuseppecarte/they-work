@@ -334,25 +334,31 @@ fn candidate_quality(agent: Agent, path: &Path) -> u8 {
         }
         Agent::Codex => {
             let sqlite = path.join("sqlite");
-            let Ok(sqlite_metadata) = fs::metadata(&sqlite) else {
+            let Ok(sqlite_metadata) = fs::symlink_metadata(&sqlite) else {
                 return 2;
             };
-            if !sqlite_metadata.is_dir() || !metadata_allows_read(&sqlite_metadata) {
+            if sqlite_metadata.file_type().is_symlink()
+                || !sqlite_metadata.is_dir()
+                || !metadata_allows_read(&sqlite_metadata)
+            {
                 return 1;
             }
             let state = sqlite.join("state_5.sqlite");
             let history = sqlite.join("thread_history_1.sqlite");
-            if !state.is_file() || !history.is_file() {
+            if ![&state, &history].iter().all(|path| {
+                fs::symlink_metadata(path)
+                    .is_ok_and(|metadata| !metadata.file_type().is_symlink() && metadata.is_file())
+            }) {
                 return 2;
             }
             if ![state.as_path(), history.as_path()].iter().all(|path| {
-                fs::metadata(path).is_ok_and(|metadata| metadata_allows_read(&metadata))
+                fs::symlink_metadata(path).is_ok_and(|metadata| metadata_allows_read(&metadata))
             }) {
                 return 1;
             }
             if [state, history]
                 .iter()
-                .any(|path| fs::metadata(path).is_ok_and(|metadata| metadata.len() > 0))
+                .any(|path| fs::symlink_metadata(path).is_ok_and(|metadata| metadata.len() > 0))
             {
                 3
             } else {

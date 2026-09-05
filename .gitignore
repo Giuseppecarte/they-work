@@ -32,3 +32,6 @@ CLAUDE.md
 # Standup reports written by the collector thread. Working notes about
 # building the project, not part of it.
 /.standup/
+
+# Scratch pixel captures
+/.cap/

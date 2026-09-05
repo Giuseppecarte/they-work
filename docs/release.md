@@ -49,7 +49,18 @@ mounts. Live mode with no stores shows setup guidance rather than an office.
 
 The [release workflow](../.github/workflows/release.yml) triggers on tags matching
 `v*.*.*`; this glob is not semantic-version validation. It builds the tagged
-source, pushes the version and `latest`, and runs with package-write permission.
+source, pushes the version and `latest`, then pulls the just-published immutable
+digest into a 160×48 Kitty-capable PTY. That post-publish check requires the
+runtime's baked `LANG`, `LC_ALL`, and `LC_CTYPE` values to be `C.UTF-8`, an
+actual Kitty graphics transmission, and a no-reply fallback containing
+quadrant-specific rather than half-block-only art. (Upper/lower half-block
+glyphs are valid quadrant masks, so the verifier reports them instead of using
+their raw presence as an encoding test.) It does not accept the runner's
+locally built tag as release evidence. After that gate passes, re-shoot the
+README stills from the published image; do not substitute a locally built image
+for that capture. The same gate also requires an iTerm2 inline-image packet
+from an iTerm2 capability reply, so a source-only implementation cannot quietly
+miss a release. The workflow runs with package-write permission.
 No workflow changes were made to obtain the v0.1.0 success.
 
 After each release, verify both publication and anonymous access separately.

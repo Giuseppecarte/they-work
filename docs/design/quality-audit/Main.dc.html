@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap">
+  <style>
+    body { margin: 0; background: #0d0b14; }
+    a { color: #f0b429; } a:hover { color: #e8342c; }
+  </style>
+</helmet>
+
+<div style="width: 1640px; height: 980px; background: #0d0b14; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #e8e2d6; padding: 28px 30px; box-sizing: border-box;">
+
+  <div style="display: flex; align-items: baseline; gap: 16px;">
+    <div style="font-family: 'Press Start 2P', monospace; font-size: 17px; color: #e8342c; text-shadow: 2px 2px 0 #8e1a15;">THE&nbsp;GAP</div>
+    <div style="font-size: 11px; color: #6f6885;">what the design says, against what a user gets when they run the published image today</div>
+    <div style="margin-left: auto; font-size: 10px; color: #5c566e;">same scene, same fixture, same moment</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 20px;">
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 10px; height: 10px; background: #56c26a;"></div>
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.5px;">INTENDED</div>
+        <div style="margin-left: auto; font-size: 10px; color: #6f6885;">docs/design/Main.dc.html &middot; 1200 &times; 760</div>
+      </div>
+      <div style="border: 1px solid #241f3d; background: #0f0d1a;">
+        <img src="intended.png" alt="The intended office design" style="display: block; width: 100%;">
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 10px; height: 10px; background: #e8342c;"></div>
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.5px;">SHIPPED TODAY</div>
+        <div style="margin-left: auto; font-size: 10px; color: #e8342c;">half-blocks &middot; 160 &times; 96 logical pixels</div>
+      </div>
+      <div style="border: 1px solid #4a1f1f; background: #0f0d1a;">
+        <img src="shipped.png" alt="What the published image renders" style="display: block; width: 100%;">
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 24px;">
+
+    <div style="background: #131126; border: 1px solid #241f3d; border-left: 3px solid #e8342c; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #e8342c; letter-spacing: 1.5px;">THE SIGN IS NOT WORDS</div>
+      <div style="font-size: 11px; color: #b4aec2; line-height: 1.85; margin-top: 9px;">
+        It reads <span style="color: #e8e2d6; font-weight: 700;">THEY-HOAI!</span> where it should read
+        THEY-WORK. W draws as H, R as A, K as an exclamation. The letterform table is correct, so the
+        glyph renderer is dropping the diagonals.
+      </div>
+    </div>
+
+    <div style="background: #131126; border: 1px solid #241f3d; border-left: 3px solid #f0b429; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #f0b429; letter-spacing: 1.5px;">THE WORST RUNG SHIPS</div>
+      <div style="font-size: 11px; color: #b4aec2; line-height: 1.85; margin-top: 9px;">
+        Measured through a pty against the published tag:
+        <span style="color: #e8e2d6;">9,975 half-blocks, 0 quadrants, 0 sextants.</span>
+        The runtime image sets no locale, so the renderer refuses anything better.
+      </div>
+    </div>
+
+    <div style="background: #131126; border: 1px solid #241f3d; border-left: 3px solid #8a8299; padding: 15px 17px;">
+      <div style="font-size: 10px; font-weight: 700; color: #8a8299; letter-spacing: 1.5px;">EVERY EDGE IS RAGGED</div>
+      <div style="font-size: 11px; color: #b4aec2; line-height: 1.85; margin-top: 9px;">
+        Half-blocks give one pixel across and two down, so the plate edge steps, walls fray, and
+        loose pixels float free of their sprites. Horizontal detail costs twice what vertical does.
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 20px; margin-top: 22px; background: #131126; border: 1px solid #241f3d; padding: 16px 20px;">
+    <div style="font-size: 11px; font-weight: 700; color: #56c26a; letter-spacing: 1.5px; white-space: nowrap;">THE GOOD NEWS</div>
+    <div style="font-size: 11px; color: #b4aec2; line-height: 1.8;">
+      None of this is the design being unachievable, and none of it is the user's terminal. The same
+      code already draws the same scene at
+      <span style="color: #e8e2d6; font-weight: 700;">1280 &times; 608</span> when a graphics protocol is
+      negotiated &mdash; sixty-six times the pixels of what ships. The gap is packaging and a glyph bug,
+      not art.
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

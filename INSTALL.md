@@ -40,6 +40,10 @@ or unreadable setup. Because the block uses `set -e`, the interactive office
 is not started after a failed check. Keep the reported Docker/permission error;
 do not dismiss it as an empty office.
 
+`--doctor` and `--once` are non-rendering diagnostics and also work with stdin
+redirected, in a pipe, or in CI. In those modes the installer does not request
+a Docker TTY. Opening the interactive office still requires a terminal.
+
 For a machine with no agent stores, use the Docker-only README demo. To test
 the installer itself in demo mode, replace both final installer invocations
 with one `sh "$installer" --demo`; retain the download and checksum checks.
@@ -111,10 +115,10 @@ docker run --rm -it \
   --read-only \
   --cap-drop ALL \
   --security-opt no-new-privileges \
-  -e TERM -e COLORTERM \
+  -e TERM -e COLORTERM -e TERM_PROGRAM \
   -e THEYWORK_CLAUDE_HOME=/data/claude \
   -e THEYWORK_CODEX_HOME=/data/codex \
-  -e THEYWORK_COLOR -e NO_COLOR \
+  -e THEYWORK_ENCODING -e THEYWORK_COLOR -e NO_COLOR \
   -v "$HOME/.claude:/data/claude:ro" \
   -v "$HOME/.codex:/data/codex:ro" \
   they-work:local
@@ -266,6 +270,8 @@ Configuration variables:
 | --- | --- |
 | `THEYWORK_CLAUDE_HOME` | Claude root; `/data/claude` in the container. |
 | `THEYWORK_CODEX_HOME` | Codex root; `/data/codex` in the container. |
+| `TERM_PROGRAM` | Forwarded for iTerm2's older capability fallback; ignored by terminals that do not use it. |
+| `THEYWORK_ENCODING` | `sextants`, `quadrants`, or `half-blocks`; leave unset for terminal detection. |
 | `THEYWORK_COLOR` | `none`, `true`, or `256`; unknown/unset values use terminal detection. |
 | `NO_COLOR` | Any presence forces monochrome and overrides `THEYWORK_COLOR`. |
 
@@ -275,6 +281,7 @@ otherwise the renderer falls back to the 256-color palette.
 ~~~bash
 THEYWORK_COLOR=none make run
 NO_COLOR=1 make run
+THEYWORK_ENCODING=sextants make run
 ~~~
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for crate boundaries, read-only source

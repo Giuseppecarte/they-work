@@ -1264,7 +1264,7 @@ mod m3_tests {
             frame.height(),
             colors.len()
         );
-        assert_eq!(checksum, 0x02c9_6410_0ba2_996b);
+        assert_eq!(checksum, 0xb9d5_c738_6239_cced);
     }
 
     #[test]

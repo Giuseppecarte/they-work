@@ -9,10 +9,11 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync::{Arc, OnceLock};
 
 use ratatui::style::Color;
-use theywork_core::{Activity, Agent, Millis, Worker, WorkerStatus};
+use theywork_core::{Activity, Agent, Millis, Worker};
 
 const WORKER_WIDTH: usize = 24;
-const WORKER_HEIGHT: usize = 19;
+const WORKER_HEIGHT: usize = 34;
+pub(crate) const WORKER_HEAD_HEIGHT: usize = 17;
 
 /// The six stable wardrobe slots used by every surface that draws a worker.
 /// Values are deliberately small indexes rather than colors or glyphs so the
@@ -37,7 +38,6 @@ impl WorkerLook {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct WorkerRenderKey {
     agent: Agent,
-    status: u8,
     activity: ActivityKind,
     look: WorkerLook,
 }
@@ -355,10 +355,8 @@ impl SpriteSet {
 
     pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
         let activity = ActivityKind::from_activity(&worker.activity);
-        let status = worker.status_at(now);
         let key = WorkerRenderKey {
             agent: worker.agent,
-            status: status_index(status),
             activity,
             look,
         };
@@ -366,7 +364,7 @@ impl SpriteSet {
         let animation_now = self.animation_time.get().unwrap_or(now);
         cache
             .entry(key)
-            .or_insert_with(|| worker_animation_for_look(worker.agent, look, activity, status))
+            .or_insert_with(|| worker_animation_for_look(worker.agent, look, activity))
             .frame_at(animation_now)
             .clone()
     }
@@ -414,15 +412,6 @@ impl SpriteSet {
     }
 }
 
-fn status_index(status: WorkerStatus) -> u8 {
-    match status {
-        WorkerStatus::Running => 0,
-        WorkerStatus::Idle => 1,
-        WorkerStatus::Blocked => 2,
-        WorkerStatus::Failed => 3,
-    }
-}
-
 fn replace_char(row: &mut String, index: usize, replacement: char) {
     let mut chars: Vec<char> = row.chars().collect();
     if let Some(slot) = chars.get_mut(index) {
@@ -443,64 +432,64 @@ fn activity_props(kind: ActivityKind, frame: usize) -> Vec<String> {
 
     match kind {
         ActivityKind::Typing => {
-            put(&mut rows, 6, 18, if frame == 0 { "MM" } else { "MO" });
-            put(&mut rows, 7, 18, if frame == 0 { "MM" } else { "OM" });
-            put(&mut rows, 8, 19, "│");
-            put(&mut rows, 9, 18, "KK");
-            put(&mut rows, 10, 2 + frame, "kkkk");
+            put(&mut rows, 27, 1 + frame, "#kkkkkk#");
+            put(
+                &mut rows,
+                28,
+                2,
+                if frame == 0 { "k#k#k#" } else { "#k#k#k" },
+            );
         }
         ActivityKind::Reading => {
-            put(&mut rows, 5, 1 + frame, "[DD]");
-            put(&mut rows, 6, 2 + frame, "[DD]");
+            put(&mut rows, 18 + frame, 0, "#kkkk#");
+            put(&mut rows, 19 + frame, 0, "#k##k#");
+            put(&mut rows, 20 + frame, 0, "#kkkk#");
         }
         ActivityKind::Editing => {
-            put(&mut rows, 5, 18, if frame == 0 { "╱" } else { "╲" });
-            put(&mut rows, 6, 17, "W");
-            put(&mut rows, 7, 18, "W");
-            put(&mut rows, 8, 19, "W");
+            put(&mut rows, 17 + frame, 21, "k#");
+            put(&mut rows, 19 + frame, 20, "#k#");
+            put(&mut rows, 22, 20, "n##");
         }
         ActivityKind::Searching => {
-            put(&mut rows, 7, 1, if frame == 0 { "OO" } else { " O" });
-            put(&mut rows, 8, 1, "O╲");
-            put(&mut rows, 9, 3, "╲");
+            put(&mut rows, 11, frame, "#zz#");
+            put(&mut rows, 12, frame, "#zz#");
+            put(&mut rows, 13, 1 + frame, "##k");
+            put(&mut rows, 14, 3 + frame, "k");
         }
         ActivityKind::Thinking => {
-            put(&mut rows, 1, 17, if frame == 0 { "(o)" } else { "( )" });
-            put(&mut rows, 2, 19, "·");
+            put(&mut rows, 1, 20, if frame == 0 { "#kk#" } else { ".##." });
+            put(&mut rows, 2, 20, "#kk#");
+            put(&mut rows, 4, 20, "#");
         }
         ActivityKind::Talking => {
-            put(&mut rows, 1, 15, if frame == 0 { "[hi]" } else { "[OK]" });
-            put(&mut rows, 2, 17, "╰");
+            put(&mut rows, 1, 19, "#kkk#");
+            put(&mut rows, 2, 19, if frame == 0 { "#k#k#" } else { "##kk#" });
+            put(&mut rows, 3, 20, "###");
+            put(&mut rows, 4, 20, "#");
         }
         ActivityKind::Waiting => {
-            put(&mut rows, 0, 17, "!");
-            put(&mut rows, 1, 17, "!");
-            put(&mut rows, 2, 17, "!");
-            put(&mut rows, 4 + frame.min(1), 2, "U");
-            put(&mut rows, 5 + frame.min(1), 1, "U");
-            put(&mut rows, 6 + frame.min(1), 2, "U");
+            let lift = frame.min(1);
+            put(&mut rows, 17 - lift, 1, "#ll#");
+            put(&mut rows, 18 - lift, 1, "#ss#");
+            put(&mut rows, 19 - lift, 2, "##");
+            put(&mut rows, 20 - lift, 2, "vv");
         }
         ActivityKind::Idle => {
-            put(&mut rows, 1, 17, if frame == 0 { "z" } else { "Z" });
-            put(&mut rows, 2, 19, "z");
-            put(&mut rows, 10, 18, "c");
-            put(&mut rows, 11, 18, "u");
+            put(&mut rows, 2, 20, if frame == 0 { "z" } else { "k" });
+            put(&mut rows, 4, 22, "z");
+            put(&mut rows, 26, 20, "#oo#");
+            put(&mut rows, 27, 20, "#oo#");
         }
         ActivityKind::Error => {
-            put(&mut rows, 2, 18, if frame == 0 { "^^" } else { "~~" });
-            put(&mut rows, 9, 18, "L");
-            put(&mut rows, 10, 18, "L");
+            put(&mut rows, 10 + frame, 21, "kk");
+            put(&mut rows, 12 + frame, 20, "k##");
+            put(&mut rows, 26, 21, "aa");
         }
     }
     rows
 }
 
-fn worker_animation_for_look(
-    agent: Agent,
-    look: WorkerLook,
-    kind: ActivityKind,
-    status: WorkerStatus,
-) -> Animation {
+fn worker_animation_for_look(agent: Agent, look: WorkerLook, kind: ActivityKind) -> Animation {
     let duration = match kind {
         ActivityKind::Typing => 260,
         ActivityKind::Reading => 620,
@@ -514,45 +503,28 @@ fn worker_animation_for_look(
     };
     Animation::new(
         (0..2)
-            .map(|frame| wardrobe_frame(agent, look, kind, status, frame))
+            .map(|frame| wardrobe_frame(agent, look, kind, frame))
             .collect(),
         duration,
     )
 }
-fn wardrobe_frame(
-    agent: Agent,
-    look: WorkerLook,
-    kind: ActivityKind,
-    status: WorkerStatus,
-    frame: usize,
-) -> Sprite {
-    let mut rows: Vec<String> = BASE_WORKER_ROWS
+fn wardrobe_frame(agent: Agent, look: WorkerLook, kind: ActivityKind, frame: usize) -> Sprite {
+    let mut rows: Vec<String> = DESIGN_WORKER_ROWS
         .iter()
         .map(|row| (*row).to_string())
         .collect();
-    let hair_key = ['H', 'J', 'N', 'R', 'T', 'V'][look.hair as usize];
-    let skin_key = ['S', 'a', 'd', 'n', 'r', 'y'][look.skin as usize];
-    let face_key = ['E', 'e', 'X', 'Y', 'Z'][look.face as usize];
-    replace_key(&mut rows, 'H', hair_key);
-    replace_key(&mut rows, 'S', skin_key);
-    replace_key(&mut rows, 'E', face_key);
-    let (top_base, top_light) = if look.contractor {
-        ('G', 'g')
-    } else {
-        ('C', 'W')
-    };
-    replace_key(&mut rows, 'C', top_base);
-    replace_key(&mut rows, 'W', top_light);
-    apply_hair_shape(&mut rows, hair_key, look.hair);
-    apply_headwear(&mut rows, hair_key, look.head);
-    apply_top_pattern(&mut rows, top_base, look.top);
+    apply_hair_style(&mut rows, look.head);
+    apply_face(&mut rows, look.face);
+    apply_top_cut(&mut rows, look.top);
+    apply_desk_prop(&mut rows, look.desk_prop);
     if matches!(kind, ActivityKind::Thinking) && frame == 1 {
-        replace_char(&mut rows[3], 11, '.');
+        replace_char(&mut rows[8], 10, 's');
+        replace_char(&mut rows[8], 14, 's');
     }
     if matches!(kind, ActivityKind::Typing | ActivityKind::Editing) {
-        let hand = if frame == 0 { 'A' } else { 'B' };
-        replace_char(&mut rows[9], 7, hand);
-        replace_char(&mut rows[9], 14, if hand == 'A' { 'B' } else { 'A' });
+        let (left, right) = if frame == 0 { ('l', 'd') } else { ('d', 'l') };
+        replace_char(&mut rows[26], 6, left);
+        replace_char(&mut rows[26], 17, right);
     }
     let props = activity_props(kind, frame);
     for (row, prop_row) in rows.iter_mut().zip(props) {
@@ -562,175 +534,225 @@ fn wardrobe_frame(
             }
         }
     }
-    let prop_key = ['1', '2', '3', '4', '5', '6'][look.desk_prop as usize];
-    replace_char(&mut rows[14], 2 + usize::from(look.desk_prop % 4), prop_key);
-    if look.contractor {
-        replace_char(&mut rows[0], 17, 'b');
-        replace_char(&mut rows[1], 17, 'b');
-    }
-    let palette = wardrobe_palette(agent, status);
+    let palette = wardrobe_palette(agent, look);
     Sprite::from_owned_rows(rows, &palette)
 }
-fn replace_key(rows: &mut [String], from: char, to: char) {
-    for row in rows {
-        let mut chars: Vec<char> = row.chars().collect();
-        for slot in &mut chars {
-            if *slot == from {
-                *slot = to;
+fn replace_row(rows: &mut [String], index: usize, row: &str) {
+    debug_assert_eq!(row.chars().count(), WORKER_WIDTH);
+    rows[index] = row.to_string();
+}
+fn apply_hair_style(rows: &mut [String], variant: u8) {
+    match variant {
+        0 => {}
+        1 => replace_row(rows, 5, "....#hh##########hh....."),
+        2 => {
+            replace_row(rows, 2, ".....##nnnnnnnnnn##.....");
+            replace_row(rows, 3, ".....#nnnnnnnnnnnn#.....");
+            replace_row(rows, 4, ".....##nnnnnnnnnn##.....");
+        }
+        3 => {
+            replace_row(rows, 1, "........########........");
+            replace_row(rows, 2, "......##nnnnnnnn##......");
+            replace_row(rows, 3, ".....#nnnnnnnnnnnn#.....");
+        }
+        4 => {
+            replace_row(rows, 5, "....#hh##########hh.....");
+            replace_char(&mut rows[9], 20, '#');
+            replace_char(&mut rows[10], 20, 'h');
+            replace_char(&mut rows[11], 20, '#');
+        }
+        _ => {
+            for column in [7, 10, 13, 16] {
+                replace_char(&mut rows[1], column, '#');
+                replace_char(&mut rows[2], column, 'h');
             }
         }
-        *row = chars.into_iter().collect();
     }
 }
-fn apply_hair_shape(rows: &mut [String], key: char, variant: u8) {
+fn apply_face(rows: &mut [String], variant: u8) {
+    match variant {
+        0 => {}
+        1 => replace_row(rows, 8, "....#g#s#we##we#s#g#...."),
+        2 => {
+            replace_row(rows, 12, "....#g#ggmmmmmmgg#g#....");
+            replace_row(rows, 13, ".....##gggggggggg##.....");
+            replace_row(rows, 14, "......#gggggggggs#......");
+        }
+        3 => replace_row(rows, 8, "....#g#ss##ss##ss#g#...."),
+        _ => replace_row(rows, 7, "....#g#ssssssssss#g#...."),
+    }
+}
+
+fn apply_top_cut(rows: &mut [String], variant: u8) {
     match variant {
         0 => {}
         1 => {
-            replace_char(&mut rows[0], 8, '.');
-            replace_char(&mut rows[0], 15, '.');
+            for row in rows.iter_mut().take(24).skip(20) {
+                replace_char(row, 11, '#');
+                replace_char(row, 12, '#');
+            }
         }
         2 => {
-            replace_char(&mut rows[1], 7, key);
-            replace_char(&mut rows[1], 16, key);
+            for row in rows.iter_mut().take(26).skip(20) {
+                for column in [8, 9, 14, 15] {
+                    replace_char(row, column, 'v');
+                }
+            }
+            replace_char(&mut rows[23], 11, 'b');
+            replace_char(&mut rows[24], 12, 'b');
         }
         3 => {
-            replace_char(&mut rows[2], 7, key);
-            replace_char(&mut rows[2], 16, key);
+            for row in [20, 22, 24] {
+                for column in 7..=16 {
+                    replace_char(&mut rows[row], column, 'b');
+                }
+            }
         }
         4 => {
-            replace_char(&mut rows[4], 8, key);
-            replace_char(&mut rows[4], 15, key);
+            for (column, key) in [(9, 'k'), (10, 'k'), (11, 'k'), (12, '#')] {
+                replace_char(&mut rows[23], column, key);
+            }
         }
         _ => {
-            replace_char(&mut rows[3], 8, key);
-            replace_char(&mut rows[3], 15, key);
+            for row in rows.iter_mut().take(27).skip(19) {
+                for column in [7, 8, 15, 16] {
+                    replace_char(row, column, 'v');
+                }
+            }
         }
     }
 }
-fn apply_headwear(rows: &mut [String], key: char, variant: u8) {
+
+fn apply_desk_prop(rows: &mut [String], variant: u8) {
+    let mut put = |row: usize, column: usize, text: &str| {
+        for (offset, key) in text.chars().enumerate() {
+            if rows[row].chars().nth(column + offset) == Some('.') {
+                replace_char(&mut rows[row], column + offset, key);
+            }
+        }
+    };
     match variant {
-        0 => {}
+        0 => {
+            put(25, 20, "#oo#");
+            put(26, 20, "#oo#");
+        }
         1 => {
-            replace_char(&mut rows[0], 10, key);
-            replace_char(&mut rows[0], 13, key);
+            put(22, 0, ".t.t");
+            put(23, 0, "ttt#");
+            put(24, 1, "#t#");
+            put(25, 1, "#o#");
         }
         2 => {
-            replace_char(&mut rows[0], 8, key);
-            replace_char(&mut rows[0], 15, key);
+            put(27, 0, "#kkkkkkkk#");
+            put(28, 1, "k#k#k#k");
         }
         3 => {
-            replace_char(&mut rows[0], 9, key);
-            replace_char(&mut rows[1], 8, key);
+            put(21, 0, "#kkk#");
+            put(22, 0, "#k#k#");
+            put(23, 0, "#kkk#");
         }
         4 => {
-            replace_char(&mut rows[0], 14, key);
-            replace_char(&mut rows[1], 15, key);
+            put(20, 20, "####");
+            put(21, 20, "#zz#");
+            put(22, 20, "#zz#");
+            put(23, 20, "####");
         }
         _ => {
-            replace_char(&mut rows[1], 7, key);
-            replace_char(&mut rows[1], 16, key);
+            put(24, 20, "#nn#");
+            put(25, 20, "#nn#");
         }
     }
 }
-fn apply_top_pattern(rows: &mut [String], base: char, variant: u8) {
-    for column in 9..15 {
-        if (column + usize::from(variant)) % 3 == 0 {
-            replace_char(&mut rows[8], column, base);
-        }
-    }
-    if variant % 2 == 1 {
-        replace_char(&mut rows[9], 10, base);
-        replace_char(&mut rows[9], 13, base);
-    }
-}
-const BASE_WORKER_ROWS: &[&str] = &[
-    ".........HHHHHH.........",
-    "........HHHHHHHH........",
-    "........HSSSSSSH........",
-    "........HSEEEESH........",
-    ".........SSSSSS.........",
-    "..........SSSS..........",
-    ".........CCCCCC.........",
-    "........CCCCCCCC........",
-    "........CWWWWWWC........",
-    "........CWWWWWWC........",
-    ".........CCCCCC.........",
-    "..........PPPP..........",
-    ".........PPPPPP.........",
-    ".........PPPPPP.........",
-    "..........PPPP..........",
+
+const DESIGN_WORKER_ROWS: &[&str] = &[
     "........................",
-    "........................",
-    "........................",
-    "........................",
+    ".......##########.......",
+    ".....##gggggggggg##.....",
+    ".....#ghhhhhhhhhhg#.....",
+    ".....#ghhiiiiiihhg#.....",
+    ".....#g##########g#.....",
+    "....#g#llssssssll#g#....",
+    "....#g#ss##ss##ss#g#....",
+    "....#g#sswesswess#g#....",
+    "....#g#ssssssssss#g#....",
+    "....#g#ssssddssss#g#....",
+    "....#g#ssssssssss#g#....",
+    "....#g#sssmmmmsss#g#....",
+    ".....##ssssssssss##.....",
+    "......#ssssssssss#......",
+    "......##ssssssss##......",
+    ".......##dddddd##.......",
+    ".......##########.......",
+    ".....##cccccccccc##.....",
+    "....#vvccccccccccvv#....",
+    "....#vvccbbbbbbccvv#....",
+    "....#vvcbbbbbbbbcvv#....",
+    "....#vvccbbbbbbccvv#....",
+    "....#vvccccccccccvv#....",
+    "....#vvccccccccccvv#....",
+    ".....#vccccccccccv#.....",
+    ".....#dccccccccccd#.....",
+    ".....#cccccccccccc#.....",
+    "......############......",
+    ".......####..####.......",
+    ".......#pp#..#pp#.......",
+    ".......#pp#..#pp#.......",
+    ".......#qq#..#qq#.......",
+    "......##oo####oo##......",
 ];
 
-fn wardrobe_palette(agent: Agent, status: WorkerStatus) -> Vec<(char, Color)> {
-    let (shirt, shade) = match agent {
-        Agent::Codex => (Color::Rgb(79, 158, 232), Color::Rgb(58, 124, 189)),
-        Agent::Claude => (Color::Rgb(232, 131, 74), Color::Rgb(201, 106, 55)),
+fn wardrobe_palette(agent: Agent, look: WorkerLook) -> Vec<(char, Color)> {
+    let cloth = match agent {
+        Agent::Codex => [
+            Color::Rgb(79, 158, 232),
+            Color::Rgb(47, 111, 174),
+            Color::Rgb(127, 189, 242),
+        ],
+        Agent::Claude => [
+            Color::Rgb(232, 131, 74),
+            Color::Rgb(180, 95, 44),
+            Color::Rgb(255, 176, 122),
+        ],
     };
-    let marker = if status == WorkerStatus::Blocked {
-        Color::Rgb(240, 180, 41)
-    } else {
-        Color::Rgb(232, 226, 214)
-    };
+    let skin = [
+        [(240, 201, 160), (201, 154, 114), (255, 227, 196)],
+        [(217, 157, 120), (185, 120, 88), (240, 187, 152)],
+        [(185, 120, 88), (143, 84, 61), (211, 154, 121)],
+        [(155, 98, 77), (117, 66, 53), (189, 128, 104)],
+        [(125, 73, 61), (91, 48, 41), (166, 106, 91)],
+        [(240, 207, 173), (201, 162, 127), (255, 230, 204)],
+    ][usize::from(look.skin % 6)];
+    let hair = [
+        [(58, 42, 30), (36, 26, 18), (92, 68, 48)],
+        [(201, 132, 58), (138, 83, 32), (240, 180, 106)],
+        [(138, 130, 153), (92, 86, 110), (201, 194, 214)],
+        [(42, 36, 64), (26, 22, 38), (88, 75, 108)],
+        [(107, 68, 41), (74, 45, 27), (151, 98, 56)],
+        [(217, 178, 106), (163, 130, 63), (245, 215, 155)],
+    ][usize::from(look.hair % 6)];
+    let rgb = |(red, green, blue)| Color::Rgb(red, green, blue);
     vec![
-        ('H', Color::Rgb(43, 37, 66)),
-        ('J', Color::Rgb(58, 51, 88)),
-        ('N', Color::Rgb(84, 51, 31)),
-        ('R', Color::Rgb(107, 68, 41)),
-        ('T', Color::Rgb(138, 90, 56)),
-        ('V', Color::Rgb(138, 130, 153)),
-        ('S', Color::Rgb(242, 192, 154)),
-        ('a', Color::Rgb(217, 157, 120)),
-        ('d', Color::Rgb(185, 120, 88)),
-        ('n', Color::Rgb(155, 98, 77)),
-        ('r', Color::Rgb(125, 73, 61)),
-        ('y', Color::Rgb(240, 207, 173)),
-        ('E', Color::Rgb(42, 36, 64)),
-        ('e', Color::Rgb(58, 53, 44)),
-        ('X', Color::Rgb(13, 11, 20)),
-        ('Y', Color::Rgb(138, 130, 153)),
-        ('Z', Color::Rgb(232, 226, 214)),
-        ('C', shirt),
-        ('W', shade),
-        ('G', Color::Rgb(138, 130, 153)),
-        ('g', Color::Rgb(232, 226, 214)),
-        ('P', Color::Rgb(42, 36, 64)),
-        ('A', Color::Rgb(244, 239, 228)),
-        ('B', Color::Rgb(232, 226, 214)),
-        ('M', Color::Rgb(88, 214, 232)),
-        ('k', Color::Rgb(138, 90, 56)),
-        ('D', Color::Rgb(232, 226, 214)),
-        ('O', Color::Rgb(90, 169, 201)),
-        ('L', Color::Rgb(232, 52, 44)),
-        ('U', Color::Rgb(232, 226, 214)),
-        ('!', marker),
-        ('c', Color::Rgb(84, 51, 31)),
-        ('u', Color::Rgb(138, 90, 56)),
-        ('z', Color::Rgb(138, 130, 153)),
-        ('│', Color::Rgb(42, 36, 64)),
-        ('╱', Color::Rgb(232, 226, 214)),
-        ('╲', Color::Rgb(232, 226, 214)),
-        ('╰', Color::Rgb(242, 192, 154)),
-        ('[', Color::Rgb(232, 226, 214)),
-        (']', Color::Rgb(232, 226, 214)),
-        ('h', Color::Rgb(232, 226, 214)),
-        ('i', Color::Rgb(232, 226, 214)),
-        ('K', Color::Rgb(232, 226, 214)),
-        ('^', Color::Rgb(138, 130, 153)),
-        ('~', Color::Rgb(138, 130, 153)),
-        ('(', Color::Rgb(138, 130, 153)),
-        (')', Color::Rgb(138, 130, 153)),
-        ('o', Color::Rgb(232, 226, 214)),
-        ('1', Color::Rgb(88, 214, 232)),
-        ('2', shirt),
-        ('3', shade),
-        ('4', Color::Rgb(138, 90, 56)),
-        ('5', Color::Rgb(90, 169, 201)),
-        ('6', Color::Rgb(232, 226, 214)),
-        ('b', Color::Rgb(232, 226, 214)),
+        ('#', Color::Rgb(26, 22, 38)),
+        ('s', rgb(skin[0])),
+        ('d', rgb(skin[1])),
+        ('l', rgb(skin[2])),
+        ('h', rgb(hair[0])),
+        ('g', rgb(hair[1])),
+        ('i', rgb(hair[2])),
+        ('e', Color::Rgb(26, 22, 38)),
+        ('w', Color::Rgb(255, 255, 255)),
+        ('m', Color::Rgb(181, 112, 92)),
+        ('c', cloth[0]),
+        ('v', cloth[1]),
+        ('b', cloth[2]),
+        ('p', Color::Rgb(43, 37, 66)),
+        ('q', Color::Rgb(28, 24, 48)),
+        ('o', Color::Rgb(74, 58, 42)),
+        ('a', Color::Rgb(232, 52, 44)),
+        ('n', Color::Rgb(240, 180, 41)),
+        ('t', Color::Rgb(86, 194, 106)),
+        ('k', Color::Rgb(201, 194, 214)),
+        ('z', Color::Rgb(88, 214, 232)),
     ]
 }
 fn static_palette() -> Vec<(char, Color)> {
@@ -1018,9 +1040,14 @@ mod tests {
         waiting.turn_in_flight = true;
         waiting.last_seen = 0;
         let look = worker_look(&waiting);
-        let waiting_frame =
-            sprites.worker_frame(&waiting, look, theywork_core::BLOCKED_AFTER_MS + 1);
-        assert_eq!(waiting_frame.pixel(17, 0), Some(Color::Rgb(240, 180, 41)));
+        let waiting_frame = sprites.worker_frame(&waiting, look, 0);
+        let raised_frame = sprites.worker_frame(&waiting, look, 450);
+        assert_ne!(waiting_frame.pixels(), raised_frame.pixels());
+        assert!(!waiting_frame
+            .pixels()
+            .iter()
+            .flatten()
+            .any(|color| *color == Color::Rgb(240, 180, 41)));
 
         let walk = sprites.manager_animation(false).frame_at(0);
         let attention = sprites.manager_animation(true).frame_at(0);
@@ -1049,7 +1076,7 @@ mod tests {
         let silhouettes = looks
             .iter()
             .map(|look| look.silhouette())
-            .collect::<std::collections::BTreeSet<_>>();
+            .collect::<std::collections::HashSet<_>>();
         assert_eq!(silhouettes.len(), looks.len());
         assert!(looks.iter().all(|look| look.head < 6
             && look.face < 5
@@ -1059,37 +1086,71 @@ mod tests {
             && look.hair < 6));
     }
     #[test]
-    fn wardrobe_tops_use_agent_hues_and_amber_only_for_blocked_markers() {
+    fn wardrobe_tops_use_only_agent_hues() {
         let look = worker_look(&test_worker(Agent::Claude));
-        let frame = |agent, contractor, status| {
+        let frame = |agent, contractor| {
             wardrobe_frame(
                 agent,
                 WorkerLook { contractor, ..look },
                 ActivityKind::Waiting,
-                status,
                 0,
             )
         };
         assert_eq!(
-            frame(Agent::Claude, false, WorkerStatus::Idle).pixel(9, 6),
+            frame(Agent::Claude, false).pixel(9, 18),
             Some(Color::Rgb(232, 131, 74))
         );
         assert_eq!(
-            frame(Agent::Codex, false, WorkerStatus::Idle).pixel(9, 6),
+            frame(Agent::Codex, false).pixel(9, 18),
             Some(Color::Rgb(79, 158, 232))
         );
         assert_eq!(
-            frame(Agent::Codex, true, WorkerStatus::Idle).pixel(9, 6),
-            Some(Color::Rgb(138, 130, 153))
+            frame(Agent::Codex, true).pixel(9, 18),
+            Some(Color::Rgb(79, 158, 232))
         );
-        assert_eq!(
-            frame(Agent::Codex, false, WorkerStatus::Idle).pixel(17, 0),
-            Some(Color::Rgb(232, 226, 214))
+    }
+
+    #[test]
+    fn design_worker_has_full_anatomy_and_small_material_palette() {
+        assert_eq!(DESIGN_WORKER_ROWS.len(), 34);
+        assert!(DESIGN_WORKER_ROWS
+            .iter()
+            .all(|row| row.chars().count() == 24));
+        let sprite = wardrobe_frame(
+            Agent::Codex,
+            WorkerLook {
+                head: 0,
+                face: 0,
+                top: 0,
+                desk_prop: 5,
+                skin: 0,
+                hair: 0,
+                contractor: false,
+            },
+            ActivityKind::Waiting,
+            0,
         );
-        assert_eq!(
-            frame(Agent::Codex, false, WorkerStatus::Blocked).pixel(17, 0),
-            Some(Color::Rgb(240, 180, 41))
-        );
+        for (x, y) in [
+            (9, 7),
+            (10, 8),
+            (12, 10),
+            (11, 12),
+            (6, 26),
+            (8, 30),
+            (8, 33),
+        ] {
+            assert!(
+                sprite.pixel(x, y).is_some(),
+                "missing anatomy at ({x}, {y})"
+            );
+        }
+        let colors = sprite
+            .pixels()
+            .iter()
+            .flatten()
+            .copied()
+            .collect::<std::collections::HashSet<_>>();
+        assert!(colors.len() <= 21, "worker uses {} colors", colors.len());
     }
     #[test]
     fn motion_setting_freezes_worker_animation_frames() {

@@ -192,7 +192,7 @@ board is what was meant.
 | `THEYWORK_COLOR` | force a colour depth |
 | `NO_COLOR` | honoured above everything else |
 
-Nothing is written to disk unless you pass `--config-dir`.
+No preference or configuration is written unless you pass `--config-dir`.
 
 ## Working on it
 

@@ -14,7 +14,7 @@ use crate::sprite::{look_for_worker, SpriteSet, WorkerLook};
 
 use super::{
     below_tab_bar, duration_label, elapsed_ms, has_area, human_tokens, inset, paint_opaque,
-    render_worker_with_look, safe_display, short_path, status_style, worker_status, PixelRect,
+    render_worker_head_with_look, safe_display, short_path, status_style, worker_status, PixelRect,
     ACCENT, ATTENTION_PANEL, BACKGROUND, GOOD, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
 };
 
@@ -531,7 +531,7 @@ fn draw_avatar(
     let height = area.height as usize;
     canvas.resize_for_cells(width, height);
     canvas.fill(background);
-    render_worker_with_look(
+    render_worker_head_with_look(
         canvas,
         sprites,
         worker,

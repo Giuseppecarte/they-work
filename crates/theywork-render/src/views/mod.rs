@@ -17,7 +17,7 @@ use ratatui::Frame;
 use theywork_core::{Millis, Office, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
-use crate::sprite::{SpriteSet, WorkerLook};
+use crate::sprite::{Sprite, SpriteSet, WorkerLook, WORKER_HEAD_HEIGHT};
 
 pub(crate) const BACKGROUND: Color = Color::Rgb(13, 11, 20);
 pub(crate) const WALL: Color = Color::Rgb(58, 51, 88);
@@ -343,20 +343,78 @@ pub(crate) fn render_worker_with_look(
     now: i64,
     placement: PixelRect,
 ) {
+    let sprite = sprites.worker_frame(worker, *look, now);
+    render_sprite_region(
+        canvas,
+        &sprite,
+        (0, 0, sprite.width(), sprite.height()),
+        placement,
+    );
+}
+
+pub(crate) fn render_worker_head_with_look(
+    canvas: &mut Canvas,
+    sprites: &SpriteSet,
+    worker: &Worker,
+    look: &WorkerLook,
+    now: i64,
+    placement: PixelRect,
+) {
+    let sprite = sprites.worker_frame(worker, *look, now);
+    render_sprite_region(
+        canvas,
+        &sprite,
+        (
+            0,
+            0,
+            sprite.width(),
+            WORKER_HEAD_HEIGHT.min(sprite.height()),
+        ),
+        placement,
+    );
+}
+
+fn render_sprite_region(
+    canvas: &mut Canvas,
+    sprite: &Sprite,
+    source: (usize, usize, usize, usize),
+    placement: PixelRect,
+) {
     let PixelRect {
         x,
         y,
         width,
         height,
     } = placement;
-    let sprite = sprites.worker_frame(worker, *look, now);
-    if width == 0 || height == 0 {
+    let (source_x, source_y, source_width, source_height) = source;
+    if width == 0 || height == 0 || source_width == 0 || source_height == 0 {
         return;
     }
-    if width == sprite.width() && height == sprite.height() {
-        canvas.blit(&sprite, x, y);
+    let integer_scale = (width / source_width).min(height / source_height);
+    let (draw_width, draw_height) = if integer_scale > 0 {
+        (
+            source_width.saturating_mul(integer_scale),
+            source_height.saturating_mul(integer_scale),
+        )
     } else {
-        canvas.blit_scaled(&sprite, x, y, width, height);
+        let draw_width = width
+            .min(height.saturating_mul(source_width) / source_height)
+            .max(1);
+        let draw_height = height
+            .min(width.saturating_mul(source_height) / source_width)
+            .max(1);
+        (draw_width, draw_height)
+    };
+    let draw_x = x.saturating_add(width.saturating_sub(draw_width) / 2);
+    let draw_y = y.saturating_add(height.saturating_sub(draw_height) / 2);
+    for target_y in 0..draw_height {
+        let sample_y = source_y + target_y.saturating_mul(source_height) / draw_height;
+        for target_x in 0..draw_width {
+            let sample_x = source_x + target_x.saturating_mul(source_width) / draw_width;
+            if let Some(color) = sprite.pixel(sample_x, sample_y) {
+                canvas.set(draw_x + target_x, draw_y + target_y, color);
+            }
+        }
     }
 }
 
@@ -564,5 +622,57 @@ mod tests {
                 && !(0x2600..=0x27bf).contains(&code)
                 && code != 0xfe0f
         }));
+    }
+
+    #[test]
+    fn phone_avatar_is_the_head_crop_of_the_office_sprite() {
+        use theywork_core::{Agent, OfficeId, WorkerId};
+
+        let worker = Worker::new(
+            WorkerId("crop-worker".into()),
+            OfficeId("crop-office".into()),
+            Agent::Codex,
+            "Crop test".into(),
+            0,
+        );
+        let look = crate::sprite::worker_look(&worker);
+        let sprites = SpriteSet::new();
+        let mut full = Canvas::new(24, 34);
+        render_worker_with_look(
+            &mut full,
+            &sprites,
+            &worker,
+            &look,
+            0,
+            PixelRect {
+                x: 0,
+                y: 0,
+                width: 24,
+                height: 34,
+            },
+        );
+        let mut head = Canvas::new(24, WORKER_HEAD_HEIGHT);
+        render_worker_head_with_look(
+            &mut head,
+            &sprites,
+            &worker,
+            &look,
+            0,
+            PixelRect {
+                x: 0,
+                y: 0,
+                width: 24,
+                height: WORKER_HEAD_HEIGHT,
+            },
+        );
+        for y in 0..WORKER_HEAD_HEIGHT {
+            for x in 0..24 {
+                assert_eq!(
+                    head.pixel(x, y),
+                    full.pixel(x, y),
+                    "crop mismatch at ({x}, {y})"
+                );
+            }
+        }
     }
 }

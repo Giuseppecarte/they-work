@@ -5,7 +5,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 use ratatui::Frame;
-use theywork_core::{Agent, Millis, Office, Worker, WorkerStatus};
+use theywork_core::{Millis, Office, Worker, WorkerStatus};
 
 use crate::canvas::{Canvas, PixelEncoding};
 use crate::sprite::{worker_looks, Sprite, SpriteSet, WorkerLook};
@@ -311,7 +311,17 @@ pub(crate) enum RoomScale {
 impl RoomScale {
     fn worker_size(self, grid: IsoGrid) -> (usize, usize) {
         match self {
-            Self::Floor => (grid.scale_width(9), grid.scale_half_height(12)),
+            Self::Floor
+                if grid.pixels_per_cell
+                    != (
+                        grid.encoding.width_per_cell(),
+                        grid.encoding.height_per_cell(),
+                    ) =>
+            {
+                (24 * 4, 34 * 4)
+            }
+            Self::Floor if grid.encoding == PixelEncoding::Sextants => (24, 34),
+            Self::Floor => (12, 17),
         }
     }
 
@@ -410,7 +420,7 @@ impl RoomScale {
     }
 
     fn manager_size(self, grid: IsoGrid) -> (usize, usize) {
-        self.worker_size(grid)
+        (grid.scale_width(9), grid.scale_half_height(12))
     }
 }
 
@@ -954,6 +964,35 @@ fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
     );
 }
 fn compact_glyph(character: char) -> [u8; 5] {
+    match character.to_ascii_uppercase() {
+        'A' => return [0b010, 0b101, 0b111, 0b101, 0b101],
+        'B' => return [0b110, 0b101, 0b110, 0b101, 0b110],
+        'C' => return [0b011, 0b100, 0b100, 0b100, 0b011],
+        'D' => return [0b110, 0b101, 0b101, 0b101, 0b110],
+        'E' => return [0b111, 0b100, 0b110, 0b100, 0b111],
+        'F' => return [0b111, 0b100, 0b110, 0b100, 0b100],
+        'G' => return [0b011, 0b100, 0b101, 0b101, 0b011],
+        'H' => return [0b101, 0b101, 0b111, 0b101, 0b101],
+        'I' => return [0b111, 0b010, 0b010, 0b010, 0b111],
+        'J' => return [0b001, 0b001, 0b001, 0b101, 0b010],
+        'K' => return [0b101, 0b110, 0b100, 0b110, 0b101],
+        'L' => return [0b100, 0b100, 0b100, 0b100, 0b111],
+        'M' => return [0b101, 0b111, 0b111, 0b101, 0b101],
+        'N' => return [0b101, 0b111, 0b111, 0b111, 0b101],
+        'O' => return [0b010, 0b101, 0b101, 0b101, 0b010],
+        'P' => return [0b110, 0b101, 0b110, 0b100, 0b100],
+        'Q' => return [0b010, 0b101, 0b101, 0b011, 0b001],
+        'R' => return [0b110, 0b101, 0b110, 0b101, 0b101],
+        'S' => return [0b011, 0b100, 0b010, 0b001, 0b110],
+        'T' => return [0b111, 0b010, 0b010, 0b010, 0b010],
+        'U' => return [0b101, 0b101, 0b101, 0b101, 0b111],
+        'V' => return [0b101, 0b101, 0b101, 0b101, 0b010],
+        'W' => return [0b101, 0b101, 0b111, 0b111, 0b101],
+        'X' => return [0b101, 0b101, 0b010, 0b101, 0b101],
+        'Y' => return [0b101, 0b101, 0b010, 0b010, 0b010],
+        'Z' => return [0b111, 0b001, 0b010, 0b100, 0b111],
+        _ => {}
+    }
     let glyph = glyph_5x7(character);
     [0, 1, 3, 5, 6].map(|row| {
         let source = glyph[row];
@@ -1176,6 +1215,29 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
             y_scale,
         );
     }
+    // Later glyphs rise into earlier glyphs' extrusion. Restore every face
+    // after composing the complete word so shadows cannot turn W/R/K into
+    // lookalike letters at image density.
+    for (character_index, character) in line.chars().enumerate() {
+        let glyph = glyph_5x7(character);
+        let glyph_x = x0 + character_index as i32 * glyph_pitch as i32;
+        let glyph_y = top + character_index as i32 * rise_per_glyph as i32;
+        for (row_index, bits) in glyph.iter().enumerate() {
+            for column_index in 0..5 {
+                if bits & (1 << (4 - column_index)) != 0 {
+                    set_sign_block(
+                        canvas,
+                        glyph_x + column_index * x_scale as i32,
+                        glyph_y + row_index as i32 * y_scale as i32,
+                        x_scale,
+                        y_scale,
+                        TITLE_COLOR,
+                        floor_limit,
+                    );
+                }
+            }
+        }
+    }
 }
 
 fn glyph_5x7(character: char) -> [u8; 7] {
@@ -1396,63 +1458,7 @@ fn blit_floor_worker(
     width: usize,
     height: usize,
 ) {
-    if width == 0 || height == 0 || sprite.width() == 0 || sprite.height() == 0 {
-        return;
-    }
-    // The last four rows of the worker sprite are reserved for transparent
-    // breathing room. Cropping that empty tail keeps the seated figure's head,
-    // shirt, and legs legible when the full sprite is reduced to floor scale.
-    let source_height = sprite.height().saturating_sub(4).max(1);
-    let mut occupied = vec![false; width.saturating_mul(height)];
-    for dy in 0..height {
-        let sy = dy.saturating_mul(source_height) / height;
-        for dx in 0..width {
-            let sx = dx.saturating_mul(sprite.width()) / width;
-            if sprite.pixel(sx, sy).is_some() {
-                occupied[dy * width + dx] = true;
-            }
-        }
-    }
-
-    // A one-pixel contour restores the hair/head silhouette after reduction
-    // and separates the shirt from the pale floor without changing its hue.
-    for dy in 0..height {
-        for dx in 0..width {
-            if !occupied[dy * width + dx] {
-                continue;
-            }
-            for y_offset in -1..=1 {
-                for x_offset in -1..=1 {
-                    let neighbor_x = dx as i32 + x_offset;
-                    let neighbor_y = dy as i32 + y_offset;
-                    let outside = neighbor_x < 0
-                        || neighbor_y < 0
-                        || neighbor_x >= width as i32
-                        || neighbor_y >= height as i32;
-                    let empty =
-                        outside || !occupied[neighbor_y as usize * width + neighbor_x as usize];
-                    if empty {
-                        set_pixel(
-                            canvas,
-                            x + neighbor_x,
-                            y + neighbor_y,
-                            outline_color(canvas),
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    for dy in 0..height {
-        let sy = dy.saturating_mul(source_height) / height;
-        for dx in 0..width {
-            let sx = dx.saturating_mul(sprite.width()) / width;
-            if let Some(color) = sprite.pixel(sx, sy) {
-                set_pixel(canvas, x + dx as i32, y + dy as i32, color);
-            }
-        }
-    }
+    blit_scaled_signed(canvas, sprite, x, y, width, height);
 }
 
 fn lerp_point(
@@ -1568,292 +1574,6 @@ fn draw_rug(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
     draw_line(canvas, right.0, right.1, bottom.0, bottom.1, RUG_BORDER);
 }
 
-fn worker_detail_rect(
-    x: i32,
-    y: i32,
-    width: usize,
-    height: usize,
-    bounds: (usize, usize, usize, usize),
-) -> (i32, i32, i32, i32) {
-    let (left, top, right, bottom) = bounds;
-    let x0 = x + left.saturating_mul(width).div_euclid(24) as i32;
-    let y0 = y + top.saturating_mul(height).div_euclid(15) as i32;
-    let x1 = x + right.saturating_mul(width).div_ceil(24) as i32;
-    let y1 = y + bottom.saturating_mul(height).div_ceil(15) as i32;
-    (x0, y0, (x1 - x0).max(1), (y1 - y0).max(1))
-}
-
-fn paint_worker_detail(
-    canvas: &mut Canvas,
-    placement: (i32, i32, usize, usize),
-    bounds: (usize, usize, usize, usize),
-    color: Color,
-) {
-    let (x, y, width, height) = placement;
-    let (x, y, width, height) = worker_detail_rect(x, y, width, height, bounds);
-    fill_rect(canvas, x, y, width, height, color);
-}
-
-fn paint_compact_worker_detail(
-    canvas: &mut Canvas,
-    placement: (i32, i32, usize, usize),
-    bounds: (usize, usize, usize, usize),
-    color: Color,
-) {
-    let (x, y, width, height) = placement;
-    let (left, top, right, bottom) = bounds;
-    let x0 = x + left.saturating_mul(width).div_euclid(9) as i32;
-    let y0 = y + top.saturating_mul(height).div_euclid(12) as i32;
-    let x1 = x + right.saturating_mul(width).div_ceil(9) as i32;
-    let y1 = y + bottom.saturating_mul(height).div_ceil(12) as i32;
-    fill_rect(canvas, x0, y0, (x1 - x0).max(1), (y1 - y0).max(1), color);
-}
-
-fn draw_compact_worker_details(
-    canvas: &mut Canvas,
-    worker: &Worker,
-    look: WorkerLook,
-    sprite: &Sprite,
-    placement: (i32, i32, usize, usize),
-) {
-    let (_, _, width, height) = placement;
-    if width < 9 || height < 12 {
-        return;
-    }
-    let hair = sprite.pixel(11, 0).unwrap_or(Color::Rgb(84, 51, 31));
-    let (shirt, shirt_dark) = match worker.agent {
-        Agent::Codex => (Color::Rgb(79, 158, 232), Color::Rgb(31, 79, 125)),
-        Agent::Claude => (Color::Rgb(232, 131, 74), Color::Rgb(122, 61, 28)),
-    };
-    let paint = |canvas: &mut Canvas, bounds, color| {
-        paint_compact_worker_detail(canvas, placement, bounds, color);
-    };
-
-    match look.head {
-        1 => {
-            paint(canvas, (2, 0, 3, 4), shirt_dark);
-            paint(canvas, (6, 0, 7, 4), shirt_dark);
-        }
-        2 => {
-            paint(canvas, (3, 0, 6, 1), WARNING);
-            paint(canvas, (4, 0, 5, 1), Color::Rgb(217, 154, 16));
-        }
-        3 => {
-            paint(canvas, (3, 0, 6, 1), WALL_LIGHT);
-            paint(canvas, (6, 1, 8, 2), Color::Rgb(43, 37, 66));
-        }
-        4 => {
-            paint(canvas, (6, 1, 8, 3), hair);
-            paint(canvas, (7, 3, 8, 5), hair);
-        }
-        5 => {
-            for column in 3..=5 {
-                paint(canvas, (column, 0, column + 1, 1), hair);
-            }
-        }
-        _ => {}
-    }
-
-    match look.face {
-        1 => {
-            paint(canvas, (3, 2, 4, 3), OUTLINE);
-            paint(canvas, (5, 2, 6, 3), OUTLINE);
-            paint(canvas, (4, 2, 5, 3), OUTLINE);
-        }
-        2 => paint(canvas, (3, 3, 6, 5), hair),
-        3 => {
-            paint(canvas, (3, 3, 4, 4), Color::Rgb(201, 138, 99));
-            paint(canvas, (5, 3, 6, 4), Color::Rgb(201, 138, 99));
-        }
-        4 => {
-            paint(canvas, (2, 1, 3, 4), TITLE_COLOR);
-            paint(canvas, (6, 1, 7, 4), TITLE_COLOR);
-            paint(canvas, (3, 0, 6, 1), TITLE_COLOR);
-        }
-        _ => {}
-    }
-
-    match look.top {
-        0 => {
-            paint(canvas, (4, 5, 5, 8), INK);
-            paint(canvas, (5, 5, 6, 8), INK);
-        }
-        1 => {
-            paint(canvas, (3, 6, 6, 7), shirt_dark);
-            paint(canvas, (3, 8, 6, 9), shirt_dark);
-        }
-        2 => {
-            paint(canvas, (3, 5, 4, 9), WALL_LIGHT);
-            paint(canvas, (5, 5, 6, 9), WALL_LIGHT);
-            paint(canvas, (4, 5, 5, 9), TITLE_COLOR);
-        }
-        3 => paint(canvas, (3, 6, 6, 8), INK),
-        4 => {
-            paint(canvas, (3, 6, 6, 8), WARNING);
-            paint(canvas, (4, 6, 5, 7), shirt_dark);
-        }
-        _ => paint(canvas, (3, 6, 6, 7), shirt),
-    }
-
-    match look.desk_prop {
-        0 => {
-            paint(canvas, (7, 9, 9, 12), Color::Rgb(74, 48, 32));
-            paint(canvas, (8, 8, 9, 9), INK);
-        }
-        1 => {
-            paint(canvas, (0, 10, 3, 12), RUG);
-            paint(canvas, (1, 8, 2, 10), Color::Rgb(61, 138, 78));
-            paint(canvas, (0, 8, 1, 10), Color::Rgb(79, 168, 96));
-            paint(canvas, (2, 8, 3, 10), Color::Rgb(79, 168, 96));
-        }
-        2 => {
-            paint(canvas, (1, 10, 8, 12), MACHINE);
-            for column in [2, 4, 6] {
-                paint(canvas, (column, 10, column + 1, 11), ACCENT);
-            }
-        }
-        3 => {
-            paint(canvas, (0, 9, 3, 12), INK);
-            paint(canvas, (1, 8, 3, 9), MUTED);
-        }
-        4 => {
-            paint(canvas, (7, 8, 9, 12), MACHINE);
-            paint(canvas, (8, 9, 9, 11), ACCENT);
-        }
-        _ => {
-            paint(canvas, (7, 8, 9, 11), WARNING);
-            paint(canvas, (8, 9, 9, 10), Color::Rgb(138, 95, 5));
-        }
-    }
-}
-
-fn draw_worker_details(
-    canvas: &mut Canvas,
-    worker: &Worker,
-    look: WorkerLook,
-    sprite: &Sprite,
-    placement: (i32, i32, usize, usize),
-) {
-    let (_, _, width, height) = placement;
-    if !canvas.has_image_density() {
-        draw_compact_worker_details(canvas, worker, look, sprite, placement);
-        return;
-    }
-    if width < 60 || height < 80 {
-        return;
-    }
-    let hair = sprite.pixel(11, 0).unwrap_or(Color::Rgb(84, 51, 31));
-    let (shirt, shirt_dark) = match worker.agent {
-        Agent::Codex => (Color::Rgb(79, 158, 232), Color::Rgb(31, 79, 125)),
-        Agent::Claude => (Color::Rgb(232, 131, 74), Color::Rgb(122, 61, 28)),
-    };
-
-    match look.head {
-        1 => {
-            paint_worker_detail(canvas, placement, (7, 0, 9, 5), shirt_dark);
-            paint_worker_detail(canvas, placement, (15, 0, 17, 5), shirt_dark);
-        }
-        2 => {
-            paint_worker_detail(canvas, placement, (8, 0, 16, 2), WARNING);
-            paint_worker_detail(canvas, placement, (11, 0, 13, 1), Color::Rgb(217, 154, 16));
-        }
-        3 => {
-            paint_worker_detail(canvas, placement, (8, 0, 16, 2), WALL_LIGHT);
-            paint_worker_detail(canvas, placement, (15, 1, 19, 2), Color::Rgb(43, 37, 66));
-        }
-        4 => {
-            paint_worker_detail(canvas, placement, (16, 1, 19, 4), hair);
-            paint_worker_detail(canvas, placement, (18, 3, 20, 5), hair);
-        }
-        5 => {
-            for bounds in [(8, 0, 10, 1), (11, 0, 13, 1), (14, 0, 16, 1)] {
-                paint_worker_detail(canvas, placement, bounds, hair);
-            }
-        }
-        _ => {}
-    }
-
-    match look.face {
-        1 => {
-            for bounds in [(9, 3, 12, 4), (13, 3, 16, 4)] {
-                let (x, y, width, height) =
-                    worker_detail_rect(placement.0, placement.1, placement.2, placement.3, bounds);
-                draw_rect_outline(canvas, x, y, width, height, OUTLINE);
-            }
-            paint_worker_detail(canvas, placement, (12, 3, 13, 4), OUTLINE);
-        }
-        2 => {
-            paint_worker_detail(canvas, placement, (9, 4, 15, 6), hair);
-            paint_worker_detail(canvas, placement, (11, 4, 13, 5), TABLE_LIGHT);
-        }
-        3 => {
-            for bounds in [(9, 4, 10, 5), (11, 4, 12, 5), (14, 4, 15, 5)] {
-                paint_worker_detail(canvas, placement, bounds, Color::Rgb(201, 138, 99));
-            }
-        }
-        4 => {
-            paint_worker_detail(canvas, placement, (7, 1, 8, 5), TITLE_COLOR);
-            paint_worker_detail(canvas, placement, (16, 1, 17, 5), TITLE_COLOR);
-            paint_worker_detail(canvas, placement, (8, 0, 16, 1), TITLE_COLOR);
-        }
-        _ => {}
-    }
-
-    match look.top {
-        0 => {
-            paint_worker_detail(canvas, placement, (11, 7, 12, 10), INK);
-            paint_worker_detail(canvas, placement, (13, 7, 14, 10), INK);
-        }
-        1 => {
-            for row in [8, 10] {
-                paint_worker_detail(canvas, placement, (8, row, 16, row + 1), shirt_dark);
-            }
-        }
-        2 => {
-            paint_worker_detail(canvas, placement, (8, 7, 11, 11), WALL_LIGHT);
-            paint_worker_detail(canvas, placement, (13, 7, 16, 11), WALL_LIGHT);
-            paint_worker_detail(canvas, placement, (12, 7, 13, 11), TITLE_COLOR);
-        }
-        3 => paint_worker_detail(canvas, placement, (10, 8, 15, 10), INK),
-        4 => {
-            paint_worker_detail(canvas, placement, (10, 8, 14, 10), WARNING);
-            paint_worker_detail(canvas, placement, (11, 8, 13, 9), shirt_dark);
-        }
-        _ => paint_worker_detail(canvas, placement, (9, 8, 15, 9), shirt),
-    }
-
-    match look.desk_prop {
-        0 => {
-            paint_worker_detail(canvas, placement, (18, 11, 21, 15), Color::Rgb(74, 48, 32));
-            paint_worker_detail(canvas, placement, (19, 10, 20, 11), INK);
-        }
-        1 => {
-            paint_worker_detail(canvas, placement, (2, 13, 7, 15), RUG);
-            paint_worker_detail(canvas, placement, (4, 10, 5, 13), Color::Rgb(61, 138, 78));
-            paint_worker_detail(canvas, placement, (2, 10, 4, 12), Color::Rgb(79, 168, 96));
-            paint_worker_detail(canvas, placement, (5, 9, 7, 12), Color::Rgb(79, 168, 96));
-        }
-        2 => {
-            paint_worker_detail(canvas, placement, (4, 13, 20, 15), MACHINE);
-            for column in [5, 8, 11, 14, 17] {
-                paint_worker_detail(canvas, placement, (column, 13, column + 1, 14), ACCENT);
-            }
-        }
-        3 => {
-            paint_worker_detail(canvas, placement, (2, 11, 7, 15), INK);
-            paint_worker_detail(canvas, placement, (3, 10, 6, 11), MUTED);
-        }
-        4 => {
-            paint_worker_detail(canvas, placement, (17, 9, 23, 15), MACHINE);
-            paint_worker_detail(canvas, placement, (18, 10, 22, 14), ACCENT);
-        }
-        _ => {
-            paint_worker_detail(canvas, placement, (18, 10, 22, 14), WARNING);
-            paint_worker_detail(canvas, placement, (19, 11, 21, 12), Color::Rgb(138, 95, 5));
-        }
-    }
-}
-
 // Drawing one item needs the canvas, where it sits, how big the room is, and
 // who is in it; grouping those into a struct would only move the same list.
 #[allow(clippy::too_many_arguments)]
@@ -1909,7 +1629,6 @@ fn draw_item(
             };
             if scale == RoomScale::Floor {
                 blit_floor_worker(canvas, &sprite, x, y, width, height);
-                draw_worker_details(canvas, worker, *look, &sprite, (x, y, width, height));
             } else {
                 blit_scaled_signed(canvas, &sprite, x, y, width, height);
             }
@@ -3198,6 +2917,65 @@ mod tests {
         }
         assert_ne!(compact_glyph('K'), compact_glyph('I'));
         assert_ne!(compact_glyph('K'), compact_glyph(':'));
+        assert_ne!(compact_glyph('W'), compact_glyph('H'));
+        assert_ne!(compact_glyph('R'), compact_glyph('A'));
+        let compact_letters = ('A'..='Z')
+            .map(compact_glyph)
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(compact_letters.len(), 26);
+    }
+
+    #[test]
+    fn complete_they_work_sign_keeps_every_letter_face_at_every_density() {
+        let modes = [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::Sextants, Some((10, 20))),
+        ];
+        let label = "THEY-WORK";
+        for (encoding, cell_size) in modes {
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                800,
+                800,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            canvas.set_cell_pixel_size(cell_size);
+            canvas.resize(800, 800);
+            let wall_top = 780;
+            draw_isometric_sign(&mut canvas, label, wall_top);
+
+            let x_scale = canvas.pixels_per_cell().0;
+            let y_scale = canvas.scale_half_height(1);
+            let glyph_pitch = SIGN_GLYPH_PITCH as usize * x_scale;
+            let face_width = label.chars().count() * glyph_pitch - x_scale;
+            let extrusion_x = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
+            let extrusion_y = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, y_scale);
+            let rise = SIGN_GLYPH_RISE as usize * y_scale;
+            let sign_height = 7 * y_scale + (label.chars().count() - 1) * rise + extrusion_y;
+            let x0 = (canvas.width() - face_width - extrusion_x) / 2;
+            let top = wall_top as usize - 1 - sign_height;
+
+            for (character_index, character) in label.chars().enumerate() {
+                for (row, bits) in glyph_5x7(character).iter().enumerate() {
+                    for column in 0..5 {
+                        if bits & (1 << (4 - column)) == 0 {
+                            continue;
+                        }
+                        let pixel = canvas.pixel(
+                            x0 + character_index * glyph_pitch + column * x_scale + x_scale / 2,
+                            top + character_index * rise + row * y_scale + y_scale / 2,
+                        );
+                        assert_eq!(
+                            pixel,
+                            Some(TITLE_COLOR),
+                            "{encoding:?} {character} lost ({column}, {row})"
+                        );
+                    }
+                }
+            }
+        }
     }
 
     #[test]
@@ -3211,10 +2989,10 @@ mod tests {
         );
         let sprites = SpriteSet::new();
         let modes = [
-            (PixelEncoding::HalfBlocks, 9, 12, None),
-            (PixelEncoding::Quadrants, 18, 12, None),
-            (PixelEncoding::Sextants, 18, 18, None),
-            (PixelEncoding::Sextants, 90, 120, Some((10, 20))),
+            (PixelEncoding::HalfBlocks, 12, 17, None),
+            (PixelEncoding::Quadrants, 12, 17, None),
+            (PixelEncoding::Sextants, 24, 34, None),
+            (PixelEncoding::Sextants, 96, 136, Some((10, 20))),
         ];
         for (encoding, width, height, cell_size) in modes {
             let checksums = (0..6_u8)
@@ -3238,7 +3016,6 @@ mod tests {
                     canvas.set_cell_pixel_size(cell_size);
                     canvas.resize(width, height);
                     blit_floor_worker(&mut canvas, &sprite, 0, 0, width, height);
-                    draw_worker_details(&mut canvas, &worker, look, &sprite, (0, 0, width, height));
                     canvas
                         .pixel_frame()
                         .rgba()

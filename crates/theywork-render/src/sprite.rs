@@ -926,42 +926,25 @@ fn manager_animation(needs_attention: bool) -> Animation {
 }
 
 fn manager_frame(needs_attention: bool, frame: usize) -> Sprite {
-    let mut rows: Vec<String> = BASE_MANAGER_ROWS
-        .iter()
-        .map(|row| (*row).to_string())
-        .collect();
-    if frame == 1 {
-        replace_char(&mut rows[15], 5, 'P');
-        replace_char(&mut rows[15], 10, 'P');
-    }
-    if needs_attention {
-        replace_char(&mut rows[0], 11, '!');
-        replace_char(&mut rows[6], 11, 'D');
-        replace_char(&mut rows[7], 11, 'D');
-    }
-
-    Sprite::from_owned_rows(rows, &static_palette())
+    wardrobe_frame(
+        Agent::Claude,
+        WorkerLook {
+            head: 0,
+            face: 0,
+            top: 4,
+            desk_prop: 0,
+            skin: 3,
+            hair: 3,
+            contractor: false,
+        },
+        if needs_attention {
+            ActivityKind::Waiting
+        } else {
+            ActivityKind::Idle
+        },
+        frame,
+    )
 }
-
-const BASE_MANAGER_ROWS: &[&str] = &[
-    "......HHHH......",
-    ".....HSSSSH.....",
-    ".....HSEESH.....",
-    "......SSSS......",
-    "......YYYY......",
-    ".....YYYYYY.....",
-    "....YYYYYYYY....",
-    "....YYYYYYYY....",
-    ".....YYYYYY.....",
-    "......YQQY......",
-    ".....YQQQQY.....",
-    ".....QQQQQQ.....",
-    "......QQQQ......",
-    "................",
-    ".....PP..PP.....",
-    "....PP....PP....",
-    "................",
-];
 
 #[cfg(test)]
 mod tests {
@@ -1031,7 +1014,7 @@ mod tests {
     }
 
     #[test]
-    fn waiting_and_manager_attention_poses_have_clear_markers() {
+    fn waiting_and_manager_attention_poses_share_the_full_character_system() {
         let sprites = SpriteSet::new();
         let mut waiting = test_worker(Agent::Codex);
         waiting.activity = Activity::Waiting {
@@ -1052,7 +1035,16 @@ mod tests {
         let walk = sprites.manager_animation(false).frame_at(0);
         let attention = sprites.manager_animation(true).frame_at(0);
         assert_ne!(walk.pixels(), attention.pixels());
-        assert_eq!(attention.pixel(11, 0), Some(Color::Rgb(240, 180, 41)));
+        assert_eq!((walk.width(), walk.height()), (WORKER_WIDTH, WORKER_HEIGHT));
+        assert_eq!(
+            (attention.width(), attention.height()),
+            (WORKER_WIDTH, WORKER_HEIGHT)
+        );
+        assert!(!attention
+            .pixels()
+            .iter()
+            .flatten()
+            .any(|color| *color == Color::Rgb(240, 180, 41)));
     }
 
     #[test]

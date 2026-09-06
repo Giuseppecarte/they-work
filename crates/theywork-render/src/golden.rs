@@ -14,6 +14,7 @@ use std::path::PathBuf;
 
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use ratatui::style::Color;
 use ratatui::Terminal;
 use theywork_core::{
@@ -468,6 +469,31 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    #[test]
+    fn sign_glyph_sheets_match_checked_in_goldens() {
+        let size = (160, 32);
+        for encoding in PixelEncoding::ALL {
+            let mut canvas =
+                Canvas::with_color_depth_and_encoding(0, 0, ColorDepth::TrueColor, encoding);
+            canvas.resize_for_cells(size.0 as usize, size.1 as usize);
+            crate::views::office::draw_sign_glyph_sheet(&mut canvas);
+            let mut buffer = Buffer::empty(Rect::new(0, 0, size.0, size.1));
+            canvas.render(&mut buffer, Rect::new(0, 0, size.0, size.1));
+            let actual = serialize_buffer(
+                SnapshotView::Office,
+                size,
+                0,
+                UiTheme::Dark,
+                encoding,
+                &buffer,
+            );
+            assert_golden(
+                &format!("sign-glyph-sheet.{}.golden", encoding.label()),
+                &actual,
+            );
         }
     }
 

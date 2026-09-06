@@ -40,6 +40,7 @@ const WINDOW_FRAME: Color = Color::Rgb(43, 37, 66);
 const WINDOW_LIGHT: Color = Color::Rgb(90, 169, 201);
 const TABLE_TOP: Color = Color::Rgb(107, 68, 41);
 const TABLE_LIGHT: Color = Color::Rgb(138, 90, 56);
+const CHAIR_BACK: Color = Color::Rgb(65, 58, 91);
 const RUG: Color = Color::Rgb(194, 90, 74);
 const RUG_BORDER: Color = Color::Rgb(142, 58, 46);
 const MACHINE: Color = Color::Rgb(42, 36, 64);
@@ -49,8 +50,7 @@ const TITLE_BODY: Color = Color::Rgb(142, 26, 21);
 const TITLE_COLOR: Color = Color::Rgb(232, 52, 44);
 const SIGN_EXTRUSION_STEPS: usize = 6;
 const SIGN_EXTRUSION_STEP: i32 = 1;
-const SIGN_GLYPH_PITCH: i32 = 7;
-const SIGN_GLYPH_RISE: i32 = 3;
+const SIGN_GLYPH_RISE: i32 = 0;
 const NIGHT_SKY_TOP: Color = Color::Rgb(13, 11, 20);
 const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
 const DAY_SKY_TOP: Color = Color::Rgb(88, 214, 232);
@@ -183,6 +183,7 @@ enum IsoKind {
     Plant,
     Cooler,
     MeetingTable,
+    Chair(usize),
     Worker(usize),
     Manager,
     Desk(usize),
@@ -199,23 +200,25 @@ struct IsoItem {
 fn kind_rank(kind: IsoKind) -> u8 {
     match kind {
         IsoKind::Plant | IsoKind::Cooler => 1,
-        IsoKind::MeetingTable => 3,
+        IsoKind::MeetingTable | IsoKind::Chair(_) => 3,
         IsoKind::Worker(_) => 4,
         IsoKind::Manager => 5,
         IsoKind::Desk(_) => 6,
     }
 }
 
+fn painter_key(item: IsoItem) -> (usize, usize, u8) {
+    (
+        item.tile_x
+            .saturating_add(item.tile_y)
+            .saturating_add(usize::from(item.footprint.depth)),
+        item.tile_y,
+        kind_rank(item.kind),
+    )
+}
+
 fn painter_order(items: &mut [IsoItem]) {
-    items.sort_by_key(|item| {
-        (
-            item.tile_x
-                .saturating_add(item.tile_y)
-                .saturating_add(usize::from(item.footprint.depth)),
-            item.tile_y,
-            kind_rank(item.kind),
-        )
-    });
+    items.sort_by_key(|item| painter_key(*item));
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -231,10 +234,6 @@ pub(crate) struct IsoGrid {
 }
 
 impl IsoGrid {
-    fn scale_width(self, value: usize) -> usize {
-        value.saturating_mul(self.pixels_per_cell.0)
-    }
-
     fn scale_half_height(self, value: usize) -> usize {
         value
             .saturating_mul(self.pixels_per_cell.1)
@@ -318,10 +317,10 @@ impl RoomScale {
                         grid.encoding.height_per_cell(),
                     ) =>
             {
-                (24 * 4, 34 * 4)
+                (24 * 3, 34 * 3)
             }
-            Self::Floor if grid.encoding == PixelEncoding::Sextants => (24, 34),
-            Self::Floor => (12, 17),
+            Self::Floor if grid.encoding == PixelEncoding::Sextants => (14, 20),
+            Self::Floor => (7, 10),
         }
     }
 
@@ -420,7 +419,7 @@ impl RoomScale {
     }
 
     fn manager_size(self, grid: IsoGrid) -> (usize, usize) {
-        (grid.scale_width(9), grid.scale_half_height(12))
+        self.worker_size(grid)
     }
 }
 
@@ -495,6 +494,18 @@ fn desk_bounds(grid: IsoGrid, scale: RoomScale, slot: usize) -> (i32, i32, usize
     let x = center_x - width as i32 / 2;
     let y = center_y + grid.tile_height / 3 - height as i32 / 2;
     (x, y, width, height)
+}
+
+fn worker_bounds(grid: IsoGrid, scale: RoomScale, slot: usize) -> (i32, i32, usize, usize) {
+    let (center_x, center_y) = grid.center(grid.desk_tile(slot).0, grid.desk_tile(slot).1);
+    let (width, height) = scale.worker_size(grid);
+    let seated_drop = height / 6;
+    (
+        center_x - width as i32 / 2,
+        center_y - height as i32 + seated_drop as i32 + 1,
+        width,
+        height,
+    )
 }
 
 fn daylight_amount(now: Millis) -> u16 {
@@ -1131,12 +1142,91 @@ fn draw_extruded_glyph(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn draw_extruded_line(
+    canvas: &mut Canvas,
+    line: &str,
+    x0: i32,
+    y0: i32,
+    floor_limit: usize,
+    x_scale: usize,
+    y_scale: usize,
+    glyph_pitch: usize,
+    rise_per_glyph: usize,
+) {
+    for (character_index, character) in line.chars().enumerate() {
+        draw_extruded_glyph(
+            canvas,
+            glyph_5x7(character),
+            x0 + character_index as i32 * glyph_pitch as i32,
+            y0 + character_index as i32 * rise_per_glyph as i32,
+            floor_limit,
+            x_scale,
+            y_scale,
+        );
+    }
+    // Compose depth first, then restore all faces as one line. A later glyph's
+    // extrusion may cross an earlier glyph, but may never erase its face.
+    for (character_index, character) in line.chars().enumerate() {
+        let glyph_x = x0 + character_index as i32 * glyph_pitch as i32;
+        let glyph_y = y0 + character_index as i32 * rise_per_glyph as i32;
+        for (row_index, bits) in glyph_5x7(character).iter().enumerate() {
+            for column_index in 0..5 {
+                if bits & (1 << (4 - column_index)) != 0 {
+                    set_sign_block(
+                        canvas,
+                        glyph_x + column_index * x_scale as i32,
+                        glyph_y + row_index as i32 * y_scale as i32,
+                        x_scale,
+                        y_scale,
+                        TITLE_COLOR,
+                        floor_limit,
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn draw_sign_glyph_sheet(canvas: &mut Canvas) {
+    canvas.fill(super::BACKGROUND);
+    let x_scale = canvas.pixels_per_cell().0;
+    let y_scale = canvas.scale_half_height(1);
+    let glyph_pitch = sign_glyph_pitch(canvas, x_scale);
+    let extrusion_y = SIGN_EXTRUSION_STEPS * sign_depth_step(canvas, y_scale);
+    let row_pitch = 7 * y_scale + extrusion_y + 3 * y_scale;
+    for (row, line) in ["ABCDEFGHIJKL", "MNOPQRSTUVWX", "YZ0123456789"]
+        .into_iter()
+        .enumerate()
+    {
+        draw_extruded_line(
+            canvas,
+            line,
+            (2 * x_scale) as i32,
+            (2 * y_scale + row * row_pitch) as i32,
+            canvas.height(),
+            x_scale,
+            y_scale,
+            glyph_pitch,
+            0,
+        );
+    }
+}
+
 fn sign_depth_step(canvas: &Canvas, scale: usize) -> usize {
     if canvas.has_image_density() {
         (scale / 4).max(1)
     } else {
         1
     }
+}
+
+fn sign_glyph_pitch(canvas: &Canvas, x_scale: usize) -> usize {
+    let extrusion = SIGN_EXTRUSION_STEPS
+        .saturating_mul(SIGN_EXTRUSION_STEP as usize)
+        .saturating_mul(sign_depth_step(canvas, x_scale));
+    6usize.saturating_mul(x_scale).saturating_add(extrusion)
 }
 
 fn sign_outline_radius(canvas: &Canvas, scale: usize) -> i32 {
@@ -1174,12 +1264,6 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     };
     let x_scale = canvas.pixels_per_cell().0;
     let y_scale = canvas.scale_half_height(1);
-    let glyph_pitch = (SIGN_GLYPH_PITCH as usize).saturating_mul(x_scale);
-    let face_width = line
-        .chars()
-        .count()
-        .saturating_mul(glyph_pitch)
-        .saturating_sub(x_scale);
     let depth_step_x = sign_depth_step(canvas, x_scale);
     let depth_step_y = sign_depth_step(canvas, y_scale);
     let extrusion_x = SIGN_EXTRUSION_STEPS
@@ -1188,6 +1272,13 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     let extrusion_y = SIGN_EXTRUSION_STEPS
         .saturating_mul(SIGN_EXTRUSION_STEP as usize)
         .saturating_mul(depth_step_y);
+    let glyph_pitch = sign_glyph_pitch(canvas, x_scale);
+    let face_width = line
+        .chars()
+        .count()
+        .saturating_sub(1)
+        .saturating_mul(glyph_pitch)
+        .saturating_add(5usize.saturating_mul(x_scale));
     let rise_per_glyph = (SIGN_GLYPH_RISE as usize).saturating_mul(y_scale);
     let sign_height = 7usize
         .saturating_mul(y_scale)
@@ -1204,40 +1295,17 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
 
     let x0 = ((canvas.width() - face_width - extrusion_x) / 2) as i32;
     let top = wall_top - 1 - sign_height as i32;
-    for (character_index, character) in line.chars().enumerate() {
-        draw_extruded_glyph(
-            canvas,
-            glyph_5x7(character),
-            x0 + character_index as i32 * glyph_pitch as i32,
-            top + character_index as i32 * rise_per_glyph as i32,
-            floor_limit,
-            x_scale,
-            y_scale,
-        );
-    }
-    // Later glyphs rise into earlier glyphs' extrusion. Restore every face
-    // after composing the complete word so shadows cannot turn W/R/K into
-    // lookalike letters at image density.
-    for (character_index, character) in line.chars().enumerate() {
-        let glyph = glyph_5x7(character);
-        let glyph_x = x0 + character_index as i32 * glyph_pitch as i32;
-        let glyph_y = top + character_index as i32 * rise_per_glyph as i32;
-        for (row_index, bits) in glyph.iter().enumerate() {
-            for column_index in 0..5 {
-                if bits & (1 << (4 - column_index)) != 0 {
-                    set_sign_block(
-                        canvas,
-                        glyph_x + column_index * x_scale as i32,
-                        glyph_y + row_index as i32 * y_scale as i32,
-                        x_scale,
-                        y_scale,
-                        TITLE_COLOR,
-                        floor_limit,
-                    );
-                }
-            }
-        }
-    }
+    draw_extruded_line(
+        canvas,
+        line,
+        x0,
+        top,
+        floor_limit,
+        x_scale,
+        y_scale,
+        glyph_pitch,
+        rise_per_glyph,
+    );
 }
 
 fn glyph_5x7(character: char) -> [u8; 7] {
@@ -1574,6 +1642,34 @@ fn draw_rug(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
     draw_line(canvas, right.0, right.1, bottom.0, bottom.1, RUG_BORDER);
 }
 
+fn draw_chair(canvas: &mut Canvas, grid: IsoGrid, scale: RoomScale, slot: usize) {
+    let (tile_x, tile_y) = grid.desk_tile(slot);
+    let (center_x, center_y) = grid.center(tile_x, tile_y);
+    let (worker_width, worker_height) = scale.worker_size(grid);
+    let width = (worker_width * 2 / 3).max(3) as i32;
+    let height = (worker_height / 3).max(3) as i32;
+    let x = center_x - width / 2;
+    let y = center_y - worker_height as i32 * 2 / 3;
+    fill_rect(canvas, x, y, width, height, CHAIR_BACK);
+    draw_rect_outline(canvas, x, y, width, height, outline_color(canvas));
+    draw_line(
+        canvas,
+        x + 1,
+        y + height,
+        x + 1,
+        center_y + grid.tile_height / 4,
+        outline_color(canvas),
+    );
+    draw_line(
+        canvas,
+        x + width - 2,
+        y + height,
+        x + width - 2,
+        center_y + grid.tile_height / 4,
+        outline_color(canvas),
+    );
+}
+
 // Drawing one item needs the canvas, where it sits, how big the room is, and
 // who is in it; grouping those into a struct would only move the same list.
 #[allow(clippy::too_many_arguments)]
@@ -1612,6 +1708,7 @@ fn draw_item(
             );
         }
         IsoKind::MeetingTable => draw_table(canvas, grid, center_x, center_y),
+        IsoKind::Chair(slot) => draw_chair(canvas, grid, scale, slot),
         IsoKind::Worker(index) => {
             let Some(worker) = workers.get(index) else {
                 return;
@@ -1620,13 +1717,7 @@ fn draw_item(
                 return;
             };
             let sprite = sprites.worker_frame(worker, *look, now);
-            let (width, height) = scale.worker_size(grid);
-            let x = center_x - width as i32 / 2;
-            let y = if scale == RoomScale::Floor {
-                center_y - height as i32 + 1
-            } else {
-                center_y - grid.tile_height / 2 - height as i32 + 1
-            };
+            let (x, y, width, height) = worker_bounds(grid, scale, index);
             if scale == RoomScale::Floor {
                 blit_floor_worker(canvas, &sprite, x, y, width, height);
             } else {
@@ -1711,9 +1802,19 @@ pub(crate) fn draw_room_scene(
     let (rug_x, rug_y) = grid.center(ISO_RUG_TILE.0, ISO_RUG_TILE.1);
     draw_rug(canvas, grid, rug_x, rug_y);
 
-    let mut items = Vec::with_capacity(visible_workers.len().saturating_mul(2) + 3);
+    let mut items = Vec::with_capacity(visible_workers.len().saturating_mul(3) + 3);
     for (slot, _) in visible_workers.iter().enumerate() {
         let (tile_x, tile_y) = grid.desk_tile(slot);
+        items.push(IsoItem {
+            tile_x,
+            tile_y,
+            footprint: IsoFootprint {
+                width: 1,
+                depth: 1,
+                height: 1,
+            },
+            kind: IsoKind::Chair(slot),
+        });
         items.push(IsoItem {
             tile_x,
             tile_y,
@@ -2105,6 +2206,37 @@ fn worker_plate_rect(body: Rect, grid: IsoGrid, slot: usize) -> Rect {
     )
 }
 
+#[cfg(test)]
+fn worker_cell_rect(grid: IsoGrid, slot: usize) -> Rect {
+    let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
+    let x_scale = grid.pixels_per_cell.0.max(1) as i32;
+    let y_scale = grid.pixels_per_cell.1.max(1) as i32;
+    let left = x.div_euclid(x_scale).max(0) as u16;
+    let top = y.div_euclid(y_scale).max(0) as u16;
+    let right = (x + width as i32)
+        .max(0)
+        .saturating_add(x_scale - 1)
+        .div_euclid(x_scale) as u16;
+    let bottom = (y + height as i32)
+        .max(0)
+        .saturating_add(y_scale - 1)
+        .div_euclid(y_scale) as u16;
+    Rect::new(
+        left,
+        top,
+        right.saturating_sub(left),
+        bottom.saturating_sub(top),
+    )
+}
+
+#[cfg(test)]
+fn rects_overlap(first: Rect, second: Rect) -> bool {
+    first.x < second.x.saturating_add(second.width)
+        && second.x < first.x.saturating_add(first.width)
+        && first.y < second.y.saturating_add(second.height)
+        && second.y < first.y.saturating_add(first.height)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn draw_nameplates(
     frame: &mut Frame,
@@ -2119,7 +2251,22 @@ fn draw_nameplates(
     if body.width == 0 || body.height == 0 {
         return;
     }
-    for (slot, worker) in workers.iter().enumerate() {
+    let mut slots = (0..workers.len()).collect::<Vec<_>>();
+    slots.sort_by_key(|slot| {
+        let (tile_x, tile_y) = grid.desk_tile(*slot);
+        painter_key(IsoItem {
+            tile_x,
+            tile_y,
+            footprint: IsoFootprint {
+                width: 1,
+                depth: 1,
+                height: 1,
+            },
+            kind: IsoKind::Desk(*slot),
+        })
+    });
+    for slot in slots {
+        let worker = workers[slot];
         let rect = worker_plate_rect(body, grid, slot);
         let mut prefix = " ";
         let status = worker_status(worker, now);
@@ -2543,6 +2690,120 @@ mod tests {
     }
 
     #[test]
+    fn five_workers_fit_the_plate_without_clipping_or_each_other() {
+        for encoding in PixelEncoding::ALL {
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                0,
+                0,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            canvas.resize_for_cells(160, 44);
+            let grid = make_grid_with_encoding(
+                canvas.width(),
+                canvas.height(),
+                ISO_ROOM_COLUMNS,
+                ISO_ROOM_ROWS,
+                encoding,
+                canvas.pixels_per_cell(),
+            );
+            let [back, _, front, _] = floor_corners(grid);
+            let plate_height = front.1.saturating_sub(back.1) as usize;
+            let mut bounds = Vec::new();
+            for slot in 0..5 {
+                let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
+                assert!(
+                    x >= 0 && y >= 0,
+                    "{encoding:?} worker {slot} clips top/left"
+                );
+                assert!(
+                    x + width as i32 <= canvas.width() as i32
+                        && y + height as i32 <= canvas.height() as i32,
+                    "{encoding:?} worker {slot} clips bottom/right"
+                );
+                assert!(
+                    height * 5 <= plate_height * 2,
+                    "{encoding:?} worker height {height} overwhelms plate height {plate_height}"
+                );
+                bounds.push((x, y, x + width as i32, y + height as i32));
+            }
+            for (index, first) in bounds.iter().enumerate() {
+                for (other_index, second) in bounds.iter().enumerate().skip(index + 1) {
+                    assert_eq!(
+                        overlap_area(*first, *second),
+                        0,
+                        "{encoding:?} workers {index} and {other_index} overlap"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn chairs_workers_and_desks_form_a_seated_stack_at_one_scale() {
+        for encoding in PixelEncoding::ALL {
+            let grid = make_grid_with_encoding(
+                160 * encoding.width_per_cell(),
+                44 * encoding.height_per_cell(),
+                ISO_ROOM_COLUMNS,
+                ISO_ROOM_ROWS,
+                encoding,
+                (encoding.width_per_cell(), encoding.height_per_cell()),
+            );
+            let (_, worker_y, worker_width, worker_height) =
+                worker_bounds(grid, RoomScale::Floor, 0);
+            let (_, desk_y, _, _) = desk_bounds(grid, RoomScale::Floor, 0);
+            let covered = (worker_y + worker_height as i32 - desk_y).max(0) as usize;
+            assert!(
+                covered >= worker_height / 6 && covered <= worker_height / 2,
+                "{encoding:?} desk covers {covered} of {worker_height} worker pixels"
+            );
+            assert_eq!(
+                RoomScale::Floor.manager_size(grid),
+                (worker_width, worker_height)
+            );
+
+            let mut stack = [
+                IsoItem {
+                    tile_x: 2,
+                    tile_y: 0,
+                    footprint: IsoFootprint {
+                        width: 1,
+                        depth: 1,
+                        height: 1,
+                    },
+                    kind: IsoKind::Desk(0),
+                },
+                IsoItem {
+                    tile_x: 2,
+                    tile_y: 0,
+                    footprint: IsoFootprint {
+                        width: 1,
+                        depth: 1,
+                        height: 2,
+                    },
+                    kind: IsoKind::Worker(0),
+                },
+                IsoItem {
+                    tile_x: 2,
+                    tile_y: 0,
+                    footprint: IsoFootprint {
+                        width: 1,
+                        depth: 1,
+                        height: 1,
+                    },
+                    kind: IsoKind::Chair(0),
+                },
+            ];
+            painter_order(&mut stack);
+            assert_eq!(
+                stack.map(|item| item.kind),
+                [IsoKind::Chair(0), IsoKind::Worker(0), IsoKind::Desk(0)]
+            );
+        }
+    }
+
+    #[test]
     fn floor_worker_plates_stay_with_their_desks_at_every_encoding() {
         let workers = (0..5)
             .map(|slot| {
@@ -2656,6 +2917,22 @@ mod tests {
                     );
                 }
             }
+
+            for (owner, plate) in plate_rects.iter().copied().enumerate() {
+                let owner_tile = grid.desk_tile(owner);
+                let owner_depth = owner_tile.0 + owner_tile.1;
+                for front in 0..workers.len() {
+                    let front_tile = grid.desk_tile(front);
+                    let front_depth = front_tile.0 + front_tile.1;
+                    if front == owner || front_depth <= owner_depth {
+                        continue;
+                    }
+                    assert!(
+                        !rects_overlap(plate, worker_cell_rect(grid, front)),
+                        "{encoding:?} plate {owner} overlaps foreground worker {front}"
+                    );
+                }
+            }
         }
     }
 
@@ -2685,9 +2962,19 @@ mod tests {
 
     fn room_items(worker_count: usize) -> Vec<IsoItem> {
         let grid = make_grid(80, 38, ISO_ROOM_COLUMNS, ISO_ROOM_ROWS);
-        let mut items = Vec::with_capacity(worker_count.saturating_mul(2) + 4);
+        let mut items = Vec::with_capacity(worker_count.saturating_mul(3) + 4);
         for slot in 0..worker_count {
             let (tile_x, tile_y) = grid.desk_tile(slot);
+            items.push(IsoItem {
+                tile_x,
+                tile_y,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 1,
+                },
+                kind: IsoKind::Chair(slot),
+            });
             items.push(IsoItem {
                 tile_x,
                 tile_y,
@@ -2747,7 +3034,7 @@ mod tests {
     fn sprite_bounds(grid: IsoGrid, item: IsoItem) -> Option<(i32, i32, i32, i32)> {
         let (center_x, center_y) = grid.center(item.tile_x, item.tile_y);
         let (width, height) = match item.kind {
-            IsoKind::Manager => return None,
+            IsoKind::Manager | IsoKind::Chair(_) => return None,
             IsoKind::Plant => (
                 (grid.tile_width / 2).clamp(4, 10),
                 (grid.tile_height + 2).clamp(5, 10),
@@ -2776,7 +3063,7 @@ mod tests {
             }
         };
         let (top, y_offset) = match item.kind {
-            IsoKind::Worker(_) => (center_y - grid.tile_height / 2 - height + 1, 0),
+            IsoKind::Worker(_) => (center_y - height + 1, 0),
             IsoKind::Desk(_) => (center_y + grid.tile_height / 3 - height / 2, 0),
             _ => (center_y - height, 0),
         };
@@ -2871,7 +3158,7 @@ mod tests {
     }
 
     #[test]
-    fn every_letter_keeps_its_five_by_seven_face_at_every_density() {
+    fn every_letter_and_digit_keeps_its_five_by_seven_face_at_every_density() {
         let modes = [
             (PixelEncoding::HalfBlocks, None),
             (PixelEncoding::Quadrants, None),
@@ -2879,7 +3166,7 @@ mod tests {
             (PixelEncoding::Sextants, Some((10, 20))),
         ];
         for (encoding, cell_size) in modes {
-            for character in 'A'..='Z' {
+            for character in ('A'..='Z').chain('0'..='9') {
                 let mut canvas = Canvas::with_color_depth_and_encoding(
                     100,
                     100,
@@ -2948,8 +3235,9 @@ mod tests {
 
             let x_scale = canvas.pixels_per_cell().0;
             let y_scale = canvas.scale_half_height(1);
-            let glyph_pitch = SIGN_GLYPH_PITCH as usize * x_scale;
-            let face_width = label.chars().count() * glyph_pitch - x_scale;
+            let glyph_pitch = sign_glyph_pitch(&canvas, x_scale);
+            let face_width =
+                (label.chars().count() - 1) * glyph_pitch + 5usize.saturating_mul(x_scale);
             let extrusion_x = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
             let extrusion_y = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, y_scale);
             let rise = SIGN_GLYPH_RISE as usize * y_scale;
@@ -3157,7 +3445,11 @@ mod tests {
         let max_x = pixels.iter().map(|(x, _)| *x).max().unwrap_or(0);
         let max_y = pixels.iter().map(|(_, y)| *y).max().unwrap_or(0);
         assert!(max_y < (wall_top - 1) as usize);
-        assert!(max_x.saturating_sub(min_x) <= 56);
+        let x_scale = canvas.pixels_per_cell().0;
+        let expected_width = 6 * sign_glyph_pitch(&canvas, x_scale)
+            + 5 * x_scale
+            + SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
+        assert!(max_x.saturating_sub(min_x) < expected_width);
     }
 
     #[test]

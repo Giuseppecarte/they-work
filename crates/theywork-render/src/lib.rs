@@ -1252,6 +1252,11 @@ mod m3_tests {
             "native-density office uses {} colours",
             colors.len()
         );
+        assert_eq!(
+            colors.len(),
+            57,
+            "native-density palette changes must stay within the Sixel register budget"
+        );
         let checksum = frame
             .rgba()
             .iter()
@@ -1264,7 +1269,7 @@ mod m3_tests {
             frame.height(),
             colors.len()
         );
-        assert_eq!(checksum, 0xb9d5_c738_6239_cced);
+        assert_eq!(checksum, 0x4032_96fd_1ed7_7039);
     }
 
     #[test]

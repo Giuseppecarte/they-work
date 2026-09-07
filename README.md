@@ -18,49 +18,41 @@ sidecars is refused rather than created.
 
 ## Start here
 
-Requires Docker and an interactive terminal. No checkout, Git, Make, or Rust.
-The first release contains a Linux/amd64 image; other architectures need Docker
-emulation and have not been verified.
+Run a native terminal office on macOS, Linux, Windows, or WSL. From this
+checkout, with Rust 1.90+ and a C compiler installed:
 
-~~~bash
-docker run --rm -it --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges -e TERM -e COLORTERM -e TERM_PROGRAM -e THEYWORK_ENCODING \
-  ghcr.io/giuseppecarte/they-work:v0.1.0 --demo
+~~~sh
+cargo install --locked --path crates/theywork-tui
+they-work --demo
 ~~~
 
-This shows an imaginary company and **mounts nothing from your disk**. Press
-`q` to quit. Docker downloads the image first; the running office has no external
-network access. See the [verified installer procedure](INSTALL.md#without-a-checkout)
-to use your own agent data, including checksum verification before running any
-downloaded shell code.
+Press `q` to quit. The demo is an imaginary company and reads no conversation
+data. To choose where your real conversations come from:
 
-If you prefer building from source, install Git and GNU Make as well:
+~~~sh
+they-work --setup
+~~~
 
-~~~bash
-git clone https://github.com/Giuseppecarte/they-work
-cd they-work
+Select Codex, Claude Code, both, or no local sources. This connects local
+conversation folders; no account login or API key is required. Each project
+gets its own office floor and each conversation a worker you can inspect.
+
+The [installation guide](INSTALL.md) covers compiler setup, custom data paths,
+Windows PowerShell, WSL, and Docker. Native installers and a six-platform release
+workflow are included on this branch; those assets have **not been published**.
+The older `v0.1.0` image does not contain these changes.
+
+For this version without local Rust, use Docker from a checkout:
+
+~~~sh
 make demo
 make run
 ~~~
 
-That mounts your agent directories read-only, with no network, and shows your
-real projects.
-
-### Look before you leap
-
-Two commands print and exit, without drawing anything:
-
-~~~bash
-make build
-docker run --rm --user "$(id -u):$(id -g)" --network none \
-  -v "$HOME/.claude:/data/claude:ro" -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local --doctor
-~~~
-
-`--doctor` says which agents it found, where, how much they hold, and — when
-something is wrong — what to do about it. Swap `--doctor` for `--once` to get
-every office and worker as plain text, blocked ones first. Both are useful over
-SSH, in a pipe, or when the office looks emptier than you expected.
+`make demo` mounts nothing. `make run` mounts existing conversation homes
+read-only and disables network access. `they-work --doctor` reports source
+readability and next steps; `they-work --once` prints all projects and workers.
+For Docker, use `make run ARGS="--doctor"` or `ARGS="--once"`.
 
 ## What you are looking at
 
@@ -155,8 +147,8 @@ dimensions always come from the terminal report, not this example.
 | Platform path | Status tested in this worktree |
 | --- | --- |
 | Windows Terminal under WSL, Sixel | Sixel encoding and the true-density renderer frame are covered by tests, but visual output was **not tested** here: this WSL session is `xterm-256color`, not Windows Terminal. |
-| macOS, Kitty protocol | Kitty encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no macOS/Kitty machine was available. |
-| macOS, iTerm2 inline images | iTerm2 encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no macOS/iTerm2 machine was available. |
+| macOS, Kitty protocol | Kitty encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no Kitty graphics session was exercised; see the current audit for native macOS checks. |
+| macOS, iTerm2 inline images | iTerm2 encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no iTerm2 graphics session was exercised; see the current audit for native macOS checks. |
 
 To verify a real terminal, run the demo in that terminal and look for a clean
 pixel image rather than the character fallback. The diagnostics and supported
@@ -172,6 +164,9 @@ board is what was meant.
 
 | Flag | |
 | --- | --- |
+| `--setup` | choose local conversation sources |
+| `--sources all\|codex\|claude\|none` | choose providers explicitly |
+| `--codex-home <path>` / `--claude-home <path>` | set a local source root |
 | `--project <path>` | open one project |
 | `--all` | start on the guard office |
 | `--demo` | the imaginary company; reads nothing |
@@ -206,8 +201,8 @@ its design reference. That comparison is how visual changes get reviewed — the
 frames are generated rather than stored, so what you open is always the code you
 have checked out.
 
-You do not need Rust installed; `scripts/cargo` runs the toolchain in a
-container as you. See [CONTRIBUTING.md](CONTRIBUTING.md).
+`scripts/cargo` uses local Rust when available, otherwise the Docker toolchain.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

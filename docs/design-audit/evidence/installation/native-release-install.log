@@ -1,0 +1,25 @@
+Downloading they-work-aarch64-apple-darwin.tar.gz (latest) ...
+Installed: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/tmpn7y1qmcs/installed with spaces/they-work
+Start with: "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/tmpn7y1qmcs/installed with spaces/they-work" --setup
+Add /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/tmpn7y1qmcs/installed with spaces to your shell PATH to use the they-work command.
+they-work --once
+timestamp_ms=1788810843808
+projects=3 workers=6
+office=/home/dev/checkout workers=3
+  worker name="Dev 1" agent=codex status=running detail="fn apply" activity=searching idle_age=0s tokens=19875688042
+  worker name="Dev 2" agent=codex status=running detail="Tests pass, pushing." activity=talking idle_age=0s tokens=39751364084
+  worker name="orchestrator" agent=claude status=running detail="cargo test --workspace" activity=typing idle_age=0s tokens=59627040126
+office=/home/dev/infra workers=1
+  worker name="Dev 1" agent=claude status=idle activity=idle idle_age=0s tokens=119254068252
+office=/home/dev/website workers=2
+  worker name="Dev 1" agent=codex status=running detail="src/render/canvas.rs" activity=editing idle_age=0s tokens=79502716168
+  worker name="reviewer" agent=claude status=running activity=thinking idle_age=0s tokens=99378392210
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+they-work --headless
+target_fps=10 effective_fps=18.69 frame_ms=100 poll_interval_ms=1000 exit_after_ms=100 elapsed_ms=107 frames=2 polls=0 events=0 poll_errors=0
+roster initial_offices=3 final_offices=3 office_min=3 office_max=3 initial_workers=6 final_workers=6 worker_min=6 worker_max=6 changes=0 joined=0 left=0 unique_workers=6
+rss_before_bytes=unavailable
+rss_after_initial_scan_bytes=unavailable
+rss_after_bytes=unavailable
+cpu_seconds=unavailable cpu_average_percent=unavailable
+PASS: actual native archive verified, installed, and launched; GitHub download substituted locally.

@@ -1,4 +1,4 @@
-# they-work — everything runs in Docker. Nothing is installed on your machine.
+# Native Rust development or an optional Docker toolchain.
 IMAGE ?= they-work:local
 DEV_IMAGE ?= they-work-dev:local
 SHOT_DIR ?= docs/shots
@@ -8,46 +8,12 @@ IMAGE_FRAME ?=
 # output is owned by you and not by root. Contributors need no local Rust.
 CARGO = THEYWORK_DEV_IMAGE=$(DEV_IMAGE) ./scripts/cargo
 
-THEYWORK_CLAUDE_HOME ?= /data/claude
-THEYWORK_CODEX_HOME ?= /data/codex
+# The shared launcher quotes host paths, skips missing sources, and chooses a
+# TTY only for interactive runs. Demo mode never mounts source data.
+ARGS ?=
+DOCKER_RUN = THEYWORK_SKIP_PULL=1 THEYWORK_IMAGE="$(IMAGE)" sh docs/install.sh
 
-# Run as you. Agent transcripts are private to their owner (Claude writes them
-# 0600), so a container with its own uid can list the directories and open
-# nothing. Reading them as yourself is also the honest posture: they-work sees
-# exactly what you can see, and no more.
-DOCKER_SECURITY = \
-  --user $(shell id -u):$(shell id -g) \
-  --network none \
-  --read-only \
-  --cap-drop ALL \
-  --security-opt no-new-privileges
-
-DOCKER_ENV = \
-  -e TERM \
-  -e COLORTERM \
-  -e TERM_PROGRAM \
-  -e THEYWORK_CLAUDE_HOME=$(THEYWORK_CLAUDE_HOME) \
-  -e THEYWORK_CODEX_HOME=$(THEYWORK_CODEX_HOME) \
-  -e THEYWORK_ENCODING \
-  -e THEYWORK_COLOR \
-  -e NO_COLOR
-
-DOCKER_VOLUMES = \
-  -v $(HOME)/.claude:/data/claude:ro \
-  -v $(HOME)/.codex:/data/codex:ro
-
-DOCKER_RUN = docker run --rm -it \
-  $(DOCKER_SECURITY) \
-  $(DOCKER_ENV) \
-  $(DOCKER_VOLUMES) \
-  $(IMAGE)
-
-DOCKER_DEMO_RUN = docker run --rm -it \
-  $(DOCKER_SECURITY) \
-  $(DOCKER_ENV) \
-  $(IMAGE) --demo
-
-.PHONY: help build run demo shot fetch test fmt fmt-check lint check clean
+.PHONY: help build run demo native install shot fetch test fmt fmt-check lint check clean
 .NOTPARALLEL: check
 
 help: ## Show this help
@@ -58,10 +24,16 @@ build: ## Build the container image
 	docker build -f docker/Dockerfile -t $(IMAGE) .
 
 run: build ## Watch your real agents (read-only)
-	$(DOCKER_RUN)
+	$(DOCKER_RUN) $(ARGS)
 
 demo: build ## Watch an imaginary company; reads nothing
-	$(DOCKER_DEMO_RUN)
+	$(DOCKER_RUN) --demo $(ARGS)
+
+native: ## Build a native executable (requires local Rust)
+	THEYWORK_TOOLCHAIN=native ./scripts/cargo build --release --locked --bin they-work
+
+install: ## Install native executable into Cargo user bin (requires local Rust)
+	THEYWORK_TOOLCHAIN=native ./scripts/cargo install --locked --path crates/theywork-tui
 
 shot: ## Export labelled cell/image frames and contact sheet
 	python3 scripts/shot.py --view "$(VIEW)" --light "$(LIGHT)" --out-dir "$(SHOT_DIR)" --image-frame-dir "$(IMAGE_FRAME_DIR)" --captured-image "$(IMAGE_FRAME)"

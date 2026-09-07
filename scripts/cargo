@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Run cargo inside the project's toolchain container.
+# Run Cargo natively when installed, otherwise use the toolchain container.
 #
 # Contributors do not need Rust installed. `./scripts/cargo test` behaves like
 # `cargo test`, but the toolchain lives in an image and the build output is
@@ -9,6 +9,29 @@ set -eu
 IMAGE=${THEYWORK_DEV_IMAGE:-they-work-dev:local}
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 CARGO_NETWORK=${THEYWORK_CARGO_NETWORK:-none}
+TOOLCHAIN=${THEYWORK_TOOLCHAIN:-auto}
+mkdir -p "$ROOT/target/tmp"
+
+case "$TOOLCHAIN" in
+    auto|native|docker) ;;
+    *) echo "THEYWORK_TOOLCHAIN must be auto, native, or docker" >&2; exit 2 ;;
+esac
+
+if [ "$TOOLCHAIN" != docker ] && command -v cargo >/dev/null 2>&1; then
+    TMPDIR="$ROOT/target/tmp" exec cargo "$@"
+fi
+if [ "$TOOLCHAIN" = native ]; then
+    echo "Cargo is missing. Install Rust 1.90 or use THEYWORK_TOOLCHAIN=docker." >&2
+    exit 1
+fi
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Install Rust (https://rustup.rs) or Docker, then retry. See INSTALL.md." >&2
+    exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+    echo "Docker is unavailable. Start Docker Desktop/the Docker daemon, or install Rust for native builds." >&2
+    exit 1
+fi
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     echo "building $IMAGE ..." >&2
@@ -22,6 +45,7 @@ exec docker run --rm $TTY \
     --network "$CARGO_NETWORK" \
     --user "$(id -u):$(id -g)" \
     -e CARGO_HOME=/src/.cargo-home \
+    -e TMPDIR=/src/target/tmp \
     -e THEYWORK_UPDATE_GOLDEN \
     -v "$ROOT:/src" -w /src \
     "$IMAGE" cargo "$@"

@@ -1,0 +1,16 @@
+building they-work-dev:local ...
+sha256:67c7ce16c93f73d49d1d7571e8b1130d83a27c43116a35f4aeced78dd1c8468e
+    Updating crates.io index
+warning: spurious network error (3 tries remaining): [6] Could not resolve hostname (Could not resolve host: index.crates.io)
+warning: spurious network error (2 tries remaining): [6] Could not resolve hostname (Could not resolve host: index.crates.io)
+warning: spurious network error (1 try remaining): [6] Could not resolve hostname (Could not resolve host: index.crates.io)
+error: failed to get `serde` as a dependency of package `theywork-core v0.1.0 (/src/crates/theywork-core)`
+
+Caused by:
+  download of config.json failed
+
+Caused by:
+  failed to download from `https://index.crates.io/config.json`
+
+Caused by:
+  [6] Could not resolve hostname (Could not resolve host: index.crates.io)

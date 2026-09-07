@@ -31,40 +31,34 @@ config-directory opt-in described there.
 
 ## Build and test
 
-Rust is not required on the host. <code>./scripts/cargo</code> builds
-<code>docker/Dockerfile.dev</code> on first use, mounts the repository at
-<code>/src</code>, and runs Cargo as the invoking user:
+Use native Rust 1.90 with a C compiler, or Docker. `./scripts/cargo` prefers
+local Cargo and falls back to `docker/Dockerfile.dev`. Set
+`THEYWORK_TOOLCHAIN=native` or `THEYWORK_TOOLCHAIN=docker` to choose explicitly.
+The Docker image runs as the invoking user, mounts the checkout at `/src`, and
+keeps Cargo's cache in `.cargo-home`. Temporary build/test files stay in `target/tmp`.
 
-~~~bash
-make fetch
-./scripts/cargo fmt --all -- --check
-./scripts/cargo clippy --workspace --all-targets -- -D warnings
-./scripts/cargo test --workspace
-make build
-make demo
+~~~sh
+make check
+make native  # local Rust: build target/release/they-work
+make install # local Rust: install into Cargo's user bin
+make demo    # optional Docker runtime; no source mounts
 python3 scripts/test-install.py
+python3 scripts/test-native-install.py
 ~~~
 
-<code>make fmt</code> formats files in place. <code>make fmt-check</code> is
-the non-mutating version. <code>make check</code> fetches the locked
-dependencies with explicit network access, then runs the formatting check,
-strict Clippy, and the workspace tests offline. The release image is
-built from <code>docker/Dockerfile</code>; its dependency layer copies the
-manifests and stub sources before the real sources, so ordinary source edits
-can reuse the registry and dependency layers.
+`make check` fetches locked dependencies, then checks formatting, strict Clippy,
+and workspace tests. Docker commands run without network access by default;
+`make fetch` explicitly enables network access to populate the dependency cache.
+Native Cargo follows its normal network policy. To run individual Docker tests
+on a fresh checkout, first run `THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked`.
+CI forces Docker for that verification lane and separately builds, runs tests,
+and smoke-tests release binaries natively on Linux, macOS, and Windows (x64/ARM64).
 
-The Cargo container runs with Docker's <code>--network none</code> by default.
-<code>make check</code> handles the fresh-checkout bootstrap. Before running
-individual Cargo commands in a fresh checkout, populate the ignored
-<code>.cargo-home</code> cache once with an explicit networked fetch:
-
-~~~bash
-THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked
-~~~
-
-CI caches that directory by lockfile and toolchain pin and performs that
-networked bootstrap only on a cache miss. Set <code>THEYWORK_CARGO_NETWORK</code>
-only when intentionally refreshing the dependency cache.
+The release workflow packages each tested native binary with `LICENSE` and
+SHA256 checksums, builds Linux/amd64 and Linux/arm64 container images, verifies
+the published image, then attaches native installers and archives to the tagged
+GitHub Release. This workflow is a release gate, not evidence that an unrun
+platform has passed. No releases were published as part of the design audit.
 
 <code>cargo fmt --all</code> crosses crate boundaries. For a focused change,
 use <code>./scripts/cargo fmt -p &lt;crate&gt;</code> (and add
@@ -259,11 +253,11 @@ diff is not a substitute for that comparison.
 
 ## CI boundary
 
-CI runs on a Linux GitHub-hosted runner with no configured Claude or Codex home.
+The Docker verification lane runs on a Linux GitHub-hosted runner with no configured Claude or Codex home.
 The collector acceptance suite therefore exercises its fixtures and skips its
 live-machine smoke check when those homes are absent; it does not prove a
-particular user's transcript or database layout. CI also does not cover
-Windows/WSL bind-mount behavior, terminal-specific key handling and dimensions,
+particular user's transcript or database layout. The native matrix checks Windows builds and fixture behavior; CI does not cover
+WSL bind-mount behavior, terminal-specific key handling and dimensions,
 or pulling the public release image from its registry. The checked-in
 goldens cover deterministic rendering; the interactive demo remains a manual
 terminal check.

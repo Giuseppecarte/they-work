@@ -1,17 +1,162 @@
 # Installing they-work
 
-The container is the recommended route. It keeps the Rust toolchain in the
-build image and gives the running program the read-only, no-network boundary
-described below.
+Run the office directly in your terminal on macOS, Linux, Windows, or WSL.
+Docker is optional. A native process reads only the local sources you select;
+Docker additionally enforces read-only data mounts and disables runtime networking.
 
-## Without a checkout
+## Install this checkout now
 
-Release `v0.1.0` was published successfully and both `v0.1.0` and `latest` are
-anonymously readable. For a Docker-only demo with no data mounts, use the
-[README command](README.md#start-here). To inspect local agent data, use the
-verified shell download below. A fresh machine with no agent stores should
-use the demo: the live program shows setup guidance, not an empty office.
+The changes on this branch have not been published as native release assets.
+The older `v0.1.0` release is Docker-only. To run this version today, build from
+this checkout with Rust 1.90 or newer, Git, and a C compiler (SQLite is bundled).
+Install Rust from [rustup.rs](https://rustup.rs).
 
+| Platform | C compiler prerequisite |
+| --- | --- |
+| macOS | Xcode Command Line Tools: `xcode-select --install` |
+| Debian/Ubuntu/WSL | `sudo apt install build-essential` |
+| Windows | Visual Studio Build Tools, “Desktop development with C++” workload |
+
+The following commands work in a shell or PowerShell:
+
+~~~sh
+git clone https://github.com/Giuseppecarte/they-work
+cd they-work
+cargo install --locked --path crates/theywork-tui
+they-work --demo
+~~~
+
+If you already have this checkout, start at `cargo install`. The binary goes in
+Cargo's user bin directory. Follow rustup's PATH instructions if your current
+terminal does not yet recognize `cargo` or `they-work`; opening a new terminal
+usually applies them. Press `q` to leave the demo.
+
+## Native release installers
+
+After a release with native assets is published, a reviewed local copy of the
+installer downloads just the executable for your OS and CPU, verifies its
+SHA256 checksum, and installs it without administrator access:
+
+~~~sh
+sh scripts/install.sh
+# Optional: sh scripts/install.sh --version vX.Y.Z --install-dir "$HOME/.local/bin"
+~~~
+
+On Windows PowerShell:
+
+~~~powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+# Optional: .\scripts\install.ps1 -Version vX.Y.Z -InstallDir C:\Tools\they-work -NoPath
+~~~
+
+The POSIX installer uses `curl`, `tar`, and either `sha256sum` or macOS's
+`shasum`. It installs into `~/.local/bin`, or `--install-dir`, and prints a
+working full-path launch command if that directory is outside PATH. The Windows
+installer uses built-in PowerShell/.NET, installs into
+`%LOCALAPPDATA%\Programs\they-work`, and adds that directory to your user PATH
+unless `-NoPath` is passed. It updates the current process PATH too.
+
+Installers are also attached to future GitHub Releases, alongside these assets:
+
+| Platform | Release archive targets |
+| --- | --- |
+| Linux and WSL | `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl` (`.tar.gz`) |
+| macOS Intel and Apple Silicon | `x86_64-apple-darwin`, `aarch64-apple-darwin` (`.tar.gz`) |
+| Windows x64 and ARM64 | `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc` (`.zip`) |
+
+You may instead download an archive and `SHA256SUMS` from the same
+[release page](https://github.com/Giuseppecarte/they-work/releases), verify it
+with `shasum -a 256` / `sha256sum` / `Get-FileHash`, then extract the executable
+to a directory on PATH. Checksums detect a corrupt download; they are not code
+signing or notarization. The release workflow builds and executes each native
+target before publishing; until that workflow actually runs, those targets are
+configured coverage, not verified releases. Real terminal/font behavior still
+requires testing on that terminal.
+
+To update, rerun the same installer. A failed download or checksum leaves an
+existing installation untouched. To uninstall, remove the executable and, on
+Windows, its installer-added user PATH entry. Source records are never removed.
+
+## Choose your conversation sources
+
+Run `they-work --setup` to choose Codex, Claude Code, both, or no local sources.
+This is a local connection screen, not an account login: no API keys, browser
+authorization, or subscription is needed. You remain logged in to your coding
+apps as usual. Demo mode reads no conversation data.
+
+For an explicit launch, including nonstandard data folders:
+
+~~~sh
+they-work --sources codex --codex-home /absolute/path/to/.codex
+they-work --sources claude --claude-home /absolute/path/to/.claude
+they-work --sources all --doctor
+they-work --sources all --once
+~~~
+
+`--doctor` explains source discovery/readability without opening an interactive
+screen. `--once` prints every project and worker; both can run over SSH or in a
+pipe. Data paths are the source root directories, not individual project folders.
+An unavailable source does not prevent the other source from working.
+
+Pass `--config-dir` to opt into remembering choices between runs:
+
+~~~sh
+they-work --config-dir "$HOME/.config/they-work" --setup
+~~~
+
+Reuse the same flag on later launches. Without it, no application preferences
+are written. On Windows, a suitable choice is
+`--config-dir "$env:LOCALAPPDATA\they-work"` in PowerShell.
+
+In WSL, install the Linux binary. Windows-side data can be selected explicitly:
+
+~~~sh
+they-work --sources codex --codex-home /mnt/c/Users/YourName/.codex
+~~~
+
+The source directory must be readable by your own account. Never change live
+store permissions just to hide a diagnostic failure. SQLite opens main stores
+read-only, but may coordinate through an existing writable `-shm` sidecar;
+missing required sidecars are not created. Transcript content, paths, and
+messages appear on screen, so the terminal has the same sensitivity as that data.
+
+## Docker from a checkout
+
+Requires Docker and GNU Make, with Docker Desktop/the daemon running. These
+commands compile the checked-out version and do not need Rust installed locally:
+
+~~~sh
+make demo
+make run
+~~~
+
+The demo mounts nothing. `make run` mounts existing source homes read-only,
+skips missing homes, runs with your UID/GID, drops capabilities, and disables
+network access. Add arguments with `make run ARGS="--doctor"` or
+`make run ARGS="--sources codex"`. Override host locations with
+`THEYWORK_CODEX_HOST` or `THEYWORK_CLAUDE_HOST`. Paths containing spaces work.
+
+Docker users who opt into `--config-dir` must mount that one configuration
+directory read-write explicitly. Merely passing the flag does not grant write
+access inside the default read-only container.
+
+## Docker without a checkout
+
+The existing `v0.1.0` image is a Linux/amd64 release. It does not contain the
+changes in this branch. Other host architectures need Docker emulation for
+that historical image. For a demo that reads no host data:
+
+~~~sh
+docker run --rm -it --network none --read-only --cap-drop ALL \
+  --security-opt no-new-privileges -e TERM -e COLORTERM -e TERM_PROGRAM \
+  ghcr.io/giuseppecarte/they-work:v0.1.0 --demo
+~~~
+
+For that release's live-data launcher, download and verify the exact historical
+installer before running it. The pinned checksum is independent of the download.
+The doctor step stops before the interactive office if store inspection fails.
+
+<!-- verified-docker-bootstrap -->
 ~~~bash
 (
   set -e
@@ -21,7 +166,12 @@ use the demo: the live program shows setup guidance, not an empty office.
     echo "Installer download failed; nothing was executed." >&2
     exit 1
   fi
-  if ! printf '%s  %s\n' '2a665a28b75d9fa22f07b7ae8aa686a3bfd6e263309eb45b522cd8a9221fa2d4' "$installer" | sha256sum -c -; then
+  if command -v sha256sum >/dev/null 2>&1; then
+    verify_sha256() { sha256sum -c -; }
+  else
+    verify_sha256() { shasum -a 256 -c -; }
+  fi
+  if ! printf '%s  %s\n' '2a665a28b75d9fa22f07b7ae8aa686a3bfd6e263309eb45b522cd8a9221fa2d4' "$installer" | verify_sha256; then
     echo "Installer verification failed: truncated or modified download; nothing was executed." >&2
     exit 1
   fi
@@ -30,271 +180,23 @@ use the demo: the live program shows setup guidance, not an empty office.
 )
 ~~~
 
-This shell route needs `curl`, `sha256sum`, and standard POSIX utilities in
-addition to Docker. The checksum pins the complete installer shipped in
-`v0.1.0`; do not replace it with a checksum fetched from the same unverified
-download. `sh -n` alone cannot reject a truncated file that is valid shell.
-
-The first invocation checks store readability and exits nonzero on a missing
-or unreadable setup. Because the block uses `set -e`, the interactive office
-is not started after a failed check. Keep the reported Docker/permission error;
-do not dismiss it as an empty office.
-
-`--doctor` and `--once` are non-rendering diagnostics and also work with stdin
-redirected, in a pipe, or in CI. In those modes the installer does not request
-a Docker TTY. Opening the interactive office still requires a terminal.
-
-For a machine with no agent stores, use the Docker-only README demo. To test
-the installer itself in demo mode, replace both final installer invocations
-with one `sh "$installer" --demo`; retain the download and checksum checks.
-
-The script pulls `ghcr.io/giuseppecarte/they-work:latest`, mounts existing
-`~/.claude` and `~/.codex` directories read-only, and skips either home that is
-missing. It runs the image as the invoking UID/GID, so private `0600`
-transcripts remain readable without widening access. To pin the runtime as
-well as the installer, set this before running the verified block above:
-
-~~~bash
-export THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v0.1.0
-~~~
-
-Use `THEYWORK_CLAUDE_HOST` and `THEYWORK_CODEX_HOST` to point at host paths
-outside the usual locations. For example, before the verified block:
-
-~~~sh
-export THEYWORK_CLAUDE_HOST=/absolute/path/to/your/claude-home
-~~~
-
-That directory must contain `projects/`, not be one individual project folder.
-It must exist on the Docker daemon's host; when invoking Docker from another
-container, make it visible there at the same absolute path too. A remote daemon
-does not see files just because they exist on the CLI machine.
-
-The installer runs with your numeric UID/GID. Your account must be able to read
-the session files, not merely list their directories. Private `0600` files owned
-by another UID will fail. Use your own account and owned data; do not widen live
-store permissions to make a test work. Windows/WSL mounts may expose different
-ownership semantics. The `--doctor` output is the check, not a guarantee based
-on the pathname alone.
-
-The installer uses the same `--network none`,
-`--read-only`, `--cap-drop ALL`, `--security-opt no-new-privileges`, and `:ro`
-mount policy as the local command below. The release process is documented in
-[`docs/release.md`](docs/release.md).
-
-## From a checkout
-
-Requires Docker and GNU Make for the convenience targets. Rust is not required
-on the host.
-
-~~~bash
-git clone https://github.com/Giuseppecarte/they-work
-cd they-work
-make demo
-~~~
-
-`make demo` builds a local release image and shows a deterministic office. It
-mounts no agent directories. To watch local data:
-
-~~~bash
-make run
-~~~
-
-`make run` mounts `~/.claude` at `/data/claude` and `~/.codex` at `/data/codex`,
-both with `:ro`.
-
-### Running the local image by hand
-
-This is the real-agent runtime command used by the Makefile:
-
-~~~bash
-docker build -f docker/Dockerfile -t they-work:local .
-docker run --rm -it \
-  --user "$(id -u):$(id -g)" \
-  --network none \
-  --read-only \
-  --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -e TERM -e COLORTERM -e TERM_PROGRAM \
-  -e THEYWORK_CLAUDE_HOME=/data/claude \
-  -e THEYWORK_CODEX_HOME=/data/codex \
-  -e THEYWORK_ENCODING -e THEYWORK_COLOR -e NO_COLOR \
-  -v "$HOME/.claude:/data/claude:ro" \
-  -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local
-~~~
-
-| Setting | Effect |
-| --- | --- |
-| `--network none` | No external network connectivity; only container loopback remains. |
-| `--read-only` | The container root filesystem is read-only. |
-| `--cap-drop ALL` | Linux capabilities are dropped. |
-| `--security-opt no-new-privileges` | The process cannot gain additional privileges. |
-| `:ro` on both mounts | The kernel refuses writes to agent data. |
-| `--user` your own UID/GID | Not root, and no wider than your own account: it reads exactly the files you can read. |
-| `--rm` | The stopped runtime container is removed. |
-
-The `make demo` target uses the same security flags but omits both mounts. The
-image build itself may use Docker's normal access to download base images; the
-running program has no external network connectivity.
-
-## Selecting a project
-
-The new interface has one selected office floor and a camera grid containing
-all discovered projects. Use:
-
-~~~text
-they-work --project <path>
-~~~
-
-The path can be relative to the process working directory or absolute. Resolve
-it to the nearest enclosing Git root when applicable, normalize Windows/WSL
-spellings, and match it to the collector's normalized project identity.
-
-Without the flag, the current directory wins when it is a discovered project;
-otherwise a picker lists discovered projects. Dismissing or being unable to
-show the picker falls back to the full camera grid. With no discovered projects,
-the interactive first-run screen shows setup guidance and waits for input.
-`Tab` switches between the selected floor
-and grid; movement keys select; `Enter` opens the selected project or desk; and
-`Esc`/`Backspace` returns to the parent view.
-
-The complete startup, switching, path, and persistence contract is in
-[`docs/project-selection.md`](docs/project-selection.md).
-
-### Optional remembered selection
-
-No preference is read or written by default. This keeps the normal container
-truly zero-write; the trade-off is repeating `--project` or a picker choice.
-
-The opt-in form is `--config-dir <path>`. It reads and writes only
-`<path>/project`, a single normalized path. In a read-only container, the user
-must explicitly add a read-write bind mount:
-
-~~~bash
-mkdir -p "$HOME/.config/they-work"
-docker run --rm -it \
-  --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -v "$HOME/.claude:/data/claude:ro" \
-  -v "$HOME/.codex:/data/codex:ro" \
-  -v "$HOME/.config/they-work:/config:rw" \
-  they-work:local --config-dir /config
-~~~
-
-An explicit `--project` wins for the current run. An unwritable explicit config
-directory is an error, not a reason to use a hidden fallback. This is the only
-additional write permission and is the cost of remembering a selection.
-
-## What is read
-
-Claude Code data comes from regular `.jsonl` session files below
-`~/.claude/projects/`; symlinks and non-JSONL files are skipped. Codex data comes
-from `~/.codex/sqlite/state_5.sqlite` and
-`~/.codex/sqlite/thread_history_1.sqlite`, opened read-only.
-
-The records may contain prompts, commands, file paths, agent messages, thread
-titles, branches, token counts, and status metadata. That activity and message
-text is displayed on screen. The collectors inspect filesystem metadata and
-`.git` directory markers to group project roots, but do not read project source
-files. Missing homes are skipped and the other collector continues.
-
-For homes outside the usual locations, mount the host path read-only and set the
-matching in-container variable. For example, if Codex data is on the Windows
-side while Docker runs in WSL:
-
-~~~bash
-docker run --rm -it \
-  --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -v /mnt/c/Users/Example/.codex:/data/codex:ro \
-  -e THEYWORK_CODEX_HOME=/data/codex \
-  they-work:local
-~~~
-
-The path on the right of the mount is the value the program must receive. With
-short `-v` syntax, Docker can create a missing host path as an empty directory;
-use an existing path or long `--mount` syntax when you want a missing path to
-fail instead.
-
-## Diagnose setup before the interactive view
-
-The implemented `--doctor` mode performs one read-only inspection without raw
-mode, an alternate screen, or rendering. It reports both configured homes,
-store readability, project/thread/activity counts, and actionable ownership or
-permission details when a store cannot be read.
-
-~~~text
-claude_home=found path=/data/claude
-codex_home=missing path=/data/codex
-claude_store=readable projects=2 threads=2 active=2
-codex_store=unavailable reason="home is not a directory"
-~~~
-
-Exit `0` means at least one home exists and every existing home is readable;
-exit `1` means neither home exists or an existing home is unreadable. Invalid
-arguments exit `2`. The local-image command is:
-
-~~~bash
-docker run --rm \
-  --network none --read-only --cap-drop ALL \
-  --security-opt no-new-privileges \
-  -v "$HOME/.claude:/data/claude:ro" \
-  -v "$HOME/.codex:/data/codex:ro" \
-  they-work:local --doctor
-~~~
-
-See [`docs/project-selection.md`](docs/project-selection.md#non-rendering-setup-diagnosis)
-for the verified behavior.
-
-## Build, test, and configure
-
-The containerized toolchain is pinned to Rust 1.90 and requires no local Rust:
-
-~~~bash
-make check
-make build
-~~~
-
-`make check` first fetches locked dependencies with network access, then checks
-formatting, strict Clippy, and tests with the toolchain container offline.
-
-The release Dockerfile copies workspace manifests and stub sources before the
-real source tree, so source-only edits reuse the dependency layer. If Rust is
-already installed, `cargo run --release --bin they-work -- --demo` is possible,
-but it does not provide Docker's isolation boundary.
-
-Configuration variables:
-
-| Variable | Values |
-| --- | --- |
-| `THEYWORK_CLAUDE_HOME` | Claude root; `/data/claude` in the container. |
-| `THEYWORK_CODEX_HOME` | Codex root; `/data/codex` in the container. |
-| `TERM_PROGRAM` | Forwarded for iTerm2's older capability fallback; ignored by terminals that do not use it. |
-| `THEYWORK_ENCODING` | `sextants`, `quadrants`, or `half-blocks`; leave unset for terminal detection. |
-| `THEYWORK_COLOR` | `none`, `true`, or `256`; unknown/unset values use terminal detection. |
-| `NO_COLOR` | Any presence forces monochrome and overrides `THEYWORK_COLOR`. |
-
-Without a forced setting, `COLORTERM=truecolor` or `24bit` selects truecolor;
-otherwise the renderer falls back to the 256-color palette.
-
-~~~bash
-THEYWORK_COLOR=none make run
-NO_COLOR=1 make run
-THEYWORK_ENCODING=sextants make run
-~~~
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for crate boundaries, read-only source
-rules, and the containerized development workflow.
+This legacy launcher pulls `latest` unless you set
+`THEYWORK_IMAGE=ghcr.io/giuseppecarte/they-work:v0.1.0`. `--doctor` and `--once`
+work without a TTY. Host paths must exist on the Docker daemon's host; a remote
+Docker daemon cannot read your local laptop's files.
 
 ## Troubleshooting
 
-**The grid is empty.** Confirm the configured homes are visible inside the
-container. A missing home is skipped; `make demo` is independent of both homes.
+- **No conversations:** run `they-work --setup`, choose sources, then use
+  `--doctor` for the exact paths and next steps. Use `--demo` to preview the office.
+- **Command not found:** use the installer's printed absolute command, or add its
+  directory to PATH. For Cargo installs, reopen the terminal after rustup setup.
+- **Docker unavailable:** start Docker Desktop/the daemon, or use a native build.
+- **Native asset missing:** no native release has been published for that tag;
+  build the checkout. A failed installer never reports successful installation.
+- **Poor-looking glyphs:** use a Unicode monospace font and try
+  `THEYWORK_ENCODING=quadrants` or `half-blocks`. Inspect `--doctor` in that terminal.
+- **Tiny window:** increase terminal size; compact layouts retain worker status.
 
-**The image cannot see a Windows-side home.** Use the host path syntax accepted
-by the Docker daemon, mount it at `/data/claude` or `/data/codex`, and set the
-corresponding `THEYWORK_*_HOME` variable to that right-hand path.
-
-**The colors look wrong.** Try `THEYWORK_COLOR=true`, `THEYWORK_COLOR=256`, or
-the reliable monochrome fallback `THEYWORK_COLOR=none`/`NO_COLOR=1`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for verification commands and
+[the installation audit](docs/design-audit/INSTALLATION.md) for actual test evidence.

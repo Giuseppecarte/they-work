@@ -1,0 +1,10 @@
+  Installing theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Updating crates.io index
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `release` profile [optimized] target(s) in 18.81s
+  Installing docs/design-audit/tmp/installed/bin/they-work
+   Installed package `theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)` (executable `they-work`)
+warning: be sure to add `docs/design-audit/tmp/installed/bin` to your PATH to be able to run the installed binaries

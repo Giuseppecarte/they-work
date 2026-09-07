@@ -22,12 +22,12 @@ RUN for c in core collect terminal-image render tui; do \
     done \
  && mkdir -p crates/theywork-tui/src \
  && echo "fn main() {}" > crates/theywork-tui/src/main.rs \
- && cargo build --release --locked 2>/dev/null || cargo build --release
+ && cargo build --release --locked
 
 COPY . .
 # Touch sources so cargo rebuilds them over the dependency-cache stubs.
 RUN find crates -name '*.rs' -exec touch {} + \
- && cargo build --release --bin they-work
+ && cargo build --release --locked --bin they-work
 
 # Runtime stage: just the binary and a non-root user.
 FROM debian:bookworm-slim AS runtime

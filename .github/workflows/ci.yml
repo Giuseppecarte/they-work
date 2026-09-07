@@ -8,9 +8,14 @@ permissions:
   contents: read
 
 jobs:
+  native:
+    uses: ./.github/workflows/native.yml
+
   verify:
     name: Required verification
     runs-on: ubuntu-latest
+    env:
+      THEYWORK_TOOLCHAIN: docker
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4

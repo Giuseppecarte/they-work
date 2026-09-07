@@ -87,7 +87,10 @@ impl Activity {
 
     /// Whether this counts as actively working, for the "busy desks" tally.
     pub fn is_busy(&self) -> bool {
-        !matches!(self, Activity::Idle | Activity::Error { .. })
+        !matches!(
+            self,
+            Activity::Idle | Activity::Error { .. } | Activity::Waiting { .. }
+        )
     }
 }
 
@@ -101,9 +104,8 @@ pub enum WorkerStatus {
     Running,
     /// No turn open. Finished, and ready to be given something new.
     Idle,
-    /// A turn is open but nothing has come out of it for a long time. Almost
-    /// always a command waiting on a human to approve it, or a question asked
-    /// and never answered. These are the ones worth interrupting your day for.
+    /// An explicit request for human input, or a long-silent open turn.
+    /// Silence is an attention hint; it does not prove an approval is pending.
     Blocked,
     /// Something failed.
     Failed,
@@ -192,10 +194,13 @@ impl Worker {
         if matches!(self.activity, Activity::Error { .. }) {
             return WorkerStatus::Failed;
         }
+        if matches!(self.activity, Activity::Waiting { .. }) {
+            return WorkerStatus::Blocked;
+        }
         if !self.turn_in_flight {
             return WorkerStatus::Idle;
         }
-        // An open turn that has gone silent is not working, it is waiting.
+        // Silence is an attention hint, not evidence of a pending approval.
         if now - self.last_seen > crate::BLOCKED_AFTER_MS {
             return WorkerStatus::Blocked;
         }

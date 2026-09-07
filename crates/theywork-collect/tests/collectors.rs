@@ -2864,6 +2864,7 @@ fn clean_wal_database_is_rejected_without_recreating_sidecars() {
 }
 
 #[test]
+#[ignore = "requires explicit opt-in to read live agent stores; use --doctor for diagnostics"]
 fn real_machine_smoke_when_homes_exist() {
     let config = Config::discover();
     if config.claude_home.is_none() && config.codex_home.is_none() {

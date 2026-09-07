@@ -704,6 +704,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "ratatui",
+ "serde",
  "theywork-core",
 ]
 
@@ -725,6 +726,7 @@ dependencies = [
  "libc",
  "ratatui",
  "rusqlite",
+ "serde",
  "serde_json",
  "theywork-collect",
  "theywork-core",

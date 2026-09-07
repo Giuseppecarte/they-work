@@ -301,6 +301,7 @@ struct FileCursor {
     last_timestamp: Option<Millis>,
     file_identity: Option<FileIdentity>,
     last_modified: Option<SystemTime>,
+    checkpoint: Vec<u8>,
     pending_tools: HashMap<String, PendingTool>,
     tokens_used: u64,
     metadata: SessionMetadata,
@@ -315,6 +316,7 @@ impl FileCursor {
             last_timestamp: None,
             file_identity: None,
             last_modified: None,
+            checkpoint: Vec::new(),
             tokens_used: 0,
             pending_tools: HashMap::new(),
             metadata: SessionMetadata::new(discovery),
@@ -328,6 +330,7 @@ impl FileCursor {
         self.last_timestamp = None;
         self.file_identity = None;
         self.last_modified = None;
+        self.checkpoint.clear();
         self.pending_tools.clear();
         self.tokens_used = 0;
         self.metadata.reset_identity();
@@ -577,14 +580,22 @@ fn read_file(
     }
     cursor.file_identity = identity;
     cursor.last_modified = modified;
-    if length == cursor.offset {
-        return;
-    }
-
     let mut file = match File::open(path) {
         Ok(file) => file,
         Err(_) => return,
     };
+    // Mounted filesystems can round mtime to whole seconds. Check a bounded
+    // transcript tail for in-place rewrites with unchanged size and timestamp.
+    if cursor.offset > 0 && !cursor.checkpoint.is_empty() {
+        if let Ok(checkpoint) = read_checkpoint(&mut file, cursor.offset) {
+            if checkpoint != cursor.checkpoint {
+                cursor.reset();
+            }
+        }
+    }
+    if length == cursor.offset {
+        return;
+    }
     if file.seek(SeekFrom::Start(cursor.offset)).is_err() {
         return;
     }
@@ -616,6 +627,15 @@ fn read_file(
             },
         );
     }
+    cursor.checkpoint = read_checkpoint(&mut file, cursor.offset).unwrap_or_default();
+}
+
+fn read_checkpoint(file: &mut File, offset: u64) -> io::Result<Vec<u8>> {
+    let size = offset.min(4096);
+    file.seek(SeekFrom::Start(offset - size))?;
+    let mut bytes = vec![0; size as usize];
+    file.read_exact(&mut bytes)?;
+    Ok(bytes)
 }
 
 fn consume_bytes<F>(pending: &mut Vec<u8>, discarding_line: &mut bool, bytes: &[u8], mut line: F)
@@ -669,7 +689,7 @@ fn parse_line(
         return;
     };
     let normalized_raw_path = normalize_office_path(raw_office_path);
-    if normalized_raw_path.is_empty() || !path_allowed(raw_office_path, only_paths) {
+    if normalized_raw_path.is_empty() {
         return;
     }
 
@@ -678,6 +698,9 @@ fn parse_line(
         office_cache,
         Some(&state.metadata.project_key),
     );
+    if !path_allowed(raw_office_path, only_paths) && !path_allowed(&office_path, only_paths) {
+        return;
+    }
     let worker = WorkerId(sanitize_terminal_text(&state.metadata.worker_id()));
     let office = OfficeId(office_path.clone());
     let make_event = |kind| Event {

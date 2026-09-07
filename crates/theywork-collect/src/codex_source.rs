@@ -66,17 +66,33 @@ impl CodexSource {
         Self::with_paths(home, only_paths)
     }
 
-    pub(crate) fn sqlite_exists(home: &Path) -> bool {
-        let sqlite = home.join("sqlite");
-        fs::symlink_metadata(&sqlite)
-            .is_ok_and(|metadata| !metadata.file_type().is_symlink() && metadata.is_dir())
+    pub(crate) fn home_exists(home: &Path) -> bool {
+        home.is_dir()
             && ["state_5.sqlite", "thread_history_1.sqlite"]
                 .iter()
                 .all(|name| {
-                    fs::symlink_metadata(sqlite.join(name)).is_ok_and(|metadata| {
-                        !metadata.file_type().is_symlink() && metadata.is_file()
-                    })
+                    let path = Self::database_path(home, name);
+                    let parent_safe = path.parent().is_none_or(|parent| {
+                        fs::symlink_metadata(parent)
+                            .map_or(true, |metadata| !metadata.file_type().is_symlink())
+                    });
+                    parent_safe
+                        && fs::symlink_metadata(path).map_or(true, |metadata| {
+                            !metadata.file_type().is_symlink() && metadata.is_file()
+                        })
                 })
+    }
+
+    /// Current stores live at the home root; older versions used sqlite/.
+    /// Prefer the root when both remain after migration, resolving state and
+    /// history independently to also support partially migrated layouts.
+    pub(crate) fn database_path(home: &Path, name: &str) -> PathBuf {
+        let root = home.join(name);
+        if fs::symlink_metadata(&root).is_ok() {
+            root
+        } else {
+            home.join("sqlite").join(name)
+        }
     }
 
     pub(crate) fn inspect_home(
@@ -100,38 +116,8 @@ impl CodexSource {
         }
 
         let sqlite = home.join("sqlite");
-        match fs::symlink_metadata(&sqlite) {
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                report.readable = true;
-                return report;
-            }
-            Err(error) => {
-                report.error = Some(crate::unreadable_reason(
-                    &sqlite,
-                    "could not inspect Codex SQLite directory",
-                    &error,
-                ));
-                return report;
-            }
-            Ok(metadata) if !metadata.is_dir() => {
-                report.error = Some(format!(
-                    "Codex SQLite path is not a directory; {}",
-                    crate::metadata_access_details(&sqlite)
-                ));
-                return report;
-            }
-            Ok(_) if !crate::path_allows_read(&sqlite) => {
-                report.error = Some(crate::unreadable_reason(
-                    &sqlite,
-                    "Codex SQLite directory cannot be read",
-                    &std::io::Error::from(std::io::ErrorKind::PermissionDenied),
-                ));
-                return report;
-            }
-            Ok(_) => {}
-        }
-        let state_path = home.join("sqlite").join("state_5.sqlite");
-        let history_path = home.join("sqlite").join("thread_history_1.sqlite");
+        let state_path = Self::database_path(home, "state_5.sqlite");
+        let history_path = Self::database_path(home, "thread_history_1.sqlite");
         let state_metadata = match fs::symlink_metadata(&state_path) {
             Ok(metadata) => Some(metadata),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
@@ -272,11 +258,11 @@ impl CodexSource {
     }
 
     fn state_path(&self) -> PathBuf {
-        self.home.join("sqlite").join("state_5.sqlite")
+        Self::database_path(&self.home, "state_5.sqlite")
     }
 
     fn history_path(&self) -> PathBuf {
-        self.home.join("sqlite").join("thread_history_1.sqlite")
+        Self::database_path(&self.home, "thread_history_1.sqlite")
     }
 
     fn minimum_item_watermark(&self) -> i64 {
@@ -360,12 +346,16 @@ impl Source for CodexSource {
             match thread.classification.kind {
                 ThreadKind::ApprovalAssessor => {
                     record_exclusion(&mut exclusions, &thread);
-                    if path_allowed(&thread.raw_office_path, &self.only_paths) {
+                    if path_allowed(&thread.raw_office_path, &self.only_paths)
+                        || path_allowed(&thread.office_path, &self.only_paths)
+                    {
                         assessors.push(thread);
                     }
                 }
                 ThreadKind::Developer => {
-                    if path_allowed(&thread.raw_office_path, &self.only_paths) {
+                    if path_allowed(&thread.raw_office_path, &self.only_paths)
+                        || path_allowed(&thread.office_path, &self.only_paths)
+                    {
                         current.insert(thread.id.clone(), thread);
                     }
                 }

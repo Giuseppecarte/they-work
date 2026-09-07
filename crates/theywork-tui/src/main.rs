@@ -3,6 +3,8 @@
 //! This binary owns command-line policy and the polling loop. Collectors own
 //! the data boundary; the renderer owns presentation state.
 
+mod connections;
+
 use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
 use std::io::{self, IsTerminal, Write};
@@ -62,11 +64,16 @@ OPTIONS:
   --dark                   Start with the dark appearance
   --color <auto|true|256|none>
                            Choose terminal color handling
-  --config-dir <path>      Opt in to remembering the selected office
+  --setup                  Choose local sources and their folders
+  --sources <all|codex|claude|none>
+                           Choose which conversations may be read
+  --codex-home <path>      Use this Codex data folder
+  --claude-home <path>     Use this Claude Code data folder
+  --config-dir <path>      Remember sources, appearance and selected floor
   -h, --help               Show this help
 ";
 
-const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.";
+const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from state_5.sqlite and thread_history_1.sqlite under ~/.codex/ or ~/.codex/sqlite/. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartView {
@@ -98,6 +105,10 @@ struct Args {
     dark: bool,
     color: Option<ColorMode>,
     config_dir: Option<PathBuf>,
+    setup: bool,
+    sources: Option<String>,
+    codex_home: Option<PathBuf>,
+    claude_home: Option<PathBuf>,
 }
 
 fn now_ms() -> Millis {
@@ -128,6 +139,30 @@ where
                 )?)?);
             }
             "--doctor" => parsed.doctor = true,
+            "--setup" => parsed.setup = true,
+            "--sources" => parsed.sources = Some(next_value(&mut arguments, "--sources")?),
+            "--codex-home" => {
+                parsed.codex_home = Some(PathBuf::from(next_value(&mut arguments, "--codex-home")?))
+            }
+            "--claude-home" => {
+                parsed.claude_home =
+                    Some(PathBuf::from(next_value(&mut arguments, "--claude-home")?))
+            }
+            value if value.starts_with("--sources=") => {
+                parsed.sources = Some(value["--sources=".len()..].into())
+            }
+            value if value.starts_with("--codex-home=") => {
+                parsed.codex_home = Some(PathBuf::from(nonempty_option(
+                    "--codex-home",
+                    &value["--codex-home=".len()..],
+                )?))
+            }
+            value if value.starts_with("--claude-home=") => {
+                parsed.claude_home = Some(PathBuf::from(nonempty_option(
+                    "--claude-home",
+                    &value["--claude-home=".len()..],
+                )?))
+            }
             "--light" => parsed.light = true,
             "--dark" => parsed.dark = true,
             "--project" => {
@@ -174,6 +209,24 @@ where
         }
     }
 
+    if parsed
+        .sources
+        .as_deref()
+        .is_some_and(|value| !matches!(value, "all" | "codex" | "claude" | "none"))
+    {
+        return Err("--sources must be all, codex, claude, or none".into());
+    }
+    if parsed.setup
+        && (parsed.once
+            || parsed.doctor
+            || parsed.headless
+            || parsed.exit_after.is_some()
+            || parsed.demo)
+    {
+        return Err(
+            "--setup is interactive; use it without --once, --doctor, --headless or --demo".into(),
+        );
+    }
     if parsed.exit_after.is_some() {
         parsed.headless = true;
     }
@@ -196,7 +249,13 @@ where
         return Err("--headless needs --exit-after".to_string());
     }
     if parsed.demo
-        && (parsed.project.is_some() || parsed.all || parsed.doctor || parsed.config_dir.is_some())
+        && (parsed.project.is_some()
+            || parsed.all
+            || parsed.doctor
+            || parsed.config_dir.is_some()
+            || parsed.sources.is_some()
+            || parsed.codex_home.is_some()
+            || parsed.claude_home.is_some())
     {
         return Err("--demo cannot be combined with project discovery options".to_string());
     }
@@ -292,19 +351,12 @@ struct Runtime {
     now: Millis,
     demo: bool,
     start_guard: bool,
+    initial_project: Option<String>,
     config_dir: Option<PathBuf>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum FirstRunAction {
-    Open(String),
-    Guard,
-    Stop,
-    Quit,
-}
-
 fn main() -> Result<()> {
-    let args = match parse_args(std::env::args().skip(1)) {
+    let mut args = match parse_args(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(error) => {
             eprintln!("error: {error}");
@@ -319,9 +371,21 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if !args.once && !args.headless {
+        install_termination_handlers()?;
+    }
+    args.config_dir = args
+        .config_dir
+        .as_deref()
+        .map(resolve_filesystem_path)
+        .transpose()?;
+    if !connections::prepare(&mut args)? {
+        return Ok(());
+    }
+
     if args.doctor {
         apply_color_mode(args.color);
-        let status = doctor();
+        let status = doctor(&args)?;
         if status != 0 {
             std::process::exit(status);
         }
@@ -341,17 +405,14 @@ fn main() -> Result<()> {
         write_selection(config_dir, &normalize_cli_path(project)?)?;
     }
 
-    if should_show_first_run(&args, &runtime) {
-        match first_run_screen(&runtime)? {
-            FirstRunAction::Open(project) => {
-                if let Some(config_dir) = runtime.config_dir.as_deref() {
-                    write_selection(config_dir, &project)?;
-                }
-                select_project(&mut runtime, &project);
-            }
-            FirstRunAction::Guard => runtime.start_guard = true,
-            FirstRunAction::Stop | FirstRunAction::Quit => return Ok(()),
+    if !args.once && !args.headless && (!io::stdin().is_terminal() || !io::stdout().is_terminal()) {
+        if should_show_first_run(&args, &runtime) {
+            let reports = theywork_collect::inspect_selected(&runtime.config, runtime.now);
+            render_first_run(&reports, &runtime.world, runtime.now, 0, false)?;
+        } else if print_once(&runtime) {
+            std::process::exit(1);
         }
+        return Ok(());
     }
 
     if args.once {
@@ -472,9 +533,9 @@ fn is_ctrl_c(input: KeyEvent) -> bool {
     input.code == KeyCode::Char('c') && input.modifiers.contains(KeyModifiers::CONTROL)
 }
 
-fn doctor() -> i32 {
-    let config = Config::discover();
-    let reports = theywork_collect::inspect(&config, now_ms());
+fn doctor(args: &Args) -> Result<i32> {
+    let config = connections::Connections::from_args(args)?.config();
+    let reports = theywork_collect::inspect_selected(&config, now_ms());
 
     println!("they-work doctor");
     print_terminal_report();
@@ -488,7 +549,11 @@ fn doctor() -> i32 {
     let broken_home = reports
         .iter()
         .any(|report| report.home_found && !report.readable);
-    i32::from(!found_home || broken_home)
+    if reports.is_empty() {
+        println!("sources=none action=run_they-work_--setup");
+    }
+    println!("next=they-work --setup (choose sources) | they-work --once (inspect workers)");
+    Ok(i32::from(!found_home || broken_home))
 }
 
 fn print_terminal_report() {
@@ -658,63 +723,6 @@ fn should_show_first_run(args: &Args, runtime: &Runtime) -> bool {
         && !args.doctor
         && !args.headless
         && args.project.is_none()
-}
-
-fn first_run_screen(runtime: &Runtime) -> Result<FirstRunAction> {
-    let reports = theywork_collect::inspect(&runtime.config, runtime.now);
-    let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
-    if !interactive {
-        render_first_run(&reports, &runtime.world, runtime.now, 0, false)?;
-        return Ok(FirstRunAction::Stop);
-    }
-
-    let has_home = reports.iter().any(|report| report.home_found);
-    let mut terminal_guard = TerminalModeGuard::enter_raw()?;
-    let result = (|| -> Result<FirstRunAction> {
-        let mut selected = 0;
-        loop {
-            if let Some(error) = termination_error() {
-                return Err(error);
-            }
-            render_first_run(&reports, &runtime.world, runtime.now, selected, true)?;
-            if !event::poll(FRAME)? {
-                continue;
-            }
-            let input = event::read()?;
-            let TermEvent::Key(input) = input else {
-                continue;
-            };
-            if is_ctrl_c(input) {
-                return Ok(FirstRunAction::Quit);
-            }
-            let offices = first_run_offices(&runtime.world, runtime.now);
-            match input.code {
-                KeyCode::Up | KeyCode::Char('k') => {
-                    selected = selected.saturating_sub(1);
-                }
-                KeyCode::Down | KeyCode::Char('j') => {
-                    if !offices.is_empty() {
-                        selected = selected.saturating_add(1).min(offices.len() - 1);
-                    }
-                }
-                KeyCode::Home => selected = 0,
-                KeyCode::End if !offices.is_empty() => selected = offices.len() - 1,
-                KeyCode::Enter if !offices.is_empty() => {
-                    return Ok(FirstRunAction::Open(offices[selected].path.clone()));
-                }
-                KeyCode::Tab if has_home => return Ok(FirstRunAction::Guard),
-                KeyCode::Tab => return Ok(FirstRunAction::Stop),
-                KeyCode::Char('q') | KeyCode::Esc => return Ok(FirstRunAction::Quit),
-                _ => {}
-            }
-        }
-    })();
-    let restored = terminal_guard.restore();
-    match (result, restored) {
-        (Err(error), _) => Err(error),
-        (Ok(_), Err(error)) => Err(error),
-        (Ok(action), Ok(())) => Ok(action),
-    }
 }
 
 fn render_first_run(
@@ -1014,11 +1022,12 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
             now,
             demo: true,
             start_guard: false,
-            config_dir: None,
+            initial_project: None,
+            config_dir: args.config_dir.clone(),
         });
     }
 
-    let base_config = Config::discover();
+    let base_config = connections::Connections::from_args(args)?.config();
     let config_dir = args
         .config_dir
         .as_deref()
@@ -1044,36 +1053,18 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
         None
     };
 
-    let (scan, start_guard) = if args.all {
-        (scan_config(&base_config, now), true)
-    } else if let Some(project) = explicit.as_deref() {
-        (scoped_scan(&base_config, project, now), false)
-    } else if let Some(project) = remembered.as_deref() {
-        let remembered_scan = scoped_scan(&base_config, project, now);
-        if remembered_scan.world.office_count() > 0 {
-            (remembered_scan, false)
-        } else if let Some(current_project) =
-            current.as_deref().filter(|candidate| *candidate != project)
-        {
-            let current_scan = scoped_scan(&base_config, current_project, now);
-            if current_scan.world.office_count() > 0 {
-                (current_scan, false)
-            } else {
-                (scan_config(&base_config, now), true)
-            }
-        } else {
-            (scan_config(&base_config, now), true)
-        }
-    } else if let Some(project) = current.as_deref() {
-        let current_scan = scoped_scan(&base_config, project, now);
-        if current_scan.world.office_count() > 0 {
-            (current_scan, false)
-        } else {
-            (scan_config(&base_config, now), true)
-        }
+    // A selected floor is a view preference. Only --project restricts the
+    // input boundary; launching inside a repository must retain the tower.
+    let scan = if let Some(project) = explicit.as_deref() {
+        scoped_scan(&base_config, project, now)
     } else {
-        (scan_config(&base_config, now), true)
+        scan_config(&base_config, now)
     };
+    let initial_project = explicit
+        .or(remembered)
+        .or(current)
+        .filter(|path| scan.world.offices().any(|office| office.path == *path));
+    let start_guard = args.all || initial_project.is_none();
 
     Ok(Runtime {
         config: scan.config,
@@ -1083,6 +1074,7 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
         now,
         demo: false,
         start_guard,
+        initial_project,
         config_dir,
     })
 }
@@ -1100,15 +1092,6 @@ fn scoped_scan(base_config: &Config, project: &str, now: Millis) -> Scan {
     let mut config = base_config.clone();
     config.only_paths = vec![PathBuf::from(project)];
     scan_config(&config, now)
-}
-
-fn select_project(runtime: &mut Runtime, project: &str) {
-    let scan = scoped_scan(&runtime.config, project, runtime.now);
-    runtime.config = scan.config;
-    runtime.sources = scan.sources;
-    runtime.world = scan.world;
-    runtime.errors = scan.errors;
-    runtime.start_guard = false;
 }
 
 fn scan_config(config: &Config, now: Millis) -> Scan {
@@ -1139,6 +1122,12 @@ fn scan_config(config: &Config, now: Millis) -> Scan {
 
 fn resolve_filesystem_path(input: &Path) -> Result<PathBuf> {
     let spelling = input.to_string_lossy();
+    if spelling == "~" || spelling.starts_with("~/") || spelling.starts_with("~\\") {
+        let home = std::env::var_os("HOME")
+            .or_else(|| std::env::var_os("USERPROFILE"))
+            .ok_or_else(|| anyhow!("cannot expand ~: HOME or USERPROFILE is not set"))?;
+        return Ok(PathBuf::from(home).join(spelling.get(2..).unwrap_or("")));
+    }
     if input.is_absolute() || looks_absolute_spelling(&spelling) {
         Ok(PathBuf::from(spelling.replace('\\', "/")))
     } else {
@@ -1216,12 +1205,7 @@ fn read_selection(config_dir: &Path) -> Result<Option<String>> {
 }
 
 fn write_selection(config_dir: &Path, project: &str) -> Result<()> {
-    if !config_dir.is_dir() {
-        return Err(anyhow!(
-            "config directory {} is not available",
-            config_dir.display()
-        ));
-    }
+    fs::create_dir_all(config_dir)?;
 
     let temporary = config_dir.join(format!(".project.{}.tmp", std::process::id()));
     let selection_path = config_dir.join("project");
@@ -1261,31 +1245,33 @@ fn apply_color_mode(mode: Option<ColorMode>) {
     }
 }
 
-fn configure_ui(ui: &mut Ui, args: &Args, start_guard: bool) {
-    if start_guard {
-        ui.handle_key(key(KeyCode::Char('0')));
+fn configure_ui(
+    ui: &mut Ui,
+    args: &Args,
+    start_guard: bool,
+    mut preferences: theywork_render::RendererPreferences,
+) {
+    if let Some(view) = args.view {
+        preferences.projection = match view {
+            StartView::Iso => "isometric",
+            StartView::Top => "top-down",
+            StartView::Side => "side",
+        }
+        .into();
     }
-
-    let cycles = match args.view {
-        Some(StartView::Iso) => 1,
-        Some(StartView::Top) => 2,
-        Some(StartView::Side) => 3,
-        None => 0,
-    };
-    for _ in 0..cycles {
-        ui.handle_key(key(KeyCode::Char('c')));
-    }
-
     if args.light {
-        ui.handle_key(key(KeyCode::Char('s')));
-        ui.handle_key(key(KeyCode::Down));
-        ui.handle_key(key(KeyCode::Enter));
-        ui.handle_key(key(KeyCode::Char('s')));
+        preferences.light = true;
     }
-}
-
-fn key(code: KeyCode) -> KeyEvent {
-    KeyEvent::new(code, KeyModifiers::NONE)
+    if args.dark {
+        preferences.light = false;
+    }
+    if args.color == Some(ColorMode::Auto) {
+        preferences.color_depth = None;
+    }
+    ui.restore_preferences(&preferences);
+    if start_guard {
+        ui.open_tower();
+    }
 }
 
 struct PollResult {
@@ -1296,30 +1282,35 @@ struct PollResult {
 struct Poller {
     results: Receiver<PollResult>,
     stop: Sender<()>,
-    thread: Option<thread::JoinHandle<()>>,
+    thread: Option<thread::JoinHandle<Vec<Box<dyn Source>>>>,
 }
 
 impl Poller {
     fn start(mut sources: Vec<Box<dyn Source>>) -> Self {
         let (result_tx, result_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = mpsc::channel();
-        let thread = thread::spawn(move || loop {
-            let now = now_ms();
-            let mut events = Vec::new();
-            let mut errors = Vec::new();
-            for source in &mut sources {
-                match source.poll(now) {
-                    Ok(source_events) => events.extend(source_events),
-                    Err(error) => errors.push(format!("{}: {}", error.source_name, error.message)),
+        let thread = thread::spawn(move || {
+            loop {
+                let now = now_ms();
+                let mut events = Vec::new();
+                let mut errors = Vec::new();
+                for source in &mut sources {
+                    match source.poll(now) {
+                        Ok(source_events) => events.extend(source_events),
+                        Err(error) => {
+                            errors.push(format!("{}: {}", error.source_name, error.message))
+                        }
+                    }
+                }
+                if result_tx.send(PollResult { events, errors }).is_err() {
+                    break;
+                }
+                match stop_rx.recv_timeout(POLL_INTERVAL) {
+                    Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => break,
+                    Err(mpsc::RecvTimeoutError::Timeout) => {}
                 }
             }
-            if result_tx.send(PollResult { events, errors }).is_err() {
-                break;
-            }
-            match stop_rx.recv_timeout(POLL_INTERVAL) {
-                Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => {}
-            }
+            sources
         });
         Self {
             results: result_rx,
@@ -1332,11 +1323,12 @@ impl Poller {
         self.results.try_iter()
     }
 
-    fn stop(mut self) {
+    fn stop(&mut self) -> Vec<Box<dyn Source>> {
         let _ = self.stop.send(());
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
-        }
+        self.thread
+            .take()
+            .and_then(|thread| thread.join().ok())
+            .unwrap_or_default()
     }
 }
 
@@ -1359,7 +1351,7 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
     let mut poll_errors = 0;
     let mut errors: HashSet<String> = runtime.errors.iter().cloned().collect();
     let rss_after_initial_scan = resident_bytes();
-    let poller = Poller::start(std::mem::take(&mut runtime.sources));
+    let mut poller = Poller::start(std::mem::take(&mut runtime.sources));
 
     loop {
         let frame_started = Instant::now();
@@ -1466,12 +1458,14 @@ fn roster_snapshot(world: &World) -> (usize, usize, HashSet<String>) {
     (world.office_count(), workers.len(), workers)
 }
 
+#[cfg(target_os = "linux")]
 fn resident_bytes() -> Option<u64> {
     let statm = fs::read_to_string("/proc/self/statm").ok()?;
     let pages = statm.split_whitespace().nth(1)?.parse::<u64>().ok()?;
     pages.checked_mul(system_page_size()?)
 }
 
+#[cfg(target_os = "linux")]
 fn system_page_size() -> Option<u64> {
     // SAFETY: sysconf reads immutable process/system configuration and does
     // not dereference pointers or mutate Rust-owned memory.
@@ -1479,6 +1473,7 @@ fn system_page_size() -> Option<u64> {
     u64::try_from(page_size).ok().filter(|value| *value > 0)
 }
 
+#[cfg(target_os = "linux")]
 fn process_cpu_ticks() -> Option<(u64, u64)> {
     let stat = fs::read_to_string("/proc/self/stat").ok()?;
     let ticks = parse_process_cpu_ticks(&stat)?;
@@ -1490,6 +1485,17 @@ fn process_cpu_ticks() -> Option<(u64, u64)> {
     Some((ticks, ticks_per_second))
 }
 
+#[cfg(not(target_os = "linux"))]
+fn resident_bytes() -> Option<u64> {
+    None
+}
+
+#[cfg(not(target_os = "linux"))]
+fn process_cpu_ticks() -> Option<(u64, u64)> {
+    None
+}
+
+#[cfg(any(target_os = "linux", test))]
 fn parse_process_cpu_ticks(stat: &str) -> Option<u64> {
     let after_name = stat.rsplit_once(')')?.1;
     let fields = after_name.split_whitespace().collect::<Vec<_>>();
@@ -1523,7 +1529,19 @@ fn run(
     capabilities: Capabilities,
 ) -> Result<()> {
     let mut ui = Ui::new();
-    configure_ui(&mut ui, args, runtime.start_guard);
+    let preferences = runtime
+        .config_dir
+        .as_deref()
+        .and_then(|directory| fs::read(directory.join("appearance.json")).ok())
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default();
+    configure_ui(&mut ui, args, runtime.start_guard, preferences);
+    if let Some(path) = &runtime.initial_project {
+        if let Some(office) = runtime.world.offices().find(|office| office.path == *path) {
+            ui.open_office(&office.id);
+        }
+    }
+    let mut active_args = args.clone();
     let terminal_cells = terminal.size()?;
     let image_cell_size = capabilities
         .graphics
@@ -1533,7 +1551,7 @@ fn run(
     ui.set_image_cell_size(image_cell_size.map(|size| (size.width, size.height)));
     let mut image_presenter =
         TerminalImagePresenter::new(capabilities, (terminal_cells.width, terminal_cells.height));
-    let poller = Poller::start(std::mem::take(&mut runtime.sources));
+    let mut poller = Poller::start(std::mem::take(&mut runtime.sources));
     let result = (|| -> Result<()> {
         loop {
             if let Some(error) = termination_error() {
@@ -1585,8 +1603,51 @@ fn run(
                         return Ok(());
                     }
                     let previous_view = ui.view();
-                    if ui.handle_key(input) == Some(UiCommand::Quit) {
-                        return Ok(());
+                    match ui.handle_key(input) {
+                        Some(UiCommand::Quit) => return Ok(()),
+                        Some(UiCommand::Sources) => {
+                            let paused_sources = poller.stop();
+                            // Joining can finish an in-flight poll. Keep its events
+                            // before replacing the channel and resuming the cursors.
+                            for result in poller.drain() {
+                                for event in result.events {
+                                    runtime.world.apply(event);
+                                }
+                                for error in result.errors {
+                                    if !runtime.errors.contains(&error) {
+                                        runtime.errors.push(error);
+                                    }
+                                }
+                            }
+                            image_presenter.present(terminal.backend_mut(), None)?;
+                            let value = connections::Connections::from_args(&active_args)?;
+                            let action = connections::show(
+                                terminal,
+                                value,
+                                active_args.config_dir.as_deref(),
+                            )?;
+                            match action {
+                                connections::Action::Connect(value) => {
+                                    if let Some(directory) = &active_args.config_dir {
+                                        connections::save(directory, &value)?;
+                                    }
+                                    value.apply(&mut active_args);
+                                    active_args.demo = false;
+                                    active_args.setup = false;
+                                    *runtime = build_runtime(&active_args)?;
+                                    ui.open_tower();
+                                }
+                                connections::Action::Demo => {
+                                    active_args.demo = true;
+                                    *runtime = build_runtime(&active_args)?;
+                                    ui.open_tower();
+                                }
+                                connections::Action::Cancel => runtime.sources = paused_sources,
+                            }
+                            poller = Poller::start(std::mem::take(&mut runtime.sources));
+                            terminal.clear()?;
+                        }
+                        None => {}
                     }
                     if previous_view == View::Cameras && ui.view() == View::Office {
                         persist_selected_office(runtime, ui.selected_office(), now)?;
@@ -1596,6 +1657,14 @@ fn run(
         }
     })();
     poller.stop();
+    if let Some(directory) = &runtime.config_dir {
+        fs::create_dir_all(directory)?;
+        fs::write(
+            directory.join("appearance.json"),
+            serde_json::to_vec_pretty(&ui.preferences())?,
+        )?;
+        persist_selected_office(runtime, ui.selected_office(), now_ms())?;
+    }
     result
 }
 
@@ -1708,6 +1777,9 @@ fn skip_image_cells(buffer: &mut Buffer, area: Rect) {
 }
 
 fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> Result<()> {
+    if runtime.demo {
+        return Ok(());
+    }
     let (Some(config_dir), Some(project)) = (
         runtime.config_dir.as_deref(),
         selected_office_path(&runtime.world, selected, now),
@@ -1718,19 +1790,17 @@ fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> R
 }
 
 fn selected_office_path(world: &World, selected: usize, now: Millis) -> Option<String> {
-    let mut offices: Vec<_> = world.offices().collect();
-    offices.sort_by(|left, right| {
-        office_rank(left, now)
-            .cmp(&office_rank(right, now))
-            .then_with(|| left.path.cmp(&right.path))
-    });
-    offices.get(selected).map(|office| office.path.clone())
+    let _ = now;
+    world
+        .offices()
+        .nth(selected)
+        .map(|office| office.path.clone())
 }
 
 fn print_once(runtime: &Runtime) -> bool {
     let mut errors = runtime.errors.clone();
     if !runtime.demo {
-        for report in theywork_collect::inspect(&runtime.config, runtime.now) {
+        for report in theywork_collect::inspect_selected(&runtime.config, runtime.now) {
             match report.error {
                 Some(error) if report.home_found => {
                     let entry = format!("{}: {error}", report.agent.label());
@@ -1776,6 +1846,13 @@ fn print_once(runtime: &Runtime) -> bool {
         }
     }
 
+    if runtime.world.worker_count() == 0 {
+        println!(
+            "next=Start a conversation in a selected source, or run they-work --setup / --doctor."
+        );
+    } else {
+        println!("next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.");
+    }
     let has_errors = !errors.is_empty();
     for error in errors {
         println!("collector_error={}", plain_value(&error));
@@ -2006,6 +2083,63 @@ mod tests {
     fn accepts_demo_once_and_help() {
         assert!(parse(&["--demo", "--once"]).unwrap().demo);
         assert!(parse(&["--help"]).unwrap().help);
+    }
+
+    #[test]
+    fn explicit_camera_and_light_override_saved_preferences_absolutely() {
+        for (arguments, projection, light) in [
+            (vec!["--view", "side", "--light"], "side", true),
+            (vec!["--view", "iso", "--dark"], "isometric", false),
+            (vec!["--view", "top", "--light"], "top-down", true),
+        ] {
+            let args = parse(&arguments).unwrap();
+            let saved = theywork_render::RendererPreferences {
+                projection: "list".into(),
+                light: true,
+                ..Default::default()
+            };
+            let mut ui = Ui::new();
+            configure_ui(&mut ui, &args, false, saved);
+            assert_eq!(ui.preferences().projection, projection);
+            assert_eq!(ui.preferences().light, light);
+        }
+    }
+
+    #[test]
+    fn pausing_collectors_preserves_the_last_batch_and_does_not_replay_it() {
+        struct Once(bool);
+        impl Source for Once {
+            fn name(&self) -> &'static str {
+                "fixture"
+            }
+            fn poll(
+                &mut self,
+                now: Millis,
+            ) -> std::result::Result<Vec<Event>, theywork_core::SourceError> {
+                if self.0 {
+                    return Ok(Vec::new());
+                }
+                self.0 = true;
+                Ok(vec![Event {
+                    at: now,
+                    office: theywork_core::OfficeId("/fixture".into()),
+                    office_path: "/fixture".into(),
+                    worker: theywork_core::WorkerId("one".into()),
+                    agent: Agent::Codex,
+                    kind: theywork_core::EventKind::Seen {
+                        name: "One worker".into(),
+                        git_branch: None,
+                    },
+                }])
+            }
+        }
+        let mut poller = Poller::start(vec![Box::new(Once(false))]);
+        let sources = poller.stop();
+        let batches: Vec<_> = poller.drain().collect();
+        assert_eq!(batches.iter().map(|b| b.events.len()).sum::<usize>(), 1);
+        let mut resumed = Poller::start(sources);
+        resumed.stop();
+        assert_eq!(resumed.drain().map(|b| b.events.len()).sum::<usize>(), 0);
     }
 
     #[test]

@@ -8,13 +8,14 @@ use theywork_core::Millis;
 /// Convert the path spellings used by Windows and WSL into one stable office id.
 pub fn normalize_office_path(input: &str) -> String {
     let input = input.trim();
+    // std::fs::canonicalize returns the extended-length spelling on Windows.
+    let input = input.strip_prefix(r"\\?\").unwrap_or(input);
     if input.is_empty() {
         return String::new();
     }
 
     let slashed = input.replace('\\', "/");
     let wsl_unc = is_wsl_unc(&slashed);
-    let windows_shaped = wsl_unc || is_windows_drive(input) || is_windows_mount(&slashed);
     let absolute = slashed.starts_with('/') || wsl_unc;
     let mut components = Vec::new();
     let mut unc_components_to_skip = if wsl_unc { 2 } else { 0 };
@@ -49,7 +50,9 @@ pub fn normalize_office_path(input: &str) -> String {
         normalized = normalized.trim_end_matches('/').to_string();
     }
 
-    if windows_shaped {
+    // A WSL UNC prefix transports a Linux path; its case remains significant.
+    // Only a Windows drive (including /mnt/c after UNC removal) folds case.
+    if is_windows_drive(input) || is_windows_mount(&normalized) {
         normalized.to_lowercase()
     } else {
         normalized
@@ -376,19 +379,46 @@ pub(crate) fn repository_root_with_project_hint(
     }
 
     let mut current = PathBuf::from(filesystem_path(input));
+    let hinted_root = project_root_hint(&normalized, project_key)
+        .filter(|hint| !is_obvious_non_project_path(hint));
     let result = loop {
         if current.join(".git").exists() {
-            break sanitize_terminal_text(&normalize_office_path(&current.to_string_lossy()));
+            let root = shared_git_root(&current).unwrap_or_else(|| current.clone());
+            break sanitize_terminal_text(&normalize_office_path(&root.to_string_lossy()));
+        }
+        // A recorded project boundary must not be swallowed by an unrelated
+        // repository mounted above it (for example a host checkout container).
+        if hinted_root.as_deref()
+            == Some(normalize_office_path(&current.to_string_lossy()).as_str())
+        {
+            break sanitize_terminal_text(hinted_root.as_deref().unwrap());
         }
         if !current.pop() {
-            break project_root_hint(&normalized, project_key)
-                .filter(|hint| !is_obvious_non_project_path(hint))
+            break hinted_root
                 .map(|hint| sanitize_terminal_text(&hint))
                 .unwrap_or_else(|| NON_PROJECT_OFFICE.to_string());
         }
     };
     cache.insert(normalized, result.clone());
     result
+}
+
+/// Git worktrees are separate checkouts of the same project. Read only Git's
+/// small pointer files so their conversations share the primary project's floor.
+fn shared_git_root(worktree: &Path) -> Option<PathBuf> {
+    let marker = worktree.join(".git");
+    if !marker.is_file() {
+        return None;
+    }
+    let pointer = std::fs::read_to_string(marker).ok()?;
+    let directory = pointer.trim().strip_prefix("gitdir:")?.trim();
+    let git_dir = worktree.join(directory);
+    let common = std::fs::read_to_string(git_dir.join("commondir")).ok()?;
+    let common_dir = git_dir.join(common.trim()).canonicalize().ok()?;
+    if common_dir.file_name()? != ".git" {
+        return None;
+    }
+    common_dir.parent().map(Path::to_path_buf)
 }
 
 fn is_obvious_non_project_path(path: &str) -> bool {
@@ -488,6 +518,13 @@ mod tests {
 
         let long = "x".repeat(DETAIL_LIMIT + 10);
         assert_eq!(truncate_detail(&long).chars().count(), DETAIL_LIMIT);
+    }
+
+    #[test]
+    fn windows_canonical_paths_and_wsl_linux_case_keep_project_identity() {
+        assert_eq!(normalize_office_path(r"\\?\C:\Users\Dev\Repo"), "c:/users/dev/repo");
+        assert_eq!(normalize_office_path(r"\\wsl.localhost\Ubuntu\home\Dev\Repo"), "/home/Dev/Repo");
+        assert_ne!(normalize_office_path("/home/Dev/Repo"), normalize_office_path("/home/dev/repo"));
     }
 
     #[test]

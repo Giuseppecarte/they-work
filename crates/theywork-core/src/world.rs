@@ -100,7 +100,12 @@ impl World {
                 worker.remember(beat);
             }
             EventKind::Tokens(n) => worker.tokens_used = worker.tokens_used.max(n),
-            EventKind::Turn { in_flight } => worker.turn_in_flight = in_flight,
+            EventKind::Turn { in_flight } => {
+                worker.turn_in_flight = in_flight;
+                if !in_flight && matches!(worker.activity, Activity::Waiting { .. }) {
+                    worker.activity = Activity::Idle;
+                }
+            }
             EventKind::Left => unreachable!("handled above"),
         }
     }
@@ -165,6 +170,33 @@ mod tests {
         let office = w.office(&OfficeId("/proj".into())).unwrap();
         assert_eq!(office.name, "proj");
         assert_eq!(office.workers[0].name, "Dev 1");
+    }
+
+    #[test]
+    fn explicit_request_needs_attention_immediately_and_completion_clears_it() {
+        use crate::WorkerStatus;
+        let mut world = World::new();
+        world.apply(ev(1, "waiting", EventKind::Turn { in_flight: true }));
+        world.apply(ev(
+            2,
+            "waiting",
+            EventKind::Acted(Activity::Waiting {
+                detail: "Approve command".into(),
+            }),
+        ));
+        let status = |w: &World, now| w.offices().next().unwrap().workers[0].status_at(now);
+        assert_eq!(status(&world, 2), WorkerStatus::Blocked);
+        world.tick(crate::IDLE_AFTER_MS + 3);
+        assert_eq!(
+            status(&world, crate::IDLE_AFTER_MS + 3),
+            WorkerStatus::Blocked
+        );
+        world.apply(ev(
+            crate::IDLE_AFTER_MS + 4,
+            "waiting",
+            EventKind::Turn { in_flight: false },
+        ));
+        assert_eq!(status(&world, crate::IDLE_AFTER_MS + 4), WorkerStatus::Idle);
     }
 
     #[test]

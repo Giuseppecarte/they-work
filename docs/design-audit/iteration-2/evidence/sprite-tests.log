@@ -1,0 +1,22 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.04s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 15 tests
+test sprite::tests::animation_frame_selection_is_deterministic ... ok
+test sprite::tests::rows_parse_with_dot_as_transparent_and_unknown_keys_as_transparent ... ok
+test sprite::tests::quiet_running_turn_uses_thinking_and_idle_stroll_never_changes_busy_workers ... ok
+test sprite::tests::room_palettes_belong_to_office_ids_and_reset_to_their_stable_default ... ok
+test sprite::tests::motion_setting_freezes_worker_animation_frames ... ok
+test sprite::tests::small_workers_have_authored_eyes_and_preserve_agent_colours ... ok
+test sprite::tests::design_worker_has_full_anatomy_and_small_material_palette ... ok
+test sprite::tests::wardrobe_is_stable_by_id_and_unique_at_guard_scale ... ok
+test sprite::tests::wardrobe_tops_use_only_agent_hues ... ok
+test sprite::tests::compact_worker_and_manager_keep_the_same_anatomy ... ok
+test sprite::tests::worker_identity_offsets_motion_but_reduced_motion_freezes_everyone ... ok
+test sprite::tests::wardrobe_choices_follow_thread_identity_across_resolutions_and_reset ... ok
+test sprite::tests::waiting_and_manager_attention_poses_share_the_full_character_system ... ok
+test sprite::tests::every_activity_animates_the_body_at_every_native_resolution ... ok
+test sprite::tests::real_worker_frames_remain_animated_after_terminal_encoding ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 95 filtered out; finished in 2.10s

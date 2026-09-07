@@ -1,0 +1,56 @@
+{
+  "scenarios_passed": 116,
+  "captured_frames": 1392,
+  "successful_recorded_exits": 62,
+  "groups": [
+    {
+      "stage": "motion",
+      "cases": 36,
+      "on": 18,
+      "off": 18,
+      "clothing_frame_range": [
+        3,
+        12
+      ],
+      "frozen_room_frames": 1,
+      "successful_recorded_exits": 18
+    },
+    {
+      "stage": "motion-small",
+      "cases": 36,
+      "on": 18,
+      "off": 18,
+      "clothing_frame_range": [
+        6,
+        12
+      ],
+      "frozen_room_frames": 1,
+      "successful_recorded_exits": 18
+    },
+    {
+      "stage": "motion-apple256",
+      "cases": 36,
+      "on": 18,
+      "off": 18,
+      "clothing_frame_range": [
+        6,
+        12
+      ],
+      "frozen_room_frames": 1,
+      "successful_recorded_exits": 18
+    },
+    {
+      "stage": "motion-apple256-views",
+      "cases": 8,
+      "on": 4,
+      "off": 4,
+      "clothing_frame_range": [
+        12,
+        12
+      ],
+      "frozen_room_frames": 1,
+      "successful_recorded_exits": 8
+    }
+  ],
+  "evidence_kind": "Native macOS PTYs; images reconstruct emitted ANSI cells. Fixtures are synthetic and confined to the repository."
+}

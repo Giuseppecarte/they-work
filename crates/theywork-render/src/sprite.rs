@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::{Arc, OnceLock};
 
 use ratatui::style::Color;
-use theywork_core::{Activity, Agent, Millis, Office, Worker};
+use theywork_core::{Activity, Agent, Millis, Office, Worker, WorkerStatus};
 
 const WORKER_WIDTH: usize = 24;
 const WORKER_HEIGHT: usize = 34;
@@ -293,7 +293,7 @@ impl Animation {
     }
 }
 
-/// The nine visual activity poses used by the renderer.
+/// Activity poses, plus a purely ambient walk used only for idle workers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum ActivityKind {
     Typing,
@@ -305,9 +305,24 @@ pub(crate) enum ActivityKind {
     Waiting,
     Idle,
     Error,
+    Strolling,
 }
 
 impl ActivityKind {
+    fn for_worker(worker: &Worker, now: Millis) -> Self {
+        match worker.status_at(now) {
+            WorkerStatus::Idle => Self::Idle,
+            WorkerStatus::Blocked => Self::Waiting,
+            WorkerStatus::Failed => Self::Error,
+            WorkerStatus::Running => match Self::from_activity(&worker.activity) {
+                // A quiet open turn is still running. A contemplative pose is
+                // honest about that uncertainty without inventing tool use.
+                Self::Idle => Self::Thinking,
+                activity => activity,
+            },
+        }
+    }
+
     pub(crate) fn from_activity(activity: &Activity) -> Self {
         match activity {
             Activity::Typing { .. } => Self::Typing,
@@ -356,6 +371,27 @@ impl SpriteSet {
 
     pub(crate) fn set_animation_time(&self, now: Option<Millis>) {
         self.animation_time.set(now);
+    }
+
+    /// Shared presentation clock. Status always uses the real `now`; ambient
+    /// motion uses this clock so reduced motion freezes the whole office.
+    pub(crate) fn animation_now(&self, now: Millis) -> Millis {
+        self.animation_time.get().unwrap_or(now)
+    }
+
+    fn worker_animation_now(&self, worker: &Worker, now: Millis) -> Millis {
+        let now = self.animation_now(now);
+        if now == 0 {
+            return 0;
+        }
+        let phase = worker
+            .id
+            .0
+            .bytes()
+            .fold(0xcbf29ce484222325u64, |hash, byte| {
+                (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
+            });
+        now.saturating_add((phase % 3_840) as Millis)
     }
 
     pub(crate) fn set_wardrobe(&self, wardrobe: &BTreeMap<String, usize>) {
@@ -432,9 +468,15 @@ impl SpriteSet {
     }
 
     pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
-        let activity = ActivityKind::from_activity(&worker.activity);
+        let activity = ActivityKind::for_worker(worker, now);
         let look = self.dressed_look(worker, look);
-        self.wardrobe_frame(worker.agent, look, activity, now, WorkerResolution::Full)
+        self.wardrobe_frame(
+            worker.agent,
+            look,
+            activity,
+            self.worker_animation_now(worker, now),
+            WorkerResolution::Full,
+        )
     }
 
     pub(crate) fn worker_frame_fitting(
@@ -448,8 +490,32 @@ impl SpriteSet {
         self.wardrobe_frame(
             worker.agent,
             self.dressed_look(worker, look),
-            ActivityKind::from_activity(&worker.activity),
-            now,
+            ActivityKind::for_worker(worker, now),
+            self.worker_animation_now(worker, now),
+            worker_resolution(width, height),
+        )
+    }
+
+    /// Ambient walking art for an idle worker moving beside their own desk.
+    /// The caller controls the path; this never changes the worker's activity.
+    pub(crate) fn worker_stroll_frame_fitting(
+        &self,
+        worker: &Worker,
+        look: WorkerLook,
+        now: Millis,
+        width: usize,
+        height: usize,
+    ) -> Sprite {
+        let activity = if worker.status_at(now) == WorkerStatus::Idle {
+            ActivityKind::Strolling
+        } else {
+            ActivityKind::for_worker(worker, now)
+        };
+        self.wardrobe_frame(
+            worker.agent,
+            self.dressed_look(worker, look),
+            activity,
+            self.worker_animation_now(worker, now),
             worker_resolution(width, height),
         )
     }
@@ -473,8 +539,8 @@ impl SpriteSet {
             self.wardrobe_frame(
                 worker.agent,
                 self.dressed_look(worker, look),
-                ActivityKind::from_activity(&worker.activity),
-                now,
+                ActivityKind::for_worker(worker, now),
+                self.worker_animation_now(worker, now),
                 resolution,
             ),
             region,
@@ -510,7 +576,7 @@ impl SpriteSet {
                 contractor: false,
             },
             activity,
-            now,
+            self.animation_now(now),
             worker_resolution(width, height),
         )
     }
@@ -530,11 +596,10 @@ impl SpriteSet {
             resolution,
         };
         let mut cache = self.wardrobe_cache.borrow_mut();
-        let animation_now = self.animation_time.get().unwrap_or(now);
         cache
             .entry(key)
             .or_insert_with(|| worker_animation_for_look(agent, look, activity, resolution))
-            .frame_at(animation_now)
+            .frame_at(now)
             .clone()
     }
 
@@ -637,8 +702,6 @@ fn activity_props(kind: ActivityKind, frame: usize) -> Vec<String> {
             put(&mut rows, 20 - lift, 2, "vv");
         }
         ActivityKind::Idle => {
-            put(&mut rows, 2, 20, if frame == 0 { "z" } else { "k" });
-            put(&mut rows, 4, 22, "z");
             put(&mut rows, 26, 20, "#oo#");
             put(&mut rows, 27, 20, "#oo#");
         }
@@ -647,6 +710,7 @@ fn activity_props(kind: ActivityKind, frame: usize) -> Vec<String> {
             put(&mut rows, 12 + frame, 20, "k##");
             put(&mut rows, 26, 21, "aa");
         }
+        ActivityKind::Strolling => {}
     }
     rows
 }
@@ -668,18 +732,19 @@ fn worker_animation_for_look(
     resolution: WorkerResolution,
 ) -> Animation {
     let duration = match kind {
-        ActivityKind::Typing => 260,
-        ActivityKind::Reading => 620,
-        ActivityKind::Editing => 300,
-        ActivityKind::Searching => 480,
-        ActivityKind::Thinking => 900,
-        ActivityKind::Talking => 700,
-        ActivityKind::Waiting => 450,
-        ActivityKind::Idle => 1_000,
-        ActivityKind::Error => 520,
+        ActivityKind::Typing => 160,
+        ActivityKind::Reading => 360,
+        ActivityKind::Editing => 180,
+        ActivityKind::Searching => 280,
+        ActivityKind::Thinking => 360,
+        ActivityKind::Talking => 220,
+        ActivityKind::Waiting => 280,
+        ActivityKind::Idle => 360,
+        ActivityKind::Error => 420,
+        ActivityKind::Strolling => 160,
     };
     Animation::new(
-        (0..2)
+        (0..8)
             .map(|frame| match resolution {
                 WorkerResolution::Full => wardrobe_frame(agent, look, kind, frame),
                 _ => compact_wardrobe_frame(agent, look, kind, frame, resolution),
@@ -724,6 +789,8 @@ fn compact_wardrobe_frame(
     frame: usize,
     resolution: WorkerResolution,
 ) -> Sprite {
+    let step = frame;
+    let frame = frame % 2;
     let mini = resolution == WorkerResolution::Mini;
     let mut rows = if mini {
         MINI_WORKER_ROWS
@@ -734,7 +801,6 @@ fn compact_wardrobe_frame(
     .map(|row| (*row).to_string())
     .collect::<Vec<_>>();
     let eye_row = if mini { 2 } else { 5 };
-    let eyes = if mini { [2, 4] } else { [5, 8] };
     // Preserve the same wardrobe choices while simplifying each silhouette at
     // its own grid. Accessories use cool neutrals, leaving amber to alerts.
     match look.head {
@@ -799,10 +865,6 @@ fn compact_wardrobe_frame(
         let raised = if mini { 4 } else { 9 };
         replace_char(&mut rows[raised - frame], 0, 's');
         replace_char(&mut rows[raised + 1 - frame], 0, 'v');
-    } else if kind == ActivityKind::Thinking && frame == 1 {
-        for column in eyes {
-            replace_char(&mut rows[eye_row], column, 's');
-        }
     } else if matches!(kind, ActivityKind::Typing | ActivityKind::Editing) {
         replace_char(&mut rows[torso + frame], if mini { 0 } else { 1 }, 's');
     } else if kind == ActivityKind::Reading {
@@ -814,9 +876,12 @@ fn compact_wardrobe_frame(
             if frame == 0 { 'm' } else { 'e' },
         );
     }
+    apply_character_motion(&mut rows, kind, step, resolution);
     Sprite::from_owned_rows(rows, &wardrobe_palette(agent, look))
 }
 fn wardrobe_frame(agent: Agent, look: WorkerLook, kind: ActivityKind, frame: usize) -> Sprite {
+    let step = frame;
+    let frame = frame % 2;
     let mut rows: Vec<String> = DESIGN_WORKER_ROWS
         .iter()
         .map(|row| (*row).to_string())
@@ -824,10 +889,13 @@ fn wardrobe_frame(agent: Agent, look: WorkerLook, kind: ActivityKind, frame: usi
     apply_hair_style(&mut rows, look.head);
     apply_face(&mut rows, look.face);
     apply_top_cut(&mut rows, look.top);
-    apply_desk_prop(&mut rows, look.desk_prop);
-    if matches!(kind, ActivityKind::Thinking) && frame == 1 {
-        replace_char(&mut rows[8], 10, 's');
-        replace_char(&mut rows[8], 14, 's');
+    if kind != ActivityKind::Strolling {
+        apply_desk_prop(&mut rows, look.desk_prop);
+    }
+    if kind == ActivityKind::Talking && frame == 1 {
+        for column in 10..14 {
+            replace_char(&mut rows[12], column, 'e');
+        }
     }
     if matches!(kind, ActivityKind::Typing | ActivityKind::Editing) {
         let (left, right) = if frame == 0 { ('l', 'd') } else { ('d', 'l') };
@@ -842,8 +910,145 @@ fn wardrobe_frame(agent: Agent, look: WorkerLook, kind: ActivityKind, frame: usi
             }
         }
     }
+    apply_character_motion(&mut rows, kind, step, WorkerResolution::Full);
     let palette = wardrobe_palette(agent, look);
     Sprite::from_owned_rows(rows, &palette)
+}
+
+/// Native-grid gestures modify the character itself at every camera distance.
+/// These are authored poses, never a resampling or a status change. Eight
+/// cached frames keep animation independent of parsing and allocation per tick.
+fn apply_character_motion(
+    rows: &mut [String],
+    kind: ActivityKind,
+    step: usize,
+    resolution: WorkerResolution,
+) {
+    if step == 0 {
+        return;
+    }
+    let (head, eye_row, eyes, shoulder, chest, hands, hand_y, feet) = match resolution {
+        WorkerResolution::Full => (17, 8, [10, 14], 17, 20, [6, 17], 26usize, 30),
+        WorkerResolution::Compact => (10, 5, [5, 8], 10, 12, [2, 11], 14, 17),
+        WorkerResolution::Mini => (5, 2, [2, 4], 4, 5, [0, 6], 6, 8),
+    };
+    let width = rows[0].len();
+    let breathe = matches!(step, 1 | 2 | 5 | 6);
+    if breathe {
+        // Raise the shoulders by one native pixel; a blink alone disappears
+        // when several pixels are packed into a single terminal character.
+        let inset = match resolution {
+            WorkerResolution::Full => 6,
+            WorkerResolution::Compact => 3,
+            WorkerResolution::Mini => 1,
+        };
+        for column in [inset, width - 1 - inset] {
+            replace_char(&mut rows[shoulder], column, 'v');
+        }
+        for column in eyes[0]..=eyes[1] {
+            if rows[chest].as_bytes().get(column) == Some(&b'c') {
+                replace_char(&mut rows[chest], column, 'b');
+            }
+        }
+    }
+    if step == 2 {
+        for column in eyes {
+            replace_char(&mut rows[eye_row], column, 's');
+        }
+    }
+    let glance = match kind {
+        ActivityKind::Idle | ActivityKind::Thinking | ActivityKind::Reading => match step {
+            3 | 4 => 1,
+            7 => -1,
+            _ => 0,
+        },
+        ActivityKind::Searching => {
+            if step < 4 {
+                -1
+            } else {
+                1
+            }
+        }
+        _ if step == 4 => 1,
+        _ => 0,
+    };
+    if glance != 0 {
+        let horizontal = match resolution {
+            WorkerResolution::Full => 3..21,
+            WorkerResolution::Compact => 0..14,
+            WorkerResolution::Mini => 0..7,
+        };
+        translate_pixels(rows, horizontal, 0..head, glance, 0);
+    }
+    let lift = match kind {
+        ActivityKind::Typing | ActivityKind::Editing | ActivityKind::Strolling => 1 + step % 2,
+        ActivityKind::Reading => 1 + usize::from(step >= 4),
+        ActivityKind::Searching | ActivityKind::Thinking | ActivityKind::Error => {
+            if step >= 3 {
+                hand_y.saturating_sub(head - 1)
+            } else {
+                1
+            }
+        }
+        ActivityKind::Talking | ActivityKind::Waiting => 2 + step % 2,
+        ActivityKind::Idle => usize::from(matches!(step, 1 | 2 | 5 | 6)),
+    };
+    if lift != 0 {
+        let side = if matches!(
+            kind,
+            ActivityKind::Typing | ActivityKind::Editing | ActivityKind::Strolling
+        ) {
+            step % 2
+        } else {
+            1
+        };
+        let x = hands[side];
+        replace_char(&mut rows[hand_y], x, 'v');
+        replace_char(&mut rows[hand_y.saturating_sub(lift)], x, 's');
+        if resolution != WorkerResolution::Mini {
+            replace_char(&mut rows[hand_y.saturating_sub(lift) + 1], x, 'v');
+        }
+    }
+    if kind == ActivityKind::Strolling {
+        let center = width / 2;
+        let leg = if step.is_multiple_of(2) {
+            0..center
+        } else {
+            center..width
+        };
+        translate_pixels(rows, leg, feet..rows.len(), 0, -1);
+    }
+}
+
+fn translate_pixels(
+    rows: &mut [String],
+    columns: std::ops::Range<usize>,
+    lines: std::ops::Range<usize>,
+    dx: isize,
+    dy: isize,
+) {
+    let source = rows
+        .iter()
+        .map(|row| row.as_bytes().to_vec())
+        .collect::<Vec<_>>();
+    for y in lines.clone() {
+        for x in columns.clone() {
+            replace_char(&mut rows[y], x, '.');
+        }
+    }
+    for y in lines {
+        for x in columns.clone() {
+            let target_x = x as isize + dx;
+            let target_y = y as isize + dy;
+            if target_x >= 0 && target_y >= 0 {
+                if let (Some(row), Some(pixel)) =
+                    (rows.get_mut(target_y as usize), source[y].get(x))
+                {
+                    replace_char(row, target_x as usize, char::from(*pixel));
+                }
+            }
+        }
+    }
 }
 fn replace_row(rows: &mut [String], index: usize, row: &str) {
     debug_assert_eq!(row.chars().count(), WORKER_WIDTH);
@@ -1254,43 +1459,180 @@ mod tests {
     }
 
     #[test]
-    fn every_activity_has_two_frames_for_each_agent() {
-        let sprites = SpriteSet::new();
+    fn every_activity_animates_the_body_at_every_native_resolution() {
         for agent in [Agent::Codex, Agent::Claude] {
             for activity in [
+                ActivityKind::Typing,
+                ActivityKind::Reading,
+                ActivityKind::Editing,
+                ActivityKind::Searching,
+                ActivityKind::Thinking,
+                ActivityKind::Talking,
+                ActivityKind::Waiting,
+                ActivityKind::Idle,
+                ActivityKind::Error,
+                ActivityKind::Strolling,
+            ] {
+                for resolution in [
+                    WorkerResolution::Full,
+                    WorkerResolution::Compact,
+                    WorkerResolution::Mini,
+                ] {
+                    let animation = worker_animation_for_look(
+                        agent,
+                        worker_look(&test_worker(agent)),
+                        activity,
+                        resolution,
+                    );
+                    let body_frames = animation
+                        .frames
+                        .iter()
+                        .map(|sprite| {
+                            let margin = sprite.width() / 4;
+                            (0..sprite.height())
+                                .flat_map(|y| {
+                                    (margin..sprite.width() - margin)
+                                        .map(move |x| sprite.pixel(x, y))
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<std::collections::HashSet<_>>();
+                    assert!(
+                        body_frames.len() >= 4,
+                        "{agent:?} {activity:?} {resolution:?}: {} distinct body poses",
+                        body_frames.len()
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn real_worker_frames_remain_animated_after_terminal_encoding() {
+        use crate::canvas::{Canvas, ColorDepth, PixelEncoding};
+        use ratatui::{buffer::Buffer, layout::Rect};
+        let sprites = SpriteSet::new();
+        for (activity, in_flight, expected) in [
+            (Activity::Idle, false, WorkerStatus::Idle),
+            (Activity::Idle, true, WorkerStatus::Running),
+            (
                 Activity::Typing {
                     detail: String::new(),
                 },
-                Activity::Reading {
-                    detail: String::new(),
-                },
-                Activity::Editing {
-                    detail: String::new(),
-                },
-                Activity::Searching {
-                    detail: String::new(),
-                },
-                Activity::Thinking,
-                Activity::Talking {
-                    detail: String::new(),
-                },
+                true,
+                WorkerStatus::Running,
+            ),
+            (
                 Activity::Waiting {
                     detail: String::new(),
                 },
-                Activity::Idle,
+                true,
+                WorkerStatus::Blocked,
+            ),
+            (
                 Activity::Error {
                     detail: String::new(),
                 },
-            ] {
-                let mut worker = test_worker(agent);
-                worker.activity = activity;
-                let look = worker_look(&worker);
-                assert_eq!(
-                    sprites.worker_frame(&worker, look, 0).height(),
-                    WORKER_HEIGHT
-                );
+                false,
+                WorkerStatus::Failed,
+            ),
+        ] {
+            let mut worker = test_worker(Agent::Codex);
+            worker.activity = activity;
+            worker.turn_in_flight = in_flight;
+            let look = worker_look(&worker);
+            for (width, height) in [(7, 10), (14, 20), (24, 34)] {
+                for encoding in PixelEncoding::ALL {
+                    for depth in [
+                        ColorDepth::TrueColor,
+                        ColorDepth::Palette256,
+                        ColorDepth::None,
+                    ] {
+                        let mut canvas =
+                            Canvas::with_color_depth_and_encoding(width, height, depth, encoding);
+                        let mut render = |now| {
+                            let sprite =
+                                sprites.worker_frame_fitting(&worker, look, now, width, height);
+                            canvas.clear();
+                            canvas.blit(&sprite, 0, 0);
+                            let area = Rect::new(
+                                0,
+                                0,
+                                width.div_ceil(encoding.width_per_cell()) as u16,
+                                height.div_ceil(encoding.height_per_cell()) as u16,
+                            );
+                            let mut buffer = Buffer::empty(area);
+                            canvas.render(&mut buffer, area);
+                            buffer.content
+                        };
+                        let first = render(0);
+                        let changed = (1..30).filter(|step| render(step * 100) != first).count();
+                        assert!(changed > 12, "{expected:?} {width}x{height} {encoding:?} {depth:?}: only {changed} changed frames");
+                        sprites.set_animation_time(Some(0));
+                        assert!(
+                            (1..30).all(|step| render(step * 100) == first),
+                            "reduced motion changed sprite"
+                        );
+                        sprites.set_animation_time(None);
+                        assert_eq!(
+                            worker.status_at(2_900),
+                            expected,
+                            "ambient art changed work status"
+                        );
+                    }
+                }
             }
         }
+    }
+
+    #[test]
+    fn quiet_running_turn_uses_thinking_and_idle_stroll_never_changes_busy_workers() {
+        let sprites = SpriteSet::new();
+        let mut worker = test_worker(Agent::Claude);
+        assert_eq!(ActivityKind::for_worker(&worker, 0), ActivityKind::Idle);
+        worker.turn_in_flight = true;
+        assert_eq!(ActivityKind::for_worker(&worker, 0), ActivityKind::Thinking);
+        let look = worker_look(&worker);
+        assert_eq!(
+            sprites
+                .worker_stroll_frame_fitting(&worker, look, 360, 14, 20)
+                .pixels(),
+            sprites
+                .worker_frame_fitting(&worker, look, 360, 14, 20)
+                .pixels(),
+        );
+    }
+
+    #[test]
+    fn worker_identity_offsets_motion_but_reduced_motion_freezes_everyone() {
+        let sprites = SpriteSet::new();
+        let first = Worker {
+            id: theywork_core::WorkerId("person-0".into()),
+            ..test_worker(Agent::Codex)
+        };
+        let second = Worker {
+            id: theywork_core::WorkerId("person-1".into()),
+            ..first.clone()
+        };
+        let look = worker_look(&first);
+        assert!((1..30).any(|step| {
+            sprites
+                .worker_frame_fitting(&first, look, step * 100, 14, 20)
+                .pixels()
+                != sprites
+                    .worker_frame_fitting(&second, look, step * 100, 14, 20)
+                    .pixels()
+        }));
+        sprites.set_animation_time(Some(0));
+        assert_eq!(sprites.animation_now(5_000), 0);
+        assert_eq!(
+            sprites
+                .worker_frame_fitting(&first, look, 5_000, 14, 20)
+                .pixels(),
+            sprites
+                .worker_frame_fitting(&second, look, 9_000, 14, 20)
+                .pixels(),
+        );
     }
 
     #[test]
@@ -1537,6 +1879,7 @@ mod tests {
     fn motion_setting_freezes_worker_animation_frames() {
         let sprites = SpriteSet::new();
         let mut worker = test_worker(Agent::Codex);
+        worker.turn_in_flight = true;
         worker.activity = Activity::Typing {
             detail: "cargo test".into(),
         };

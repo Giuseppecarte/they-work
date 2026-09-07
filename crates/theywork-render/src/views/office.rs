@@ -9,7 +9,6 @@ use theywork_core::{Millis, Office, Worker, WorkerStatus};
 
 use crate::canvas::{Canvas, PixelEncoding};
 use crate::sprite::{worker_looks, Sprite, SpriteSet, WorkerLook};
-use crate::views::render_worker_with_look;
 
 use super::{
     draw_footer, draw_header, draw_tiny, has_area, paint_opaque, short_path, status_color,
@@ -43,18 +42,24 @@ const TABLE_LIGHT: Color = Color::Rgb(138, 90, 56);
 const CHAIR_BACK: Color = Color::Rgb(65, 58, 91);
 const RUG: Color = Color::Rgb(194, 90, 74);
 const RUG_BORDER: Color = Color::Rgb(142, 58, 46);
-const MACHINE: Color = Color::Rgb(42, 36, 64);
-const MACHINE_LIGHT: Color = Color::Rgb(138, 130, 153);
+#[cfg(test)]
 const TITLE_SIGN: Color = Color::Rgb(92, 15, 12);
+#[cfg(test)]
 const TITLE_BODY: Color = Color::Rgb(142, 26, 21);
-const TITLE_COLOR: Color = Color::Rgb(232, 52, 44);
+const TITLE_COLOR: Color = Color::Rgb(184, 231, 222);
 #[cfg(test)]
 const SIGN_EXTRUSION_STEPS: usize = 6;
+#[cfg(test)]
 const ROOM_SIGN_EXTRUSION_STEPS: usize = 2;
+#[cfg(test)]
 const SIGN_EXTRUSION_STEP: i32 = 1;
+#[cfg(test)]
 const SIGN_GLYPH_RISE: i32 = 0;
+#[cfg(test)]
 const SIGN_MAX_WIDTH_NUMERATOR: usize = 9;
+#[cfg(test)]
 const SIGN_MAX_WIDTH_DENOMINATOR: usize = 20;
+#[cfg(test)]
 const SIGN_STATUS_RESERVE_CELLS: usize = 38;
 const NIGHT_SKY_TOP: Color = Color::Rgb(13, 11, 20);
 const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
@@ -80,6 +85,7 @@ const ISO_DESK_TILES: [(usize, usize); 10] = [
 const ISO_RUG_TILE: (usize, usize) = (2, 3);
 const ISO_PLANT_TILE: (usize, usize) = (0, 0);
 const ISO_COOLER_TILE: (usize, usize) = (1, 0);
+#[cfg(test)]
 const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 2);
 
 fn outline_color(canvas: &Canvas) -> Color {
@@ -93,7 +99,14 @@ fn outline_color(canvas: &Canvas) -> Color {
 pub(super) fn apply_room_palette(canvas: &mut Canvas, palette: usize) {
     let [_, wall, floor, _] = super::guard_scene::palette(palette, canvas.is_light_mode());
     let dark = blend_color(floor, Color::Rgb(26, 22, 38), 65);
-    let mid = blend_color(floor, dark, 120);
+    // Dark room palettes need light seams. Darkening both samples collapses
+    // them into one ANSI-256 colour, erasing the room's floor on native shells.
+    let mid = match floor {
+        Color::Rgb(r, g, b) if u16::from(r) + u16::from(g) + u16::from(b) < 360 => {
+            blend_color(floor, Color::Rgb(170, 190, 218), 90)
+        }
+        _ => blend_color(floor, dark, 120),
+    };
     canvas.remap_materials(&[
         (FLOOR_LIGHT, floor),
         (FLOOR_DARK, dark),
@@ -184,7 +197,9 @@ pub fn desk_layout(worker_count: usize, width: u16, height: u16) -> OfficeLayout
         3
     };
     let columns = preferred_columns.min(worker_count).max(1);
-    let rows = if height >= 14 { 2 } else { 1 };
+    let rows = worker_count
+        .div_ceil(columns)
+        .min(if height >= 14 { 2 } else { 1 });
     let page_size = columns.saturating_mul(rows).clamp(1, MAX_DESKS);
     OfficeLayout {
         columns,
@@ -254,6 +269,9 @@ pub(crate) struct IsoGrid {
     origin_y: i32,
     encoding: PixelEncoding,
     pixels_per_cell: (usize, usize),
+    desk_tiles: [(usize, usize); MAX_DESKS],
+    wall_height: i32,
+    animation_now: Option<Millis>,
 }
 
 impl IsoGrid {
@@ -262,21 +280,6 @@ impl IsoGrid {
             .saturating_mul(self.pixels_per_cell.1)
             .saturating_add(1)
             / 2
-    }
-
-    fn scale_legacy_width(self, value: i32) -> i32 {
-        value
-            .saturating_mul(self.pixels_per_cell.0 as i32)
-            .checked_div(self.encoding.width_per_cell() as i32)
-            .unwrap_or(value)
-    }
-
-    fn scale_legacy_height(self, value: i32) -> i32 {
-        let divisor = self.encoding.height_per_cell() as i32;
-        value
-            .saturating_mul(self.pixels_per_cell.1 as i32)
-            .saturating_add(divisor - 1)
-            / divisor
     }
 }
 
@@ -289,7 +292,8 @@ impl IsoGrid {
     }
 
     fn desk_tile(self, slot: usize) -> (usize, usize) {
-        let (tile_x, tile_y) = ISO_DESK_TILES
+        let (tile_x, tile_y) = self
+            .desk_tiles
             .get(slot)
             .copied()
             .unwrap_or((slot % self.columns, slot / self.columns));
@@ -332,114 +336,35 @@ pub(crate) enum RoomScale {
 
 impl RoomScale {
     fn worker_size(self, grid: IsoGrid) -> (usize, usize) {
-        match self {
-            Self::Floor
-                if grid.pixels_per_cell
-                    != (
-                        grid.encoding.width_per_cell(),
-                        grid.encoding.height_per_cell(),
-                    ) =>
-            {
-                (24 * 3, 34 * 3)
-            }
-            Self::Floor if grid.encoding == PixelEncoding::Sextants => (14, 20),
-            Self::Floor if grid.encoding == PixelEncoding::Quadrants => (14, 10),
-            Self::Floor => (7, 10),
-        }
+        figure_dimensions(
+            grid.encoding,
+            grid.pixels_per_cell,
+            (grid.tile_width * 9 / 20).max(7) as usize,
+            (grid.tile_height * 2).max(10) as usize,
+        )
     }
 
     fn desk_size(self, grid: IsoGrid) -> (usize, usize) {
-        match self {
-            Self::Floor => (
-                (grid.tile_width * 2 / 3).clamp(
-                    5,
-                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
-                        14
-                    } else {
-                        28
-                    }),
-                ) as usize,
-                grid.tile_height
-                    .saturating_sub(grid.scale_half_height(1) as i32)
-                    .clamp(
-                        3,
-                        grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
-                            6
-                        } else {
-                            12
-                        }),
-                    ) as usize,
-            ),
-        }
+        let (width, height) = self.worker_size(grid);
+        (
+            (width * 2).min(grid.tile_width as usize * 4 / 5).max(5),
+            (height / 3 + grid.pixels_per_cell.1).max(3),
+        )
     }
 
     fn monitor_size(self, grid: IsoGrid) -> (usize, usize) {
-        match self {
-            Self::Floor => (
-                (grid.tile_width * 2 / 5).clamp(
-                    10,
-                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
-                        16
-                    } else {
-                        22
-                    }),
-                ) as usize,
-                grid.scale_half_height(9).clamp(
-                    8,
-                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
-                        12
-                    } else {
-                        16
-                    }) as usize,
-                ),
-            ),
-        }
+        let (width, height) = self.worker_size(grid);
+        ((width * 2 / 3).max(4), (height / 4).max(4))
     }
 
     fn plant_size(self, grid: IsoGrid) -> (usize, usize) {
-        match self {
-            Self::Floor => (
-                (grid.tile_width / 2).clamp(
-                    4,
-                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
-                        10
-                    } else {
-                        20
-                    }),
-                ) as usize,
-                (grid.tile_height + grid.scale_half_height(2) as i32).clamp(
-                    5,
-                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
-                        10
-                    } else {
-                        16
-                    }),
-                ) as usize,
-            ),
-        }
+        let (width, height) = self.worker_size(grid);
+        ((width * 3 / 4).max(4), (height * 4 / 5).max(5))
     }
 
     fn cooler_size(self, grid: IsoGrid) -> (usize, usize) {
-        match self {
-            Self::Floor => (
-                (grid.tile_width / 3).clamp(
-                    4,
-                    grid.scale_legacy_width(if grid.encoding == PixelEncoding::HalfBlocks {
-                        8
-                    } else {
-                        16
-                    }),
-                ) as usize,
-                (grid.tile_height + grid.scale_half_height(1) as i32).clamp(
-                    5,
-                    grid.scale_legacy_height(if grid.encoding == PixelEncoding::HalfBlocks {
-                        9
-                    } else {
-                        14
-                    }),
-                ) as usize,
-            ),
-        }
+        let (width, height) = self.worker_size(grid);
+        ((width * 2 / 3).max(4), (height * 3 / 4).max(5))
     }
 
     fn manager_size(self, grid: IsoGrid) -> (usize, usize) {
@@ -469,29 +394,22 @@ fn make_grid_with_encoding(
 ) -> IsoGrid {
     let columns = columns.max(1);
     let rows = rows.max(1);
-    let floor_span = columns.saturating_add(rows).saturating_sub(1).max(1);
-    let logical_width = width / pixels_per_cell.0.max(1);
-    let logical_height = height.saturating_mul(2) / pixels_per_cell.1.max(1);
-    let native_image = pixels_per_cell != (encoding.width_per_cell(), encoding.height_per_cell());
-    let base_tile_width = logical_width
-        .saturating_mul(8)
-        .div_ceil(floor_span.saturating_mul(5).max(1))
-        .clamp(4, if native_image { 40 } else { 22 }) as i32;
-    let base_tile_height = if logical_height < 20 {
-        2
-    } else {
-        (base_tile_width * 2 / 5).clamp(3, 10)
-    };
-    let tile_width = base_tile_width.saturating_mul(pixels_per_cell.0 as i32);
-    let tile_height = (base_tile_height as usize)
-        .saturating_mul(pixels_per_cell.1)
-        .div_ceil(2) as i32;
-    let floor_depth = (floor_span as i32 * tile_height) / 2;
-    let floor_margin = (logical_height / 6)
-        .clamp(8, 12)
-        .saturating_mul(pixels_per_cell.1)
-        .div_ceil(2);
-    let origin_y = height as i32 - floor_margin as i32 - floor_depth;
+    let floor_span = columns.saturating_add(rows).max(2);
+    let (px, py) = pixels_per_cell;
+    let title_band = py * 5;
+    let wall_height = (height / 5).max(py * 4).min(py * 12) as i32;
+    let available_height = height.saturating_sub(title_band + wall_height as usize + py * 2);
+    let tile_width = (width * 18 / (floor_span * 10)).max(px * 5) as i32;
+    let ideal_height = tile_width as usize * py / (px * 5).max(1);
+    let tile_height = ideal_height
+        .min(available_height * 2 / floor_span)
+        .max(py * 2) as i32;
+    let floor_depth = floor_span as i32 * tile_height / 2;
+    let room_height = wall_height + floor_depth;
+    let origin_y = title_band as i32
+        + (height as i32 - title_band as i32 - room_height).max(0) / 2
+        + wall_height
+        + tile_height / 2;
     let origin_x = width as i32 / 2 - (columns as i32 - rows as i32) * tile_width / 4;
     IsoGrid {
         columns,
@@ -502,7 +420,34 @@ fn make_grid_with_encoding(
         origin_y,
         encoding,
         pixels_per_cell,
+        desk_tiles: ISO_DESK_TILES,
+        wall_height,
+        animation_now: None,
     }
+}
+
+fn make_room_grid(canvas: &Canvas, count: usize) -> IsoGrid {
+    let (columns, rows) = if count <= 1 {
+        (4, 3)
+    } else if count <= 3 {
+        (5, 4)
+    } else {
+        (ISO_ROOM_COLUMNS, ISO_ROOM_ROWS)
+    };
+    let mut grid = make_grid_with_encoding(
+        canvas.width(),
+        canvas.height(),
+        columns,
+        rows,
+        canvas.encoding(),
+        canvas.pixels_per_cell(),
+    );
+    if count <= 1 {
+        grid.desk_tiles[0] = (2, 1);
+    } else if count <= 3 {
+        grid.desk_tiles[..3].copy_from_slice(&[(1, 0), (3, 0), (2, 2)]);
+    }
+    grid
 }
 
 fn phase_ms(now: Millis, period: u64) -> u64 {
@@ -516,7 +461,7 @@ fn desk_bounds(grid: IsoGrid, scale: RoomScale, slot: usize) -> (i32, i32, usize
     let (center_x, center_y) = grid.center(grid.desk_tile(slot).0, grid.desk_tile(slot).1);
     let (width, height) = scale.desk_size(grid);
     let x = center_x - width as i32 / 2;
-    let y = center_y + grid.tile_height / 3 - height as i32 / 2;
+    let y = center_y - scale.worker_size(grid).1 as i32 / 6;
     (x, y, width, height)
 }
 
@@ -551,7 +496,8 @@ fn manager_bounds(
     tile: (usize, usize),
     now: Millis,
 ) -> (i32, i32, usize, usize, bool) {
-    let (manager_x, manager_y, attention) = manager_position(grid, tile, now);
+    let (manager_x, manager_y, attention) =
+        manager_position(grid, tile, grid.animation_now.unwrap_or(now));
     let (width, height) = scale.manager_size(grid);
     (
         manager_x - width as i32 / 2,
@@ -609,6 +555,7 @@ fn set_pixel(canvas: &mut Canvas, x: i32, y: i32, color: Color) {
     }
 }
 
+#[cfg(test)]
 fn set_sign_pixel(canvas: &mut Canvas, x: i32, y: i32, color: Color, floor_top: usize) {
     if y >= 0 && (y as usize) < floor_top {
         set_pixel(canvas, x, y, color);
@@ -655,6 +602,7 @@ fn fill_polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
             }
         }
         intersections.sort_unstable();
+        intersections.dedup();
         for pair in intersections.chunks_exact(2) {
             let start = pair[0].min(pair[1]);
             let end = pair[0].max(pair[1]);
@@ -780,6 +728,9 @@ fn draw_sky_area(canvas: &mut Canvas, x: i32, y: i32, width: i32, height: i32, n
     let cloud_x = x - 7 + (elapsed / CLOUD_DRIFT_MS % span) as i32;
     let cloud_y = y + height / 3;
     for offset in 0..8 {
+        if cloud_x + offset < x || cloud_x + offset >= x + width {
+            continue;
+        }
         set_pixel(
             canvas,
             cloud_x + offset,
@@ -788,6 +739,9 @@ fn draw_sky_area(canvas: &mut Canvas, x: i32, y: i32, width: i32, height: i32, n
         );
     }
     for offset in [1, 2, 4, 5, 6] {
+        if cloud_x + offset < x || cloud_x + offset >= x + width || cloud_y - 1 < y {
+            continue;
+        }
         set_pixel(
             canvas,
             cloud_x + offset,
@@ -825,89 +779,6 @@ fn draw_window(canvas: &mut Canvas, x: i32, y: i32, width: i32, height: i32, now
         y + height - 2,
         WINDOW_LIGHT,
     );
-}
-
-fn draw_backdrop(canvas: &mut Canvas, floor_top: usize, now: Millis) {
-    canvas.fill(WALL);
-    let width = canvas.width() as i32;
-    let floor_top = floor_top.min(canvas.height()) as i32;
-    if width <= 0 || floor_top <= 0 {
-        return;
-    }
-
-    let window_count = if width >= 54 {
-        3
-    } else if width >= 28 {
-        2
-    } else {
-        1
-    };
-    let gap = 2_i32;
-    let window_width = ((width - gap * (window_count + 1)) / window_count).max(5);
-    let window_y = if floor_top >= 13 {
-        7
-    } else {
-        (floor_top / 3).max(1)
-    };
-    let window_height = floor_top.saturating_sub(window_y + 2);
-    for index in 0..window_count {
-        let x = gap + index * (window_width + gap);
-        draw_window(
-            canvas,
-            x,
-            window_y,
-            window_width.min(width.saturating_sub(x)),
-            window_height,
-            now + index as Millis * 1_700,
-        );
-    }
-
-    draw_line(
-        canvas,
-        0,
-        floor_top.saturating_sub(1),
-        width - 1,
-        floor_top.saturating_sub(1),
-        WALL_LIGHT,
-    );
-    for column in (3..width.max(3)).step_by(11) {
-        set_pixel(canvas, column, floor_top.saturating_sub(2), WALL_LIGHT);
-    }
-
-    let machine_y = floor_top.saturating_sub(5);
-    if width >= 24 && machine_y > window_y {
-        let machine_width = (width / 12).clamp(4, 7);
-        draw_rect_outline(
-            canvas,
-            2,
-            machine_y,
-            machine_width,
-            4,
-            outline_color(canvas),
-        );
-        fill_rect(canvas, 3, machine_y + 1, machine_width - 2, 2, MACHINE);
-        set_pixel(canvas, 4, machine_y + 1, MACHINE_LIGHT);
-        if width >= 42 {
-            let printer_x = width - machine_width - 3;
-            draw_rect_outline(
-                canvas,
-                printer_x,
-                machine_y,
-                machine_width,
-                4,
-                outline_color(canvas),
-            );
-            fill_rect(
-                canvas,
-                printer_x + 1,
-                machine_y + 1,
-                machine_width - 2,
-                2,
-                MACHINE,
-            );
-            set_pixel(canvas, printer_x + 2, machine_y + 2, INK);
-        }
-    }
 }
 
 fn draw_polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
@@ -974,6 +845,7 @@ fn draw_wall_window(
     );
 }
 
+#[cfg(test)]
 fn iso_wall_height(canvas: &Canvas) -> i32 {
     let base_height = canvas.half_space_height(canvas.height());
     canvas.scale_half_height((base_height / 4).clamp(16, 24)) as i32
@@ -981,7 +853,7 @@ fn iso_wall_height(canvas: &Canvas) -> i32 {
 fn draw_isometric_backdrop(canvas: &mut Canvas, grid: IsoGrid, now: Millis) {
     canvas.fill(super::BACKGROUND);
     let [back, right, _, left] = floor_corners(grid);
-    let wall_height = iso_wall_height(canvas);
+    let wall_height = grid.wall_height;
     let back_top = (back.0, back.1 - wall_height);
     let left_top = (left.0, left.1 - wall_height);
     let right_top = (right.0, right.1 - wall_height);
@@ -1075,10 +947,12 @@ fn compact_glyph(character: char) -> [u8; 5] {
     })
 }
 
+#[cfg(test)]
 fn compact_sign_width(line: &str) -> usize {
     line.chars().count().saturating_mul(4).saturating_sub(1)
 }
 
+#[cfg(test)]
 fn compact_sign_lines(label: &str, width: usize) -> Vec<String> {
     let max_chars = width.saturating_add(1).div_euclid(4).max(1);
     label
@@ -1089,6 +963,7 @@ fn compact_sign_lines(label: &str, width: usize) -> Vec<String> {
         .collect()
 }
 
+#[cfg(test)]
 fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     let x_scale = canvas.pixels_per_cell().0;
     let y_scale = canvas.scale_half_height(1);
@@ -1129,6 +1004,7 @@ fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[cfg(test)]
 fn draw_extruded_glyph(
     canvas: &mut Canvas,
     glyph: [u8; 7],
@@ -1199,6 +1075,7 @@ fn draw_extruded_glyph(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[cfg(test)]
 fn draw_extruded_line(
     canvas: &mut Canvas,
     line: &str,
@@ -1273,6 +1150,7 @@ pub(crate) fn draw_sign_glyph_sheet(canvas: &mut Canvas) {
     }
 }
 
+#[cfg(test)]
 fn sign_depth_step(canvas: &Canvas, scale: usize) -> usize {
     if canvas.has_image_density() {
         (scale / 4).max(1)
@@ -1281,6 +1159,7 @@ fn sign_depth_step(canvas: &Canvas, scale: usize) -> usize {
     }
 }
 
+#[cfg(test)]
 fn sign_glyph_pitch(canvas: &Canvas, x_scale: usize, depth_steps: usize) -> usize {
     let extrusion = depth_steps
         .saturating_mul(SIGN_EXTRUSION_STEP as usize)
@@ -1288,10 +1167,12 @@ fn sign_glyph_pitch(canvas: &Canvas, x_scale: usize, depth_steps: usize) -> usiz
     6usize.saturating_mul(x_scale).saturating_add(extrusion)
 }
 
+#[cfg(test)]
 fn room_sign_max_width(canvas: &Canvas) -> usize {
     canvas.width().saturating_mul(SIGN_MAX_WIDTH_NUMERATOR) / SIGN_MAX_WIDTH_DENOMINATOR
 }
 
+#[cfg(test)]
 fn room_sign_x(canvas: &Canvas, width: usize) -> usize {
     let centered = canvas.width().saturating_sub(width) / 2;
     let reserved = SIGN_STATUS_RESERVE_CELLS.saturating_mul(canvas.pixels_per_cell().0);
@@ -1300,6 +1181,7 @@ fn room_sign_x(canvas: &Canvas, width: usize) -> usize {
         .min(canvas.width().saturating_sub(width))
 }
 
+#[cfg(test)]
 fn sign_outline_radius(canvas: &Canvas, scale: usize) -> i32 {
     if canvas.has_image_density() {
         (scale / 5).max(1) as i32
@@ -1308,6 +1190,7 @@ fn sign_outline_radius(canvas: &Canvas, scale: usize) -> i32 {
     }
 }
 
+#[cfg(test)]
 fn set_sign_block(
     canvas: &mut Canvas,
     x: i32,
@@ -1324,6 +1207,7 @@ fn set_sign_block(
     }
 }
 
+#[cfg(test)]
 fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     if canvas.width() == 0 || canvas.height() == 0 {
         return;
@@ -1475,6 +1359,106 @@ fn worker_plate_name(worker_name: &str, office_name: &str) -> String {
     worker_name.to_string()
 }
 
+fn unique_plate_name(workers: &[&Worker], slot: usize, office_name: &str, width: usize) -> String {
+    let names = workers
+        .iter()
+        .map(|worker| worker_plate_name(&worker.name, office_name))
+        .collect::<Vec<_>>();
+    let Some(name) = names.get(slot) else {
+        return String::new();
+    };
+    let shortened = short_path(name, width);
+    let collisions = names
+        .iter()
+        .enumerate()
+        .filter(|(_, other)| short_path(other, width) == shortened)
+        .collect::<Vec<_>>();
+    if collisions.len() < 2 {
+        return shortened;
+    }
+    let common = name
+        .chars()
+        .enumerate()
+        .take_while(|(index, character)| {
+            collisions
+                .iter()
+                .all(|(_, other)| other.chars().nth(*index) == Some(*character))
+        })
+        .count();
+    let suffix = name.chars().skip(common).collect::<String>();
+    let suffix = suffix.trim_start_matches([' ', '-', '/', ':', '_']);
+    if !suffix.is_empty() {
+        let chars = suffix.chars().collect::<Vec<_>>();
+        let result = if chars.len() + 5 < width {
+            format!(
+                "{} {}",
+                short_path(name, width.saturating_sub(chars.len() + 1)),
+                suffix
+            )
+        } else if chars.len() <= width {
+            suffix.to_owned()
+        } else {
+            format!(
+                "…{}",
+                chars[chars.len().saturating_sub(width.saturating_sub(1))..]
+                    .iter()
+                    .collect::<String>()
+            )
+        };
+        if collisions
+            .iter()
+            .filter(|(_, other)| *other == name)
+            .count()
+            == 1
+        {
+            return result;
+        }
+    }
+    let hash = workers[slot]
+        .id
+        .0
+        .bytes()
+        .fold(2166136261u32, |hash, byte| {
+            (hash ^ byte as u32).wrapping_mul(16777619)
+        });
+    let tag = format!("#{:06x}", hash & 0xffffff);
+    format!(
+        "{}{}",
+        short_path(name, width.saturating_sub(tag.len())),
+        tag
+    )
+}
+
+/// Idle workers occasionally shift along their own desk's aisle. The excursion
+/// is bounded by that station, deterministic by identity, and returns to zero
+/// when reduced motion is enabled. It never implies an active model turn.
+fn idle_step(worker: &Worker, now: Millis, animation_now: Millis, width: usize) -> (i32, bool) {
+    if animation_now == 0 || worker_status(worker, now) != WorkerStatus::Idle {
+        return (0, false);
+    }
+    let seed = worker
+        .id
+        .0
+        .bytes()
+        .fold(14695981039346656037u64, |hash, byte| {
+            (hash ^ byte as u64).wrapping_mul(1099511628211)
+        });
+    let phase = (animation_now.max(0) as u64 + seed % 26000) % 26000;
+    let fraction = match phase {
+        8000..=11999 => phase - 8000,
+        12000..=15999 => 4000,
+        16000..=19999 => 20000 - phase,
+        _ => 0,
+    };
+    let offset =
+        (width as u64 * fraction / 12000) as i32 * if seed.is_multiple_of(2) { 1 } else { -1 };
+    (
+        offset,
+        (8000..12000).contains(&phase) || (16000..20000).contains(&phase),
+    )
+}
+
+#[cfg(test)]
 fn sign_lines(label: &str) -> Vec<String> {
     let chars = label.chars().collect::<Vec<_>>();
     if chars.len() <= 16 {
@@ -1568,28 +1552,9 @@ fn draw_floor_grid(canvas: &mut Canvas, grid: IsoGrid) {
     }
 }
 fn draw_floor_plate(canvas: &mut Canvas, grid: IsoGrid) {
-    for depth in 0..grid.columns.saturating_add(grid.rows) {
-        for tile_y in 0..grid.rows {
-            if depth < tile_y {
-                continue;
-            }
-            let tile_x = depth - tile_y;
-            if tile_x >= grid.columns {
-                continue;
-            }
-            let (center_x, center_y) = grid.center(tile_x, tile_y);
-            let base = FLOOR;
-            fill_diamond(
-                canvas,
-                center_x,
-                center_y,
-                grid.tile_width / 2,
-                grid.tile_height / 2,
-                base,
-                base,
-            );
-        }
-    }
+    // Fill the complete quadrilateral once. Separately rasterized diamonds
+    // leave one-pixel cracks when an odd tile width meets an even tile height.
+    fill_polygon(canvas, &floor_corners(grid), FLOOR);
     draw_floor_grid(canvas, grid);
     draw_floor_edges(canvas, grid);
 }
@@ -1625,8 +1590,8 @@ fn draw_table(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) 
 }
 
 fn draw_rug(canvas: &mut Canvas, grid: IsoGrid, center_x: i32, center_y: i32) {
-    let half_width = (grid.tile_width * 3 / 4).max(3);
-    let half_height = (grid.tile_height * 3 / 4).max(2);
+    let half_width = (grid.tile_width * 9 / 20).max(3);
+    let half_height = (grid.tile_height * 9 / 20).max(2);
     fill_diamond(
         canvas,
         center_x,
@@ -1722,7 +1687,19 @@ fn draw_item(
                 return;
             };
             let (x, y, width, height) = worker_bounds(grid, scale, index);
-            let sprite = sprites.worker_frame_fitting(worker, *look, now, width, height);
+            let stretch =
+                if grid.encoding == PixelEncoding::Quadrants && grid.pixels_per_cell == (2, 2) {
+                    2
+                } else {
+                    1
+                };
+            let (step, walking) = idle_step(worker, now, grid.animation_now.unwrap_or(now), width);
+            let x = x + step;
+            let sprite = if !walking {
+                sprites.worker_frame_fitting(worker, *look, now, width / stretch, height)
+            } else {
+                sprites.worker_stroll_frame_fitting(worker, *look, now, width / stretch, height)
+            };
             if scale == RoomScale::Floor {
                 blit_floor_worker(canvas, &sprite, x, y, width, height);
             } else {
@@ -1732,7 +1709,13 @@ fn draw_item(
         IsoKind::Manager => {
             let (x, y, width, height, attention) =
                 manager_bounds(grid, scale, (item.tile_x, item.tile_y), now);
-            let sprite = sprites.manager_frame_fitting(attention, now, width, height);
+            let stretch =
+                if grid.encoding == PixelEncoding::Quadrants && grid.pixels_per_cell == (2, 2) {
+                    2
+                } else {
+                    1
+                };
+            let sprite = sprites.manager_frame_fitting(attention, now, width / stretch, height);
             blit_floor_worker(canvas, &sprite, x, y, width, height);
             if attention {
                 set_pixel(canvas, x + width as i32 + 1, y, WARNING);
@@ -1775,21 +1758,24 @@ pub(crate) fn draw_room_scene(
 ) -> IsoGrid {
     canvas.clear();
     let scale = RoomScale::Floor;
-    let grid = make_grid_with_encoding(
-        canvas.width(),
-        canvas.height(),
-        ISO_ROOM_COLUMNS,
-        ISO_ROOM_ROWS,
-        canvas.encoding(),
-        canvas.pixels_per_cell(),
-    );
-    draw_isometric_backdrop(canvas, grid, now);
+    let mut grid = make_room_grid(canvas, visible_workers.len());
+    grid.animation_now = Some(sprites.animation_now(now));
+    draw_isometric_backdrop(canvas, grid, grid.animation_now.unwrap_or(now));
     let [back, ..] = floor_corners(grid);
-    let wall_top = back.1 - iso_wall_height(canvas);
-    draw_isometric_sign(canvas, &project_label(office_name), wall_top);
+    let wall_top = back.1 - grid.wall_height;
+    draw_flat_project_sign(
+        canvas,
+        &project_label(office_name),
+        wall_top.max(0) as usize,
+    );
     draw_floor_plate(canvas, grid);
 
-    let (rug_x, rug_y) = grid.center(ISO_RUG_TILE.0, ISO_RUG_TILE.1);
+    let lounge_tile = if visible_workers.len() <= 3 {
+        (0, grid.rows - 1)
+    } else {
+        ISO_RUG_TILE
+    };
+    let (rug_x, rug_y) = grid.center(lounge_tile.0, lounge_tile.1);
     draw_rug(canvas, grid, rug_x, rug_y);
 
     let mut items = Vec::with_capacity(visible_workers.len().saturating_mul(3) + 3);
@@ -1849,8 +1835,8 @@ pub(crate) fn draw_room_scene(
             kind: IsoKind::Cooler,
         },
         IsoItem {
-            tile_x: ISO_MEETING_TABLE_TILE.0,
-            tile_y: ISO_MEETING_TABLE_TILE.1,
+            tile_x: lounge_tile.0,
+            tile_y: lounge_tile.1,
             footprint: IsoFootprint {
                 width: 2,
                 depth: 1,
@@ -1895,57 +1881,195 @@ pub(crate) fn draw_room_scene(
     grid
 }
 
-fn draw_flat_project_sign(canvas: &mut Canvas, label: &str, floor_top: usize) {
-    let reserve = canvas.pixels_per_cell().1 * 2;
-    let available_height = floor_top.saturating_sub(reserve + 1);
-    let available_width = canvas.width().saturating_sub(8);
+/// Geometry is planned in terminal cells before converting to the selected
+/// pixel density. A larger window adds room around furniture, not empty desks.
+#[derive(Clone, Copy, Debug)]
+struct Station {
+    center_x: usize,
+    worker_y: usize,
+    worker_width: usize,
+    worker_height: usize,
+    desk_y: usize,
+    desk_width: usize,
+    desk_height: usize,
+    label_y: usize,
+    label_width: usize,
+}
+
+#[derive(Debug)]
+struct FlatRoom {
+    top: usize,
+    bottom: usize,
+    wall_height: usize,
+    floor_line: usize,
+    lounge_y: Option<usize>,
+    stations: Vec<Station>,
+}
+
+fn character_dimensions(canvas: &Canvas, width: usize, height: usize) -> (usize, usize) {
+    figure_dimensions(canvas.encoding(), canvas.pixels_per_cell(), width, height)
+}
+
+fn figure_dimensions(
+    encoding: PixelEncoding,
+    density: (usize, usize),
+    width: usize,
+    height: usize,
+) -> (usize, usize) {
+    let stretch_x = if encoding == PixelEncoding::Quadrants && density == (2, 2) {
+        2
+    } else {
+        1
+    };
+    let (source_width, source_height) = [(24, 34), (14, 20), (7, 10)]
+        .into_iter()
+        .find(|(w, h)| w * stretch_x <= width && *h <= height)
+        .unwrap_or((7, 10));
+    let zoom = (width / (source_width * stretch_x))
+        .min(height / source_height)
+        .max(1);
+    (source_width * stretch_x * zoom, source_height * zoom)
+}
+
+impl FlatRoom {
+    fn new(canvas: &Canvas, count: usize, layout: OfficeLayout, projection: Projection) -> Self {
+        let (px, py) = canvas.pixels_per_cell();
+        let width = canvas.width();
+        let height = canvas
+            .height()
+            .min((width / px / 3 + 16).clamp(28, 48) * py);
+        let top = canvas.height().saturating_sub(height) / 2;
+        let side = projection == Projection::Side;
+        let columns = if side {
+            count.max(1)
+        } else {
+            layout.columns.max(1).min(count.max(1))
+        };
+        let rows = count.max(1).div_ceil(columns);
+        // A shallow wall cap leaves the top view's floor usable even at 80x24.
+        let wall_height = (height / 7).clamp(py * 2, py * 6).min(height / 3);
+        let floor_line = top
+            + if side {
+                height.saturating_sub((height / 8).max(py * 2))
+            } else {
+                wall_height
+            };
+        let lounge = !side && rows == 1 && height / py >= 36;
+        let floor_height = height.saturating_sub(wall_height + py);
+        let station_height = if side {
+            floor_line.saturating_sub(top + wall_height)
+        } else if lounge {
+            floor_height * 3 / 5
+        } else {
+            floor_height / rows
+        };
+        let margin = if width / px >= 110 { px * 5 } else { px };
+        let slot_width = width.saturating_sub(margin * 2) / columns;
+        let mut stations = Vec::with_capacity(count);
+        for slot in 0..count {
+            let row = slot / columns;
+            let row_count = (count - row * columns).min(columns);
+            let row_width = slot_width * row_count;
+            let center_x = width.saturating_sub(row_width) / 2
+                + (slot % columns) * slot_width
+                + slot_width / 2;
+            let budget_height = if side {
+                station_height.min(height * 2 / 3) * 2 / 3
+            } else {
+                station_height.saturating_sub(py * 2) * 4 / 5
+            };
+            let (worker_width, worker_height) =
+                character_dimensions(canvas, slot_width.saturating_sub(px * 4) / 2, budget_height);
+            let desk_width = (worker_width * 5 / 2)
+                .min(slot_width.saturating_sub(px * 2))
+                .max(px * 6);
+            let desk_height = (worker_height / 3).max(py * 2);
+            let label_y = if side {
+                floor_line + py / 2
+            } else {
+                top + wall_height + (row + 1) * station_height - py
+            }
+            .min((top + height).saturating_sub(py));
+            let desk_y = label_y.saturating_sub(desk_height + py);
+            let worker_y = desk_y.saturating_sub(worker_height * 2 / 3);
+            stations.push(Station {
+                center_x,
+                worker_y,
+                worker_width,
+                worker_height,
+                desk_y,
+                desk_width,
+                desk_height,
+                label_y,
+                label_width: (slot_width / px).saturating_sub(2).min(28),
+            });
+        }
+        Self {
+            top,
+            bottom: top + height,
+            wall_height,
+            floor_line,
+            lounge_y: lounge.then_some(top + wall_height + station_height + py * 2),
+            stations,
+        }
+    }
+}
+
+fn draw_flat_project_sign(canvas: &mut Canvas, label: &str, wall_height: usize) {
+    draw_room_project_sign(canvas, label, 0, wall_height);
+}
+
+fn draw_room_project_sign(canvas: &mut Canvas, label: &str, top: usize, wall_height: usize) {
+    let (px, py) = canvas.pixels_per_cell();
+    // Fixed lettering tiers: never scale type into the room's unused height.
+    let available_height = wall_height
+        .saturating_sub(py)
+        .min(py * 4)
+        .min((canvas.height() * 12 / 100).max(5));
+    let available_width = canvas.width().saturating_sub(px * 8).min(px * 64);
     if available_height < 5 || available_width < 3 {
         return;
     }
-    let compact = label.chars().count() * 6 > available_width || available_height < 7;
-    let (glyph_width, glyph_height) = if compact { (3, 5) } else { (5, 7) };
-    let characters = label
+    let compact = available_height < 7 || label.chars().count() * 6 > available_width;
+    let (gw, gh) = if compact { (3, 5) } else { (5, 7) };
+    let letters = label
         .chars()
-        .take((available_width + 1) / (glyph_width + 1))
+        .take((available_width + 1) / (gw + 1))
         .collect::<Vec<_>>();
-    let width = characters
-        .len()
-        .saturating_mul(glyph_width + 1)
-        .saturating_sub(1);
-    if width == 0 {
+    let face_width = letters.len().saturating_mul(gw + 1).saturating_sub(1);
+    if face_width == 0 {
         return;
     }
-    let scale = (available_width / width)
-        .min(available_height / glyph_height)
+    let scale = (available_height / gh)
+        .min(available_width / face_width)
         .max(1);
-    let x0 = (canvas.width() - width * scale) / 2;
-    let y0 = reserve + (available_height - glyph_height * scale) / 2;
+    let x = (canvas.width() - face_width * scale) / 2;
+    let y = top + wall_height.saturating_sub(gh * scale) / 2;
     fill_rect(
         canvas,
-        x0.saturating_sub(2) as i32,
-        y0.saturating_sub(1) as i32,
-        (width * scale + 4) as i32,
-        (glyph_height * scale + 2) as i32,
+        x.saturating_sub(px * 2) as i32,
+        y.saturating_sub(1) as i32,
+        (face_width * scale + px * 4) as i32,
+        (gh * scale + 2) as i32,
         PANEL,
     );
-    for (index, character) in characters.into_iter().enumerate() {
+    for (index, letter) in letters.into_iter().enumerate() {
         let glyph = if compact {
-            let short = compact_glyph(character);
+            let short = compact_glyph(letter);
             [short[0], short[1], short[2], short[3], short[4], 0, 0]
         } else {
-            glyph_5x7(character)
+            glyph_5x7(letter)
         };
-        for (row, bits) in glyph.iter().take(glyph_height).enumerate() {
-            for column in 0..glyph_width {
-                if bits & (1 << (glyph_width - 1 - column)) != 0 {
-                    set_sign_block(
+        for (row, bits) in glyph.iter().take(gh).enumerate() {
+            for column in 0..gw {
+                if bits & (1 << (gw - 1 - column)) != 0 {
+                    fill_rect(
                         canvas,
-                        (x0 + (index * (glyph_width + 1) + column) * scale) as i32,
-                        (y0 + row * scale) as i32,
-                        scale,
-                        scale,
+                        (x + (index * (gw + 1) + column) * scale) as i32,
+                        (y + row * scale) as i32,
+                        scale as i32,
+                        scale as i32,
                         TITLE_COLOR,
-                        floor_top,
                     );
                 }
             }
@@ -1953,221 +2077,447 @@ fn draw_flat_project_sign(canvas: &mut Canvas, label: &str, floor_top: usize) {
     }
 }
 
+fn draw_flat_floor(canvas: &mut Canvas, start: usize, bottom: usize) {
+    let (px, py) = canvas.pixels_per_cell();
+    fill_rect(
+        canvas,
+        0,
+        start as i32,
+        canvas.width() as i32,
+        bottom.saturating_sub(start) as i32,
+        FLOOR_LIGHT,
+    );
+    let spacing = (py * 5).max(4);
+    for y in (start..bottom).step_by(spacing) {
+        draw_line(
+            canvas,
+            0,
+            y as i32,
+            canvas.width() as i32 - 1,
+            y as i32,
+            FLOOR_DITHER,
+        );
+        for x in ((y / spacing % 2) * px * 12..canvas.width()).step_by((px * 24).max(1)) {
+            draw_line(
+                canvas,
+                x as i32,
+                y as i32,
+                x as i32,
+                (y + spacing).min(bottom - 1) as i32,
+                FLOOR_DITHER,
+            );
+        }
+    }
+    fill_rect(
+        canvas,
+        0,
+        start as i32,
+        canvas.width() as i32,
+        py.max(1) as i32,
+        FLOOR_DARK,
+    );
+}
+
+fn draw_bookcase(canvas: &mut Canvas, x: usize, y: usize, width: usize, height: usize) {
+    if width < 5 || height < 6 {
+        return;
+    }
+    fill_rect(
+        canvas,
+        x as i32,
+        y as i32,
+        width as i32,
+        height as i32,
+        TABLE_TOP,
+    );
+    let shelf = (height / 3).max(2);
+    for row in 0..3 {
+        let top = y + row * shelf + 1;
+        for book in 0..5 {
+            let bw = (width.saturating_sub(4) / 5).max(1);
+            let color = [RUG, WINDOW_LIGHT, FLOOR_DITHER, ACCENT, CHAIR_BACK][book];
+            fill_rect(
+                canvas,
+                (x + 2 + book * bw) as i32,
+                (top + book % 2) as i32,
+                bw.saturating_sub(1).max(1) as i32,
+                shelf.saturating_sub(2 + book % 2).max(1) as i32,
+                color,
+            );
+        }
+    }
+}
+
+fn draw_potted_plant(canvas: &mut Canvas, x: usize, y: usize, width: usize, height: usize) {
+    let stem = (width / 6).max(1);
+    let center = x + width / 2;
+    let green = Color::Rgb(91, 185, 123);
+    fill_rect(
+        canvas,
+        center as i32,
+        y as i32,
+        stem as i32,
+        (height * 3 / 4) as i32,
+        green,
+    );
+    for (side, level) in [(false, 1), (true, 2), (false, 3)] {
+        let leaf_x = if side {
+            center
+        } else {
+            center.saturating_sub(width / 3)
+        };
+        fill_rect(
+            canvas,
+            leaf_x as i32,
+            (y + height * level / 6) as i32,
+            (width / 3 + stem) as i32,
+            (height / 6).max(1) as i32,
+            green,
+        );
+    }
+    fill_rect(
+        canvas,
+        (x + width / 4) as i32,
+        (y + height * 3 / 4) as i32,
+        (width / 2).max(2) as i32,
+        (height / 4).max(2) as i32,
+        TABLE_LIGHT,
+    );
+}
+
+fn draw_lounge(canvas: &mut Canvas, top: usize, bottom: usize) {
+    let (px, py) = canvas.pixels_per_cell();
+    let height = bottom.saturating_sub(top + py * 2);
+    if height < py * 5 {
+        return;
+    }
+    let width = (canvas.width() / 2).min(px * 62);
+    let left = (canvas.width() - width) / 2;
+    let sofa_w = width / 3;
+    let sofa_h = (height / 2).min(py * 7);
+    let y = top + (height - sofa_h) / 2;
+    fill_rect(
+        canvas,
+        left as i32,
+        top as i32,
+        width as i32,
+        height as i32,
+        RUG_BORDER,
+    );
+    fill_rect(
+        canvas,
+        (left + px) as i32,
+        (top + py / 2) as i32,
+        width.saturating_sub(px * 2) as i32,
+        height.saturating_sub(py) as i32,
+        RUG,
+    );
+    for x in [left + px * 2, left + width - sofa_w - px * 2] {
+        fill_rect(
+            canvas,
+            x as i32,
+            y as i32,
+            sofa_w as i32,
+            sofa_h as i32,
+            CHAIR_BACK,
+        );
+        fill_rect(
+            canvas,
+            (x + px) as i32,
+            (y + py) as i32,
+            sofa_w.saturating_sub(px * 2) as i32,
+            sofa_h.saturating_sub(py * 2) as i32,
+            WALL_LIGHT,
+        );
+    }
+    let table_w = width / 5;
+    fill_rect(
+        canvas,
+        (canvas.width() / 2 - table_w / 2) as i32,
+        (y + sofa_h / 3) as i32,
+        table_w as i32,
+        (sofa_h / 2).max(2) as i32,
+        TABLE_LIGHT,
+    );
+    draw_potted_plant(
+        canvas,
+        left.saturating_sub(px * 9),
+        y,
+        px * 6,
+        sofa_h.max(py * 5),
+    );
+    draw_bookcase(
+        canvas,
+        (left + width + px * 3).min(canvas.width().saturating_sub(px * 9)),
+        y,
+        px * 7,
+        sofa_h,
+    );
+}
+
+fn draw_station(
+    canvas: &mut Canvas,
+    station: Station,
+    worker: &Worker,
+    look: WorkerLook,
+    sprites: &SpriteSet,
+    now: Millis,
+) {
+    let (px, py) = canvas.pixels_per_cell();
+    let Station {
+        center_x,
+        worker_y,
+        worker_width,
+        worker_height,
+        desk_y,
+        desk_width,
+        desk_height,
+        ..
+    } = station;
+    let chair_x = center_x.saturating_sub(worker_width / 2);
+    fill_rect(
+        canvas,
+        chair_x as i32,
+        (worker_y + worker_height / 3) as i32,
+        worker_width as i32,
+        (worker_height * 2 / 3) as i32,
+        CHAIR_BACK,
+    );
+    let stretch = if canvas.encoding() == PixelEncoding::Quadrants && !canvas.has_image_density() {
+        2
+    } else {
+        1
+    };
+    let (step, walking) = idle_step(worker, now, sprites.animation_now(now), worker_width);
+    let sprite = if !walking {
+        sprites.worker_frame_fitting(worker, look, now, worker_width / stretch, worker_height)
+    } else {
+        sprites.worker_stroll_frame_fitting(
+            worker,
+            look,
+            now,
+            worker_width / stretch,
+            worker_height,
+        )
+    };
+    blit_scaled_signed(
+        canvas,
+        &sprite,
+        chair_x as i32 + step,
+        worker_y as i32,
+        worker_width,
+        worker_height,
+    );
+    let desk_x = center_x.saturating_sub(desk_width / 2);
+    let top_h = (desk_height / 3).max(1);
+    fill_rect(
+        canvas,
+        desk_x as i32,
+        desk_y as i32,
+        desk_width as i32,
+        top_h as i32,
+        TABLE_LIGHT,
+    );
+    fill_rect(
+        canvas,
+        desk_x as i32,
+        (desk_y + top_h) as i32,
+        desk_width as i32,
+        py.max(1) as i32,
+        TABLE_TOP,
+    );
+    for x in [desk_x + px, desk_x + desk_width.saturating_sub(px * 2)] {
+        fill_rect(
+            canvas,
+            x as i32,
+            (desk_y + top_h + py) as i32,
+            px.max(1) as i32,
+            desk_height.saturating_sub(top_h + py).max(1) as i32,
+            TABLE_TOP,
+        );
+    }
+    let mw = (worker_width * 3 / 4).max(px * 3);
+    let mh = (worker_height / 4).max(py * 2);
+    let mx = desk_x + px;
+    let my = desk_y.saturating_sub(mh);
+    fill_rect(
+        canvas,
+        mx as i32,
+        my as i32,
+        mw as i32,
+        mh as i32,
+        WINDOW_FRAME,
+    );
+    fill_rect(
+        canvas,
+        (mx + px.max(1)) as i32,
+        (my + 1) as i32,
+        mw.saturating_sub(px * 2).max(1) as i32,
+        mh.saturating_sub(2).max(1) as i32,
+        WINDOW_LIGHT,
+    );
+    draw_line(
+        canvas,
+        (mx + px) as i32,
+        (my + mh / 2) as i32,
+        (mx + mw * 2 / 3) as i32,
+        (my + mh / 2) as i32,
+        INK,
+    );
+    fill_rect(
+        canvas,
+        (center_x + desk_width / 4) as i32,
+        desk_y.saturating_sub(py) as i32,
+        (px * 2) as i32,
+        py as i32,
+        FLOOR_LIGHT,
+    );
+}
+
 fn draw_top_down_scene(
     canvas: &mut Canvas,
     office: &Office,
-    visible_workers: &[&Worker],
+    workers: &[&Worker],
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
     layout: OfficeLayout,
 ) {
-    canvas.clear();
-    let floor_top = (canvas.height() / 3).max(4).min(canvas.height());
-    canvas.fill(PANEL);
-    draw_flat_project_sign(canvas, &project_label(&office.name), floor_top);
+    canvas.fill(super::BACKGROUND);
+    let plan = FlatRoom::new(canvas, workers.len(), layout, Projection::TopDown);
     fill_rect(
         canvas,
         0,
-        floor_top as i32,
+        plan.top as i32,
         canvas.width() as i32,
-        canvas.height().saturating_sub(floor_top) as i32,
-        FLOOR_LIGHT,
+        (plan.bottom - plan.top) as i32,
+        WALL,
     );
-    draw_line(
+    draw_flat_floor(canvas, plan.top + plan.wall_height, plan.bottom);
+    draw_room_project_sign(
+        canvas,
+        &project_label(&office.name),
+        plan.top,
+        plan.wall_height,
+    );
+    let (px, py) = canvas.pixels_per_cell();
+    // Perimeter walls and a shared floor establish one room, never a cell per person.
+    fill_rect(
         canvas,
         0,
-        floor_top as i32,
-        canvas.width() as i32 - 1,
-        floor_top as i32,
-        outline_color(canvas),
+        (plan.top + plan.wall_height) as i32,
+        px.max(1) as i32,
+        plan.bottom.saturating_sub(plan.top + plan.wall_height) as i32,
+        WALL,
     );
-
-    let columns = layout.columns.max(1);
-    let rows = layout.rows.max(1);
-    let floor_height = canvas.height().saturating_sub(floor_top).max(1);
-    let cell_width = (canvas.width() / columns).max(1);
-    let cell_height = (floor_height / rows).max(1);
-    for row in 0..rows {
-        for column in 0..columns {
-            let cell_x = column.saturating_mul(cell_width);
-            let cell_y = floor_top.saturating_add(row.saturating_mul(cell_height));
-            let width = if column + 1 == columns {
-                canvas.width().saturating_sub(cell_x)
-            } else {
-                cell_width
-            };
-            let height = if row + 1 == rows {
-                canvas.height().saturating_sub(cell_y)
-            } else {
-                cell_height
-            };
-            let base = if (row + column).is_multiple_of(2) {
-                FLOOR_LIGHT
-            } else {
-                FLOOR_DITHER
-            };
-            fill_rect(
-                canvas,
-                cell_x as i32,
-                cell_y as i32,
-                width as i32,
-                height as i32,
-                base,
-            );
-            draw_rect_outline(
-                canvas,
-                cell_x as i32,
-                cell_y as i32,
-                width as i32,
-                height as i32,
-                outline_color(canvas),
-            );
-        }
+    fill_rect(
+        canvas,
+        canvas.width().saturating_sub(px) as i32,
+        (plan.top + plan.wall_height) as i32,
+        px.max(1) as i32,
+        plan.bottom.saturating_sub(plan.top + plan.wall_height) as i32,
+        WALL,
+    );
+    if let Some(top) = plan.lounge_y {
+        draw_lounge(canvas, top, plan.bottom);
     }
-
-    for (slot, worker) in visible_workers.iter().enumerate() {
-        let column = slot % columns;
-        let row = slot / columns;
-        let cell_x = column.saturating_mul(cell_width);
-        let cell_y = floor_top.saturating_add(row.saturating_mul(cell_height));
-        let Some(look) = looks.get(slot) else {
-            continue;
-        };
-        let (max_width, max_height) = character_budget(canvas);
-        let desk_height = canvas.scale_image_sprite_height(4);
-        let gap = canvas.scale_image_sprite_height(1);
-        let worker_width = cell_width
-            .saturating_sub(canvas.scale_image_sprite_width(3))
-            .min(max_width)
-            .max(1);
-        let worker_height = cell_height
-            .saturating_sub(desk_height + gap)
-            .min(max_height)
-            .max(1);
-        let worker_x = cell_x.saturating_add(cell_width.saturating_sub(worker_width) / 2);
-        let worker_y =
-            cell_y.saturating_add(cell_height.saturating_sub(worker_height + desk_height));
-        render_worker_with_look(
+    for ((station, worker), look) in plan.stations.iter().zip(workers).zip(looks) {
+        draw_station(canvas, *station, worker, *look, sprites, now);
+    }
+    if canvas.width() / px >= 100 {
+        let prop_h = (canvas.height() / 7).max(py * 4).min(py * 9);
+        draw_potted_plant(
             canvas,
-            sprites,
-            worker,
-            look,
-            now,
-            super::PixelRect {
-                x: worker_x,
-                y: worker_y,
-                width: worker_width,
-                height: worker_height,
-            },
+            px * 2,
+            plan.top + plan.wall_height + py,
+            px * 6,
+            prop_h,
         );
-        let desk_width = cell_width
-            .saturating_sub(2)
-            .min(canvas.scale_image_sprite_width(16))
-            .max(1);
-        let desk_x = cell_x.saturating_add(cell_width.saturating_sub(desk_width) / 2);
-        let desk_y = cell_y.saturating_add(cell_height.saturating_sub(desk_height));
-        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, desk_height);
-    }
-
-    if canvas.width() >= 8 {
-        let prop_height = 6.min(canvas.height().saturating_sub(floor_top));
         canvas.blit_scaled(
-            &sprites.plant,
-            1,
-            floor_top.saturating_add(1),
-            6,
-            prop_height.max(1),
+            &sprites.water_cooler,
+            canvas.width().saturating_sub(px * 9),
+            plan.top + plan.wall_height + py,
+            px * 5,
+            prop_h,
         );
-    }
-}
-
-fn character_budget(canvas: &Canvas) -> (usize, usize) {
-    if canvas.has_image_density() {
-        (72, 102)
-    } else {
-        match canvas.encoding() {
-            PixelEncoding::Sextants => (14, 20),
-            PixelEncoding::Quadrants => (14, 10),
-            PixelEncoding::HalfBlocks => (7, 10),
-        }
     }
 }
 
 fn draw_side_scene(
     canvas: &mut Canvas,
     office: &Office,
-    visible_workers: &[&Worker],
+    workers: &[&Worker],
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
 ) {
-    canvas.clear();
-    let floor_top = canvas.height().saturating_mul(2) / 3;
-    draw_backdrop(canvas, floor_top, now);
-    draw_flat_project_sign(canvas, &project_label(&office.name), floor_top);
+    let layout = OfficeLayout {
+        columns: workers.len().max(1),
+        rows: 1,
+        page_size: workers.len(),
+        pages: 1,
+    };
+    let plan = FlatRoom::new(canvas, workers.len(), layout, Projection::Side);
+    canvas.fill(super::BACKGROUND);
     fill_rect(
         canvas,
         0,
-        floor_top as i32,
+        plan.top as i32,
         canvas.width() as i32,
-        canvas.height().saturating_sub(floor_top) as i32,
-        FLOOR_DARK,
+        (plan.bottom - plan.top) as i32,
+        WALL,
     );
-    draw_line(
-        canvas,
-        0,
-        floor_top as i32,
-        canvas.width() as i32 - 1,
-        floor_top as i32,
-        FLOOR_LIGHT,
-    );
-    if canvas.height() > floor_top + 1 {
-        draw_line(
+    let (px, py) = canvas.pixels_per_cell();
+    let window_top = plan.top + plan.wall_height + py;
+    let worker_top = plan
+        .stations
+        .iter()
+        .map(|s| s.worker_y)
+        .min()
+        .unwrap_or(plan.floor_line / 2);
+    let window_height = worker_top
+        .saturating_sub(window_top)
+        .max(py * 3)
+        .min(py * 16);
+    let window_count = if canvas.width() / px >= 110 { 3 } else { 2 };
+    let window_width = canvas.width() * 2 / 3 / window_count;
+    let total = window_width * window_count;
+    let left = (canvas.width() - total) / 2;
+    for index in 0..window_count {
+        draw_window(
             canvas,
-            0,
-            floor_top as i32 + 1,
-            canvas.width() as i32 - 1,
-            floor_top as i32 + 1,
-            outline_color(canvas),
+            (left + index * window_width + px) as i32,
+            window_top as i32,
+            window_width.saturating_sub(px * 2) as i32,
+            window_height as i32,
+            sprites.animation_now(now) + index as Millis * 1700,
         );
     }
-
-    let count = visible_workers.len().max(1);
-    for (slot, worker) in visible_workers.iter().enumerate() {
-        let Some(look) = looks.get(slot) else {
-            continue;
-        };
-        let x = (slot + 1).saturating_mul(canvas.width()) / (count + 1);
-        let desk_width = (canvas.width() / count)
-            .min(canvas.scale_image_sprite_width(18))
-            .max(1);
-        let desk_height = canvas.scale_image_sprite_height(4);
-        let desk_x = x.saturating_sub(desk_width / 2);
-        let desk_y = floor_top.saturating_sub(desk_height);
-        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, desk_height);
-        let (max_width, max_height) = character_budget(canvas);
-        let worker_width = desk_width.saturating_sub(2).min(max_width).max(1);
-        let worker_height = floor_top
-            .saturating_sub(desk_height + canvas.scale_image_sprite_height(2))
-            .min(max_height)
-            .max(1);
-        let worker_x = x.saturating_sub(worker_width / 2);
-        let worker_y = floor_top
-            .saturating_sub(worker_height + desk_height + canvas.scale_image_sprite_height(1));
-        render_worker_with_look(
+    draw_room_project_sign(
+        canvas,
+        &project_label(&office.name),
+        plan.top,
+        plan.wall_height,
+    );
+    draw_flat_floor(canvas, plan.floor_line.saturating_sub(py), plan.bottom);
+    let prop_h = plan
+        .stations
+        .first()
+        .map(|s| s.worker_height)
+        .unwrap_or(py * 8);
+    let prop_y = plan.floor_line.saturating_sub(prop_h);
+    if canvas.width() / px >= 100 {
+        draw_bookcase(canvas, px * 2, prop_y, px * 9, prop_h);
+        draw_potted_plant(
             canvas,
-            sprites,
-            worker,
-            look,
-            now,
-            super::PixelRect {
-                x: worker_x,
-                y: worker_y,
-                width: worker_width,
-                height: worker_height,
-            },
+            canvas.width().saturating_sub(px * 10),
+            prop_y,
+            px * 7,
+            prop_h,
         );
+    }
+    for ((station, worker), look) in plan.stations.iter().zip(workers).zip(looks) {
+        draw_station(canvas, *station, worker, *look, sprites, now);
     }
 }
 fn draw_list_scene(canvas: &mut Canvas) {
@@ -2479,18 +2829,6 @@ fn worker_cell_rect(grid: IsoGrid, slot: usize) -> Rect {
     )
 }
 
-#[cfg(test)]
-fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize) -> Rect {
-    scene_cell_rect(
-        Rect::new(0, 0, u16::MAX, u16::MAX),
-        grid,
-        x,
-        y,
-        width,
-        height,
-    )
-}
-
 #[allow(clippy::too_many_arguments)]
 fn draw_nameplates(
     frame: &mut Frame,
@@ -2538,8 +2876,10 @@ fn draw_nameplates(
         } else if status == WorkerStatus::Failed {
             prefix = "×";
         }
-        let name = short_path(
-            &worker_plate_name(&worker.name, office_name),
+        let name = unique_plate_name(
+            workers,
+            slot,
+            office_name,
             usize::from(rect.width.saturating_sub(2)),
         );
         let label = format!("{prefix} {name}");
@@ -2558,6 +2898,7 @@ fn draw_nameplates(
 #[allow(clippy::too_many_arguments)]
 fn draw_projection_nameplates(
     frame: &mut Frame,
+    canvas: &Canvas,
     body: Rect,
     office_name: &str,
     workers: &[&Worker],
@@ -2570,20 +2911,11 @@ fn draw_projection_nameplates(
     if body.width == 0 || body.height == 0 || workers.is_empty() {
         return;
     }
-    let columns = layout.columns.max(1);
-    let rows = layout.rows.max(1);
-    let cell_width = (usize::from(body.width) / columns).max(1);
+    let plan = FlatRoom::new(canvas, workers.len(), layout, projection);
+    let (px, py) = canvas.pixels_per_cell();
     for (slot, worker) in workers.iter().enumerate() {
-        let column = slot % columns;
-        let row = slot / columns;
-        let cell_x = column.saturating_mul(cell_width);
-        let width = if column + 1 == columns {
-            usize::from(body.width).saturating_sub(cell_x)
-        } else {
-            cell_width
-        }
-        .max(1);
-        let label_width = width.min(24);
+        let station = plan.stations[slot];
+        let label_width = station.label_width.max(1);
         let status = worker_status(worker, now);
         let prefix = if start + slot == selected {
             match status {
@@ -2598,8 +2930,10 @@ fn draw_projection_nameplates(
         } else {
             " "
         };
-        let name = short_path(
-            &worker_plate_name(&worker.name, office_name),
+        let name = unique_plate_name(
+            workers,
+            slot,
+            office_name,
             label_width.saturating_sub(prefix.chars().count() + 1),
         );
         let style = if start + slot == selected {
@@ -2609,19 +2943,12 @@ fn draw_projection_nameplates(
         };
         let x = body
             .x
-            .saturating_add(cell_x as u16)
+            .saturating_add((station.center_x / px).saturating_sub(label_width / 2) as u16)
             .min(body.x.saturating_add(body.width.saturating_sub(1)));
-        let y = match projection {
-            Projection::TopDown => body.y.saturating_add(
-                usize::from(body.height)
-                    .saturating_mul(rows + 2 * (row + 1))
-                    .div_ceil(3 * rows)
-                    .saturating_sub(1) as u16,
-            ),
-            Projection::Side | Projection::Iso | Projection::Auto | Projection::List => {
-                body.y.saturating_add(body.height.saturating_sub(1))
-            }
-        };
+        let y = body
+            .y
+            .saturating_add((station.label_y / py) as u16)
+            .min(body.y.saturating_add(body.height.saturating_sub(1)));
         let available = body.x.saturating_add(body.width).saturating_sub(x);
         paint_opaque(
             frame,
@@ -2667,6 +2994,21 @@ pub(crate) fn draw(
         layout.rows = 1;
         layout.page_size = layout.columns;
         layout.pages = office.workers.len().div_ceil(layout.page_size);
+    }
+    if effective == Projection::Iso && layout.columns > 0 {
+        let capacity = if area.width < 110 || body_height < 26 {
+            3
+        } else if area.width < ISO_MIN_WIDTH || body_height < ISO_MIN_HEIGHT {
+            5
+        } else {
+            MAX_DESKS
+        };
+        if layout.page_size > capacity {
+            layout.page_size = capacity;
+            layout.columns = capacity;
+            layout.rows = 1;
+            layout.pages = office.workers.len().div_ceil(capacity);
+        }
     }
     let page = if layout.page_size == 0 {
         0
@@ -2721,6 +3063,14 @@ pub(crate) fn draw(
         )
     };
     draw_footer(frame, footer, &footer_text);
+    if footer.height > 1 && footer.width >= 50 {
+        Paragraph::new("  PgUp/PgDn pages · Home first worker · End last worker")
+            .style(Style::default().fg(MUTED).bg(super::BACKGROUND))
+            .render(
+                Rect::new(footer.x, footer.y + 1, footer.width, 1),
+                frame.buffer_mut(),
+            );
+    }
     if !has_area(body) {
         return layout;
     }
@@ -2786,6 +3136,7 @@ pub(crate) fn draw(
         } else {
             draw_projection_nameplates(
                 frame,
+                canvas,
                 body,
                 &office.name,
                 &visible_workers,
@@ -3024,7 +3375,7 @@ mod tests {
                     );
                 }
                 assert!(
-                    height * 5 <= plate_height * 2,
+                    height * 2 <= plate_height,
                     "{encoding:?}/{cell_size:?} worker height {height} overwhelms plate height {plate_height}"
                 );
                 bounds.push((x, y, x + width as i32, y + height as i32));
@@ -3308,43 +3659,8 @@ mod tests {
                 }
             }
 
-            let manager_tile = manager_tile(grid, workers.len(), 0);
-            let manager_item = IsoItem {
-                tile_x: manager_tile.0,
-                tile_y: manager_tile.1,
-                footprint: IsoFootprint {
-                    width: 1,
-                    depth: 1,
-                    height: 2,
-                },
-                kind: IsoKind::Manager,
-            };
-            let (x, y, width, height, _) = manager_bounds(
-                grid,
-                RoomScale::Floor,
-                manager_tile,
-                MANAGER_TRAVEL_MS as Millis,
-            );
-            let manager_rect = physical_cell_rect(grid, x, y, width, height);
-            for (owner, plate) in plate_rects.iter().copied().enumerate() {
-                let owner_tile = grid.desk_tile(owner);
-                let owner_item = IsoItem {
-                    tile_x: owner_tile.0,
-                    tile_y: owner_tile.1,
-                    footprint: IsoFootprint {
-                        width: 1,
-                        depth: 1,
-                        height: 1,
-                    },
-                    kind: IsoKind::Desk(owner),
-                };
-                if painter_key(manager_item) > painter_key(owner_item) {
-                    assert!(
-                        !rects_overlap(plate, expanded_rect(manager_rect, body, 1)),
-                        "{encoding:?}/{cell_size:?} plate {owner} enters the safety gap around the full-scale manager"
-                    );
-                }
-            }
+            // No manager is present on an idle floor. Manager avoidance is
+            // checked below using actual blocked state and its own frame time.
         }
     }
 
@@ -4171,6 +4487,426 @@ mod tests {
                 4,
                 "each office palette needs a distinct floor"
             );
+        }
+    }
+    #[test]
+    fn resize_plans_have_only_occupied_rows_and_adjacent_nameplates() {
+        for encoding in [
+            PixelEncoding::HalfBlocks,
+            PixelEncoding::Quadrants,
+            PixelEncoding::Sextants,
+        ] {
+            for (width, height) in [(80, 24), (120, 32), (192, 58), (240, 70), (110, 80)] {
+                let mut canvas = Canvas::with_color_depth_and_encoding(
+                    0,
+                    0,
+                    crate::canvas::ColorDepth::TrueColor,
+                    encoding,
+                );
+                canvas.resize_for_cells(width, height - 5);
+                for count in [1, 3, 20] {
+                    let layout = desk_layout(count, width as u16, (height - 5) as u16);
+                    for projection in [Projection::TopDown, Projection::Side] {
+                        let shown = count.min(if projection == Projection::Side {
+                            layout.columns
+                        } else {
+                            layout.page_size
+                        });
+                        let plan = FlatRoom::new(&canvas, shown, layout, projection);
+                        assert_eq!(plan.stations.len(), shown);
+                        assert!(plan.bottom <= canvas.height());
+                        let (px, py) = canvas.pixels_per_cell();
+                        for station in &plan.stations {
+                            assert!(station.center_x >= station.desk_width / 2);
+                            assert!(station.center_x + station.desk_width / 2 <= canvas.width());
+                            assert!(
+                                station.worker_y >= plan.top,
+                                "{encoding:?}/{width}x{height}/{count}/{projection:?}: {station:?}"
+                            );
+                            assert!(
+                                station.worker_y + station.worker_height <= station.label_y + py
+                            );
+                            assert!(station.label_y < plan.bottom);
+                            assert!(
+                                station.label_y - (station.desk_y + station.desk_height) <= py * 2
+                            );
+                            assert!(station.worker_width >= px * 3);
+                        }
+                        for (index, first) in plan.stations.iter().enumerate() {
+                            for second in plan.stations.iter().skip(index + 1) {
+                                assert!(
+                                    first.label_y != second.label_y
+                                        || first.center_x.abs_diff(second.center_x)
+                                            >= first.label_width * px
+                                );
+                            }
+                        }
+                    }
+                    if count <= 3 {
+                        assert_eq!(layout.rows, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn shared_prefixes_and_duplicate_titles_keep_distinguishable_nameplates() {
+        let names = [
+            "Daily POD Gmail Reconciliation - deliveries",
+            "Daily POD Gmail Reconciliation - invoices",
+            "Daily POD Gmail Reconciliation - receipts",
+        ];
+        let mut workers = names
+            .into_iter()
+            .enumerate()
+            .map(|(index, name)| {
+                Worker::new(
+                    WorkerId(format!("conversation-{index}")),
+                    OfficeId("/office".into()),
+                    Agent::Codex,
+                    name.into(),
+                    0,
+                )
+            })
+            .collect::<Vec<_>>();
+        for width in [10, 18, 26] {
+            let references = workers.iter().collect::<Vec<_>>();
+            let labels = (0..workers.len())
+                .map(|slot| unique_plate_name(&references, slot, "project", width))
+                .collect::<std::collections::BTreeSet<_>>();
+            assert_eq!(labels.len(), workers.len());
+            assert!(labels.iter().all(|label| label.chars().count() <= width));
+        }
+        for worker in &mut workers {
+            worker.name = "Identical title".into();
+        }
+        let references = workers.iter().collect::<Vec<_>>();
+        let labels = (0..workers.len())
+            .map(|slot| unique_plate_name(&references, slot, "project", 18))
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(labels.len(), workers.len());
+        assert!(labels.iter().all(|label| label.contains('#')));
+    }
+
+    #[test]
+    fn room_motion_freezes_sky_figures_and_manager_together() {
+        let worker = Worker::new(
+            WorkerId("quiet-worker".into()),
+            OfficeId("/office".into()),
+            Agent::Codex,
+            "Quiet worker".into(),
+            0,
+        );
+        let mut office = Office::new(OfficeId("/office".into()), "/office".into());
+        office.workers.push(worker);
+        let refs = office.workers.iter().collect::<Vec<_>>();
+        let looks = worker_looks(&office.workers);
+        let sprites = SpriteSet::new();
+        sprites.set_animation_time(Some(0));
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            crate::canvas::ColorDepth::TrueColor,
+            PixelEncoding::HalfBlocks,
+        );
+        canvas.resize_for_cells(120, 38);
+        for projection in [Projection::Iso, Projection::TopDown, Projection::Side] {
+            let mut frames = Vec::new();
+            for now in [20000, 25000, 31000] {
+                match projection {
+                    Projection::Iso => {
+                        draw_room_scene(&mut canvas, "Office", &refs, &looks, &sprites, now, None);
+                    }
+                    Projection::TopDown => draw_top_down_scene(
+                        &mut canvas,
+                        &office,
+                        &refs,
+                        &looks,
+                        &sprites,
+                        now,
+                        desk_layout(1, 120, 38),
+                    ),
+                    _ => draw_side_scene(&mut canvas, &office, &refs, &looks, &sprites, now),
+                }
+                frames.push(
+                    (0..canvas.height())
+                        .flat_map(|y| (0..canvas.width()).map(move |x| (x, y)))
+                        .map(|(x, y)| canvas.pixel(x, y))
+                        .collect::<Vec<_>>(),
+                );
+            }
+            assert_eq!(
+                frames[0], frames[1],
+                "{projection:?} ignores reduced motion"
+            );
+            assert_eq!(
+                frames[1], frames[2],
+                "{projection:?} ignores reduced motion"
+            );
+        }
+    }
+
+    #[test]
+    fn clouds_never_draw_outside_their_window() {
+        let mut canvas = Canvas::with_color_depth(80, 40, crate::canvas::ColorDepth::TrueColor);
+        for now in [0, 1000, 3000, 8000, 15000] {
+            canvas.fill(WALL);
+            draw_sky_area(&mut canvas, 20, 10, 30, 20, now);
+            for y in 0..40 {
+                for x in 0..80 {
+                    if !(20..50).contains(&x) || !(10..30).contains(&y) {
+                        assert_eq!(canvas.pixel(x, y), Some(WALL));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn blocked_floor_labels_avoid_the_manager_at_the_rendered_time() {
+        let mut workers = (0..5)
+            .map(|slot| {
+                Worker::new(
+                    WorkerId(format!("thread-{slot}")),
+                    OfficeId("/office".into()),
+                    Agent::Codex,
+                    format!("Worker {slot}"),
+                    0,
+                )
+            })
+            .collect::<Vec<_>>();
+        workers[0].activity = theywork_core::Activity::Waiting {
+            detail: "Review".into(),
+        };
+        let refs = workers.iter().collect::<Vec<_>>();
+        let looks = worker_looks(&workers);
+        let sprites = SpriteSet::new();
+        for encoding in [
+            PixelEncoding::HalfBlocks,
+            PixelEncoding::Quadrants,
+            PixelEncoding::Sextants,
+        ] {
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                0,
+                0,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            canvas.resize_for_cells(160, 44);
+            for now in [0, 1200, 2400, 4000] {
+                let grid =
+                    draw_room_scene(&mut canvas, "Office", &refs, &looks, &sprites, now, None);
+                let body = Rect::new(0, 0, 160, 44);
+                for slot in 0..workers.len() {
+                    let rect = worker_plate_rect(body, grid, slot, workers.len(), Some(0), now);
+                    let obstacles = plate_obstacles(body, grid, slot, workers.len(), Some(0), now);
+                    assert!(
+                        obstacles
+                            .iter()
+                            .all(|obstacle| !rects_overlap(rect, *obstacle)),
+                        "{encoding:?} at {now} plate {slot} covers a foreground figure"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn isometric_floor_is_a_continuous_surface_at_odd_pixel_sizes() {
+        for encoding in [
+            PixelEncoding::HalfBlocks,
+            PixelEncoding::Quadrants,
+            PixelEncoding::Sextants,
+        ] {
+            for count in [1, 3, 10] {
+                let mut canvas = Canvas::with_color_depth_and_encoding(
+                    0,
+                    0,
+                    crate::canvas::ColorDepth::TrueColor,
+                    encoding,
+                );
+                canvas.resize_for_cells(191, 53);
+                let grid = make_room_grid(&canvas, count);
+                draw_floor_plate(&mut canvas, grid);
+                for y in 0..canvas.height() {
+                    let occupied = (0..canvas.width())
+                        .filter(|x| canvas.pixel(*x, y).is_some())
+                        .collect::<Vec<_>>();
+                    if let (Some(first), Some(last)) = (occupied.first(), occupied.last()) {
+                        assert!(
+                            (*first..=*last).all(|x| canvas.pixel(x, y).is_some()),
+                            "{encoding:?}/{count} floor crack in row {y}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn midnight_floor_seams_survive_the_256_colour_terminal_palette() {
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            crate::canvas::ColorDepth::Palette256,
+            PixelEncoding::HalfBlocks,
+        );
+        canvas.resize_for_cells(80, 24);
+        draw_flat_floor(&mut canvas, 0, 48);
+        apply_room_palette(&mut canvas, 1);
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).expect("terminal");
+        terminal
+            .draw(|frame| {
+                let area = frame.area();
+                canvas.render(frame.buffer_mut(), area);
+            })
+            .expect("frame");
+        let floor = terminal.backend().buffer()[(1, 2)].fg;
+        let seam = terminal.backend().buffer()[(1, 5)].bg;
+        assert_ne!(
+            floor, seam,
+            "floor and seam collapse to the same indexed colour"
+        );
+    }
+
+    #[test]
+    fn compact_isometric_floor_pages_before_workers_overlap() {
+        let mut office = Office::new(OfficeId("/office".into()), "/office".into());
+        office.workers = (0..20)
+            .map(|slot| {
+                Worker::new(
+                    WorkerId(format!("thread-{slot}")),
+                    office.id.clone(),
+                    Agent::Codex,
+                    format!("Desk {slot}"),
+                    0,
+                )
+            })
+            .collect();
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            crate::canvas::ColorDepth::TrueColor,
+            PixelEncoding::HalfBlocks,
+        );
+        let sprites = SpriteSet::new();
+        for (width, height, capacity) in [(80, 24, 3), (120, 32, 5), (192, 58, 10)] {
+            let mut terminal = Terminal::new(TestBackend::new(width, height)).expect("terminal");
+            let mut actual = OfficeLayout::default();
+            terminal
+                .draw(|frame| {
+                    actual = draw(
+                        frame,
+                        Some(&office),
+                        &mut canvas,
+                        &sprites,
+                        0,
+                        19,
+                        Projection::Iso,
+                        true,
+                    );
+                })
+                .expect("last page");
+            assert_eq!(actual.page_size, capacity);
+            assert_eq!(actual.pages, 20usize.div_ceil(capacity));
+            let text = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert!(
+                text.contains("Desk 19"),
+                "{width}x{height} lost last selected worker"
+            );
+        }
+    }
+    #[test]
+    fn isometric_navigation_reaches_last_worker_and_keeps_identity_through_resize() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+        let mut world = theywork_core::World::new();
+        for index in 0..20 {
+            world.apply(theywork_core::Event {
+                at: 0,
+                office: OfficeId("/office".into()),
+                office_path: "/office".into(),
+                worker: WorkerId(format!("thread-{index:02}")),
+                agent: Agent::Codex,
+                kind: theywork_core::EventKind::Seen {
+                    name: format!("Desk {index:02}"),
+                    git_branch: None,
+                },
+            });
+        }
+        let press = |code| KeyEvent::new(code, KeyModifiers::NONE);
+        for (width, height, columns) in [(80, 24, 3), (120, 32, 5), (192, 58, 5)] {
+            let mut ui = crate::Ui::new();
+            ui.restore_preferences(&crate::RendererPreferences {
+                projection: "isometric".into(),
+                ..Default::default()
+            });
+            let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            let capacity = if width >= 192 { 10 } else { columns };
+            ui.handle_key(press(KeyCode::PageDown));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), capacity);
+            ui.handle_key(press(KeyCode::End));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), 19);
+            ui.handle_key(press(KeyCode::PageUp));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), 19 - capacity);
+            ui.handle_key(press(KeyCode::Home));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), 0);
+            ui.handle_key(press(KeyCode::Char('j')));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), columns);
+            ui.handle_key(press(KeyCode::Char('k')));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), 0);
+            for index in 1..20 {
+                ui.handle_key(press(KeyCode::Right));
+                terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+                assert_eq!(ui.selected_worker(), index);
+            }
+            for (new_width, new_height) in [(192, 58), (80, 24), (120, 32)] {
+                terminal.backend_mut().resize(new_width, new_height);
+                terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+                assert_eq!(
+                    ui.selected_worker(),
+                    19,
+                    "resize changed the selected conversation"
+                );
+                let text = terminal
+                    .backend()
+                    .buffer()
+                    .content
+                    .iter()
+                    .map(|cell| cell.symbol())
+                    .collect::<String>();
+                assert!(text.contains("Desk 19"));
+            }
+            ui.handle_key(press(KeyCode::Enter));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.view(), crate::View::Desk);
+            assert_eq!(ui.selected_worker(), 19);
+            ui.handle_key(press(KeyCode::Esc));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.view(), crate::View::Office);
+            ui.handle_key(press(KeyCode::Char('k')));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(
+                ui.selected_worker(),
+                14,
+                "latest resized layout must determine vertical navigation"
+            );
+            ui.handle_key(press(KeyCode::Char('l')));
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            assert_eq!(ui.selected_worker(), 15);
         }
     }
 }

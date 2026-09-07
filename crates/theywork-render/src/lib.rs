@@ -87,6 +87,7 @@ pub struct Ui {
     camera_columns: usize,
     camera_page_size: usize,
     office_columns: usize,
+    office_page_size: usize,
     known_office_count: usize,
     known_worker_count: usize,
     now: Millis,
@@ -135,6 +136,7 @@ impl Ui {
             camera_columns: 1,
             camera_page_size: 1,
             office_columns: 1,
+            office_page_size: 1,
             known_office_count: 0,
             known_worker_count: 0,
             now: 0,
@@ -460,6 +462,19 @@ impl Ui {
                     };
                     self.selected_office_id = None;
                     self.selected_worker = 0;
+                } else if self.view == View::Office {
+                    self.selected_worker = match key.code {
+                        KeyCode::Home => 0,
+                        KeyCode::End => self.known_worker_count.saturating_sub(1),
+                        KeyCode::PageUp => {
+                            self.selected_worker.saturating_sub(self.office_page_size)
+                        }
+                        _ => self
+                            .selected_worker
+                            .saturating_add(self.office_page_size)
+                            .min(self.known_worker_count.saturating_sub(1)),
+                    };
+                    self.selected_worker_id = None;
                 }
                 None
             }
@@ -696,6 +711,7 @@ impl Ui {
                     self.name_plates,
                 );
                 self.office_columns = layout.columns.max(1);
+                self.office_page_size = layout.page_size.max(1);
             }
             View::Desk => {
                 let worker = office.and_then(|value| value.workers.get(self.selected_worker));

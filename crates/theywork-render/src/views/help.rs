@@ -48,7 +48,7 @@ pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
         "Esc / Backspace goes back: desk → floor → tower.",
         "Arrows / hjkl select floors or workers.",
         "Tab / Shift-Tab cycles floors · 1–9 jumps to a floor.",
-        "Tower: PgUp/PgDn pages · Home/End first/last floor.",
+        "Tower/floor: PgUp/PgDn pages · Home/End first/last.",
         "Desk: ↑/↓ scroll history · ←/→ switches workers.",
         "p phone · 1–4 channels · ↑/↓ message · Enter inspect.",
         "v cycles office views · s customizes the office.",

@@ -267,19 +267,43 @@ fn run(fixture: &Fixture, args: &[&str]) -> Output {
     run_with_homes(fixture, args, &fixture.claude_home, &fixture.codex_home)
 }
 
+fn isolated_command(fixture: &Fixture) -> Command {
+    let mut command = Command::new(binary());
+    command
+        .current_dir(fixture.temp.path())
+        .env("HOME", fixture.temp.path())
+        .env("USERPROFILE", fixture.temp.path())
+        .env("XDG_CONFIG_HOME", fixture.temp.path().join("settings"))
+        .env("APPDATA", fixture.temp.path().join("settings"))
+        .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
+        .env("THEYWORK_CODEX_HOME", &fixture.codex_home);
+    command
+}
+
 fn run_with_homes(
     fixture: &Fixture,
     args: &[&str],
     claude_home: &Path,
     codex_home: &Path,
 ) -> Output {
-    Command::new(binary())
-        .current_dir(fixture.temp.path())
+    let mut command = isolated_command(fixture);
+    command
         .env("THEYWORK_CLAUDE_HOME", claude_home)
-        .env("THEYWORK_CODEX_HOME", codex_home)
-        .args(args)
-        .output()
-        .unwrap()
+        .env("THEYWORK_CODEX_HOME", codex_home);
+    // Existing collector scenarios explicitly consent to reading their synthetic homes.
+    // First-launch consent tests use isolated_command directly, without this opt-in.
+    let saved = args
+        .windows(2)
+        .find(|pair| pair[0] == "--config-dir")
+        .is_some_and(|pair| Path::new(pair[1]).join("connections.json").exists());
+    if !saved
+        && !args
+            .iter()
+            .any(|arg| *arg == "--demo" || arg.starts_with("--sources"))
+    {
+        command.args(["--sources", "all"]);
+    }
+    command.args(args).output().unwrap()
 }
 
 fn stdout(output: &Output) -> String {
@@ -423,7 +447,8 @@ fn saved_sources_are_respected_and_explicit_choice_overrides_them() {
 #[test]
 fn launching_inside_one_project_keeps_the_other_floors() {
     let fixture = Fixture::new();
-    let output = Command::new(binary())
+    let output = isolated_command(&fixture)
+        .args(["--sources", "all"])
         .current_dir(&fixture.project_a)
         .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
         .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
@@ -531,7 +556,7 @@ fn once_never_emits_transcript_terminal_controls() {
 #[test]
 fn doctor_explains_the_published_container_terminal_fallback() {
     let fixture = Fixture::new();
-    let output = Command::new(binary())
+    let output = isolated_command(&fixture)
         .current_dir(fixture.temp.path())
         .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
         .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
@@ -566,7 +591,7 @@ fn doctor_explains_the_published_container_terminal_fallback() {
 #[test]
 fn doctor_explains_an_explicit_color_override() {
     let fixture = Fixture::new();
-    let output = Command::new(binary())
+    let output = isolated_command(&fixture)
         .current_dir(fixture.temp.path())
         .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
         .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
@@ -584,7 +609,7 @@ fn doctor_explains_an_explicit_color_override() {
 #[test]
 fn no_color_remains_authoritative_over_explicit_truecolor() {
     let fixture = Fixture::new();
-    let output = Command::new(binary())
+    let output = isolated_command(&fixture)
         .current_dir(fixture.temp.path())
         .env("THEYWORK_CLAUDE_HOME", &fixture.claude_home)
         .env("THEYWORK_CODEX_HOME", &fixture.codex_home)
@@ -772,7 +797,7 @@ fn headless_exit_after_runs_the_full_polling_loop() {
 }
 
 #[test]
-fn project_scopes_once_and_persists_only_with_config_dir() {
+fn project_scopes_once_without_persisting_even_with_config_dir() {
     let fixture = Fixture::new();
     let project_a = fixture.project_a.to_str().unwrap();
     let project_b = fixture.project_b.to_str().unwrap();
@@ -796,10 +821,8 @@ fn project_scopes_once_and_persists_only_with_config_dir() {
         ],
     );
     assert_success(&output);
-    assert_eq!(
-        fs::read_to_string(fixture.config_dir.join("project")).unwrap(),
-        format!("{project_b}\n")
-    );
+    assert!(!fixture.config_dir.join("project").exists());
+    assert!(stdout(&output).contains(project_b));
 }
 
 #[test]
@@ -819,7 +842,7 @@ fn first_run_without_homes_explains_overrides_and_stops() {
 }
 
 #[test]
-fn requested_config_directory_is_created() {
+fn once_does_not_create_requested_config_directory() {
     let fixture = Fixture::new();
     let missing = fixture.temp.path().join("missing-config");
     let project = fixture.project_a.to_str().unwrap();
@@ -834,7 +857,7 @@ fn requested_config_directory_is_created() {
         ],
     );
     assert_success(&output);
-    assert!(missing.join("project").exists());
+    assert!(!missing.exists());
 }
 
 #[test]
@@ -858,4 +881,106 @@ fn invalid_args_report_clear_failure() {
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("invalid --color value \"purple\"; use auto, true, 256, or none"));
+}
+
+#[test]
+fn unconfigured_scripts_explain_consent_without_reading_conversations() {
+    let fixture = Fixture::new();
+    for args in [
+        vec![],
+        vec!["--once"],
+        vec!["--headless", "--exit-after", "1ms"],
+    ] {
+        let output = isolated_command(&fixture).args(args).output().unwrap();
+        assert_success(&output);
+        let text = stdout(&output);
+        assert!(text.contains("Connect your team before reading local conversations."));
+        assert!(text.contains("--sources codex --once"));
+        assert!(!text.contains("Codex running"));
+        assert!(!text.contains("projects="));
+        assert!(!fixture.temp.path().join("settings").exists());
+    }
+}
+
+#[test]
+fn unconfigured_doctor_only_checks_candidates() {
+    let fixture = Fixture::new();
+    let output = isolated_command(&fixture).arg("--doctor").output().unwrap();
+    assert_success(&output);
+    let text = stdout(&output);
+    assert!(text.contains("Only folder locations were checked."));
+    assert!(text.contains("Folder found"));
+    assert!(!text.contains("codex_store="));
+    assert!(!text.contains("threads="));
+    assert!(!fixture.temp.path().join("settings").exists());
+}
+
+#[test]
+fn default_saved_sources_are_used_without_a_config_flag() {
+    let fixture = Fixture::new();
+    let settings = fixture.temp.path().join("settings/they-work");
+    fs::create_dir_all(&settings).unwrap();
+    let choices = serde_json::to_vec(&json!({"claude":false,"codex":true,"claude_home":fixture.claude_home,"codex_home":fixture.codex_home})).unwrap();
+    fs::write(settings.join("connections.json"), &choices).unwrap();
+    for args in [
+        vec!["--once"],
+        vec!["--once", "--no-save"],
+        vec!["--doctor"],
+    ] {
+        let output = isolated_command(&fixture).args(args).output().unwrap();
+        assert_success(&output);
+        let text = stdout(&output);
+        assert!(!text.contains("claude_store="));
+        assert!(text.contains("projects=1"));
+        assert_eq!(
+            fs::read(settings.join("connections.json")).unwrap(),
+            choices
+        );
+        assert_eq!(fs::read_dir(&settings).unwrap().count(), 1);
+    }
+}
+
+#[test]
+fn default_settings_fall_back_to_home_when_location_is_unset() {
+    let fixture = Fixture::new();
+    let settings = fixture.temp.path().join(".config/they-work");
+    fs::create_dir_all(&settings).unwrap();
+    fs::write(settings.join("connections.json"), serde_json::to_vec(&json!({"claude":false,"codex":false,"claude_home":fixture.claude_home,"codex_home":fixture.codex_home})).unwrap()).unwrap();
+    let output = isolated_command(&fixture)
+        .env_remove("XDG_CONFIG_HOME")
+        .env_remove("APPDATA")
+        .arg("--once")
+        .output()
+        .unwrap();
+    assert_success(&output);
+    assert!(stdout(&output).contains("projects=0 workers=0"));
+    assert_eq!(fs::read_dir(settings).unwrap().count(), 1);
+}
+
+#[test]
+fn demo_does_not_read_or_replace_corrupt_saved_sources() {
+    let fixture = Fixture::new();
+    let settings = fixture.temp.path().join("settings/they-work");
+    fs::create_dir_all(&settings).unwrap();
+    let path = settings.join("connections.json");
+    fs::write(&path, "broken preferences").unwrap();
+    let output = isolated_command(&fixture)
+        .args(["--demo", "--once"])
+        .output()
+        .unwrap();
+    assert_success(&output);
+    assert_eq!(fs::read_to_string(path).unwrap(), "broken preferences");
+    assert_eq!(fs::read_dir(settings).unwrap().count(), 1);
+}
+
+#[test]
+fn explicit_no_sources_is_a_successful_diagnostic() {
+    let fixture = Fixture::new();
+    let output = isolated_command(&fixture)
+        .args(["--sources", "none", "--doctor"])
+        .output()
+        .unwrap();
+    assert_success(&output);
+    assert!(stdout(&output).contains("sources=none"));
+    assert!(!fixture.temp.path().join("settings").exists());
 }

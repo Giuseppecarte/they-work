@@ -76,10 +76,36 @@ Windows, its installer-added user PATH entry. Source records are never removed.
 
 ## Choose your conversation sources
 
-Run `they-work --setup` to choose Codex, Claude Code, both, or no local sources.
-This is a local connection screen, not an account login: no API keys, browser
-authorization, or subscription is needed. You remain logged in to your coding
-apps as usual. Demo mode reads no conversation data.
+Start with `they-work`. On first launch, **Connect your team** lets you choose
+Codex, Claude Code, both, or an empty tower. No account login, API key, browser
+authorization, or subscription is needed. It reads local conversation titles,
+messages, and tool activity. Approve requests in the original coding app.
+Press `d` to explore the demo without reading conversations.
+
+Use `↑` / `↓` to choose a source, `Space` to turn it on or off, and `e` to edit
+its **app data folder** (`.codex` or `.claude`, not a project folder). While editing,
+use arrow keys, Home/End, Backspace/Delete, or `Ctrl+U` to clear the path. `Enter`
+applies the path; `Esc` cancels the edit. Press `Enter` again to connect. If a
+folder is missing, the screen selects the source that needs repair.
+
+**Remember on this computer** is selected by default. Turn it off with `Space`
+on that row, or press `m`, for a temporary session. Saved choices are left
+unchanged. Launch with `--no-save` to disable preference writes for the whole
+session. Source switches and paths are saved when you confirm Connect; appearance,
+characters, room palettes, and the selected floor are saved during interactive use.
+Demo mode, `--once`, `--doctor`, and `--headless` do not save preferences or create
+settings folders. Demo mode also skips reading saved preferences.
+
+Later, simply run `they-work` again. Use `c` inside the app or `they-work --setup`
+to change sources and repair folders. Settings live in:
+
+- macOS/Linux/WSL: `$XDG_CONFIG_HOME/they-work`, or `$HOME/.config/they-work`.
+- Windows: `%APPDATA%\they-work`, falling back to the home `.config\they-work`.
+
+An absolute `--config-dir <folder>` overrides this location; relative paths and
+`~` are also normalized. The directory is created only when saving. No transcript
+content is copied into settings. To reset the saved connection, remove only
+`connections.json` from this folder and launch again; source records remain intact.
 
 For an explicit launch, including nonstandard data folders:
 
@@ -90,23 +116,13 @@ they-work --sources all --doctor
 they-work --sources all --once
 ~~~
 
-`--doctor` explains source discovery/readability without opening an interactive
-screen. `--once` prints every project and worker; both can run over SSH or in a
-pipe. Data paths are the source root directories, not individual project folders.
-An unavailable source does not prevent the other source from working.
-
-Pass `--config-dir` to opt into remembering choices between runs:
-
-~~~sh
-they-work --config-dir "$HOME/.config/they-work" --setup
-~~~
-
-Reuse the same flag on later launches. The directory is normalized and created
-explicitly; `~` expands to your home directory. Source switches and paths,
-appearance, character choices, room palettes, and the selected real floor are
-remembered there. Exploring the demo does not overwrite the selected real floor.
-Without this flag, no application preferences are written. On Windows, a suitable choice is
-`--config-dir "$env:LOCALAPPDATA\they-work"` in PowerShell.
+`--doctor` explains source discovery and readability. `--once` prints each project
+and worker; both can run over SSH or in a pipe. Without saved source choices or
+`--sources`, these commands explain how to choose; `--doctor` checks only folder
+locations. No conversations are read until sources are chosen. A home override
+alone does not grant permission. Command-line choices apply to that run; use the
+connection screen to remember them. An unavailable source does not prevent the
+other source from working.
 
 In the office, `c` opens source selection, `v` changes camera, `w` / `W` changes
 or resets the selected worker's character, and `o` / `O` changes or resets the
@@ -142,9 +158,12 @@ network access. Add arguments with `make run ARGS="--doctor"` or
 `make run ARGS="--sources codex"`. Override host locations with
 `THEYWORK_CODEX_HOST` or `THEYWORK_CLAUDE_HOST`. Paths containing spaces work.
 
-Docker users who opt into `--config-dir` must mount that one configuration
-directory read-write explicitly. Merely passing the flag does not grant write
-access inside the default read-only container.
+The default read-only Docker container cannot save settings. Turn off
+**Remember on this computer**, or use `--no-save`. To
+retain choices, mount one settings directory read-write and pass its container
+path with `--config-dir`. Merely passing the flag does not grant write access.
+For scripts without saved choices, include `--sources`, for example
+`make run ARGS="--sources all --doctor"`.
 
 ## Docker without a checkout
 

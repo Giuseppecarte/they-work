@@ -55,9 +55,13 @@ make run
 ~~~
 
 `make demo` mounts nothing. `make run` mounts existing conversation homes
-read-only and disables network access. `they-work --doctor` reports source
-readability and next steps; `they-work --once` prints all projects and workers.
-For Docker, use `make run ARGS="--doctor"` or `ARGS="--once"`.
+read-only and disables network access. The first launch asks which local sources
+may be read. Keep **Remember on this computer** selected to reconnect next time,
+or turn it off for a temporary session. `they-work --doctor` checks chosen sources;
+`they-work --once` prints projects and workers. Without a saved choice, add
+`--sources all`, `codex`, or `claude`; no conversations are read without a choice.
+For Docker, use `make run ARGS="--sources all --doctor"` or
+`ARGS="--sources all --once"`.
 
 ## What you are looking at
 
@@ -79,8 +83,9 @@ looking somewhere else.
 
 Use `v` to change the camera, `w` at a desk to change that worker's character,
 and `o` to change the selected floor's palette. `W` and `O` restore defaults.
-Pass `--config-dir <folder>` to remember sources, the selected floor, and these
-appearance choices. Git worktrees of the same repository share one floor.
+Keep **Remember on this computer** enabled when connecting to save these choices
+and the selected floor. `--no-save` keeps changes temporary. Git worktrees of the
+same repository share one floor.
 
 ![A worker's desk, replayed with Menlo](docs/design-audit/iteration-2/evidence/review3/surface-desk-192x58-menlo.png)
 
@@ -192,7 +197,8 @@ board is what was meant.
 | `--view iso\|top\|side` | starting camera |
 | `--light` / `--dark` | starting appearance |
 | `--color auto\|true\|256\|none` | colour depth |
-| `--config-dir <path>` | opt in to remembering settings |
+| `--config-dir <path>` | override the default settings folder |
+| `--no-save` | keep the session temporary; write no preferences |
 | `--headless --exit-after <dur>` | run the loop without a terminal |
 
 | Variable | |
@@ -204,7 +210,11 @@ board is what was meant.
 | `THEYWORK_COLOR` | force a colour depth |
 | `NO_COLOR` | honoured above everything else |
 
-No preference or configuration is written unless you pass `--config-dir`.
+Sources are remembered when you confirm **Connect** with **Remember on this
+computer** enabled. Settings use `$XDG_CONFIG_HOME/they-work` (or
+`$HOME/.config/they-work`) on macOS/Linux/WSL, and `%APPDATA%\they-work` on
+Windows. `--no-save` prevents writes; demo and noninteractive modes never save
+preferences. See [installation and source setup](INSTALL.md#choose-your-conversation-sources).
 
 ## Working on it
 

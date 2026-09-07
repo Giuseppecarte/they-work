@@ -17,12 +17,15 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
 use crossterm::cursor::{MoveTo, Show};
-use crossterm::event::{self, Event as TermEvent, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{
+    self, DisableBracketedPaste, EnableBracketedPaste, Event as TermEvent, KeyCode, KeyEvent,
+    KeyModifiers,
+};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use ratatui::backend::{CrosstermBackend, TestBackend};
+use ratatui::backend::{Backend, CrosstermBackend, TestBackend};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::Terminal;
@@ -52,13 +55,13 @@ USAGE:
   they-work [OPTIONS]
 
 OPTIONS:
-  --project <path>         Open one project office
-  --all                    Start at the guard office
+  --project <path>         Read conversations from one project only
+  --all                    Start at the tower overview
   --demo                   Show the imaginary company; reads nothing
   --once                   Print one plain-text standup and exit
   --headless               Run the polling loop without a terminal
   --exit-after <duration>  Stop headless mode after e.g. 30s, 5m, or 1h
-  --doctor                 Print discovered stores and exit
+  --doctor                 Check selected sources and explain problems
   --view <iso|top|side>    Choose the starting camera
   --light                  Start with the light appearance
   --dark                   Start with the dark appearance
@@ -69,7 +72,8 @@ OPTIONS:
                            Choose which conversations may be read
   --codex-home <path>      Use this Codex data folder
   --claude-home <path>     Use this Claude Code data folder
-  --config-dir <path>      Remember sources, appearance and selected floor
+  --config-dir <path>      Override the default settings folder
+  --no-save                Keep this session temporary; save no preferences
   -h, --help               Show this help
 ";
 
@@ -106,9 +110,24 @@ struct Args {
     color: Option<ColorMode>,
     config_dir: Option<PathBuf>,
     setup: bool,
+    no_save: bool,
+    remember: Option<bool>,
+    consent_needed: bool,
+    connection_choice: Option<connections::Connections>,
     sources: Option<String>,
     codex_home: Option<PathBuf>,
     claude_home: Option<PathBuf>,
+}
+
+impl Args {
+    fn may_save(&self) -> bool {
+        !self.no_save
+            && self.remember.unwrap_or(true)
+            && !self.demo
+            && !self.once
+            && !self.headless
+            && !self.doctor
+    }
 }
 
 fn now_ms() -> Millis {
@@ -140,6 +159,7 @@ where
             }
             "--doctor" => parsed.doctor = true,
             "--setup" => parsed.setup = true,
+            "--no-save" => parsed.no_save = true,
             "--sources" => parsed.sources = Some(next_value(&mut arguments, "--sources")?),
             "--codex-home" => {
                 parsed.codex_home = Some(PathBuf::from(next_value(&mut arguments, "--codex-home")?))
@@ -353,6 +373,7 @@ struct Runtime {
     start_guard: bool,
     initial_project: Option<String>,
     config_dir: Option<PathBuf>,
+    save_preferences: bool,
 }
 
 fn main() -> Result<()> {
@@ -374,11 +395,13 @@ fn main() -> Result<()> {
     if !args.once && !args.headless {
         install_termination_handlers()?;
     }
+    args.config_dir = args.config_dir.or_else(connections::default_config_dir);
     args.config_dir = args
         .config_dir
         .as_deref()
         .map(resolve_filesystem_path)
         .transpose()?;
+    apply_color_mode(args.color);
     if !connections::prepare(&mut args)? {
         return Ok(());
     }
@@ -392,6 +415,11 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if args.consent_needed {
+        connections::print_choose_sources();
+        return Ok(());
+    }
+
     let rss_before = if args.headless {
         resident_bytes()
     } else {
@@ -400,9 +428,6 @@ fn main() -> Result<()> {
     let mut runtime = build_runtime(&args)?;
     if !args.once && !args.headless {
         install_termination_handlers()?;
-    }
-    if let (Some(config_dir), Some(project)) = (&runtime.config_dir, args.project.as_ref()) {
-        write_selection(config_dir, &normalize_cli_path(project)?)?;
     }
 
     if !args.once && !args.headless && (!io::stdin().is_terminal() || !io::stdout().is_terminal()) {
@@ -431,6 +456,11 @@ fn main() -> Result<()> {
         );
     }
 
+    if runtime.save_preferences {
+        if let (Some(config_dir), Some(project)) = (&runtime.config_dir, args.project.as_ref()) {
+            write_selection(config_dir, &normalize_cli_path(project)?)?;
+        }
+    }
     apply_color_mode(args.color);
     let capabilities = detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT).unwrap_or_default();
     let mut terminal_guard = TerminalModeGuard::enter_alternate()?;
@@ -460,6 +490,7 @@ impl TerminalModeGuard {
         let mut guard = Self::enter_raw()?;
         execute!(io::stdout(), EnterAlternateScreen)?;
         guard.alternate = true;
+        execute!(io::stdout(), EnableBracketedPaste)?;
         Ok(guard)
     }
 
@@ -471,7 +502,13 @@ impl TerminalModeGuard {
         };
         self.raw = false;
         let screen_result = if self.alternate {
-            execute!(io::stdout(), LeaveAlternateScreen, Show).map_err(anyhow::Error::from)
+            execute!(
+                io::stdout(),
+                DisableBracketedPaste,
+                LeaveAlternateScreen,
+                Show
+            )
+            .map_err(anyhow::Error::from)
         } else {
             Ok(())
         };
@@ -534,6 +571,24 @@ fn is_ctrl_c(input: KeyEvent) -> bool {
 }
 
 fn doctor(args: &Args) -> Result<i32> {
+    if args.consent_needed {
+        println!("they-work doctor\nNo sources selected yet. Only folder locations were checked.");
+        print_terminal_report();
+        let value = connections::Connections::from_args(args)?;
+        for (label, path) in [
+            ("Claude Code", value.claude_home),
+            ("Codex", value.codex_home),
+        ] {
+            println!(
+                "{}: {} ({})",
+                label,
+                plain_value(&path.to_string_lossy()),
+                connections::folder_status(&path)
+            );
+        }
+        connections::print_choose_sources();
+        return Ok(0);
+    }
     let config = connections::Connections::from_args(args)?.config();
     let reports = theywork_collect::inspect_selected(&config, now_ms());
 
@@ -541,6 +596,11 @@ fn doctor(args: &Args) -> Result<i32> {
     print_terminal_report();
     for report in &reports {
         print_store_report(report);
+        if !report.home_found || !report.readable {
+            println!("{}: run they-work --setup, select this source, and press e to choose its app data folder. Space turns off a source you do not use.", report.agent.label());
+        } else if report.active_threads == 0 {
+            println!("{}: no recent conversations found. Start a conversation in the original app, then return here. Check its folder with they-work --setup if needed.", report.agent.label());
+        }
     }
     println!("read={READ_PARAGRAPH}");
     println!("discovery_overrides={}", discovery_overrides());
@@ -553,7 +613,9 @@ fn doctor(args: &Args) -> Result<i32> {
         println!("sources=none action=run_they-work_--setup");
     }
     println!("next=they-work --setup (choose sources) | they-work --once (inspect workers)");
-    Ok(i32::from(!found_home || broken_home))
+    Ok(i32::from(
+        !reports.is_empty() && (!found_home || broken_home),
+    ))
 }
 
 fn print_terminal_report() {
@@ -1024,6 +1086,7 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
             start_guard: false,
             initial_project: None,
             config_dir: args.config_dir.clone(),
+            save_preferences: false,
         });
     }
 
@@ -1041,8 +1104,7 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
     let remembered = if explicit.is_none() && !args.all {
         config_dir
             .as_deref()
-            .map(read_selection)
-            .transpose()?
+            .and_then(|directory| read_selection(directory).ok())
             .flatten()
     } else {
         None
@@ -1076,6 +1138,7 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
         start_guard,
         initial_project,
         config_dir,
+        save_preferences: args.may_save(),
     })
 }
 
@@ -1532,6 +1595,7 @@ fn run(
     let preferences = runtime
         .config_dir
         .as_deref()
+        .filter(|_| !runtime.demo)
         .and_then(|directory| fs::read(directory.join("appearance.json")).ok())
         .and_then(|bytes| serde_json::from_slice(&bytes).ok())
         .unwrap_or_default();
@@ -1585,20 +1649,35 @@ fn run(
                 (terminal_cells.width, terminal_cells.height),
             )?;
             let mut pixel_frame = None;
+            let mut native_frame = None;
             terminal.draw(|frame| {
                 ui.draw(frame, &runtime.world);
                 if image_presenter.enabled() {
-                    let snapshot = ui.pixel_frame();
-                    if let Some(area) = snapshot.cell_area() {
-                        skip_image_cells(frame.buffer_mut(), area);
+                    native_frame = Some(frame.buffer_mut().clone());
+                    // Image protocols can erase their old rectangle. Paint
+                    // native text only after that operation has completed.
+                    for cell in &mut frame.buffer_mut().content {
+                        cell.set_skip(true);
                     }
-                    pixel_frame = Some(snapshot);
+                    pixel_frame = Some(ui.pixel_frame().with_text_backgrounds());
                 }
             })?;
-            image_presenter.present(terminal.backend_mut(), pixel_frame)?;
+            if let Some(native_frame) = native_frame {
+                present_composed_frame(
+                    terminal.backend_mut(),
+                    &mut image_presenter,
+                    pixel_frame,
+                    &native_frame,
+                )?;
+            }
 
             if event::poll(FRAME)? {
-                if let TermEvent::Key(input) = event::read()? {
+                let input = event::read()?;
+                if let TermEvent::Paste(text) = input {
+                    ui.handle_paste(&text);
+                    continue;
+                }
+                if let TermEvent::Key(input) = input {
                     if is_ctrl_c(input) {
                         return Ok(());
                     }
@@ -1620,17 +1699,19 @@ fn run(
                                 }
                             }
                             image_presenter.present(terminal.backend_mut(), None)?;
-                            let value = connections::Connections::from_args(&active_args)?;
+                            let mut connection_args = active_args.clone();
+                            connection_args.setup = true;
+                            let value = connections::Connections::from_args(&connection_args)?;
                             let action = connections::show(
                                 terminal,
                                 value,
                                 active_args.config_dir.as_deref(),
+                                active_args.remember.unwrap_or(true),
+                                !active_args.no_save,
                             )?;
                             match action {
-                                connections::Action::Connect(value) => {
-                                    if let Some(directory) = &active_args.config_dir {
-                                        connections::save(directory, &value)?;
-                                    }
+                                connections::Action::Connect { value, remember } => {
+                                    active_args.remember = Some(remember);
                                     value.apply(&mut active_args);
                                     active_args.demo = false;
                                     active_args.setup = false;
@@ -1657,7 +1738,11 @@ fn run(
         }
     })();
     poller.stop();
-    if let Some(directory) = &runtime.config_dir {
+    if let Some(directory) = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| runtime.save_preferences)
+    {
         fs::create_dir_all(directory)?;
         fs::write(
             directory.join("appearance.json"),
@@ -1672,6 +1757,7 @@ struct TerminalImagePresenter {
     surface: Option<ImageSurface>,
     next_frame: Instant,
     last_area: Option<Rect>,
+    last_frame: Option<theywork_render::PixelFrame>,
 }
 
 impl TerminalImagePresenter {
@@ -1688,6 +1774,7 @@ impl TerminalImagePresenter {
             surface,
             next_frame: Instant::now(),
             last_area: None,
+            last_frame: None,
         }
     }
 
@@ -1705,6 +1792,7 @@ impl TerminalImagePresenter {
             surface.resize(output, geometry)?;
             self.next_frame = Instant::now();
             self.last_area = None;
+            self.last_frame = None;
         }
         Ok(())
     }
@@ -1713,21 +1801,23 @@ impl TerminalImagePresenter {
         &mut self,
         output: &mut W,
         pixel_frame: Option<theywork_render::PixelFrame>,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let Some(surface) = self.surface.as_mut() else {
-            return Ok(());
+            return Ok(false);
         };
         let Some(pixel_frame) = pixel_frame else {
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         };
         let Some(area) = pixel_frame.cell_area() else {
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         };
         let rectangle = CellRect::new(area.x, area.y, area.width, area.height);
         let frame_size = (
@@ -1737,22 +1827,40 @@ impl TerminalImagePresenter {
         if surface.geometry().pixel_size(rectangle) != Some(frame_size) {
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         }
         let started = Instant::now();
-        if self.last_area == Some(area) && started < self.next_frame {
-            return Ok(());
+        if self.last_frame.as_ref() == Some(&pixel_frame) {
+            return Ok(true);
+        }
+        if self.last_area == Some(area)
+            && started < self.next_frame
+            && self
+                .last_frame
+                .as_ref()
+                .is_some_and(|previous| previous.text_cells() == pixel_frame.text_cells())
+        {
+            return Ok(true);
         }
         let image = RgbaImage::new(frame_size.0, frame_size.1, pixel_frame.rgba().to_vec())?;
+        surface.clear(output)?;
+        // Remove old text from the art rectangle before replacing its pixels.
+        // ECH is bounded to a row and cannot wrap or scroll at the screen edge.
+        output.write_all(b"\x1b[0m")?;
+        for y in area.y..area.bottom() {
+            write!(output, "\x1b[{};{}H\x1b[{}X", y + 1, area.x + 1, area.width)?;
+        }
         let report = surface.draw(output, &image, rectangle)?;
         output.flush()?;
         self.last_area = Some(area);
+        self.last_frame = Some(pixel_frame);
         if surface.protocol() == theywork_terminal_image::GraphicsProtocol::Sixel {
             self.next_frame =
                 started + sixel_frame_interval(report.written_bytes, started.elapsed());
         }
-        Ok(())
+        Ok(true)
     }
 }
 
@@ -1764,20 +1872,49 @@ fn sixel_frame_interval(bytes: usize, write_time: Duration) -> Duration {
         .max(write_time.saturating_mul(2))
 }
 
-fn skip_image_cells(buffer: &mut Buffer, area: Rect) {
-    let right = area.x.saturating_add(area.width);
-    let bottom = area.y.saturating_add(area.height);
-    for y in area.y..bottom {
-        for x in area.x..right {
-            if let Some(cell) = buffer.cell_mut((x, y)) {
-                cell.set_skip(true);
-            }
+fn present_composed_frame<W: Write>(
+    output: &mut CrosstermBackend<W>,
+    presenter: &mut TerminalImagePresenter,
+    pixels: Option<theywork_render::PixelFrame>,
+    text: &Buffer,
+) -> Result<()> {
+    let area = pixels.as_ref().and_then(|frame| frame.cell_area());
+    let native_cells = pixels
+        .as_ref()
+        .map(|frame| {
+            frame
+                .text_cells()
+                .iter()
+                .map(|(x, y, _)| (*x, *y))
+                .collect::<HashSet<_>>()
+        })
+        .unwrap_or_default();
+    crossterm::queue!(output, crossterm::cursor::SavePosition)?;
+    let visible = presenter.present(output, pixels)?;
+    let mut next_column = 0;
+    output.draw(text.content.iter().enumerate().filter_map(|(index, cell)| {
+        let x = text.area.x + (index % usize::from(text.area.width)) as u16;
+        let y = text.area.y + (index / usize::from(text.area.width)) as u16;
+        if x == text.area.x {
+            next_column = x;
         }
-    }
+        if x < next_column {
+            return None;
+        }
+        next_column =
+            x.saturating_add(ratatui::text::Line::from(cell.symbol()).width().max(1) as u16);
+        (!visible
+            || !area.is_some_and(|area| area.contains((x, y).into()))
+            || native_cells.contains(&(x, y)))
+        .then_some((x, y, cell))
+    }))?;
+    crossterm::queue!(output, crossterm::cursor::RestorePosition)?;
+    Write::flush(output)?;
+    Ok(())
 }
 
 fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> Result<()> {
-    if runtime.demo {
+    if !runtime.save_preferences {
         return Ok(());
     }
     let (Some(config_dir), Some(project)) = (
@@ -2204,6 +2341,75 @@ mod tests {
             outcome: Some(theywork_core::Outcome::Exited(0)),
         });
         assert_eq!(worker_waiting_detail(&worker), None);
+    }
+
+    #[test]
+    fn composed_frames_keep_help_above_images_and_repaint_after_erasure() {
+        let mut world = World::new();
+        for event in theywork_core::demo::events(0) {
+            world.apply(event);
+        }
+        for protocol in [
+            GraphicsProtocol::Sixel,
+            GraphicsProtocol::Iterm2,
+            GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+        ] {
+            let mut ui = Ui::new();
+            ui.set_image_cell_size(Some((8, 16)));
+            ui.handle_key(KeyEvent::new(KeyCode::Char('?'), KeyModifiers::NONE));
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            let pixels = ui.pixel_frame().with_text_backgrounds();
+            assert!(!pixels.text_cells().is_empty());
+            let capabilities = Capabilities {
+                graphics: protocol,
+                cell_size: Some(CellSize::new(8, 16)),
+                terminal_cells: Some((80, 24)),
+            };
+            let mut presenter = TerminalImagePresenter::new(capabilities, (80, 24));
+            let mut output = Vec::new();
+            present_composed_frame(
+                &mut CrosstermBackend::new(&mut output),
+                &mut presenter,
+                Some(pixels.clone()),
+                terminal.backend().buffer(),
+            )
+            .unwrap();
+            let help = output
+                .windows(4)
+                .position(|part| part == b"HELP")
+                .expect("native help text");
+            let image_end = match protocol {
+                GraphicsProtocol::Iterm2 => output.iter().rposition(|byte| *byte == 7).unwrap(),
+                _ => output
+                    .windows(2)
+                    .rposition(|part| part == b"\x1b\\")
+                    .unwrap(),
+            };
+            assert!(
+                help > image_end,
+                "{protocol:?}: text must follow the image and its clearing operations"
+            );
+            let original_length = output.len();
+            present_composed_frame(
+                &mut CrosstermBackend::new(&mut output),
+                &mut presenter,
+                Some(pixels),
+                terminal.backend().buffer(),
+            )
+            .unwrap();
+            let repeated = &output[original_length..];
+            assert!(repeated.windows(4).any(|part| part == b"HELP"));
+            assert!(!repeated
+                .windows(3)
+                .any(|part| part == b"\x1bPq" || part == b"\x1b_G"));
+            assert!(
+                repeated.ends_with(b"\x1b8"),
+                "restore the finder/text cursor after presentation"
+            );
+        }
     }
 
     #[test]

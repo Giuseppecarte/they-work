@@ -1,0 +1,5 @@
+    Checking theywork-core v0.1.0 (/src/crates/theywork-core)
+    Checking theywork-render v0.1.0 (/src/crates/theywork-render)
+    Checking theywork-collect v0.1.0 (/src/crates/theywork-collect)
+    Checking theywork-tui v0.1.0 (/src/crates/theywork-tui)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.50s

@@ -1,5 +1,15 @@
 # Implemented changes
 
+The [third-iteration review](iteration-3/REVIEW.md) records the current result:
+a numbered floor directory, furnished selected office, global project/worker
+finder, task-first inspection, accurate Phone channels, editable source folders
+and optional default persistence. Review also corrected request truncation,
+native text/image composition, and light-theme contrast/background coverage.
+Its verification table and reproduction scripts describe the integrated version.
+No release was published and the branch remains unmerged.
+
+The sections below preserve the first and second iterations as history.
+
 The original verification below records the first iteration. Native-terminal
 feedback reopened the visual audit: [second-iteration requirements](iteration-2/REQUIREMENTS.md).
 The [second-iteration review](iteration-2/REVIEW.md) records a font-compatible

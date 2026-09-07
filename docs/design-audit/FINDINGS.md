@@ -1,5 +1,24 @@
 # Design and usability findings
 
+## Current review: third iteration
+
+The three priorities were locating work across many projects, explaining the
+actual reason for attention, and making source setup persist without a special
+CLI flag. The [third-iteration review](iteration-3/REVIEW.md) supersedes earlier
+completion judgments below. Its evidence includes the running native binary,
+synthetic local stores, terminal restoration, and explicitly labelled font and
+protocol replays.
+
+The review found and corrected: a CCTV-style tower with poor project hierarchy;
+no global conversation search; clipped task titles and misleading historical
+Phone messages; awkward path editing and no ordinary first-run persistence;
+pending requests truncated silently before rendering; native text obscured by
+terminal images; low light-theme contrast and unpainted background gaps. Each
+reproduction and rejected intermediate result is documented in the linked review.
+
+Earlier reports remain below as historical evidence, including their own test
+counts and limits. They are not claims about the final third-iteration screens.
+
 ## Reopened after native-terminal feedback
 
 The user's resize screenshots disproved the first visual completion judgment.

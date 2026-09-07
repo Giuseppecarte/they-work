@@ -14,12 +14,12 @@ SQLite store, SQLite may update an already-existing `-shm` coordination sidecar;
 the container mounts stores read-only, and a cold WAL store without its existing
 sidecars is refused rather than created.
 
-![Three conversations in the side-view office, replayed with Menlo](docs/design-audit/iteration-2/evidence/review3/apple-terminal-3-side-192x58-menlo.png)
+![A software tower with independent project floors and a furnished office](docs/design-audit/iteration-3/evidence/tower-final/tower-6-120x32.png)
 
-The previews replay native macOS PTY output at 192×58 terminal cells through
-CoreText with the installed Menlo font, half blocks and 256 colors. They are
-font replays, not screenshots of Terminal.app. The [audit](docs/design-audit/iteration-2/REVIEW.md)
-records the resize cases and evidence limits.
+The previews reconstruct native macOS PTY output. The tower uses a cell replay;
+the desk and finder use the installed Menlo font through CoreText. They are
+not screenshots of Terminal.app. The [current audit](docs/design-audit/iteration-3/REVIEW.md)
+records the interaction checks, resize cases and evidence limits.
 
 ## Start here
 
@@ -70,13 +70,17 @@ For Docker, use `make run ARGS="--sources all --doctor"` or
 | **The tower** | `0` | all projects and attention counts; the starting view when no floor is selected |
 | **The floor** | `Enter` from the tower | one project's office, with a desk per conversation |
 | **A desk** | `Enter` | one worker up close, with their timeline |
-| **The phone** | `p` | a messaging app: standup, blocked, shipping, watercooler |
+| **The phone** | `p` | Now, Attention, Edits and Messages from recorded conversations |
+| **Find your team** | `/` or `Ctrl+K` | find a project or conversation by name, path, provider or state |
 | **Settings** | `s` | camera, light, theme, colour depth, motion |
 | **Help** | `?` | every key |
 | **Sources** | `c` | choose local providers and folders |
 
 `Tab` / `Shift+Tab` cycle floors; `1`–`9` jump straight to one. In the tower,
 `PageUp` / `PageDown` reach additional floors; `Enter` opens the selected floor.
+Use `/` to search across the tower and open the exact conversation directly.
+In a desk, `PageUp` / `PageDown` scroll history, `Home` shows its beginning and
+`End` returns to the latest state. Recorded history times are labelled UTC.
 Press `!` to jump to a worker needing attention, or `c` to change sources. A tab's dot
 turns amber the moment anyone in that project is blocked, even while you are
 looking somewhere else.
@@ -87,7 +91,9 @@ Keep **Remember on this computer** enabled when connecting to save these choices
 and the selected floor. `--no-save` keeps changes temporary. Git worktrees of the
 same repository share one floor.
 
-![A worker's desk, replayed with Menlo](docs/design-audit/iteration-2/evidence/review3/surface-desk-192x58-menlo.png)
+![A complete current request and recorded history at 80 columns, replayed with Menlo](docs/design-audit/iteration-3/evidence/inspection-final/desk-request-80x24-menlo.png)
+
+![Finding conversations across project floors in the light appearance](docs/design-audit/iteration-3/evidence/finder-final/finder-light-120x32-menlo.png)
 
 Colour means the same thing everywhere. **Shirt** is which agent — orange for
 Claude Code, blue for Codex. The **bar under a name** is status: green running,

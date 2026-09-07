@@ -1,0 +1,49 @@
+{
+  "recorded_at_utc": "2026-09-07T22:02:52.560540+00:00",
+  "source_commit": "e786cec8b6ff91754cab50413b76da93f9d3b771",
+  "branch": "audit/design-and-usability",
+  "native_platform": {
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "native_workspace": {
+    "log": "native-workspace-tests.log",
+    "passed": 258,
+    "failed": 0,
+    "ignored": 2,
+    "groups": 13
+  },
+  "linux_workspace": {
+    "log": "linux-workspace-tests.log",
+    "passed": 258,
+    "failed": 0,
+    "ignored": 2,
+    "groups": 13
+  },
+  "strict_clippy": {
+    "native": "passed",
+    "linux": "passed"
+  },
+  "format": "passed",
+  "native_release": {
+    "path": "target/native-macos/release/they-work",
+    "sha256": "01ea1eb2fbf1bdedd166b4379dcc1bd8889f5278c5c6c1bc4e2fd549ea06cb94",
+    "bytes": 3658192
+  },
+  "final_smokes": [
+    "cli-help.txt",
+    "demo-once.txt",
+    "graphics-pty/results.json"
+  ],
+  "source_setup_pty": {
+    "sessions": 13,
+    "exit_and_terminal_restoration": "passed"
+  },
+  "finder_pty": "all cases passed",
+  "published": false,
+  "limits": [
+    "Two opt-in live-store tests ignored; synthetic fixtures were used.",
+    "PTY/font replays and controlled protocol responses are not terminal-window screenshots.",
+    "Windows/WSL, Linux graphical terminals, Kitty and iTerm2 visual sessions remain unmeasured."
+  ]
+}

@@ -522,9 +522,18 @@ mod tests {
 
     #[test]
     fn windows_canonical_paths_and_wsl_linux_case_keep_project_identity() {
-        assert_eq!(normalize_office_path(r"\\?\C:\Users\Dev\Repo"), "c:/users/dev/repo");
-        assert_eq!(normalize_office_path(r"\\wsl.localhost\Ubuntu\home\Dev\Repo"), "/home/Dev/Repo");
-        assert_ne!(normalize_office_path("/home/Dev/Repo"), normalize_office_path("/home/dev/repo"));
+        assert_eq!(
+            normalize_office_path(r"\\?\C:\Users\Dev\Repo"),
+            "c:/users/dev/repo"
+        );
+        assert_eq!(
+            normalize_office_path(r"\\wsl.localhost\Ubuntu\home\Dev\Repo"),
+            "/home/Dev/Repo"
+        );
+        assert_ne!(
+            normalize_office_path("/home/Dev/Repo"),
+            normalize_office_path("/home/dev/repo")
+        );
     }
 
     #[test]

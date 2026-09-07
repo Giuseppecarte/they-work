@@ -1,0 +1,36 @@
+{
+  "setup-connect-inspect-character-reconnect-settings-quit": {
+    "exit": 0,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  },
+  "persistence": {
+    "sources": true,
+    "appearance": true
+  },
+  "restore": {
+    "exit": 0,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  },
+  "signal": {
+    "exit": 1,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  },
+  "compact": {
+    "exit": 0,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  },
+  "disconnect-all": {
+    "exit": 0,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  },
+  "live-demo-live": {
+    "exit": 0,
+    "terminal_restored": true,
+    "alternate_screen_restored": true
+  }
+}

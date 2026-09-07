@@ -1,0 +1,12 @@
+they-work doctor
+terminal_env TERM="dumb" COLORTERM="" TERM_PROGRAM=unset LANG="C.UTF-8" LC_ALL="C.UTF-8" LC_CTYPE="C.UTF-8"
+terminal_color depth=none reason="colour disabled by NO_COLOR"
+terminal_encoding encoding=half-blocks reason="half-blocks selected because TERM is dumb or cons25; sextant glyph coverage cannot be queried, so force it with THEYWORK_ENCODING=sextants"
+terminal_graphics protocol=none probe="skipped:not_a_tty" cells=unknown cell_pixels=unknown
+terminal_frame mode=cells covered_cells=unknown source_pixels=unknown
+terminal_action=set_THEYWORK_ENCODING=sextants
+codex_home=found path=/Users/gc/.codex discovery=home
+codex_store=readable projects=8 threads=1221 active=15 status=ready action=read_only
+read=Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from state_5.sqlite and thread_history_1.sqlite under ~/.codex/ or ~/.codex/sqlite/. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.
+discovery_overrides=none
+next=they-work --setup (choose sources) | they-work --once (inspect workers)

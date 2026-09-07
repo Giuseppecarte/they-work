@@ -1,0 +1,31 @@
+ 0 TOWER  no floors · c sources · ? help
+  SOFTWARE TOWER  0 floors · 0 workers
+  0 working · 0 idle · 0 waiting · 0 failed
+No conversations found.
+
+Press c to choose local sources, then start a conversation in a project.
+Each project becomes a floor; each conversation becomes a worker.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  arrows move · Enter floor · ! attention · c sources · ? help · q quit

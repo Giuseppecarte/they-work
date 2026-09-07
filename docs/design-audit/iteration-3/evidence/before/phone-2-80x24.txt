@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work!                                 1/1 · c sources · ? help
+  DESK / Review the release plan for database migration and production cutover
+
+▄▄▄▄▄▄▄▄▄▄▄  ┌ PHONE ────────────────────────────────────────────┐ODUCTION CUTOV
+▄▄▄▄▄▄▄▄▄▄▄  │                    ──────                         │
+▄▄▄▄▄▄▄▄▄▄▄  │ they-work  5 workers                              │
+▄▄▄▄▄▄▄▄▄▄▄  │ STANDUP                                           │ace [w]
+▄▄▄▄▄▄▄▄▄▄▄  │ 1 standup   2 blocked   3 ship   4 water          │
+▄▄▄▄▄▄▄▄▄▄▄  │>▄▄▄▄▄ Review the release pl…  blocked  4m 04s ago │y.
+▄▄▄▄▄▄▄▄▄▄▄  │▌▄▄▄▄▄ Waiting for you to review:                  │on-eu-west
+             │▌▄▄▄▄▄ awaiting approval: deploy --project projec… │tomer
+             │▌                                                  │
+             │▌▄▄▄▄▄ Verify the customer i…  blocked  4m 04s ago │
+┌ THIS THREAD│▌▄▄▄▄▄ No recent activity; check thread.           │─────────────┐
+│            │▌▄▄▄▄▄ Waiting; no approval detail available       │             │
+│            │▌                                                  │             │
+│21:23 EDITED│ ▄▄▄▄▄ Investigate the payment se…  failed  5s ago │             │
+│            │ ▄▄▄▄▄ failed • failed 5s • last typing • cargo t… │             │
+│            │       codex · main · 4.3K tokens                  │             │
+│21:23 SAID  │ THE ROOM RIGHT NOW                                │on checklist.│
+│            │ 1 running  1 idle  3 needs you                    │             │
+└────────────│ ↑↓ scroll  Enter thread  ←→ channel  Esc close    │─────────────┘
+ THINKING  RA│                 ━━━━━━━━                          │
+  ↑↓ scroll  └───────────────────────────────────────────────────┘read-only

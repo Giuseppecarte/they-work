@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work!                                    1/1 · / find · ? help
+  DESK / they-work  codex conversation · observed 4m 04s ago · read-only
+
+▄▄┌ PHONE / ATTENTION · 3 ───────────────────────────────────────────────────┐
+▄▄│ they-work · 5 conversations                                              │
+▄▄│ 1 Now  2 Attention  3 Edits  4 Messages                                  │
+▄▄│>▄▄▄▄▄ Investigate the payment service connection refused after deploy    │
+▄▄│ ▄▄▄▄▄ error · 5s ago · codex · they-work                                 │
+▄▄│ ▄▄▄▄▄ Connection refused at payments.internal:443; retry exhausted.      │
+▄▄│       Enter: inspect · check the original conversation                   │
+▄▄│                                                                          │
+▄▄│!▄▄▄▄▄ Review the release plan for database migration and production cut… │
+┌ │ ▄▄▄▄▄ needs review · 4m 04s ago · codex · they-work                      │─┐
+│2│ ▄▄▄▄▄ awaiting approval: deploy --project project-production-eu-west --… │ │
+│ │                                                                          │ │
+│ │!▄▄▄▄▄ Verify the customer import that stopped reporting progress         │ │
+│2│ ▄▄▄▄▄ silent · 4m 04s ago · codex · they-work                            │.│
+│ │ ▄▄▄▄▄ No recent activity. No approval was identified.                    │ │
+│N│                                                                          │ │
+│a│                                                                          │ │
+│-│                                                                          │ │
+└─│ 1/3 · attention first · current state                                    │─┘
+ O│↑↓ select  Enter inspect  ←→ channel  Esc close                           │
+  └──────────────────────────────────────────────────────────────────────────┘

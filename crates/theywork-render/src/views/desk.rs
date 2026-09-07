@@ -5,15 +5,16 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Paragraph, Widget, Wrap};
 use ratatui::Frame;
-use theywork_core::{Activity, Beat, Millis, Office, Outcome, Worker};
+use theywork_core::{Activity, Beat, Millis, Office, Outcome, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
 use crate::sprite::{look_for_worker, SpriteSet};
 
 use super::{
-    below_tab_bar, draw_footer, draw_header, draw_panel, draw_tiny, has_area, human_tokens,
-    paint_opaque, render_worker_with_look, safe_display, short_path, status_style, worker_status,
-    PixelRect, ACCENT, ATTENTION_PANEL, BACKGROUND, GOOD, INK, MUTED, PANEL,
+    below_tab_bar, draw_footer, draw_header, draw_panel, draw_tiny, duration_label, elapsed_ms,
+    has_area, human_tokens, paint_opaque, render_worker_with_look, safe_display, short_path,
+    status_style, worker_status, PixelRect, ACCENT, ATTENTION_PANEL, BACKGROUND, GOOD, INK, MUTED,
+    PANEL,
 };
 
 fn timeline_time(at: Millis) -> String {
@@ -80,11 +81,8 @@ fn timeline_lines(beat: &Beat, width: usize) -> Vec<Line<'static>> {
         chunks.last_mut().expect("one chunk").push_str(&value);
         used += size;
     }
-    let background = if matches!(beat.activity, Activity::Waiting { .. }) {
-        ATTENTION_PANEL
-    } else {
-        BACKGROUND
-    };
+    // Historical requests are evidence, not an outstanding approval badge.
+    let background = BACKGROUND;
     let color = timeline_color(&beat.activity, beat.outcome);
     let mut lines = chunks
         .into_iter()
@@ -126,6 +124,75 @@ fn timeline_lines(beat: &Beat, width: usize) -> Vec<Line<'static>> {
     lines
 }
 
+/// A current observation, kept separate from historical events in both views.
+pub(super) struct InspectionSummary {
+    pub label: &'static str,
+    pub detail: String,
+    pub next_step: &'static str,
+}
+
+pub(super) fn inspection_summary(worker: &Worker, now: Millis) -> InspectionSummary {
+    let detail = worker
+        .activity
+        .detail()
+        .filter(|value| !value.trim().is_empty());
+    match worker_status(worker, now) {
+        WorkerStatus::Blocked if matches!(worker.activity, Activity::Waiting { .. }) => {
+            InspectionSummary {
+                label: "WAITING ON YOU",
+                detail: safe_display(
+                    detail.unwrap_or("The source recorded a request without details."),
+                ),
+                next_step: "Review this request in the original conversation.",
+            }
+        }
+        WorkerStatus::Blocked => InspectionSummary {
+            label: "NEEDS ATTENTION · SILENT",
+            detail: "No recent activity. No approval was identified.".into(),
+            next_step: "Check the original conversation for progress or a problem.",
+        },
+        WorkerStatus::Failed => InspectionSummary {
+            label: "NEEDS ATTENTION · ERROR",
+            detail: safe_display(detail.unwrap_or("The source reported an error without details.")),
+            next_step: "Review the error in the original conversation.",
+        },
+        WorkerStatus::Idle => InspectionSummary {
+            label: "IDLE · LAST UPDATE",
+            detail: safe_display(detail.unwrap_or("No task is currently running.")),
+            next_step: "Continue in the original conversation when you are ready.",
+        },
+        WorkerStatus::Running => InspectionSummary {
+            label: "WORKING · LATEST ACTIVITY",
+            detail: detail
+                .map(safe_display)
+                .unwrap_or_else(|| worker.activity.label().into()),
+            next_step: "Follow the recorded activity below.",
+        },
+    }
+}
+
+// Keep every character available when text wraps, including command whitespace.
+pub(super) fn wrapped_lines(text: &str, width: usize) -> Vec<String> {
+    let mut lines = vec![String::new()];
+    let mut used = 0;
+    for character in safe_display(text).chars() {
+        let size = Span::raw(character.to_string()).width();
+        if used + size > width.max(1) && used > 0 {
+            let current = lines.last_mut().expect("one line");
+            let tail = current
+                .rfind(' ')
+                .filter(|index| *index > 0)
+                .map(|index| current.split_off(index + 1))
+                .unwrap_or_default();
+            used = Span::raw(tail.clone()).width();
+            lines.push(tail);
+        }
+        lines.last_mut().expect("one line").push(character);
+        used += size;
+    }
+    lines
+}
+
 pub(crate) fn draw(
     frame: &mut Frame,
     office: Option<&Office>,
@@ -136,61 +203,49 @@ pub(crate) fn draw(
     scroll: &mut usize,
 ) {
     let area = below_tab_bar(frame.area());
-    if area.width < 16 || area.height < 8 {
-        draw_tiny(frame, "they-work • terminal too small for the desk view");
+    if area.width < 24 || area.height < 12 {
+        draw_tiny(
+            frame,
+            "Desk needs 24 columns × 13 rows. Esc returns to the floor.",
+        );
         return;
     }
     let (Some(office), Some(worker)) = (office, worker) else {
         draw_tiny(frame, "No desk selected.");
         return;
     };
-
-    let branch = worker
-        .git_branch
-        .as_deref()
-        .map(safe_display)
-        .unwrap_or_else(|| "no branch".to_string());
     let status = worker_status(worker, now);
-    let approval_request = matches!(worker.activity, Activity::Waiting { .. });
-    let worker_title = short_path(&worker.name, area.width.saturating_sub(11) as usize);
-    let office_title = short_path(&office.name, area.width.saturating_sub(20) as usize);
+    let summary = inspection_summary(worker, now);
     let (header, mut body, footer) = super::vertical_bands(area, 2, 2);
-    // Keep a readable conversation column on wide screens. The portrait can
-    // grow with the available height without stretching every line of prose.
     let content_width = body.width.min(124);
     body.x += body.width.saturating_sub(content_width) / 2;
     body.width = content_width;
     draw_header(
         frame,
         header,
-        &format!("DESK / {}", worker_title),
         &format!(
-            "{} • {} • {} • branch {}",
-            office_title,
+            "DESK / {}",
+            short_path(&office.name, area.width.saturating_sub(10) as usize)
+        ),
+        &format!(
+            "{} conversation · observed {} ago · read-only",
             worker.agent.label(),
-            status.label(),
-            branch
+            duration_label(elapsed_ms(now, worker.last_seen))
         ),
     );
     draw_footer(
         frame,
-        Rect::new(
-            footer.x,
-            footer.y + footer.height.saturating_sub(1),
-            footer.width,
-            footer.height.min(1),
-        ),
-        "↑↓ scroll  ←→ desks  w character  W reset  p phone  Esc floor · read-only",
+        Rect::new(footer.x, footer.bottom().saturating_sub(1), footer.width, 1),
+        "↑↓ history  PgUp/PgDn page  ←→ desks  / find  p phone  Esc floor",
     );
     if footer.height > 1 {
-        Paragraph::new(Line::from(vec![
-            Span::styled(" THINKING ", Style::default().fg(MUTED)),
-            Span::styled(" RAN / READ ", Style::default().fg(ACCENT)),
-            Span::styled(" EDITED ", Style::default().fg(GOOD)),
-            Span::styled(" SAID ", Style::default().fg(Color::Rgb(232, 131, 74))),
-            Span::styled(" ASKED ", Style::default().fg(super::WARNING)),
-        ]))
-        .style(Style::default().bg(PANEL))
+        let (persona, _) = sprites.persona_label(worker);
+        Paragraph::new(format!(
+            " {persona} · w character   {} tokens · branch {}",
+            human_tokens(worker.tokens_used),
+            safe_display(worker.git_branch.as_deref().unwrap_or("none"))
+        ))
+        .style(Style::default().fg(MUTED).bg(PANEL))
         .render(
             Rect::new(footer.x, footer.y, footer.width, 1),
             frame.buffer_mut(),
@@ -199,28 +254,20 @@ pub(crate) fn draw(
     if !has_area(body) {
         return;
     }
-
     paint_opaque(frame, body, Style::default().bg(BACKGROUND));
-    let large_portrait = body.width >= 100 && body.height >= 32;
-    let profile_height = body
-        .height
-        .min(if large_portrait { 18 } else { 10 })
-        .min(body.height.saturating_sub(3).max(1));
+    let avatar_width = if body.width >= 60 { 11 } else { 0 };
+    let gap = if avatar_width > 0 { 2 } else { 0 };
+    let info_width = body.width.saturating_sub(avatar_width + gap);
+    let title_lines = wrapped_lines(&worker.name, info_width as usize);
+    let title_height = title_lines.len().min(3) as u16;
+    // The request has priority over decorative metadata; leave a usable log.
+    let profile_height = (title_height + 7).min(body.height.saturating_sub(5)).max(1);
     let profile = Rect::new(body.x, body.y, body.width, profile_height);
-    let avatar_width = profile.width.min(if large_portrait { 24 } else { 11 });
-    let avatar = Rect::new(
-        profile.x,
-        profile.y,
-        avatar_width,
-        profile.height.min(if large_portrait { 18 } else { 7 }),
-    );
-    paint_opaque(frame, avatar, Style::default().bg(PANEL));
-    if has_area(avatar) {
+    if avatar_width > 0 {
+        let avatar = Rect::new(profile.x, profile.y, avatar_width, profile.height.min(9));
         canvas.resize_for_cells(avatar.width as usize, avatar.height as usize);
         canvas.fill(PANEL);
         let look = look_for_worker(&office.workers, worker);
-        let width = canvas.width();
-        let height = canvas.height();
         render_worker_with_look(
             canvas,
             sprites,
@@ -228,185 +275,179 @@ pub(crate) fn draw(
             &look,
             now,
             PixelRect {
-                x: canvas.width().saturating_sub(width) / 2,
-                y: canvas.height().saturating_sub(height) / 2,
-                width,
-                height,
+                x: 0,
+                y: 0,
+                width: canvas.width(),
+                height: canvas.height(),
             },
         );
         canvas.render(frame.buffer_mut(), avatar);
     }
-
     let info = Rect::new(
-        profile.x.saturating_add(avatar_width).saturating_add(2),
+        profile.x + avatar_width + gap,
         profile.y,
-        profile.width.saturating_sub(avatar_width.saturating_add(2)),
+        info_width,
         profile.height,
     );
-    if has_area(info) {
-        let (persona, quirk) = sprites.persona_label(worker);
-        let metadata = vec![
-            Line::from(vec![
-                Span::styled(
-                    safe_display(&worker.name).to_uppercase(),
-                    Style::default().fg(INK).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("  {}", worker.agent.label()),
-                    Style::default().fg(ACCENT),
-                ),
-                Span::styled(
-                    format!("  {}", status.label().to_uppercase()),
-                    status_style(status),
-                ),
-            ]),
-            Line::from(Span::styled(
-                format!(
-                    "branch {branch} · thread {}",
-                    short_path(
-                        &worker.id.0,
-                        usize::from(info.width).saturating_sub(branch.len().saturating_add(18))
-                    )
-                ),
-                Style::default().fg(MUTED),
-            )),
-            Line::from(Span::styled(
-                format!("{} tokens", human_tokens(worker.tokens_used)),
-                Style::default().fg(MUTED),
-            )),
-            Line::from(Span::styled(
-                short_path(
-                    &format!("CHARACTER · {persona} · {quirk} [w]"),
-                    info.width as usize,
-                ),
-                Style::default().fg(ACCENT),
-            )),
-        ];
-        Paragraph::new(metadata)
-            .style(Style::default().bg(BACKGROUND))
+    let title_height = title_height.min(info.height);
+    let mut title = title_lines
+        .iter()
+        .take(title_height as usize)
+        .cloned()
+        .collect::<Vec<_>>();
+    if title_lines.len() > title.len() {
+        if let Some(last) = title.last_mut() {
+            *last = short_path(&format!("{last}…"), info.width as usize);
+        }
+    }
+    Paragraph::new(title.into_iter().map(Line::from).collect::<Vec<_>>())
+        .style(Style::default().fg(INK).add_modifier(Modifier::BOLD))
+        .render(
+            Rect::new(info.x, info.y, info.width, title_height),
+            frame.buffer_mut(),
+        );
+    let notice = Rect::new(
+        info.x,
+        info.y + title_height,
+        info.width,
+        info.height.saturating_sub(title_height + 1),
+    );
+    if has_area(notice) {
+        let background = if status.needs_attention() {
+            ATTENTION_PANEL
+        } else {
+            PANEL
+        };
+        let accent = if status == WorkerStatus::Failed {
+            super::HOT
+        } else if status.needs_attention() {
+            super::WARNING
+        } else {
+            ACCENT
+        };
+        paint_opaque(frame, notice, Style::default().bg(background));
+        Paragraph::new(format!(" {}", summary.label))
+            .style(
+                Style::default()
+                    .fg(accent)
+                    .bg(background)
+                    .add_modifier(Modifier::BOLD),
+            )
             .render(
-                Rect::new(info.x, info.y, info.width, info.height.min(4)),
+                Rect::new(notice.x, notice.y, notice.width, 1),
                 frame.buffer_mut(),
             );
-        if info.height > 4 {
-            let notice = Rect::new(
-                info.x,
-                info.y + 4,
-                info.width,
-                info.height.saturating_sub(4).min(5),
-            );
-            let background = if status.needs_attention() {
-                ATTENTION_PANEL
-            } else {
-                PANEL
-            };
-            let accent = if status.needs_attention() {
-                super::WARNING
-            } else {
-                ACCENT
-            };
-            paint_opaque(frame, notice, Style::default().bg(background));
-            let label = match status {
-                theywork_core::WorkerStatus::Blocked if approval_request => " WAITING ON YOU",
-                theywork_core::WorkerStatus::Blocked => " NEEDS ATTENTION",
-                theywork_core::WorkerStatus::Failed => " NEEDS ATTENTION",
-                theywork_core::WorkerStatus::Idle => " LAST UPDATE · IDLE",
-                _ => " CURRENT WORK",
-            };
-            Paragraph::new(label)
-                .style(
-                    Style::default()
-                        .fg(accent)
-                        .bg(background)
-                        .add_modifier(Modifier::BOLD),
-                )
-                .render(
-                    Rect::new(notice.x, notice.y, notice.width, 1),
-                    frame.buffer_mut(),
-                );
-            if notice.height >= 2 {
-                let instruction =
-                    if status == theywork_core::WorkerStatus::Blocked && approval_request {
-                        " Review in the original thread; this view is read-only."
-                    } else if status == theywork_core::WorkerStatus::Blocked {
-                        " No recent activity; check the original conversation."
-                    } else {
-                        " Latest activity"
-                    };
-                Paragraph::new(instruction)
-                    .style(Style::default().fg(INK).bg(background))
-                    .render(
-                        Rect::new(notice.x, notice.y + 1, notice.width, 1),
-                        frame.buffer_mut(),
-                    );
-            }
-            if notice.height >= 3 && notice.width > 2 {
-                let detail = Rect::new(
-                    notice.x + 1,
-                    notice.y + 2,
-                    notice.width - 2,
-                    notice.height - 2,
-                );
-                paint_opaque(frame, detail, Style::default().bg(BACKGROUND));
-                let detail_text =
-                    if status == theywork_core::WorkerStatus::Blocked && !approval_request {
-                        "No approval was identified."
-                    } else {
-                        worker.activity.detail().unwrap_or("No detail available")
-                    };
-                Paragraph::new(safe_display(detail_text))
-                    .style(Style::default().fg(accent).bg(BACKGROUND))
-                    .wrap(Wrap { trim: false })
-                    .render(detail, frame.buffer_mut());
-            }
-            for y in notice.y..notice.y + notice.height {
-                Paragraph::new("▌")
-                    .style(Style::default().fg(accent).bg(background))
-                    .render(Rect::new(notice.x, y, 1, 1), frame.buffer_mut());
+        let detail_height = notice
+            .height
+            .saturating_sub(3)
+            .max(1)
+            .min(notice.height.saturating_sub(1));
+        let detail = Rect::new(
+            notice.x + 1,
+            notice.y + 1,
+            notice.width.saturating_sub(2),
+            detail_height,
+        );
+        let details = wrapped_lines(&summary.detail, detail.width as usize);
+        let mut preview = details
+            .iter()
+            .take(detail.height as usize)
+            .cloned()
+            .collect::<Vec<_>>();
+        if details.len() > preview.len() {
+            if let Some(last) = preview.last_mut() {
+                *last = short_path(&format!("{last}…"), detail.width as usize);
             }
         }
+        Paragraph::new(preview.into_iter().map(Line::from).collect::<Vec<_>>())
+            .style(Style::default().fg(INK).bg(background))
+            .render(detail, frame.buffer_mut());
+        let action = Rect::new(
+            notice.x + 1,
+            detail.bottom(),
+            notice.width.saturating_sub(2),
+            notice.bottom().saturating_sub(detail.bottom()),
+        );
+        Paragraph::new(summary.next_step)
+            .style(Style::default().fg(accent).bg(background))
+            .wrap(Wrap { trim: false })
+            .render(action, frame.buffer_mut());
     }
     let thread = Rect::new(
         body.x,
-        body.y.saturating_add(profile_height),
+        body.y + profile_height,
         body.width,
         body.height.saturating_sub(profile_height),
     );
-    let thread_inner = draw_panel(frame, thread, "THIS THREAD · NEWEST LAST", false);
-    if has_area(thread_inner) {
-        let available = thread_inner.height as usize;
-        let mut lines = worker
-            .history
-            .iter()
-            .flat_map(|beat| timeline_lines(beat, thread_inner.width as usize))
-            .collect::<Vec<_>>();
-        if lines.is_empty() && lines.len() < available {
-            let current = Beat {
-                at: worker.last_seen,
-                activity: worker.activity.clone(),
-                outcome: None,
+    // Context is scrollable too: very long titles and IDs remain recoverable.
+    let width = thread.width.saturating_sub(2) as usize;
+    let mut lines = Vec::new();
+    for (label, value) in [
+        ("Conversation", worker.name.as_str()),
+        ("Thread", worker.id.0.as_str()),
+        ("Branch", worker.git_branch.as_deref().unwrap_or("none")),
+    ] {
+        lines.extend(
+            wrapped_lines(&format!("{label}: {value}"), width)
+                .into_iter()
+                .map(|line| Line::styled(line, Style::default().fg(MUTED))),
+        );
+    }
+    lines.push(Line::from(""));
+    if worker.history.is_empty() {
+        lines.push(Line::styled(
+            "No recorded history for this conversation.",
+            Style::default().fg(MUTED),
+        ));
+        lines.push(Line::from(""));
+    }
+    let mut day = None;
+    for beat in &worker.history {
+        let recorded_day = beat.at.div_euclid(86_400_000);
+        if day != Some(recorded_day) {
+            let days_ago = now.div_euclid(86_400_000).saturating_sub(recorded_day);
+            let label = match days_ago {
+                0 => "Today (UTC)".into(),
+                1 => "Yesterday (UTC)".into(),
+                value if value > 1 => format!("{value} days ago (UTC)"),
+                _ => "Future timestamp (UTC)".into(),
             };
-            lines.extend(timeline_lines(&current, thread_inner.width as usize));
+            lines.push(Line::styled(label, Style::default().fg(MUTED)));
+            day = Some(recorded_day);
         }
-        let max_scroll = lines.len().saturating_sub(available);
-        *scroll = (*scroll).min(max_scroll);
-        let start = max_scroll.saturating_sub(*scroll);
+        lines.extend(timeline_lines(beat, width));
+    }
+    // Current state is distinct from the recorded timeline. An Acted event may
+    // carry the current request without ever producing a historical Beat.
+    lines.push(Line::styled(
+        format!("NOW · {}", summary.label),
+        status_style(status).add_modifier(Modifier::BOLD),
+    ));
+    lines.extend(
+        wrapped_lines(&summary.detail, width)
+            .into_iter()
+            .map(|line| Line::styled(line, Style::default().fg(INK))),
+    );
+    let available = thread.height.saturating_sub(2) as usize;
+    let max_scroll = lines.len().saturating_sub(available);
+    *scroll = (*scroll).min(max_scroll);
+    let start = max_scroll.saturating_sub(*scroll);
+    let range = format!(
+        "HISTORY · UTC · {}–{}/{}{}",
+        start + 1,
+        (start + available).min(lines.len()),
+        lines.len(),
+        if *scroll == 0 {
+            " · latest"
+        } else {
+            " · End latest"
+        }
+    );
+    let thread_inner = draw_panel(frame, thread, &range, false);
+    if has_area(thread_inner) {
         paint_opaque(frame, thread_inner, Style::default().bg(BACKGROUND));
-        for (index, line) in lines.iter().skip(start).take(available).enumerate() {
-            if line.style.bg == Some(ATTENTION_PANEL) {
-                paint_opaque(
-                    frame,
-                    Rect::new(
-                        thread_inner.x,
-                        thread_inner.y + index as u16,
-                        thread_inner.width,
-                        1,
-                    ),
-                    Style::default().bg(ATTENTION_PANEL),
-                );
-            }
-        }
         Paragraph::new(Text::from(lines))
+            .style(Style::default().fg(INK).bg(BACKGROUND))
             .scroll((start.min(u16::MAX as usize) as u16, 0))
             .render(thread_inner, frame.buffer_mut());
     }
@@ -467,6 +508,92 @@ mod tests {
             .map(|cell| cell.symbol())
             .collect::<String>();
         assert!(!profile.contains("an earlier command"));
+    }
+
+    #[test]
+    fn current_request_remains_complete_after_recorded_work() {
+        use ratatui::{backend::TestBackend, Terminal};
+        use theywork_core::{Agent, OfficeId, WorkerId};
+        let office = Office::new(OfficeId("/project".into()), "Project".into());
+        let mut worker = Worker::new(
+            WorkerId("thread".into()),
+            office.id.clone(),
+            Agent::Codex,
+            "Review the release plan for database migration and production cutover".into(),
+            100,
+        );
+        worker.history.push_back(Beat {
+            at: 1,
+            activity: Activity::Typing {
+                detail: "cargo test".into(),
+            },
+            outcome: Some(Outcome::Exited(0)),
+        });
+        let request = "Approve the migration only after verifying the backup exists and confirming the exact production account: project-production-eu-west.";
+        worker.activity = Activity::Waiting {
+            detail: request.into(),
+        };
+        worker.turn_in_flight = true;
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        let mut canvas = Canvas::new(0, 0);
+        let mut scroll = 0;
+        terminal
+            .draw(|frame| {
+                draw(
+                    frame,
+                    Some(&office),
+                    Some(&worker),
+                    &mut canvas,
+                    &SpriteSet::new(),
+                    100,
+                    &mut scroll,
+                )
+            })
+            .unwrap();
+        let rows = terminal
+            .backend()
+            .buffer()
+            .content
+            .chunks(80)
+            .map(|row| row.iter().map(|cell| cell.symbol()).collect::<String>())
+            .collect::<Vec<_>>();
+        let text = rows.join("\n");
+        assert!(text.contains("WAITING ON YOU"));
+        assert!(
+            text.contains("cutover"),
+            "title must retain its distinguishing suffix"
+        );
+        assert!(
+            text.contains("project-production-eu-west."),
+            "full current request must be reachable at the latest position"
+        );
+        assert!(text.contains("HISTORY · UTC"));
+    }
+
+    #[test]
+    fn historical_request_is_not_styled_as_a_current_alert() {
+        let beat = Beat {
+            at: 0,
+            activity: Activity::Waiting {
+                detail: "old approval".into(),
+            },
+            outcome: None,
+        };
+        assert!(timeline_lines(&beat, 80)
+            .iter()
+            .all(|line| line.style.bg != Some(ATTENTION_PANEL)));
+    }
+
+    #[test]
+    fn wrapped_context_preserves_title_and_unicode_at_narrow_widths() {
+        let title = "Review producción café 東京 with the final distinguishing suffix";
+        for width in [1, 8, 25, 60] {
+            let lines = wrapped_lines(title, width);
+            assert_eq!(lines.concat(), title);
+            assert!(lines
+                .iter()
+                .all(|line| Span::raw(line).width() <= width.max(2)));
+        }
     }
 
     #[test]

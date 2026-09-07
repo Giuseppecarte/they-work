@@ -1,0 +1,36 @@
+ 0 TOWER >1 they-work!                                                                1/1 · / find · c sources · ? help
+  DESK / they-work  codex conversation · observed 4m 05s ago · read-only
+
+▄▄▄▄▄▄▄▄▄▄▄  Re┌ PHONE / ATTENTION · 3 ─────────────────────────────────────────────────────────────────┐
+▄▄▄▄▄▄▄▄▄▄▄   W│ they-work · 5 conversations                                                            │
+▄▄▄▄▄▄▄▄▄▄▄   a│ 1 Now  2 Attention  3 Edits  4 Messages                                                │26-09-07
+▄▄▄▄▄▄▄▄▄▄▄   -│>▄▄▄▄▄ Investigate the payment service connection refused after deploy                  │
+▄▄▄▄▄▄▄▄▄▄▄    │ ▄▄▄▄▄ error · 5s ago · codex · they-work                                               │
+▄▄▄▄▄▄▄▄▄▄▄   R│ ▄▄▄▄▄ Connection refused at payments.internal:443; retry exhausted.                    │
+▄▄▄▄▄▄▄▄▄▄▄    │       Enter: inspect · check the original conversation                                 │
+▄▄▄▄▄▄▄▄▄▄▄    │                                                                                        │
+┌ HISTORY · UTC│!▄▄▄▄▄ Review the release plan for database migration and production cutover            │──────────────┐
+│Conversation: │ ▄▄▄▄▄ needs review · 4m 05s ago · codex · they-work                                    │              │
+│Thread: person│ ▄▄▄▄▄ awaiting approval: deploy --project project-production-eu-west --require-backup… │              │
+│Branch: main  │                                                                                        │              │
+│              │!▄▄▄▄▄ Verify the customer import that stopped reporting progress                       │              │
+│Today (UTC)   │ ▄▄▄▄▄ silent · 4m 05s ago · codex · they-work                                          │              │
+│21:36 RAN     │ ▄▄▄▄▄ No recent activity. No approval was identified.                                  │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│21:37 EDITED  │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│21:37 SAID    │                                                                                        │              │
+│              │                                                                                        │              │
+│NOW · WAITING │                                                                                        │              │
+│awaiting appro│                                                                                        │gration       │
+│customer-accou│                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+└──────────────│ 1/3 · attention first · current state                                                  │──────────────┘
+ Original · w c│↑↓ select  Enter inspect  ←→ channel  Esc close                                         │
+  ↑↓ history  P└────────────────────────────────────────────────────────────────────────────────────────┘

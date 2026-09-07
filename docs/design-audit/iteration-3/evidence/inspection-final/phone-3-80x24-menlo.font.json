@@ -1,0 +1,19 @@
+{
+  "actual_font_runs" : {
+    "Menlo-Bold" : 216,
+    "Menlo-Regular" : 609,
+    "Monaco" : 59
+  },
+  "baseline_from_bottom" : 4.2451171875,
+  "cell_height" : 21,
+  "cell_width" : 11,
+  "columns" : 80,
+  "font" : "Menlo-Regular",
+  "font_points" : 18,
+  "method" : "Actual CoreText glyph raster with full cell backgrounds and clipping; captured buffer replay, not a Terminal.app screenshot",
+  "rows" : 24,
+  "source" : "docs\/design-audit\/iteration-3\/evidence\/inspection-final\/phone-3-80x24.cells.json",
+  "unsupported_symbols" : [
+
+  ]
+}

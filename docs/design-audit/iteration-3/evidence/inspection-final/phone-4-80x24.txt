@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work!                                    1/1 · / find · ? help
+  DESK / they-work  codex conversation · observed 4m 06s ago · read-only
+
+▄▄┌ PHONE / MESSAGES · 5 ────────────────────────────────────────────────────┐
+▄▄│ they-work · 5 conversations                                              │
+▄▄│ 1 Now  2 Attention  3 Edits  4 Messages                                  │
+▄▄│>▄▄▄▄▄ Investigate the payment service connection refused after deploy    │
+▄▄│ ▄▄▄▄▄ recorded · 11s ago · codex · they-work                             │
+▄▄│ ▄▄▄▄▄ talking • Verified the test outcome and recorded the migration     │
+▄▄│       checklist.                                                         │
+▄▄│       Enter: full history and current state                              │
+▄▄│                                                                          │
+┌ │ ▄▄▄▄▄ Review the accessibility findings and keyboard navigation          │─┐
+│2│ ▄▄▄▄▄ recorded · 11s ago · codex · they-work                             │ │
+│ │ ▄▄▄▄▄ talking • Verified the test outcome and recorded the migration ch… │ │
+│ │                                                                          │ │
+│2│ ▄▄▄▄▄ Prepare release notes for the customer dashboard                   │.│
+│ │ ▄▄▄▄▄ recorded · 11s ago · codex · they-work                             │ │
+│N│ ▄▄▄▄▄ talking • Verified the test outcome and recorded the migration ch… │ │
+│a│                                                                          │ │
+│-│                                                                          │ │
+└─│ 1/5 · newest first · recorded history                                    │─┘
+ O│↑↓ select  Enter inspect  ←→ channel  Esc close                           │
+  └──────────────────────────────────────────────────────────────────────────┘

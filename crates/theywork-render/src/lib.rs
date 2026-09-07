@@ -664,6 +664,13 @@ impl Ui {
     /// Draw the current view.
     pub fn draw(&mut self, f: &mut Frame, world: &World) {
         self.canvas.begin_frame();
+        views::paint_opaque(
+            f,
+            f.area(),
+            ratatui::style::Style::default()
+                .fg(views::INK)
+                .bg(views::BACKGROUND),
+        );
         self.sprites.set_wardrobe(&self.wardrobe);
         self.sprites.set_office_palettes(&self.office_palettes);
         self.canvas.set_color_depth(self.color_depth);
@@ -1470,6 +1477,24 @@ mod m3_tests {
         assert!(
             ui.pixel_frame().cell_area().is_none(),
             "never reuse the preceding room rectangle when no art is drawn"
+        );
+    }
+
+    #[test]
+    fn sparse_tower_uses_the_selected_theme_between_panels() {
+        let world = world_with_office_counts(&[1], false);
+        let mut ui = Ui::new();
+        ui.restore_preferences(&RendererPreferences {
+            light: true,
+            ..Default::default()
+        });
+        ui.color_depth = ColorDepth::TrueColor;
+        ui.open_tower();
+        let mut terminal = Terminal::new(TestBackend::new(120, 50)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert_eq!(
+            terminal.backend().buffer()[(5, 40)].bg,
+            views::LIGHT_BACKGROUND
         );
     }
 

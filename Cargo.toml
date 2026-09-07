@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/theywork-core",
+    "crates/theywork-control",
     "crates/theywork-collect",
     "crates/theywork-terminal-image",
     "crates/theywork-render",
@@ -18,6 +19,7 @@ description = "A pixel-art virtual office for watching your AI coding agents wor
 
 [workspace.dependencies]
 theywork-core = { path = "crates/theywork-core" }
+theywork-control = { path = "crates/theywork-control" }
 theywork-collect = { path = "crates/theywork-collect" }
 theywork-render = { path = "crates/theywork-render" }
 

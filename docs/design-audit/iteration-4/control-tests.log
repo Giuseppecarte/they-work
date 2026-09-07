@@ -1,0 +1,41 @@
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_control-e96669f4884d25a1)
+
+running 2 tests
+test supervisor::tests::structured_reply_rejects_other_question_ids_and_nontext_answers ... ok
+test supervisor::tests::permission_replies_cannot_expand_paths_network_or_lifetime ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/control.rs (target/native-macos/debug/deps/control-bee42b1c60a8333b)
+
+running 9 tests
+test cancelled_turn_clears_approvals_and_external_ids_have_no_authority ... ok
+test approvals_require_current_request_and_single_action_decision ... ok
+test closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt ... ok
+test complete_and_disconnected_turns_do_not_stay_controllable_as_working ... ok
+test explicit_delegations_create_three_people_and_results_without_granting_child_control ... ok
+test owner_permissions_token_authentication_and_source_binding_are_enforced ... ok
+test supervisor_process_entry ... ok
+test connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start ... ok
+test uncertain_send_is_durable_and_restart_never_replays_or_reconnects ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.27s
+
+     Running tests/native.rs (target/native-macos/debug/deps/native-0fd973f523a64642)
+
+running 4 tests
+test ctrl_c_interrupts_native_child_and_returns_to_parent_in_a_real_pty ... ok
+test native_console_process_entry ... ok
+test attach_requires_fresh_same_source_live_background_and_never_resumes_a_stopped_job ... ok
+test native_login_and_prompt_use_literal_arguments_and_official_config_home ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+   Doc-tests theywork_control
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

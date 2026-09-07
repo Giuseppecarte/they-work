@@ -25,7 +25,7 @@ const MIN_HEIGHT: u16 = 7;
 const ISO_MIN_WIDTH: u16 = 128;
 const ISO_MIN_HEIGHT: u16 = 36;
 const TOP_DOWN_MIN_WIDTH: u16 = 80;
-const TOP_DOWN_MIN_HEIGHT: u16 = 24;
+const TOP_DOWN_MIN_HEIGHT: u16 = 16;
 const MANAGER_TRAVEL_MS: u64 = 2_400;
 const MANAGER_HOLD_MS: u64 = 1_800;
 const SKY_CYCLE_MS: u64 = 90_000;
@@ -161,7 +161,7 @@ pub(crate) fn effective_projection(projection: Projection, width: u16, height: u
         Projection::Auto if width >= TOP_DOWN_MIN_WIDTH && height >= TOP_DOWN_MIN_HEIGHT => {
             Projection::TopDown
         }
-        Projection::Auto if width >= 110 && height < TOP_DOWN_MIN_HEIGHT => Projection::Side,
+        Projection::Auto if width >= 60 && height >= 13 => Projection::Side,
         Projection::Auto => Projection::List,
         other => other,
     }
@@ -1475,17 +1475,6 @@ fn worker_plate_name(worker_name: &str, office_name: &str) -> String {
     worker_name.to_string()
 }
 
-fn block_text_step(scale: usize) -> usize {
-    6usize.saturating_mul(scale.max(1))
-}
-
-fn block_text_width(text: &str, scale: usize) -> usize {
-    let count = text.chars().count();
-    count
-        .saturating_mul(block_text_step(scale))
-        .saturating_sub(scale.max(1))
-}
-
 fn sign_lines(label: &str) -> Vec<String> {
     let chars = label.chars().collect::<Vec<_>>();
     if chars.len() <= 16 {
@@ -1499,65 +1488,6 @@ fn sign_lines(label: &str) -> Vec<String> {
     let first = chars[..split].iter().collect::<String>();
     let second = chars[split..].iter().collect::<String>();
     vec![first, second]
-}
-
-fn draw_project_name(canvas: &mut Canvas, label: &str, floor_top: usize) {
-    if canvas.width() == 0 || canvas.height() == 0 {
-        return;
-    }
-    let lines = sign_lines(label);
-    let scale = if lines.len() == 1
-        && lines[0].chars().count() <= 8
-        && block_text_width(&lines[0], 2) <= canvas.width()
-    {
-        2
-    } else {
-        1
-    };
-    let line_pitches = lines
-        .iter()
-        .map(|line| 7 * scale + block_text_width(line, scale) / 2 + 2)
-        .collect::<Vec<_>>();
-    let total_height = line_pitches.iter().sum::<usize>().saturating_sub(2);
-    let mut line_top = floor_top.saturating_sub(total_height.saturating_add(1));
-    for (line_index, line) in lines.iter().enumerate() {
-        let width = block_text_width(line, scale);
-        if width == 0 {
-            continue;
-        }
-        let x0 = canvas.width().saturating_sub(width) / 2;
-        for (character_index, character) in line.chars().enumerate() {
-            let glyph = glyph_5x7(character);
-            let glyph_x = x0 + character_index * block_text_step(scale);
-            for (row_index, bits) in glyph.iter().enumerate() {
-                for column_index in 0..5 {
-                    if bits & (1 << (4 - column_index)) == 0 {
-                        continue;
-                    }
-                    for sy in 0..scale {
-                        for sx in 0..scale {
-                            let x = glyph_x + column_index * scale + sx;
-                            let logical_x = x.saturating_sub(x0);
-                            let y = line_top + row_index * scale + sy + logical_x / 2;
-                            for depth in (1..=6).rev() {
-                                let offset = depth * 2;
-                                let color = if depth >= 4 { TITLE_SIGN } else { TITLE_BODY };
-                                set_sign_pixel(
-                                    canvas,
-                                    x as i32 - offset,
-                                    y as i32 + offset,
-                                    color,
-                                    floor_top,
-                                );
-                            }
-                            set_sign_pixel(canvas, x as i32, y as i32, TITLE_COLOR, floor_top);
-                        }
-                    }
-                }
-            }
-        }
-        line_top = line_top.saturating_add(line_pitches[line_index]);
-    }
 }
 
 fn blit_scaled_signed(
@@ -1965,6 +1895,64 @@ pub(crate) fn draw_room_scene(
     grid
 }
 
+fn draw_flat_project_sign(canvas: &mut Canvas, label: &str, floor_top: usize) {
+    let reserve = canvas.pixels_per_cell().1 * 2;
+    let available_height = floor_top.saturating_sub(reserve + 1);
+    let available_width = canvas.width().saturating_sub(8);
+    if available_height < 5 || available_width < 3 {
+        return;
+    }
+    let compact = label.chars().count() * 6 > available_width || available_height < 7;
+    let (glyph_width, glyph_height) = if compact { (3, 5) } else { (5, 7) };
+    let characters = label
+        .chars()
+        .take((available_width + 1) / (glyph_width + 1))
+        .collect::<Vec<_>>();
+    let width = characters
+        .len()
+        .saturating_mul(glyph_width + 1)
+        .saturating_sub(1);
+    if width == 0 {
+        return;
+    }
+    let scale = (available_width / width)
+        .min(available_height / glyph_height)
+        .max(1);
+    let x0 = (canvas.width() - width * scale) / 2;
+    let y0 = reserve + (available_height - glyph_height * scale) / 2;
+    fill_rect(
+        canvas,
+        x0.saturating_sub(2) as i32,
+        y0.saturating_sub(1) as i32,
+        (width * scale + 4) as i32,
+        (glyph_height * scale + 2) as i32,
+        PANEL,
+    );
+    for (index, character) in characters.into_iter().enumerate() {
+        let glyph = if compact {
+            let short = compact_glyph(character);
+            [short[0], short[1], short[2], short[3], short[4], 0, 0]
+        } else {
+            glyph_5x7(character)
+        };
+        for (row, bits) in glyph.iter().take(glyph_height).enumerate() {
+            for column in 0..glyph_width {
+                if bits & (1 << (glyph_width - 1 - column)) != 0 {
+                    set_sign_block(
+                        canvas,
+                        (x0 + (index * (glyph_width + 1) + column) * scale) as i32,
+                        (y0 + row * scale) as i32,
+                        scale,
+                        scale,
+                        TITLE_COLOR,
+                        floor_top,
+                    );
+                }
+            }
+        }
+    }
+}
+
 fn draw_top_down_scene(
     canvas: &mut Canvas,
     office: &Office,
@@ -1976,8 +1964,8 @@ fn draw_top_down_scene(
 ) {
     canvas.clear();
     let floor_top = (canvas.height() / 3).max(4).min(canvas.height());
-    draw_backdrop(canvas, floor_top, now);
-    draw_project_name(canvas, &project_label(&office.name), floor_top);
+    canvas.fill(PANEL);
+    draw_flat_project_sign(canvas, &project_label(&office.name), floor_top);
     fill_rect(
         canvas,
         0,
@@ -2046,10 +2034,20 @@ fn draw_top_down_scene(
         let Some(look) = looks.get(slot) else {
             continue;
         };
-        let worker_width = cell_width.saturating_sub(3).clamp(5, 12);
-        let worker_height = cell_height.saturating_sub(5).clamp(6, 18);
+        let (max_width, max_height) = character_budget(canvas);
+        let desk_height = canvas.scale_image_sprite_height(4);
+        let gap = canvas.scale_image_sprite_height(1);
+        let worker_width = cell_width
+            .saturating_sub(canvas.scale_image_sprite_width(3))
+            .min(max_width)
+            .max(1);
+        let worker_height = cell_height
+            .saturating_sub(desk_height + gap)
+            .min(max_height)
+            .max(1);
         let worker_x = cell_x.saturating_add(cell_width.saturating_sub(worker_width) / 2);
-        let worker_y = cell_y.saturating_add(cell_height.saturating_sub(worker_height + 4));
+        let worker_y =
+            cell_y.saturating_add(cell_height.saturating_sub(worker_height + desk_height));
         render_worker_with_look(
             canvas,
             sprites,
@@ -2063,10 +2061,13 @@ fn draw_top_down_scene(
                 height: worker_height,
             },
         );
-        let desk_width = cell_width.saturating_sub(2).clamp(5, 16);
+        let desk_width = cell_width
+            .saturating_sub(2)
+            .min(canvas.scale_image_sprite_width(16))
+            .max(1);
         let desk_x = cell_x.saturating_add(cell_width.saturating_sub(desk_width) / 2);
-        let desk_y = cell_y.saturating_add(cell_height.saturating_sub(4));
-        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, 4);
+        let desk_y = cell_y.saturating_add(cell_height.saturating_sub(desk_height));
+        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, desk_height);
     }
 
     if canvas.width() >= 8 {
@@ -2081,6 +2082,18 @@ fn draw_top_down_scene(
     }
 }
 
+fn character_budget(canvas: &Canvas) -> (usize, usize) {
+    if canvas.has_image_density() {
+        (72, 102)
+    } else {
+        match canvas.encoding() {
+            PixelEncoding::Sextants => (14, 20),
+            PixelEncoding::Quadrants => (14, 10),
+            PixelEncoding::HalfBlocks => (7, 10),
+        }
+    }
+}
+
 fn draw_side_scene(
     canvas: &mut Canvas,
     office: &Office,
@@ -2092,7 +2105,7 @@ fn draw_side_scene(
     canvas.clear();
     let floor_top = canvas.height().saturating_mul(2) / 3;
     draw_backdrop(canvas, floor_top, now);
-    draw_project_name(canvas, &project_label(&office.name), floor_top);
+    draw_flat_project_sign(canvas, &project_label(&office.name), floor_top);
     fill_rect(
         canvas,
         0,
@@ -2126,14 +2139,22 @@ fn draw_side_scene(
             continue;
         };
         let x = (slot + 1).saturating_mul(canvas.width()) / (count + 1);
-        let desk_width = (canvas.width() / count).clamp(7, 18);
+        let desk_width = (canvas.width() / count)
+            .min(canvas.scale_image_sprite_width(18))
+            .max(1);
+        let desk_height = canvas.scale_image_sprite_height(4);
         let desk_x = x.saturating_sub(desk_width / 2);
-        let desk_y = floor_top.saturating_sub(4);
-        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, 4);
-        let worker_width = desk_width.saturating_sub(2).clamp(5, 12);
-        let worker_height = floor_top.saturating_sub(6).clamp(6, 18);
+        let desk_y = floor_top.saturating_sub(desk_height);
+        canvas.blit_scaled(&sprites.desk, desk_x, desk_y, desk_width, desk_height);
+        let (max_width, max_height) = character_budget(canvas);
+        let worker_width = desk_width.saturating_sub(2).min(max_width).max(1);
+        let worker_height = floor_top
+            .saturating_sub(desk_height + canvas.scale_image_sprite_height(2))
+            .min(max_height)
+            .max(1);
         let worker_x = x.saturating_sub(worker_width / 2);
-        let worker_y = floor_top.saturating_sub(worker_height + 5);
+        let worker_y = floor_top
+            .saturating_sub(worker_height + desk_height + canvas.scale_image_sprite_height(1));
         render_worker_with_look(
             canvas,
             sprites,
@@ -2565,7 +2586,11 @@ fn draw_projection_nameplates(
         let label_width = width.min(24);
         let status = worker_status(worker, now);
         let prefix = if start + slot == selected {
-            ">"
+            match status {
+                WorkerStatus::Blocked => "> !",
+                WorkerStatus::Failed => "> ×",
+                _ => ">",
+            }
         } else if status == WorkerStatus::Blocked {
             "!"
         } else if status == WorkerStatus::Failed {
@@ -2588,8 +2613,10 @@ fn draw_projection_nameplates(
             .min(body.x.saturating_add(body.width.saturating_sub(1)));
         let y = match projection {
             Projection::TopDown => body.y.saturating_add(
-                ((row + 1).saturating_mul(usize::from(body.height)) / rows).saturating_sub(1)
-                    as u16,
+                usize::from(body.height)
+                    .saturating_mul(rows + 2 * (row + 1))
+                    .div_ceil(3 * rows)
+                    .saturating_sub(1) as u16,
             ),
             Projection::Side | Projection::Iso | Projection::Auto | Projection::List => {
                 body.y.saturating_add(body.height.saturating_sub(1))
@@ -2635,7 +2662,12 @@ pub(crate) fn draw(
 
     let body_height = area.height.saturating_sub(4);
     let effective = effective_projection(projection, area.width, body_height);
-    let layout = desk_layout(office.workers.len(), area.width, body_height);
+    let mut layout = desk_layout(office.workers.len(), area.width, body_height);
+    if effective == Projection::Side && layout.columns > 0 {
+        layout.rows = 1;
+        layout.page_size = layout.columns;
+        layout.pages = office.workers.len().div_ceil(layout.page_size);
+    }
     let page = if layout.page_size == 0 {
         0
     } else {
@@ -3851,8 +3883,6 @@ mod tests {
         let longish = project_label("/workspace/beta-platform");
         assert_eq!(longish, "BETA-PLATFORM");
         assert_eq!(sign_lines(&longish), vec!["BETA-PLATFORM"]);
-        assert!(block_text_width(&longish, 2) > 100);
-        assert!(block_text_width(&longish, 1) <= 100);
         let label = project_label("/workspace/very-long-project-name/with spaces");
         assert!(label.contains('·'));
         assert_eq!(sign_lines(&label).len(), 1);
@@ -3958,7 +3988,7 @@ mod tests {
         );
         assert_eq!(
             effective_projection(Projection::Auto, 80, 19),
-            Projection::List
+            Projection::TopDown
         );
         assert_eq!(
             effective_projection(Projection::Auto, 32, 7),
@@ -3966,18 +3996,89 @@ mod tests {
         );
         assert_eq!(
             effective_projection(Projection::Auto, 110, 20),
+            Projection::TopDown
+        );
+        assert_eq!(
+            effective_projection(Projection::Auto, 60, 13),
             Projection::Side
+        );
+        assert_eq!(
+            effective_projection(Projection::Auto, 59, 19),
+            Projection::List
         );
         assert_eq!(
             effective_projection(Projection::Side, 80, 50),
             Projection::Side
         );
     }
+
+    #[test]
+    fn common_terminal_draws_workers_and_labels_instead_of_a_plain_list() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let id = OfficeId("/small-office".into());
+        let mut office = Office::new(id.clone(), "Small office".into());
+        office.workers = (0..5)
+            .map(|index| {
+                Worker::new(
+                    WorkerId(format!("small-{index}")),
+                    id.clone(),
+                    Agent::Codex,
+                    format!("worker {index}"),
+                    0,
+                )
+            })
+            .collect();
+        for encoding in PixelEncoding::ALL {
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                0,
+                0,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            terminal
+                .draw(|frame| {
+                    draw(
+                        frame,
+                        Some(&office),
+                        &mut canvas,
+                        &SpriteSet::new(),
+                        0,
+                        0,
+                        Projection::Auto,
+                        true,
+                    );
+                })
+                .unwrap();
+            let text = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert!(text.contains("top-down"));
+            for index in 0..5 {
+                assert!(
+                    text.contains(&format!("worker {index}")),
+                    "missing label at {encoding:?}"
+                );
+            }
+            assert!(
+                canvas
+                    .pixel_frame()
+                    .rgb()
+                    .chunks_exact(3)
+                    .any(|pixel| pixel == [79, 158, 232]),
+                "missing worker clothing at {encoding:?}"
+            );
+        }
+    }
     #[test]
     fn project_sign_stays_above_floor_and_within_bounded_area() {
         let mut canvas =
             crate::canvas::Canvas::with_color_depth(80, 40, crate::canvas::ColorDepth::TrueColor);
-        draw_project_name(&mut canvas, "A", 30);
+        draw_flat_project_sign(&mut canvas, "A", 30);
         let sign_colors = [TITLE_COLOR, TITLE_BODY, TITLE_SIGN];
         let mut sign_pixels = 0;
         for x in 0..canvas.width() {
@@ -4006,10 +4107,10 @@ mod tests {
     }
 
     #[test]
-    fn project_sign_has_face_body_and_six_step_base_layers() {
+    fn compact_project_sign_keeps_a_flat_face_clear_of_alert_rows() {
         let mut canvas =
             crate::canvas::Canvas::with_color_depth(80, 40, crate::canvas::ColorDepth::TrueColor);
-        draw_project_name(&mut canvas, "A", 30);
+        draw_flat_project_sign(&mut canvas, "A", 30);
         let count_color = |color| {
             (0..canvas.width())
                 .flat_map(|x| (0..canvas.height()).map(move |y| (x, y)))
@@ -4017,8 +4118,11 @@ mod tests {
                 .count()
         };
         assert!(count_color(TITLE_COLOR) > 0);
-        assert!(count_color(TITLE_BODY) > 0);
-        assert!(count_color(TITLE_SIGN) > 0);
+        assert_eq!(count_color(TITLE_BODY), 0);
+        assert_eq!(count_color(TITLE_SIGN), 0);
+        for y in 0..canvas.pixels_per_cell().1 * 2 {
+            assert!((0..canvas.width()).all(|x| canvas.pixel(x, y) != Some(TITLE_COLOR)));
+        }
     }
     #[test]
     fn worker_plate_names_preserve_distinguishing_suffixes() {

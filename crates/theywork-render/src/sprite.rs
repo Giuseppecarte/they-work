@@ -1237,6 +1237,7 @@ mod tests {
         assert_eq!(sprite.pixel(0, 1), None);
         assert_eq!(sprite.pixel(1, 1), Some(Color::Red));
         assert_eq!(sprite.pixel(2, 0), None);
+        assert_eq!(sprite.pixel(3, 0), None);
         assert_eq!(sprite.pixel(0, 2), None);
     }
 

@@ -195,11 +195,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
                     .scale_image_sprite_height(full.height())
                     .min(floor_start.saturating_sub(1).max(1))
                     .max(1);
-                let pixel_width = if available_width >= 24 && available_height >= 34 {
-                    1
-                } else {
-                    super::compact_pixel_width(canvas)
-                };
+                let pixel_width = super::sprite_pixel_width(canvas);
                 let sprite = sprites.worker_frame_fitting(
                     worker,
                     look,

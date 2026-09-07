@@ -560,7 +560,7 @@ fn doctor_explains_the_published_container_terminal_fallback() {
     assert!(text.contains("sextant glyph coverage cannot be queried"));
     assert!(text.contains("terminal_graphics protocol=none probe=\"skipped:not_a_tty\""));
     assert!(text.contains("terminal_frame mode=cells covered_cells=unknown source_pixels=unknown"));
-    assert!(text.contains("terminal_action=set_THEYWORK_ENCODING=sextants"));
+    assert!(text.contains("terminal_action=they-work --demo (press s to compare pixel encodings with your terminal font)"));
 }
 
 #[test]

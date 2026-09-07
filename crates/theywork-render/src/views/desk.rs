@@ -154,7 +154,12 @@ pub(crate) fn draw(
     let approval_request = matches!(worker.activity, Activity::Waiting { .. });
     let worker_title = short_path(&worker.name, area.width.saturating_sub(11) as usize);
     let office_title = short_path(&office.name, area.width.saturating_sub(20) as usize);
-    let (header, body, footer) = super::vertical_bands(area, 2, 2);
+    let (header, mut body, footer) = super::vertical_bands(area, 2, 2);
+    // Keep a readable conversation column on wide screens. The portrait can
+    // grow with the available height without stretching every line of prose.
+    let content_width = body.width.min(124);
+    body.x += body.width.saturating_sub(content_width) / 2;
+    body.width = content_width;
     draw_header(
         frame,
         header,
@@ -196,13 +201,19 @@ pub(crate) fn draw(
     }
 
     paint_opaque(frame, body, Style::default().bg(BACKGROUND));
+    let large_portrait = body.width >= 100 && body.height >= 32;
     let profile_height = body
         .height
-        .min(10)
+        .min(if large_portrait { 18 } else { 10 })
         .min(body.height.saturating_sub(3).max(1));
     let profile = Rect::new(body.x, body.y, body.width, profile_height);
-    let avatar_width = profile.width.min(11);
-    let avatar = Rect::new(profile.x, profile.y, avatar_width, profile.height.min(7));
+    let avatar_width = profile.width.min(if large_portrait { 24 } else { 11 });
+    let avatar = Rect::new(
+        profile.x,
+        profile.y,
+        avatar_width,
+        profile.height.min(if large_portrait { 18 } else { 7 }),
+    );
     paint_opaque(frame, avatar, Style::default().bg(PANEL));
     if has_area(avatar) {
         canvas.resize_for_cells(avatar.width as usize, avatar.height as usize);
@@ -299,6 +310,7 @@ pub(crate) fn draw(
                 theywork_core::WorkerStatus::Blocked if approval_request => " WAITING ON YOU",
                 theywork_core::WorkerStatus::Blocked => " NEEDS ATTENTION",
                 theywork_core::WorkerStatus::Failed => " NEEDS ATTENTION",
+                theywork_core::WorkerStatus::Idle => " LAST UPDATE · IDLE",
                 _ => " CURRENT WORK",
             };
             Paragraph::new(label)

@@ -707,7 +707,7 @@ fn graphics_protocol_label(protocol: GraphicsProtocol) -> &'static str {
 
 fn terminal_action(renderer: &RendererDiagnostics) -> &'static str {
     if renderer.encoding != theywork_render::PixelEncoding::Sextants {
-        "set_THEYWORK_ENCODING=sextants"
+        "they-work --demo (press s to compare pixel encodings with your terminal font)"
     } else if renderer.color_depth != ColorDepth::TrueColor {
         "set_THEYWORK_COLOR=true"
     } else {

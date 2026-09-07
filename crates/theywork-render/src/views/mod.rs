@@ -17,7 +17,9 @@ use ratatui::Frame;
 use theywork_core::{Millis, Office, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
-use crate::sprite::{Sprite, SpriteSet, WorkerLook, WORKER_HEAD_HEIGHT};
+#[cfg(test)]
+use crate::sprite::WORKER_HEAD_HEIGHT;
+use crate::sprite::{Sprite, SpriteSet, WorkerLook};
 
 pub(crate) const BACKGROUND: Color = Color::Rgb(13, 11, 20);
 pub(crate) const WALL: Color = Color::Rgb(58, 51, 88);
@@ -369,8 +371,8 @@ pub(crate) fn render_worker_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let horizontal_scale = compact_pixel_width(canvas);
-    let sprite = if placement.width >= 24 && placement.height >= 34 {
+    let horizontal_scale = sprite_pixel_width(canvas);
+    let sprite = if placement.width / horizontal_scale >= 24 && placement.height >= 34 {
         sprites.worker_frame(worker, *look, now)
     } else {
         sprites.worker_frame_fitting(
@@ -397,16 +399,12 @@ pub(crate) fn render_worker_head_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let width = if placement.width >= 24 && placement.height >= WORKER_HEAD_HEIGHT {
-        placement.width
-    } else {
-        placement.width / compact_pixel_width(canvas)
-    };
+    let width = placement.width / sprite_pixel_width(canvas);
     let (sprite, source) = sprites.worker_head_fitting(worker, *look, now, width, placement.height);
     render_sprite_region(canvas, &sprite, source, placement);
 }
 
-fn compact_pixel_width(canvas: &Canvas) -> usize {
+fn sprite_pixel_width(canvas: &Canvas) -> usize {
     if canvas.encoding() == crate::canvas::PixelEncoding::Quadrants && !canvas.has_image_density() {
         2
     } else {
@@ -430,11 +428,7 @@ fn render_sprite_region(
     if width == 0 || height == 0 || source_width == 0 || source_height == 0 {
         return;
     }
-    let pixel_width = if source_width < 24 {
-        compact_pixel_width(canvas)
-    } else {
-        1
-    };
+    let pixel_width = sprite_pixel_width(canvas);
     let integer_scale = (width / source_width / pixel_width)
         .min(height / source_height)
         .max(1);
@@ -664,6 +658,52 @@ mod tests {
                 && !(0x2600..=0x27bf).contains(&code)
                 && code != 0xfe0f
         }));
+    }
+
+    #[test]
+    fn full_portrait_keeps_its_aspect_ratio_in_quadrant_cells() {
+        use crate::canvas::{ColorDepth, PixelEncoding};
+        use theywork_core::{Agent, OfficeId, WorkerId};
+
+        let worker = Worker::new(
+            WorkerId("portrait-aspect".into()),
+            OfficeId("office".into()),
+            Agent::Codex,
+            "Portrait".into(),
+            0,
+        );
+        let look = crate::sprite::worker_look(&worker);
+        let sprites = SpriteSet::new();
+        let mut half = Canvas::new(24, 34);
+        let mut quadrants = Canvas::with_color_depth_and_encoding(
+            48,
+            34,
+            ColorDepth::TrueColor,
+            PixelEncoding::Quadrants,
+        );
+        for (canvas, width) in [(&mut half, 24), (&mut quadrants, 48)] {
+            render_worker_with_look(
+                canvas,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: 34,
+                },
+            );
+        }
+        // Both buffers cover the same physical area in typical 1:2 terminal
+        // cells. Full portraits must obey the same aspect rule as miniatures.
+        for y in 0..34 {
+            for x in 0..24 {
+                assert_eq!(half.pixel(x, y), quadrants.pixel(x * 2, y));
+                assert_eq!(half.pixel(x, y), quadrants.pixel(x * 2 + 1, y));
+            }
+        }
     }
 
     #[test]

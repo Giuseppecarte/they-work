@@ -55,4 +55,3 @@ test project_scopes_once_and_persists_only_with_config_dir ... ok
 test headless_exit_after_runs_the_full_polling_loop ... ok
 
 test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
-

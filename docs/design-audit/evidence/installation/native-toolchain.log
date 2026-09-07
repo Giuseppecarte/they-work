@@ -10,19 +10,19 @@ info: default toolchain set to 1.90.0-aarch64-apple-darwin
 
 Rust is installed now. Great!
 
-To get started you need Cargo's bin directory 
+To get started you need Cargo's bin directory
 (/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/native-rust/cargo-home/bin)
 in your PATH
 environment variable. This has not been done automatically.
 
 To configure your current shell, you need to source
-the corresponding env file under 
+the corresponding env file under
 /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/native-rust/cargo-home.
 
 Consider running the right command for your shell (note the leading DOT):
-. 
+.
 "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/native-rust/cargo-home/env"
 # For sh/ash/dash/pdksh/zsh
-source 
+source
 "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/native-rust/cargo-home/env.tcsh"
 # For tcsh

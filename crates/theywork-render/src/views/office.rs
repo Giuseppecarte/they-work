@@ -48,9 +48,14 @@ const MACHINE_LIGHT: Color = Color::Rgb(138, 130, 153);
 const TITLE_SIGN: Color = Color::Rgb(92, 15, 12);
 const TITLE_BODY: Color = Color::Rgb(142, 26, 21);
 const TITLE_COLOR: Color = Color::Rgb(232, 52, 44);
+#[cfg(test)]
 const SIGN_EXTRUSION_STEPS: usize = 6;
+const ROOM_SIGN_EXTRUSION_STEPS: usize = 2;
 const SIGN_EXTRUSION_STEP: i32 = 1;
 const SIGN_GLYPH_RISE: i32 = 0;
+const SIGN_MAX_WIDTH_NUMERATOR: usize = 9;
+const SIGN_MAX_WIDTH_DENOMINATOR: usize = 20;
+const SIGN_STATUS_RESERVE_CELLS: usize = 38;
 const NIGHT_SKY_TOP: Color = Color::Rgb(13, 11, 20);
 const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
 const DAY_SKY_TOP: Color = Color::Rgb(88, 214, 232);
@@ -505,6 +510,36 @@ fn worker_bounds(grid: IsoGrid, scale: RoomScale, slot: usize) -> (i32, i32, usi
         center_y - height as i32 + seated_drop as i32 + 1,
         width,
         height,
+    )
+}
+
+fn manager_position(grid: IsoGrid, tile: (usize, usize), now: Millis) -> (i32, i32, bool) {
+    let origin = grid.center(0, grid.rows.saturating_sub(1));
+    let target = grid.center(tile.0, tile.1);
+    let cycle = MANAGER_TRAVEL_MS + MANAGER_HOLD_MS;
+    let phase = phase_ms(now, cycle);
+    let travel = phase.min(MANAGER_TRAVEL_MS);
+    (
+        origin.0 + (target.0 - origin.0) * travel as i32 / MANAGER_TRAVEL_MS as i32,
+        origin.1 + (target.1 - origin.1) * travel as i32 / MANAGER_TRAVEL_MS as i32,
+        phase >= MANAGER_TRAVEL_MS,
+    )
+}
+
+fn manager_bounds(
+    grid: IsoGrid,
+    scale: RoomScale,
+    tile: (usize, usize),
+    now: Millis,
+) -> (i32, i32, usize, usize, bool) {
+    let (manager_x, manager_y, attention) = manager_position(grid, tile, now);
+    let (width, height) = scale.manager_size(grid);
+    (
+        manager_x - width as i32 / 2,
+        manager_y - height as i32 + 1,
+        width,
+        height,
+        attention,
     )
 }
 
@@ -1038,7 +1073,7 @@ fn compact_sign_lines(label: &str, width: usize) -> Vec<String> {
 fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     let x_scale = canvas.pixels_per_cell().0;
     let y_scale = canvas.scale_half_height(1);
-    let width = canvas.width().saturating_sub(x_scale.saturating_mul(2));
+    let width = room_sign_max_width(canvas);
     let lines = compact_sign_lines(label, width / x_scale.max(1));
     let line_height = 6_i32.saturating_mul(y_scale as i32);
     let total_height = lines.len().saturating_mul(line_height as usize) as i32;
@@ -1049,7 +1084,7 @@ fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
         .max(0);
     for (line_index, line) in lines.iter().enumerate() {
         let line_width = compact_sign_width(line).saturating_mul(x_scale);
-        let x0 = (canvas.width().saturating_sub(line_width) / 2) as i32;
+        let x0 = room_sign_x(canvas, line_width) as i32;
         let y0 = top + line_index as i32 * line_height;
         for (character_index, character) in line.chars().enumerate() {
             let glyph = compact_glyph(character);
@@ -1074,6 +1109,7 @@ fn draw_compact_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_extruded_glyph(
     canvas: &mut Canvas,
     glyph: [u8; 7],
@@ -1082,6 +1118,7 @@ fn draw_extruded_glyph(
     floor_limit: usize,
     x_scale: usize,
     y_scale: usize,
+    depth_steps: usize,
 ) {
     let mut face_pixels = Vec::new();
     for (row_index, bits) in glyph.iter().enumerate() {
@@ -1095,14 +1132,14 @@ fn draw_extruded_glyph(
         }
     }
 
-    // Each glyph owns its complete six-step shadow. Keeping this local to the
-    // glyph prevents one letter's depth from becoming the next letter's tail.
+    // Each glyph owns its complete shadow. Keeping depth local prevents one
+    // letter's extrusion from becoming the next letter's tail.
     let depth_step_x = sign_depth_step(canvas, x_scale);
     let depth_step_y = sign_depth_step(canvas, y_scale);
-    for depth in (1..=SIGN_EXTRUSION_STEPS).rev() {
+    for depth in (1..=depth_steps).rev() {
         let offset_x = depth as i32 * SIGN_EXTRUSION_STEP * depth_step_x as i32;
         let offset_y = depth as i32 * SIGN_EXTRUSION_STEP * depth_step_y as i32;
-        let color = if depth >= SIGN_EXTRUSION_STEPS.saturating_sub(1) {
+        let color = if depth >= depth_steps.saturating_sub(1) {
             TITLE_SIGN
         } else {
             TITLE_BODY
@@ -1153,6 +1190,7 @@ fn draw_extruded_line(
     y_scale: usize,
     glyph_pitch: usize,
     rise_per_glyph: usize,
+    depth_steps: usize,
 ) {
     for (character_index, character) in line.chars().enumerate() {
         draw_extruded_glyph(
@@ -1163,6 +1201,7 @@ fn draw_extruded_line(
             floor_limit,
             x_scale,
             y_scale,
+            depth_steps,
         );
     }
     // Compose depth first, then restore all faces as one line. A later glyph's
@@ -1193,7 +1232,7 @@ pub(crate) fn draw_sign_glyph_sheet(canvas: &mut Canvas) {
     canvas.fill(super::BACKGROUND);
     let x_scale = canvas.pixels_per_cell().0;
     let y_scale = canvas.scale_half_height(1);
-    let glyph_pitch = sign_glyph_pitch(canvas, x_scale);
+    let glyph_pitch = sign_glyph_pitch(canvas, x_scale, SIGN_EXTRUSION_STEPS);
     let extrusion_y = SIGN_EXTRUSION_STEPS * sign_depth_step(canvas, y_scale);
     let row_pitch = 7 * y_scale + extrusion_y + 3 * y_scale;
     for (row, line) in ["ABCDEFGHIJKL", "MNOPQRSTUVWX", "YZ0123456789"]
@@ -1210,6 +1249,7 @@ pub(crate) fn draw_sign_glyph_sheet(canvas: &mut Canvas) {
             y_scale,
             glyph_pitch,
             0,
+            SIGN_EXTRUSION_STEPS,
         );
     }
 }
@@ -1222,11 +1262,23 @@ fn sign_depth_step(canvas: &Canvas, scale: usize) -> usize {
     }
 }
 
-fn sign_glyph_pitch(canvas: &Canvas, x_scale: usize) -> usize {
-    let extrusion = SIGN_EXTRUSION_STEPS
+fn sign_glyph_pitch(canvas: &Canvas, x_scale: usize, depth_steps: usize) -> usize {
+    let extrusion = depth_steps
         .saturating_mul(SIGN_EXTRUSION_STEP as usize)
         .saturating_mul(sign_depth_step(canvas, x_scale));
     6usize.saturating_mul(x_scale).saturating_add(extrusion)
+}
+
+fn room_sign_max_width(canvas: &Canvas) -> usize {
+    canvas.width().saturating_mul(SIGN_MAX_WIDTH_NUMERATOR) / SIGN_MAX_WIDTH_DENOMINATOR
+}
+
+fn room_sign_x(canvas: &Canvas, width: usize) -> usize {
+    let centered = canvas.width().saturating_sub(width) / 2;
+    let reserved = SIGN_STATUS_RESERVE_CELLS.saturating_mul(canvas.pixels_per_cell().0);
+    centered
+        .max(reserved)
+        .min(canvas.width().saturating_sub(width))
 }
 
 fn sign_outline_radius(canvas: &Canvas, scale: usize) -> i32 {
@@ -1266,13 +1318,13 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
     let y_scale = canvas.scale_half_height(1);
     let depth_step_x = sign_depth_step(canvas, x_scale);
     let depth_step_y = sign_depth_step(canvas, y_scale);
-    let extrusion_x = SIGN_EXTRUSION_STEPS
+    let extrusion_x = ROOM_SIGN_EXTRUSION_STEPS
         .saturating_mul(SIGN_EXTRUSION_STEP as usize)
         .saturating_mul(depth_step_x);
-    let extrusion_y = SIGN_EXTRUSION_STEPS
+    let extrusion_y = ROOM_SIGN_EXTRUSION_STEPS
         .saturating_mul(SIGN_EXTRUSION_STEP as usize)
         .saturating_mul(depth_step_y);
-    let glyph_pitch = sign_glyph_pitch(canvas, x_scale);
+    let glyph_pitch = sign_glyph_pitch(canvas, x_scale, ROOM_SIGN_EXTRUSION_STEPS);
     let face_width = line
         .chars()
         .count()
@@ -1286,14 +1338,14 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
         .saturating_add(extrusion_y);
     let floor_limit = wall_top.saturating_sub(1).max(0) as usize;
     if face_width == 0
-        || face_width.saturating_add(extrusion_x) > canvas.width()
+        || face_width.saturating_add(extrusion_x) > room_sign_max_width(canvas)
         || sign_height > floor_limit
     {
         draw_compact_sign(canvas, label, wall_top);
         return;
     }
 
-    let x0 = ((canvas.width() - face_width - extrusion_x) / 2) as i32;
+    let x0 = room_sign_x(canvas, face_width.saturating_add(extrusion_x)) as i32;
     let top = wall_top - 1 - sign_height as i32;
     draw_extruded_line(
         canvas,
@@ -1305,6 +1357,7 @@ fn draw_isometric_sign(canvas: &mut Canvas, label: &str, wall_top: i32) {
         y_scale,
         glyph_pitch,
         rise_per_glyph,
+        ROOM_SIGN_EXTRUSION_STEPS,
     );
 }
 
@@ -1682,6 +1735,7 @@ fn draw_item(
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
+    selected_slot: Option<usize>,
 ) {
     let (center_x, center_y) = grid.center(item.tile_x, item.tile_y);
     match item.kind {
@@ -1725,36 +1779,12 @@ fn draw_item(
             }
         }
         IsoKind::Manager => {
-            let origin = grid.center(0, grid.rows.saturating_sub(1));
-            let target = (center_x, center_y);
-            let cycle = MANAGER_TRAVEL_MS + MANAGER_HOLD_MS;
-            let phase = phase_ms(now, cycle);
-            let travel = phase.min(MANAGER_TRAVEL_MS);
-            let manager_x =
-                origin.0 + (target.0 - origin.0) * travel as i32 / MANAGER_TRAVEL_MS as i32;
-            let manager_y =
-                origin.1 + (target.1 - origin.1) * travel as i32 / MANAGER_TRAVEL_MS as i32;
-            let attention = phase >= MANAGER_TRAVEL_MS;
+            let (x, y, width, height, attention) =
+                manager_bounds(grid, scale, (item.tile_x, item.tile_y), now);
             let sprite = sprites.manager_animation(attention).frame_at(now);
-            let (width, height) = scale.manager_size(grid);
-            let x = manager_x - width as i32 / 2;
-            let y = if scale == RoomScale::Floor {
-                manager_y - height as i32 + 1
-            } else {
-                manager_y - grid.tile_height / 2 - height as i32 + 1
-            };
-            if scale == RoomScale::Floor {
-                blit_floor_worker(canvas, sprite, x, y, width, height);
-            } else {
-                blit_scaled_signed(canvas, sprite, x, y, width, height);
-            }
+            blit_floor_worker(canvas, sprite, x, y, width, height);
             if attention {
-                set_pixel(
-                    canvas,
-                    manager_x + width as i32 / 2 + 1,
-                    manager_y - height as i32,
-                    WARNING,
-                );
+                set_pixel(canvas, x + width as i32 + 1, y, WARNING);
             }
         }
         IsoKind::Desk(slot) => {
@@ -1771,6 +1801,7 @@ fn draw_item(
                 monitor_width,
                 monitor_height,
             );
+            draw_nameplate_chip(canvas, grid, slot, selected_slot == Some(slot));
         }
     }
 }
@@ -1782,9 +1813,10 @@ pub(crate) fn draw_room_scene(
     looks: &[WorkerLook],
     sprites: &SpriteSet,
     now: Millis,
-    scale: RoomScale,
+    selected_slot: Option<usize>,
 ) -> IsoGrid {
     canvas.clear();
+    let scale = RoomScale::Floor;
     let grid = make_grid_with_encoding(
         canvas.width(),
         canvas.height(),
@@ -1899,6 +1931,7 @@ pub(crate) fn draw_room_scene(
             looks,
             sprites,
             now,
+            selected_slot,
         );
     }
     grid
@@ -2187,8 +2220,7 @@ fn worker_plate_position(grid: IsoGrid, slot: usize) -> (i32, i32) {
 }
 
 fn worker_plate_width(body: Rect, grid: IsoGrid) -> u16 {
-    let tile_width_cells =
-        physical_to_cell(grid.tile_width, grid.encoding.width_per_cell()).max(12) as u16;
+    let tile_width_cells = physical_to_cell(grid.tile_width, grid.pixels_per_cell.0).max(12) as u16;
     (tile_width_cells / 2).max(12).min(body.width)
 }
 
@@ -2206,9 +2238,34 @@ fn worker_plate_rect(body: Rect, grid: IsoGrid, slot: usize) -> Rect {
     )
 }
 
+fn draw_nameplate_chip(canvas: &mut Canvas, grid: IsoGrid, slot: usize, selected: bool) {
+    let cell_width = canvas.width() / grid.pixels_per_cell.0.max(1);
+    let cell_height = canvas.height() / grid.pixels_per_cell.1.max(1);
+    let body = Rect::new(
+        0,
+        0,
+        u16::try_from(cell_width).unwrap_or(u16::MAX),
+        u16::try_from(cell_height).unwrap_or(u16::MAX),
+    );
+    let rect = worker_plate_rect(body, grid, slot);
+    fill_rect(
+        canvas,
+        i32::from(rect.x) * grid.pixels_per_cell.0 as i32,
+        i32::from(rect.y) * grid.pixels_per_cell.1 as i32,
+        i32::from(rect.width) * grid.pixels_per_cell.0 as i32,
+        i32::from(rect.height) * grid.pixels_per_cell.1 as i32,
+        if selected { PANEL_HIGHLIGHT } else { PANEL },
+    );
+}
+
 #[cfg(test)]
 fn worker_cell_rect(grid: IsoGrid, slot: usize) -> Rect {
     let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
+    physical_cell_rect(grid, x, y, width, height)
+}
+
+#[cfg(test)]
+fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize) -> Rect {
     let x_scale = grid.pixels_per_cell.0.max(1) as i32;
     let y_scale = grid.pixels_per_cell.1.max(1) as i32;
     let left = x.div_euclid(x_scale).max(0) as u16;
@@ -2282,12 +2339,12 @@ fn draw_nameplates(
             usize::from(rect.width.saturating_sub(2)),
         );
         let label = format!("{prefix} {name}");
+        let label = format!("{label:<width$}", width = usize::from(rect.width));
         let style = if start + slot == selected {
-            Style::default().fg(INK).bg(PANEL_HIGHLIGHT)
+            Style::default().fg(INK)
         } else {
-            Style::default().fg(status_color(status)).bg(PANEL)
+            Style::default().fg(status_color(status))
         };
-        paint_opaque(frame, rect, style);
         Paragraph::new(Line::from(Span::styled(label, style)))
             .style(style)
             .render(rect, frame.buffer_mut());
@@ -2462,7 +2519,7 @@ pub(crate) fn draw(
             &looks,
             sprites,
             now,
-            RoomScale::Floor,
+            selected.checked_sub(start),
         )),
         Projection::TopDown => {
             draw_top_down_scene(
@@ -2691,13 +2748,20 @@ mod tests {
 
     #[test]
     fn five_workers_fit_the_plate_without_clipping_or_each_other() {
-        for encoding in PixelEncoding::ALL {
+        let modes = [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::Sextants, Some((10, 20))),
+        ];
+        for (encoding, cell_size) in modes {
             let mut canvas = Canvas::with_color_depth_and_encoding(
                 0,
                 0,
                 crate::canvas::ColorDepth::TrueColor,
                 encoding,
             );
+            canvas.set_cell_pixel_size(cell_size);
             canvas.resize_for_cells(160, 44);
             let grid = make_grid_with_encoding(
                 canvas.width(),
@@ -2714,25 +2778,47 @@ mod tests {
                 let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
                 assert!(
                     x >= 0 && y >= 0,
-                    "{encoding:?} worker {slot} clips top/left"
+                    "{encoding:?}/{cell_size:?} worker {slot} clips top/left"
                 );
                 assert!(
                     x + width as i32 <= canvas.width() as i32
                         && y + height as i32 <= canvas.height() as i32,
-                    "{encoding:?} worker {slot} clips bottom/right"
+                    "{encoding:?}/{cell_size:?} worker {slot} clips bottom/right"
                 );
                 assert!(
                     height * 5 <= plate_height * 2,
-                    "{encoding:?} worker height {height} overwhelms plate height {plate_height}"
+                    "{encoding:?}/{cell_size:?} worker height {height} overwhelms plate height {plate_height}"
                 );
                 bounds.push((x, y, x + width as i32, y + height as i32));
+
+                let (desk_x, desk_y, desk_width, desk_height) =
+                    desk_bounds(grid, RoomScale::Floor, slot);
+                let (tile_x, tile_y) = grid.desk_tile(slot);
+                let (center_x, _) = grid.center(tile_x, tile_y);
+                let (monitor_width, monitor_height) = RoomScale::Floor.monitor_size(grid);
+                let monitor_x = center_x - desk_width as i32 / 4 - monitor_width as i32 / 2;
+                let monitor_y = desk_y - monitor_height as i32 + grid.scale_half_height(2) as i32;
+                assert!(
+                    desk_x >= 0
+                        && desk_y >= 0
+                        && desk_x + desk_width as i32 <= canvas.width() as i32
+                        && desk_y + desk_height as i32 <= canvas.height() as i32,
+                    "{encoding:?}/{cell_size:?} desk {slot} clips the frame"
+                );
+                assert!(
+                    monitor_x >= 0
+                        && monitor_y >= 0
+                        && monitor_x + monitor_width as i32 <= canvas.width() as i32
+                        && monitor_y + monitor_height as i32 <= canvas.height() as i32,
+                    "{encoding:?}/{cell_size:?} monitor {slot} clips the frame"
+                );
             }
             for (index, first) in bounds.iter().enumerate() {
                 for (other_index, second) in bounds.iter().enumerate().skip(index + 1) {
                     assert_eq!(
                         overlap_area(*first, *second),
                         0,
-                        "{encoding:?} workers {index} and {other_index} overlap"
+                        "{encoding:?}/{cell_size:?} workers {index} and {other_index} overlap"
                     );
                 }
             }
@@ -2741,14 +2827,22 @@ mod tests {
 
     #[test]
     fn chairs_workers_and_desks_form_a_seated_stack_at_one_scale() {
-        for encoding in PixelEncoding::ALL {
+        let modes = [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::Sextants, Some((10, 20))),
+        ];
+        for (encoding, cell_size) in modes {
+            let pixels_per_cell =
+                cell_size.unwrap_or((encoding.width_per_cell(), encoding.height_per_cell()));
             let grid = make_grid_with_encoding(
-                160 * encoding.width_per_cell(),
-                44 * encoding.height_per_cell(),
+                160 * pixels_per_cell.0,
+                44 * pixels_per_cell.1,
                 ISO_ROOM_COLUMNS,
                 ISO_ROOM_ROWS,
                 encoding,
-                (encoding.width_per_cell(), encoding.height_per_cell()),
+                pixels_per_cell,
             );
             let (_, worker_y, worker_width, worker_height) =
                 worker_bounds(grid, RoomScale::Floor, 0);
@@ -2756,7 +2850,7 @@ mod tests {
             let covered = (worker_y + worker_height as i32 - desk_y).max(0) as usize;
             assert!(
                 covered >= worker_height / 6 && covered <= worker_height / 2,
-                "{encoding:?} desk covers {covered} of {worker_height} worker pixels"
+                "{encoding:?}/{cell_size:?} desk covers {covered} of {worker_height} worker pixels"
             );
             assert_eq!(
                 RoomScale::Floor.manager_size(grid),
@@ -2823,13 +2917,20 @@ mod tests {
         let visible_workers = workers.iter().collect::<Vec<_>>();
         let body = Rect::new(0, 0, 160, 44);
 
-        for encoding in PixelEncoding::ALL {
+        let modes = [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::Sextants, Some((10, 20))),
+        ];
+        for (encoding, cell_size) in modes {
             let mut canvas = Canvas::with_color_depth_and_encoding(
                 0,
                 0,
                 crate::canvas::ColorDepth::TrueColor,
                 encoding,
             );
+            canvas.set_cell_pixel_size(cell_size);
             canvas.resize_for_cells(body.width as usize, body.height as usize);
             let sprites = SpriteSet::new();
             let looks = worker_looks(&workers);
@@ -2840,7 +2941,7 @@ mod tests {
                 &looks,
                 &sprites,
                 0,
-                RoomScale::Floor,
+                None,
             );
             let mut terminal =
                 Terminal::new(TestBackend::new(body.width, body.height)).expect("test terminal");
@@ -2884,21 +2985,28 @@ mod tests {
                 assert_eq!(
                     matches.len(),
                     1,
-                    "{encoding:?} should render exactly one plate for worker {slot}"
+                    "{encoding:?}/{cell_size:?} should render exactly one plate for worker {slot}"
                 );
 
                 let rect = worker_plate_rect(body, grid, slot);
                 plate_rects.push(rect);
+                let tile_width_cells =
+                    physical_to_cell(grid.tile_width, grid.pixels_per_cell.0).max(12) as u16;
+                assert_eq!(
+                    rect.width,
+                    (tile_width_cells / 2).max(12).min(body.width),
+                    "{encoding:?}/{cell_size:?} plate width did not use actual cell density"
+                );
                 assert_eq!(matches[0], (rect.x.saturating_add(2), rect.y));
 
                 let (_, desk_y, _, desk_height) = desk_bounds(grid, RoomScale::Floor, slot);
                 let desk_bottom =
-                    physical_to_cell(desk_y + desk_height as i32 - 1, encoding.height_per_cell())
+                    physical_to_cell(desk_y + desk_height as i32 - 1, grid.pixels_per_cell.1)
                         as u16;
                 assert!(
                     rect.y >= body.y.saturating_add(desk_bottom)
                         && rect.y <= body.y.saturating_add(desk_bottom).saturating_add(1),
-                    "{encoding:?} plate {slot} at row {} is detached from desk bottom {}",
+                    "{encoding:?}/{cell_size:?} plate {slot} at row {} is detached from desk bottom {}",
                     rect.y,
                     body.y.saturating_add(desk_bottom)
                 );
@@ -2912,7 +3020,7 @@ mod tests {
                         || second.y.saturating_add(second.height) <= first.y;
                     assert!(
                         separated,
-                        "{encoding:?} worker plates {index} and {} overlap",
+                        "{encoding:?}/{cell_size:?} worker plates {index} and {} overlap",
                         index + 1
                     );
                 }
@@ -2920,16 +3028,72 @@ mod tests {
 
             for (owner, plate) in plate_rects.iter().copied().enumerate() {
                 let owner_tile = grid.desk_tile(owner);
-                let owner_depth = owner_tile.0 + owner_tile.1;
+                let owner_key = painter_key(IsoItem {
+                    tile_x: owner_tile.0,
+                    tile_y: owner_tile.1,
+                    footprint: IsoFootprint {
+                        width: 1,
+                        depth: 1,
+                        height: 1,
+                    },
+                    kind: IsoKind::Desk(owner),
+                });
                 for front in 0..workers.len() {
                     let front_tile = grid.desk_tile(front);
-                    let front_depth = front_tile.0 + front_tile.1;
-                    if front == owner || front_depth <= owner_depth {
+                    let front_key = painter_key(IsoItem {
+                        tile_x: front_tile.0,
+                        tile_y: front_tile.1,
+                        footprint: IsoFootprint {
+                            width: 1,
+                            depth: 1,
+                            height: 2,
+                        },
+                        kind: IsoKind::Worker(front),
+                    });
+                    if front == owner || front_key <= owner_key {
                         continue;
                     }
                     assert!(
                         !rects_overlap(plate, worker_cell_rect(grid, front)),
-                        "{encoding:?} plate {owner} overlaps foreground worker {front}"
+                        "{encoding:?}/{cell_size:?} plate {owner} overlaps foreground worker {front}"
+                    );
+                }
+            }
+
+            let manager_tile = manager_tile(grid, workers.len(), 0);
+            let manager_item = IsoItem {
+                tile_x: manager_tile.0,
+                tile_y: manager_tile.1,
+                footprint: IsoFootprint {
+                    width: 1,
+                    depth: 1,
+                    height: 2,
+                },
+                kind: IsoKind::Manager,
+            };
+            let (x, y, width, height, _) = manager_bounds(
+                grid,
+                RoomScale::Floor,
+                manager_tile,
+                MANAGER_TRAVEL_MS as Millis,
+            );
+            let manager_rect = physical_cell_rect(grid, x, y, width, height);
+            for (owner, plate) in plate_rects.iter().copied().enumerate() {
+                let owner_tile = grid.desk_tile(owner);
+                let owner_item = IsoItem {
+                    tile_x: owner_tile.0,
+                    tile_y: owner_tile.1,
+                    footprint: IsoFootprint {
+                        width: 1,
+                        depth: 1,
+                        height: 1,
+                    },
+                    kind: IsoKind::Desk(owner),
+                };
+                if painter_key(manager_item) > painter_key(owner_item) {
+                    assert!(
+                        !rects_overlap(plate, manager_rect),
+                        "{encoding:?}/{cell_size:?} plate {owner} obscures the full-scale manager"
                     );
                 }
             }
@@ -3178,7 +3342,16 @@ mod tests {
                 let x_scale = canvas.pixels_per_cell().0;
                 let y_scale = canvas.scale_half_height(1);
                 let glyph = glyph_5x7(character);
-                draw_extruded_glyph(&mut canvas, glyph, 10, 10, 100, x_scale, y_scale);
+                draw_extruded_glyph(
+                    &mut canvas,
+                    glyph,
+                    10,
+                    10,
+                    100,
+                    x_scale,
+                    y_scale,
+                    SIGN_EXTRUSION_STEPS,
+                );
                 for (row, bits) in glyph.iter().enumerate() {
                     for column in 0..5 {
                         let pixel = canvas.pixel(
@@ -3223,26 +3396,26 @@ mod tests {
         let label = "THEY-WORK";
         for (encoding, cell_size) in modes {
             let mut canvas = Canvas::with_color_depth_and_encoding(
-                800,
-                800,
+                0,
+                0,
                 crate::canvas::ColorDepth::TrueColor,
                 encoding,
             );
             canvas.set_cell_pixel_size(cell_size);
-            canvas.resize(800, 800);
-            let wall_top = 780;
+            canvas.resize_for_cells(160, 44);
+            let wall_top = canvas.height() as i32 - 1;
             draw_isometric_sign(&mut canvas, label, wall_top);
 
             let x_scale = canvas.pixels_per_cell().0;
             let y_scale = canvas.scale_half_height(1);
-            let glyph_pitch = sign_glyph_pitch(&canvas, x_scale);
+            let glyph_pitch = sign_glyph_pitch(&canvas, x_scale, ROOM_SIGN_EXTRUSION_STEPS);
             let face_width =
                 (label.chars().count() - 1) * glyph_pitch + 5usize.saturating_mul(x_scale);
-            let extrusion_x = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
-            let extrusion_y = SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, y_scale);
+            let extrusion_x = ROOM_SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
+            let extrusion_y = ROOM_SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, y_scale);
             let rise = SIGN_GLYPH_RISE as usize * y_scale;
             let sign_height = 7 * y_scale + (label.chars().count() - 1) * rise + extrusion_y;
-            let x0 = (canvas.width() - face_width - extrusion_x) / 2;
+            let x0 = room_sign_x(&canvas, face_width.saturating_add(extrusion_x));
             let top = wall_top as usize - 1 - sign_height;
 
             for (character_index, character) in label.chars().enumerate() {
@@ -3317,6 +3490,62 @@ mod tests {
                 checksums.len(),
                 6,
                 "{encoding:?} collapsed wardrobe variants"
+            );
+        }
+    }
+
+    #[test]
+    fn sextants_is_the_lowest_cell_rung_that_retains_eye_detail() {
+        let worker = Worker::new(
+            WorkerId("/office#face".into()),
+            OfficeId("/office".into()),
+            Agent::Codex,
+            "face".into(),
+            0,
+        );
+        let look = WorkerLook {
+            head: 0,
+            face: 0,
+            top: 0,
+            desk_prop: 0,
+            skin: 0,
+            hair: 0,
+            contractor: false,
+        };
+        let sprite = SpriteSet::new().worker_frame(&worker, look, 0);
+        let modes = [
+            (PixelEncoding::HalfBlocks, None, false),
+            (PixelEncoding::Quadrants, None, false),
+            (PixelEncoding::Sextants, None, true),
+            (PixelEncoding::Sextants, Some((10, 20)), true),
+        ];
+        for (encoding, cell_size, expected) in modes {
+            let pixels_per_cell =
+                cell_size.unwrap_or((encoding.width_per_cell(), encoding.height_per_cell()));
+            let grid = make_grid_with_encoding(
+                160 * pixels_per_cell.0,
+                44 * pixels_per_cell.1,
+                ISO_ROOM_COLUMNS,
+                ISO_ROOM_ROWS,
+                encoding,
+                pixels_per_cell,
+            );
+            let (width, height) = RoomScale::Floor.worker_size(grid);
+            let mut canvas = Canvas::with_color_depth_and_encoding(
+                width,
+                height,
+                crate::canvas::ColorDepth::TrueColor,
+                encoding,
+            );
+            canvas.set_cell_pixel_size(cell_size);
+            canvas.resize(width, height);
+            blit_floor_worker(&mut canvas, &sprite, 0, 0, width, height);
+            let has_eye_white = (0..width)
+                .flat_map(|x| (0..height / 2).map(move |y| (x, y)))
+                .any(|(x, y)| canvas.pixel(x, y) == Some(Color::Rgb(255, 255, 255)));
+            assert_eq!(
+                has_eye_white, expected,
+                "{encoding:?}/{cell_size:?} face readability changed"
             );
         }
     }
@@ -3426,7 +3655,7 @@ mod tests {
     }
 
     #[test]
-    fn isometric_sign_has_a_fixed_depth_and_stays_above_the_wall() {
+    fn isometric_sign_stays_in_its_reserved_band() {
         let mut canvas =
             crate::canvas::Canvas::with_color_depth(160, 88, crate::canvas::ColorDepth::TrueColor);
         let wall_top = 32;
@@ -3445,11 +3674,43 @@ mod tests {
         let max_x = pixels.iter().map(|(x, _)| *x).max().unwrap_or(0);
         let max_y = pixels.iter().map(|(_, y)| *y).max().unwrap_or(0);
         assert!(max_y < (wall_top - 1) as usize);
+        let actual_width = max_x.saturating_sub(min_x).saturating_add(1);
+        assert!(
+            actual_width * SIGN_MAX_WIDTH_DENOMINATOR <= canvas.width() * SIGN_MAX_WIDTH_NUMERATOR,
+            "sign consumes {actual_width} of {} pixels",
+            canvas.width()
+        );
+        assert!(
+            min_x >= SIGN_STATUS_RESERVE_CELLS * canvas.pixels_per_cell().0,
+            "sign begins at {min_x} inside the reserved status area"
+        );
         let x_scale = canvas.pixels_per_cell().0;
-        let expected_width = 6 * sign_glyph_pitch(&canvas, x_scale)
+        let expected_width = 6 * sign_glyph_pitch(&canvas, x_scale, ROOM_SIGN_EXTRUSION_STEPS)
             + 5 * x_scale
-            + SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
+            + ROOM_SIGN_EXTRUSION_STEPS * sign_depth_step(&canvas, x_scale);
         assert!(max_x.saturating_sub(min_x) < expected_width);
+    }
+
+    #[test]
+    fn long_isometric_sign_steps_down_without_leaving_its_band() {
+        let mut canvas =
+            crate::canvas::Canvas::with_color_depth(160, 88, crate::canvas::ColorDepth::TrueColor);
+        let wall_top = 32;
+        draw_isometric_sign(&mut canvas, "VERY-LONG-PROJECT-NAME", wall_top);
+        let pixels = (0..canvas.width())
+            .flat_map(|x| (0..canvas.height()).map(move |y| (x, y)))
+            .filter(|(x, y)| canvas.pixel(*x, *y) == Some(TITLE_COLOR))
+            .collect::<Vec<_>>();
+        assert!(!pixels.is_empty());
+        let min_x = pixels.iter().map(|(x, _)| *x).min().unwrap_or(0);
+        let max_x = pixels.iter().map(|(x, _)| *x).max().unwrap_or(0);
+        let max_y = pixels.iter().map(|(_, y)| *y).max().unwrap_or(0);
+        assert!(max_y < (wall_top - 1) as usize);
+        assert!(
+            (max_x - min_x + 1) * SIGN_MAX_WIDTH_DENOMINATOR
+                <= canvas.width() * SIGN_MAX_WIDTH_NUMERATOR
+        );
+        assert!(min_x >= SIGN_STATUS_RESERVE_CELLS);
     }
 
     #[test]

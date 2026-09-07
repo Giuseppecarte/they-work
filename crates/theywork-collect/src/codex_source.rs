@@ -1778,11 +1778,11 @@ fn read_pending_commands(
         if command_status(&payload).is_some_and(command_status_is_terminal) {
             continue;
         }
-        let command = json_detail(&payload, &["command", "cmd", "description", "prompt"]);
+        let command = timeline_detail(&payload, &["command", "cmd", "description", "prompt"]);
         let detail = if command.is_empty() {
             "approval required".to_string()
         } else {
-            truncate_detail(&format!("awaiting approval: {command}"))
+            truncate_timeline_text(&format!("awaiting approval: {command}"))
         };
         commands.insert(thread_id, PendingCommand { at, detail });
     }
@@ -1828,6 +1828,41 @@ fn command_status_is_terminal(status: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pending_requests_preserve_command_suffixes_and_mark_the_resource_limit() {
+        let connection = Connection::open_in_memory().unwrap();
+        connection.execute_batch("CREATE TABLE thread_items (thread_id TEXT, created_at_ms INTEGER, item_type TEXT, item_json TEXT);").unwrap();
+        let command = format!(
+            "deploy --project {} --require-backup verified --migration customer-account-id-index",
+            "production-".repeat(12)
+        );
+        for (id, text) in [
+            ("complete", command.clone()),
+            ("bounded", "界".repeat(3_000)),
+        ] {
+            connection
+                .execute(
+                    "INSERT INTO thread_items VALUES (?1,1,'commandExecution',?2)",
+                    rusqlite::params![
+                        id,
+                        serde_json::json!({"command":text,"status":"inProgress"}).to_string()
+                    ],
+                )
+                .unwrap();
+        }
+        let requests =
+            read_pending_commands(&connection, &["complete".into(), "bounded".into()]).unwrap();
+        assert_eq!(
+            requests["complete"].detail,
+            format!("awaiting approval: {command}")
+        );
+        assert!(requests["bounded"].detail.ends_with('…'));
+        assert_eq!(
+            requests["bounded"].detail.chars().count(),
+            crate::util::TIMELINE_TEXT_LIMIT
+        );
+    }
 
     fn thread(id: &str, office_path: &str) -> ThreadRecord {
         ThreadRecord {

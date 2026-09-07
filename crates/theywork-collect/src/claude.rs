@@ -1141,7 +1141,7 @@ fn question_detail(input: Option<&Value>) -> String {
                 .and_then(|question| question.get("question"))
                 .and_then(Value::as_str)
         })
-        .map(truncate_detail)
+        .map(truncate_timeline_text)
         .unwrap_or_default()
 }
 
@@ -1261,6 +1261,18 @@ fn next_unique_name(base: &str, worker_id: &str, used: &HashSet<String>) -> Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn current_questions_keep_their_context_beyond_caption_length() {
+        let question = format!(
+            "Review {} before choosing production or staging?",
+            "the migration plan ".repeat(20)
+        );
+        let input = serde_json::json!({"questions":[{"question":question}]});
+        assert_eq!(question_detail(Some(&input)), question);
+        let oversized = serde_json::json!({"question":"界".repeat(3_000)});
+        assert!(question_detail(Some(&oversized)).ends_with('…'));
+    }
 
     fn cursor(path: &str, session_id: &str, office_path: &str) -> (PathBuf, FileCursor) {
         let path = PathBuf::from(path);

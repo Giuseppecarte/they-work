@@ -117,6 +117,7 @@ pub(crate) fn truncate_detail(input: &str) -> String {
     let mut output = String::with_capacity(sanitized.len().min(DETAIL_LIMIT));
     let mut count = 0;
     let mut pending_space = false;
+    let mut truncated = false;
 
     for ch in sanitized.chars() {
         if ch.is_whitespace() {
@@ -128,6 +129,7 @@ pub(crate) fn truncate_detail(input: &str) -> String {
 
         if pending_space {
             if count == DETAIL_LIMIT {
+                truncated = true;
                 break;
             }
             output.push(' ');
@@ -136,12 +138,17 @@ pub(crate) fn truncate_detail(input: &str) -> String {
         }
 
         if count == DETAIL_LIMIT {
+            truncated = true;
             break;
         }
         output.push(ch);
         count += 1;
     }
 
+    if truncated {
+        output.pop();
+        output.push('…');
+    }
     output
 }
 
@@ -150,10 +157,17 @@ pub(crate) fn truncate_detail(input: &str) -> String {
 /// unit here so a cap never cuts through a UTF-8 code point or destroys the
 /// text the desk view is meant to show.
 pub(crate) fn truncate_timeline_text(input: &str) -> String {
-    sanitize_terminal_text(input)
-        .chars()
+    let sanitized = sanitize_terminal_text(input);
+    let mut characters = sanitized.chars();
+    let mut text = characters
+        .by_ref()
         .take(TIMELINE_TEXT_LIMIT)
-        .collect()
+        .collect::<String>();
+    if characters.next().is_some() {
+        text.pop();
+        text.push('…');
+    }
+    text
 }
 
 pub(crate) fn text_line_count(input: &str) -> u32 {
@@ -518,6 +532,9 @@ mod tests {
 
         let long = "x".repeat(DETAIL_LIMIT + 10);
         assert_eq!(truncate_detail(&long).chars().count(), DETAIL_LIMIT);
+        assert!(truncate_detail(&long).ends_with('…'));
+        assert!(!truncate_detail(&"x".repeat(DETAIL_LIMIT)).ends_with('…'));
+        assert!(truncate_timeline_text(&"界".repeat(TIMELINE_TEXT_LIMIT + 1)).ends_with('…'));
     }
 
     #[test]

@@ -1,68 +1,43 @@
-//! The software tower: a floor directory and readable, paginated office feeds.
+//! The software tower: a stable floor directory beside the selected project.
 
 use ratatui::layout::Rect;
-use ratatui::style::Style;
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 use theywork_core::{Millis, Office, WorkerStatus, World};
 
+use super::{
+    below_tab_bar, draw_footer, draw_header, draw_tiny, has_area, inset, paint_opaque, short_path,
+    status_color, worker_status, ACCENT, BACKGROUND, HOT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
+    WARNING,
+};
 use crate::canvas::Canvas;
 use crate::sprite::SpriteSet;
 
-use super::{
-    below_tab_bar, draw_footer, draw_header, draw_tiny, grid_rect, has_area, inset, paint_opaque,
-    paint_scanlines, short_path, status_color, status_marker, status_style, timestamp,
-    worker_status, ACCENT, BACKGROUND, HOT, INK, MUTED, PANEL, PANEL_HIGHLIGHT, WARNING,
-};
-
-/// The dimensions of a camera grid after taking count and terminal space into account.
+/// The directory is one column; rows are its visible project capacity.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct GridLayout {
     pub columns: usize,
     pub rows: usize,
 }
 
-/// Pick a grid that fits the available space while retaining the broad CCTV-wall shape.
 pub fn grid_layout(office_count: usize, width: u16, height: u16) -> GridLayout {
     if office_count == 0 || width == 0 || height == 0 {
         return GridLayout::default();
     }
-
-    let max_rows = (height as usize / 10).max(1);
-    let balanced_columns = if max_rows >= 2 && office_count >= 4 {
-        office_count.div_ceil(2)
+    let capacity = if width >= 110 {
+        height.saturating_sub(2) as usize / 3
     } else {
-        office_count
+        (height as usize / 3).clamp(2, 7).saturating_sub(1)
     };
-    let max_columns = (width as usize / 26)
-        .max(1)
-        .min(office_count)
-        .min(balanced_columns);
-    let mut best = GridLayout {
+    GridLayout {
         columns: 1,
-        rows: office_count,
-    };
-    let mut best_score = u64::MAX;
-
-    for columns in 1..=max_columns {
-        let rows = office_count.div_ceil(columns);
-        let aspect_error = (columns as i64 * 10 - rows as i64 * 26).unsigned_abs();
-        let overflow = rows.saturating_sub(max_rows) as u64;
-        let empty = (columns * rows).saturating_sub(office_count) as u64;
-        // A fit beats an attractive shape that would make a tile too short;
-        // after that, prefer the 26x10 camera aspect and fewer empty cells.
-        let score = overflow * 1_000_000 + aspect_error * 10 + empty;
-        if score < best_score {
-            best_score = score;
-            best = GridLayout { columns, rows };
-        }
+        rows: office_count.min(capacity.max(1)),
     }
-    best
 }
 
-/// Keep floor numbers stable when a worker changes status. The world orders
-/// projects by their canonical path; attention is exposed separately.
+/// Canonical path order gives each project a stable floor number.
 pub(crate) fn ordered_offices(world: &World, _now: Millis) -> Vec<&Office> {
     world.offices().collect()
 }
@@ -74,8 +49,12 @@ struct StatusCounts {
     blocked: usize,
     failed: usize,
 }
-
 impl StatusCounts {
+    fn for_office(office: &Office, now: Millis) -> Self {
+        let mut result = Self::default();
+        result.add_office(office, now);
+        result
+    }
     fn add_office(&mut self, office: &Office, now: Millis) {
         for worker in &office.workers {
             match worker_status(worker, now) {
@@ -86,12 +65,55 @@ impl StatusCounts {
             }
         }
     }
-
-    fn label(&self) -> String {
-        format!(
-            "{} working · {} idle · {} waiting · {} failed",
-            self.running, self.idle, self.blocked, self.failed
-        )
+    fn color(&self) -> ratatui::style::Color {
+        if self.blocked > 0 {
+            WARNING
+        } else if self.failed > 0 {
+            HOT
+        } else if self.running > 0 {
+            ACCENT
+        } else {
+            MUTED
+        }
+    }
+    fn marker(&self) -> &'static str {
+        if self.blocked > 0 {
+            "!"
+        } else if self.failed > 0 {
+            "×"
+        } else if self.running > 0 {
+            "▸"
+        } else {
+            "·"
+        }
+    }
+    fn compact(&self) -> String {
+        let mut parts = Vec::new();
+        if self.blocked > 0 {
+            parts.push(format!("!{} help", self.blocked));
+        }
+        if self.failed > 0 {
+            parts.push(format!("×{} failed", self.failed));
+        }
+        parts.push(format!("{} working · {} idle", self.running, self.idle));
+        parts.join(" · ")
+    }
+    fn line(&self) -> Line<'static> {
+        Line::from(vec![
+            Span::styled(
+                format!("  {} working", self.running),
+                Style::default().fg(ACCENT),
+            ),
+            Span::styled(format!(" · {} idle", self.idle), Style::default().fg(MUTED)),
+            Span::styled(
+                format!(" · {} need help", self.blocked),
+                Style::default().fg(if self.blocked > 0 { WARNING } else { MUTED }),
+            ),
+            Span::styled(
+                format!(" · {} failed", self.failed),
+                Style::default().fg(if self.failed > 0 { HOT } else { MUTED }),
+            ),
+        ])
     }
 }
 
@@ -102,14 +124,13 @@ pub(crate) fn draw(
     sprites: &SpriteSet,
     now: Millis,
     selected: usize,
-    all_selected: bool,
+    _all_selected: bool,
 ) -> GridLayout {
     let area = below_tab_bar(frame.area());
     if area.width < 16 || area.height < 6 {
-        draw_tiny(frame, "they-work • terminal too small for the camera wall");
+        draw_tiny(frame, "they-work · enlarge the terminal to see the tower");
         return GridLayout::default();
     }
-
     let offices = ordered_offices(world, now);
     let mut counts = StatusCounts::default();
     for office in &offices {
@@ -121,14 +142,24 @@ pub(crate) fn draw(
         Rect::new(header.x, header.y, header.width, 1),
         "SOFTWARE TOWER",
         &format!(
-            "{} floors · {} workers",
+            "{} {} · {} {}",
             offices.len(),
-            world.worker_count()
+            if offices.len() == 1 {
+                "floor"
+            } else {
+                "floors"
+            },
+            world.worker_count(),
+            if world.worker_count() == 1 {
+                "worker"
+            } else {
+                "workers"
+            }
         ),
     );
     if header.height > 1 {
-        Paragraph::new(format!("  {}", counts.label()))
-            .style(Style::default().fg(INK).bg(BACKGROUND))
+        Paragraph::new(counts.line())
+            .style(Style::default().bg(BACKGROUND))
             .render(
                 Rect::new(header.x, header.y + 1, header.width, 1),
                 frame.buffer_mut(),
@@ -137,276 +168,338 @@ pub(crate) fn draw(
     draw_footer(
         frame,
         footer,
-        "arrows move · Enter floor · ! attention · c sources · ? help · q quit",
+        "↑↓ floors · Enter visit · ! attention · / find · c sources · ? help",
     );
-
     if !has_area(body) {
         return GridLayout::default();
     }
     if offices.is_empty() {
-        Paragraph::new("No conversations found.\n\nPress c to choose local sources, then start a conversation in a project.\nEach project becomes a floor; each conversation becomes a worker.")
-            .style(Style::default().fg(MUTED).bg(BACKGROUND))
-            .wrap(ratatui::widgets::Wrap { trim: false })
-            .render(body, frame.buffer_mut());
+        Paragraph::new("YOUR TOWER STARTS HERE\n\nEach project is a floor. Each conversation is a worker.\n\nPress c to choose local sources, then start a conversation in a project.")
+            .style(Style::default().fg(INK).bg(BACKGROUND)).wrap(ratatui::widgets::Wrap {trim:false}).render(inset(body,1),frame.buffer_mut());
         return GridLayout::default();
     }
-
-    let feeds = if body.width >= 110 && offices.len() > 1 {
-        let directory = Rect::new(body.x, body.y, 30, body.height);
-        draw_directory(frame, directory, &offices, selected, now);
-        Rect::new(body.x + 31, body.y, body.width - 31, body.height)
+    let selected = selected.min(offices.len() - 1);
+    let layout = grid_layout(offices.len(), body.width, body.height);
+    let capacity = layout.rows.max(1);
+    let first = selected / capacity * capacity;
+    let visible_count = capacity.min(offices.len() - first);
+    let wide = body.width >= 110;
+    let (directory, focus) = if wide {
+        let dw = (body.width / 3).clamp(34, 48);
+        (
+            Rect::new(
+                body.x,
+                body.y,
+                dw,
+                body.height.min(visible_count as u16 * 3 + 2),
+            ),
+            Rect::new(
+                body.x + dw + 1,
+                body.y,
+                (body.width - dw - 1).min(80 + offices[selected].workers.len().min(5) as u16 * 16),
+                body.height
+                    .min(23 + offices[selected].workers.len().min(6) as u16 * 3),
+            ),
+        )
     } else {
-        body
+        let dh = (capacity as u16 + 2).min(body.height.saturating_sub(5));
+        (
+            Rect::new(body.x, body.y, body.width, dh),
+            Rect::new(body.x, body.y + dh, body.width, body.height - dh),
+        )
     };
-    let capacity = (usize::from(feeds.width) / 26).max(1) * (usize::from(feeds.height) / 10).max(1);
-    let layout = grid_layout(offices.len().min(capacity), feeds.width, feeds.height);
-    let page_size = layout.columns.saturating_mul(layout.rows).max(1);
-    let first = selected.min(offices.len() - 1) / page_size * page_size;
-    for (index, office) in offices.iter().enumerate().skip(first).take(page_size) {
-        let tile = grid_rect(feeds, index - first, layout.columns, layout.rows);
-        if has_area(tile) {
-            draw_tile(
-                frame,
-                canvas,
-                sprites,
-                office,
-                tile,
-                now,
-                index == selected,
-                index + 1,
-            );
-        }
-    }
+    draw_directory(
+        frame, directory, &offices, first, capacity, selected, now, wide,
+    );
+    draw_focus(
+        frame,
+        focus,
+        canvas,
+        sprites,
+        offices[selected],
+        selected + 1,
+        now,
+    );
     if footer.height > 1 {
-        let project = offices[selected.min(offices.len() - 1)];
-        let detail = format!(
-            "  Floor {}/{} · page {}/{} · PgUp/PgDn · {}",
+        let text = format!(
+            "  Floor {}/{} · page {}/{} · PgUp/PgDn pages · Home first · End last",
             selected + 1,
             offices.len(),
-            first / page_size + 1,
-            offices.len().div_ceil(page_size),
-            project.path
+            first / capacity + 1,
+            offices.len().div_ceil(capacity)
         );
-        Paragraph::new(super::short_path(&detail, usize::from(footer.width)))
+        Paragraph::new(short_path(&text, footer.width as usize))
             .style(Style::default().fg(MUTED).bg(BACKGROUND))
             .render(
                 Rect::new(footer.x, footer.y + 1, footer.width, 1),
                 frame.buffer_mut(),
             );
     }
-    let _ = all_selected;
     layout
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_directory(
     frame: &mut Frame,
     area: Rect,
     offices: &[&Office],
+    first: usize,
+    capacity: usize,
     selected: usize,
     now: Millis,
+    wide: bool,
 ) {
-    let inner = super::draw_panel(frame, area, "FLOORS / PROJECTS", false);
+    Block::default()
+        .title(" FLOORS / PROJECTS ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(MUTED))
+        .style(Style::default().bg(PANEL))
+        .render(area, frame.buffer_mut());
+    let inner = inset(area, 1);
     if !has_area(inner) {
         return;
     }
-    let visible = usize::from(inner.height).max(1);
-    let first = selected
-        .saturating_sub(visible / 2)
-        .min(offices.len().saturating_sub(visible));
-    for (index, office) in offices.iter().enumerate().skip(first).take(visible) {
-        let marker = if super::office_dot_color(office, now) == WARNING {
-            "!"
-        } else if super::office_dot_color(office, now) == HOT {
-            "×"
-        } else {
-            "·"
-        };
+    for (index, office) in offices.iter().enumerate().skip(first).take(capacity) {
+        let y = inner.y + ((index - first) * if wide { 3 } else { 1 }) as u16;
+        if y >= inner.bottom() {
+            break;
+        }
+        let counts = StatusCounts::for_office(office, now);
+        let active = index == selected;
         let style = Style::default()
-            .fg(if index == selected { INK } else { MUTED })
-            .bg(if index == selected {
-                PANEL_HIGHLIGHT
-            } else {
-                PANEL
-            });
-        let line = Line::from(vec![
-            Span::styled(
-                format!(
-                    "{}{:>2}",
-                    if index == selected { ">" } else { " " },
-                    index + 1
-                ),
-                style,
-            ),
-            Span::styled(marker, style.fg(super::office_dot_color(office, now))),
-            Span::styled(
-                format!(
-                    " {}",
-                    short_path(&office.name, usize::from(inner.width.saturating_sub(5)))
-                ),
-                style,
-            ),
-        ]);
-        Paragraph::new(line).style(style).render(
-            Rect::new(inner.x, inner.y + (index - first) as u16, inner.width, 1),
-            frame.buffer_mut(),
+            .fg(if active { INK } else { MUTED })
+            .bg(if active { PANEL_HIGHLIGHT } else { PANEL });
+        let row = Rect::new(
+            inner.x,
+            y,
+            inner.width,
+            if wide { 2.min(inner.bottom() - y) } else { 1 },
         );
+        paint_opaque(frame, row, style);
+        let number = format!("{} F{:02}", if active { ">" } else { " " }, index + 1);
+        let (name_width, summary) = if wide || inner.width < 30 {
+            (inner.width.saturating_sub(9) as usize, None)
+        } else {
+            let summary = counts.compact();
+            let max_summary = (inner.width / 2).max(18) as usize;
+            (
+                inner.width.saturating_sub(10 + max_summary as u16) as usize,
+                Some(short_path(&summary, max_summary)),
+            )
+        };
+        let mut spans = vec![
+            Span::styled(number, style.fg(if active { ACCENT } else { MUTED })),
+            Span::styled(format!(" {} ", counts.marker()), style.fg(counts.color())),
+            Span::styled(
+                format!(
+                    "{:<width$}",
+                    short_path(&office.name, name_width),
+                    width = name_width
+                ),
+                style,
+            ),
+        ];
+        if let Some(summary) = summary {
+            spans.push(Span::styled(
+                format!(" {summary}"),
+                style.fg(counts.color()),
+            ));
+        }
+        Paragraph::new(Line::from(spans))
+            .style(style)
+            .render(Rect::new(inner.x, y, inner.width, 1), frame.buffer_mut());
+        if wide && row.height > 1 {
+            Paragraph::new(short_path(
+                &format!(
+                    "     {} {} · {}",
+                    office.workers.len(),
+                    if office.workers.len() == 1 {
+                        "worker"
+                    } else {
+                        "workers"
+                    },
+                    counts.compact()
+                ),
+                inner.width as usize,
+            ))
+            .style(style.fg(counts.color()))
+            .render(
+                Rect::new(inner.x, y + 1, inner.width, 1),
+                frame.buffer_mut(),
+            );
+            if y + 2 < inner.bottom() {
+                Paragraph::new("─".repeat(inner.width as usize))
+                    .style(Style::default().fg(super::WALL).bg(PANEL))
+                    .render(
+                        Rect::new(inner.x, y + 2, inner.width, 1),
+                        frame.buffer_mut(),
+                    );
+            }
+        }
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-fn draw_tile(
+fn draw_focus(
     frame: &mut Frame,
+    area: Rect,
     canvas: &mut Canvas,
     sprites: &SpriteSet,
-    office: &theywork_core::Office,
-    tile: Rect,
+    office: &Office,
+    floor: usize,
     now: Millis,
-    selected: bool,
-    floor_number: usize,
 ) {
-    let blocked_count = office
-        .workers
-        .iter()
-        .filter(|worker| worker_status(worker, now) == WorkerStatus::Blocked)
-        .count();
-    let failed_count = office
-        .workers
-        .iter()
-        .filter(|worker| worker_status(worker, now) == WorkerStatus::Failed)
-        .count();
-    let border_color = if blocked_count > 0 {
-        WARNING
-    } else if failed_count > 0 {
-        HOT
-    } else if selected {
-        ACCENT
-    } else {
-        MUTED
-    };
-    let border_style = Style::default().fg(border_color).bg(BACKGROUND);
-    let title_prefix = format!("{}F{} ", if selected { "> " } else { "" }, floor_number);
-    let title_width = tile.width.saturating_sub(4) as usize;
-    let office_title = short_path(
-        &office.name,
-        title_width.saturating_sub(title_prefix.chars().count()),
-    );
-    Block::default()
-        .title(format!(" {}{} ", title_prefix, office_title))
-        .borders(Borders::ALL)
-        .border_style(border_style)
-        .style(Style::default().bg(BACKGROUND))
-        .render(tile, frame.buffer_mut());
-
-    let inner = inset(tile, 1);
-    if !has_area(inner) {
+    if !has_area(area) {
         return;
     }
-
-    canvas.resize_for_cells(inner.width as usize, inner.height as usize);
+    let counts = StatusCounts::for_office(office, now);
+    let inner = super::draw_panel(
+        frame,
+        area,
+        &format!(
+            " F{floor} · {} ",
+            short_path(&office.name, area.width.saturating_sub(13) as usize)
+        ),
+        true,
+    );
+    if inner.height < 3 {
+        return;
+    }
+    let stats = counts.compact();
+    Paragraph::new(stats)
+        .style(Style::default().fg(counts.color()).bg(PANEL))
+        .render(
+            Rect::new(inner.x, inner.y, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    let path_rows = usize::from(inner.height >= 9) as u16;
+    if path_rows > 0 {
+        Paragraph::new(path_tail(
+            &office.path,
+            inner.width.saturating_sub(1) as usize,
+        ))
+        .style(Style::default().fg(MUTED).bg(PANEL))
+        .render(
+            Rect::new(inner.x, inner.y + 1, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    }
+    let available = inner.height.saturating_sub(1 + path_rows);
+    let scene_height = if available >= 20 {
+        available
+            .saturating_sub(1 + office.workers.len().min(6) as u16 * 3)
+            .clamp(12, 18)
+    } else {
+        available.saturating_sub(2).max(1)
+    };
+    let scene = Rect::new(inner.x, inner.y + 1 + path_rows, inner.width, scene_height);
+    canvas.resize_for_cells(scene.width as usize, scene.height as usize);
     let markers = super::guard_scene::draw(canvas, office, sprites, now);
-    canvas.render(frame.buffer_mut(), inner);
-    paint_scanlines(frame.buffer_mut(), inner, now);
-
-    for (index, worker) in office.workers.iter().enumerate() {
+    canvas.render(frame.buffer_mut(), scene);
+    let roster_y = scene.bottom();
+    let remaining = inner.bottom().saturating_sub(roster_y);
+    if remaining == 0 {
+        return;
+    }
+    let workers = super::guard_scene::ranked_workers(office, now);
+    let stride = if remaining as usize > workers.len().min(6) * 3 {
+        3
+    } else {
+        1
+    };
+    let listed = workers
+        .len()
+        .min(remaining.saturating_sub(1) as usize / stride);
+    let extra = if markers.len() < workers.len() {
+        format!(" · {} characters shown", markers.len())
+    } else {
+        String::new()
+    };
+    let title = if listed < workers.len() {
+        format!(
+            " TEAM · {listed} of {} listed (+{} more) · Enter visit",
+            workers.len(),
+            workers.len() - listed
+        )
+    } else {
+        format!(
+            " TEAM · {} {}{} · Enter visit",
+            workers.len(),
+            if workers.len() == 1 {
+                "conversation"
+            } else {
+                "conversations"
+            },
+            extra
+        )
+    };
+    Paragraph::new(title)
+        .style(
+            Style::default()
+                .fg(INK)
+                .bg(PANEL)
+                .add_modifier(Modifier::BOLD),
+        )
+        .render(
+            Rect::new(inner.x, roster_y, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    for (index, worker) in workers.iter().take(listed).enumerate() {
         let status = worker_status(worker, now);
-        let Some(marker) = status_marker(status) else {
-            continue;
+        let label = match status {
+            WorkerStatus::Running => "WORKING",
+            WorkerStatus::Idle => "IDLE",
+            WorkerStatus::Blocked => "NEEDS HELP",
+            WorkerStatus::Failed => "FAILED",
         };
-        let Some(&(marker_cell_x, marker_cell_y)) = markers.get(index) else {
-            continue;
-        };
-        let marker_x =
-            inner.x + marker_cell_x.clamp(0, inner.width.saturating_sub(1) as i32) as u16;
-        let marker_y =
-            inner.y + marker_cell_y.clamp(0, inner.height.saturating_sub(1) as i32) as u16;
-        let marker_area = Rect::new(marker_x, marker_y, 1, 1);
-        let marker_style = status_style(status).bg(BACKGROUND);
-        paint_opaque(frame, marker_area, marker_style);
-        Paragraph::new(marker)
-            .style(marker_style)
-            .render(marker_area, frame.buffer_mut());
-    }
-
-    let summary_status = if blocked_count > 0 {
-        WorkerStatus::Blocked
-    } else if failed_count > 0 {
-        WorkerStatus::Failed
-    } else if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Running)
-    {
-        WorkerStatus::Running
-    } else {
-        WorkerStatus::Idle
-    };
-    let running = office
-        .workers
-        .iter()
-        .filter(|worker| worker_status(worker, now) == WorkerStatus::Running)
-        .count();
-    let idle = office
-        .workers
-        .iter()
-        .filter(|worker| worker_status(worker, now) == WorkerStatus::Idle)
-        .count();
-    let status = if blocked_count > 0 {
-        format!("! {blocked_count} WAITING · {running} working")
-    } else if failed_count > 0 {
-        format!("× {failed_count} FAILED · {running} working")
-    } else {
-        format!("{running} working · {idle} idle")
-    };
-
-    let status_width = if inner.width >= 42 && inner.height >= 2 {
-        inner.width.saturating_sub(8)
-    } else {
-        inner.width
-    };
-    let status_area = Rect::new(inner.x, inner.y, status_width, inner.height.min(1));
-    let status_text_style = Style::default()
-        .fg(status_color(summary_status))
-        .bg(BACKGROUND);
-    paint_opaque(frame, status_area, status_text_style);
-    Paragraph::new(status)
-        .style(status_text_style)
-        .render(status_area, frame.buffer_mut());
-    if inner.width >= 42 && inner.height >= 2 {
-        let rec = if now.div_euclid(500) % 2 == 0 {
-            "● REC"
-        } else {
-            "○ REC"
-        };
-        let rec_area = Rect::new(
-            inner.x + inner.width.saturating_sub(7),
-            inner.y,
-            7.min(inner.width),
-            1,
-        );
-        let rec_style = Style::default()
-            .fg(status_color(summary_status))
-            .bg(BACKGROUND);
-        paint_opaque(frame, rec_area, rec_style);
+        let width = inner.width.saturating_sub(14) as usize;
+        let y = roster_y + 1 + (index * stride) as u16;
         Paragraph::new(Line::from(vec![
-            Span::styled(rec, rec_style),
-            Span::styled(" ", rec_style),
+            Span::styled(
+                format!(" {:<11}", label),
+                Style::default().fg(status_color(status)),
+            ),
+            Span::styled(short_path(&worker.name, width), Style::default().fg(INK)),
         ]))
-        .style(rec_style)
-        .render(rec_area, frame.buffer_mut());
+        .style(Style::default().bg(PANEL))
+        .render(Rect::new(inner.x, y, inner.width, 1), frame.buffer_mut());
+        if stride > 1 {
+            let summary = super::desk::inspection_summary(worker, now);
+            let prefix = match status {
+                WorkerStatus::Running => "Latest: ",
+                WorkerStatus::Idle => "Last update: ",
+                _ => "Reason: ",
+            };
+            Paragraph::new(format!(
+                "             {}",
+                short_path(&format!("{prefix}{}", summary.detail), width)
+            ))
+            .style(Style::default().fg(MUTED).bg(PANEL))
+            .render(
+                Rect::new(inner.x, y + 1, inner.width, 1),
+                frame.buffer_mut(),
+            );
+        }
     }
-    if inner.width >= 8 && inner.height >= 2 {
-        let time_area = Rect::new(
-            inner.x,
-            inner.y + inner.height.saturating_sub(1),
-            inner.width,
-            1,
-        );
-        let time_style = Style::default().fg(MUTED).bg(BACKGROUND);
-        paint_opaque(frame, time_area, time_style);
-        Paragraph::new(timestamp(now))
-            .style(time_style)
-            .render(time_area, frame.buffer_mut());
+}
+
+fn path_tail(path: &str, width: usize) -> String {
+    if width == 0 {
+        return String::new();
     }
+    let safe = super::safe_display(path);
+    if Line::from(safe.as_str()).width() <= width {
+        return safe;
+    }
+    let mut tail = String::new();
+    for character in safe.chars().rev() {
+        let candidate = format!("{character}{tail}");
+        if Line::from(candidate.as_str()).width() + 1 > width {
+            break;
+        }
+        tail = candidate;
+    }
+    format!("…{tail}")
 }
 
 #[cfg(test)]
@@ -497,20 +590,149 @@ mod tests {
     }
 
     #[test]
-    fn wide_guard_office_keeps_feeds_in_balanced_rows() {
+    fn tower_directory_stacks_projects_in_one_column() {
         assert_eq!(
             grid_layout(6, 160, 44),
             GridLayout {
-                columns: 3,
-                rows: 2,
+                columns: 1,
+                rows: 6,
             }
         );
         assert_eq!(
             grid_layout(4, 160, 44),
             GridLayout {
-                columns: 2,
-                rows: 2,
+                columns: 1,
+                rows: 4,
             }
         );
+    }
+    #[test]
+    fn tower_exposes_attention_and_last_floor_without_changing_identity() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let mut world = status_world();
+        for index in 0..16 {
+            world.apply(event(
+                &format!("/project-{index:02}/same-name"),
+                &format!("worker-{index}"),
+                0,
+                EventKind::Seen {
+                    name: format!("Task {index}"),
+                    git_branch: None,
+                },
+            ));
+        }
+        let sprites = SpriteSet::new();
+        for (width, height) in [(80, 24), (120, 32), (192, 58)] {
+            let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+            let mut canvas = Canvas::new(0, 0);
+            let mut layout = GridLayout::default();
+            terminal
+                .draw(|frame| {
+                    layout = draw(
+                        frame,
+                        &world,
+                        &mut canvas,
+                        &sprites,
+                        BLOCKED_AFTER_MS + 1,
+                        19,
+                        false,
+                    );
+                })
+                .unwrap();
+            let text = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert_eq!(layout.columns, 1);
+            assert!(text.contains("20/20"));
+            assert!(text.contains("F20"));
+            assert!(text.contains("NEEDS HELP"));
+            assert!(!text.contains("REC"));
+            assert!(!text.contains("t+"));
+            assert!(text.contains("/ find"));
+            if width >= 110 {
+                assert!(text.contains("No recent activity. No approval was identified."));
+            }
+        }
+    }
+
+    #[test]
+    fn directory_attention_survives_a_narrow_row() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let world = status_world();
+        let offices = ordered_offices(&world, 0);
+        let mut terminal = Terminal::new(TestBackend::new(80, 8)).unwrap();
+        terminal
+            .draw(|frame| {
+                draw_directory(frame, Rect::new(0, 0, 80, 8), &offices, 0, 4, 2, 0, false)
+            })
+            .unwrap();
+        let rows = (0..8)
+            .map(|y| {
+                (0..80)
+                    .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>();
+        assert!(rows
+            .iter()
+            .any(|row| row.contains("y-blocked") && row.contains("!1 help")));
+        assert!(rows
+            .iter()
+            .any(|row| row.contains("a-failed") && row.contains("×1 failed")));
+    }
+
+    #[test]
+    fn compact_team_preview_reports_the_unlisted_conversations() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let mut world = World::new();
+        for index in 0..3 {
+            world.apply(event(
+                "/project",
+                &index.to_string(),
+                0,
+                EventKind::Seen {
+                    name: format!("Task {index}"),
+                    git_branch: None,
+                },
+            ));
+        }
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal
+            .draw(|frame| {
+                draw(
+                    frame,
+                    &world,
+                    &mut Canvas::new(0, 0),
+                    &SpriteSet::new(),
+                    0,
+                    0,
+                    false,
+                );
+            })
+            .unwrap();
+        let text = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(text.contains("1 of 3 listed (+2 more)"));
+    }
+
+    #[test]
+    fn project_paths_preserve_the_distinguishing_end_at_small_widths() {
+        assert_eq!(path_tail("/work/client-a/app", 12), "…lient-a/app");
+        assert_ne!(
+            path_tail("/work/client-a/app", 12),
+            path_tail("/work/client-b/app", 12)
+        );
+        for width in 0..20 {
+            assert!(Line::from(path_tail("/路径/客户-a/app", width)).width() <= width);
+        }
     }
 }

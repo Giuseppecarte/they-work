@@ -32,10 +32,7 @@ fn polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
     }
 }
 
-fn palette(office: &Office, light: bool) -> [Color; 4] {
-    let theme = office.id.0.bytes().fold(0usize, |hash, byte| {
-        hash.wrapping_mul(31).wrapping_add(byte as usize)
-    }) % 4;
+pub(super) fn palette(theme: usize, light: bool) -> [Color; 4] {
     if light {
         let colors = match theme {
             0 => [
@@ -92,7 +89,8 @@ pub(super) fn draw(
             h * (50 + (y - 50) * 3 / 5) / 100,
         )
     };
-    let [left_wall, right_wall, floor, wood] = palette(office, canvas.is_light_mode());
+    let [left_wall, right_wall, floor, wood] =
+        palette(sprites.office_palette_index(office), canvas.is_light_mode());
     let back = point(50, 25);
     let right = point(86, 55);
     let front = point(50, 88);
@@ -155,9 +153,20 @@ pub(super) fn draw(
             ],
             wood,
         );
-        let sprite = sprites.worker_frame(&office.workers[index], looks[index], now);
-        let width = (w / 14).max(3) as usize;
-        let height = (h / 5).max(3) as usize;
+        let available_width = (w / 14).max(3) as usize;
+        let available_height = (h / 5).max(3) as usize;
+        let sprite = sprites.worker_frame_fitting(
+            &office.workers[index],
+            looks[index],
+            now,
+            available_width,
+            available_height,
+        );
+        let scale = (available_width / sprite.width())
+            .min(available_height / sprite.height())
+            .max(1);
+        let width = sprite.width() * scale;
+        let height = sprite.height() * scale;
         canvas.blit_scaled(
             &sprite,
             (x - width as i32 / 2).max(0) as usize,
@@ -170,8 +179,8 @@ pub(super) fn draw(
         .into_iter()
         .map(|(x, y)| {
             (
-                x / canvas.encoding().width_per_cell() as i32,
-                y / canvas.encoding().height_per_cell() as i32,
+                x / canvas.pixels_per_cell().0 as i32,
+                y / canvas.pixels_per_cell().1 as i32,
             )
         })
         .collect()
@@ -216,5 +225,31 @@ mod tests {
                     .all(|pixel| pixel[3] == 255));
             }
         }
+    }
+
+    #[test]
+    fn native_image_markers_stay_in_terminal_cell_coordinates() {
+        let id = OfficeId("/native-project".into());
+        let mut office = Office::new(id.clone(), id.0.clone());
+        office.workers.push(Worker::new(
+            WorkerId("worker".into()),
+            id,
+            Agent::Codex,
+            "worker".into(),
+            0,
+        ));
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            ColorDepth::TrueColor,
+            PixelEncoding::Sextants,
+        );
+        canvas.set_cell_pixel_size(Some((10, 20)));
+        canvas.resize_for_cells(53, 19);
+        let markers = draw(&mut canvas, &office, &SpriteSet::new(), 0);
+        assert_eq!(markers.len(), 1);
+        assert!(markers
+            .iter()
+            .all(|&(x, y)| (0..53).contains(&x) && (0..19).contains(&y)));
     }
 }

@@ -527,6 +527,37 @@ impl Canvas {
         self.pixels.get(self.index(x, y)?).copied().flatten()
     }
 
+    /// Replace exact room materials after drawing, preserving skin, clothing,
+    /// status colours and alpha. Sources use the current global light theme;
+    /// destinations are already selected for that theme by the room palette.
+    pub(crate) fn remap_materials(&mut self, mappings: &[(Color, Color)]) {
+        let mappings = mappings
+            .iter()
+            .map(|&(from, to)| {
+                (
+                    rgb_of_color(self.themed_color(from)),
+                    rgb_of_color(to),
+                    self.convert_color(to),
+                )
+            })
+            .collect::<Vec<_>>();
+        for (index, rgba) in Arc::make_mut(&mut self.rgba)
+            .chunks_exact_mut(4)
+            .enumerate()
+        {
+            if rgba[3] == 0 {
+                continue;
+            }
+            if let Some((_, (r, g, b), cell_color)) = mappings
+                .iter()
+                .find(|(from, _, _)| *from == (rgba[0], rgba[1], rgba[2]))
+            {
+                rgba[..3].copy_from_slice(&[*r, *g, *b]);
+                self.pixels[index] = Some(*cell_color);
+            }
+        }
+    }
+
     /// Copy this canvas into an owned RGBA8 frame for a terminal-image encoder.
     ///
     /// This accessor deliberately does not select a graphics protocol or write

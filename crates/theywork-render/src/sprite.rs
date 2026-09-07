@@ -5,11 +5,11 @@
 //! walks the already-parsed colour buffer.
 
 use std::cell::{Cell, RefCell};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::{Arc, OnceLock};
 
 use ratatui::style::Color;
-use theywork_core::{Activity, Agent, Millis, Worker};
+use theywork_core::{Activity, Agent, Millis, Office, Worker};
 
 const WORKER_WIDTH: usize = 24;
 const WORKER_HEIGHT: usize = 34;
@@ -40,6 +40,16 @@ struct WorkerRenderKey {
     agent: Agent,
     activity: ActivityKind,
     look: WorkerLook,
+    resolution: WorkerResolution,
+}
+
+/// Each camera distance has authored pixels; a small terminal must not sample
+/// away the eyes, hands and shirt of the detailed character.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum WorkerResolution {
+    Full,
+    Compact,
+    Mini,
 }
 /// Derive a worker's base wardrobe from only its stable thread id.
 /// The hash is explicit so the result does not depend on Rust's randomized
@@ -158,6 +168,9 @@ impl Sprite {
     /// Read one pixel. `None` means transparent or outside the sprite.
     pub fn pixel(&self, x: usize, y: usize) -> Option<Color> {
         let parsed = self.parsed();
+        if x >= parsed.width || y >= parsed.height {
+            return None;
+        }
         parsed
             .pixels
             .get(y.checked_mul(parsed.width)?.checked_add(x)?)
@@ -314,6 +327,8 @@ impl ActivityKind {
 #[derive(Clone)]
 pub(crate) struct SpriteSet {
     wardrobe_cache: RefCell<HashMap<WorkerRenderKey, Animation>>,
+    wardrobe: RefCell<BTreeMap<String, usize>>,
+    office_palettes: RefCell<BTreeMap<String, usize>>,
     animation_time: Cell<Option<Millis>>,
     pub(crate) desk: Sprite,
     pub(crate) monitor: Sprite,
@@ -327,6 +342,8 @@ impl SpriteSet {
     pub(crate) fn new() -> Self {
         Self {
             wardrobe_cache: RefCell::new(HashMap::new()),
+            wardrobe: RefCell::new(BTreeMap::new()),
+            office_palettes: RefCell::new(BTreeMap::new()),
             animation_time: Cell::new(None),
             desk: desk(),
             monitor: monitor(),
@@ -341,12 +358,141 @@ impl SpriteSet {
         self.animation_time.set(now);
     }
 
-    pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
-        let activity = ActivityKind::from_activity(&worker.activity);
-        self.wardrobe_frame(worker.agent, look, activity, now)
+    pub(crate) fn set_wardrobe(&self, wardrobe: &BTreeMap<String, usize>) {
+        if *self.wardrobe.borrow() != *wardrobe {
+            self.wardrobe.replace(wardrobe.clone());
+        }
     }
 
+    pub(crate) fn set_office_palettes(&self, palettes: &BTreeMap<String, usize>) {
+        if *self.office_palettes.borrow() != *palettes {
+            self.office_palettes.replace(palettes.clone());
+        }
+    }
+
+    pub(crate) fn office_palette_index(&self, office: &Office) -> usize {
+        self.office_palettes
+            .borrow()
+            .get(&office.id.0)
+            .copied()
+            .unwrap_or_else(|| {
+                office.id.0.bytes().fold(0usize, |hash, byte| {
+                    hash.wrapping_mul(31).wrapping_add(byte as usize)
+                })
+            })
+            % 4
+    }
+
+    pub(crate) fn office_palette_label(&self, office: &Office) -> &'static str {
+        match self
+            .office_palettes
+            .borrow()
+            .get(&office.id.0)
+            .map(|index| index % 4)
+        {
+            Some(0) => "Sandstone",
+            Some(1) => "Midnight",
+            Some(2) => "Orchard",
+            Some(_) => "Arcade",
+            None => "Auto",
+        }
+    }
+
+    pub(crate) fn persona_label(&self, worker: &Worker) -> (&'static str, &'static str) {
+        const PERSONAS: [(&str, &str); 6] = [
+            ("The Explorer", "Collects tiny maps"),
+            ("The Maker", "Keeps a lucky pencil"),
+            ("The Gardener", "Names every desk plant"),
+            ("The Dreamer", "Sketches clouds at lunch"),
+            ("The Bookworm", "Organizes books by colour"),
+            ("The Stargazer", "Counts imaginary satellites"),
+        ];
+        self.wardrobe
+            .borrow()
+            .get(&worker.id.0)
+            .map(|preset| PERSONAS[*preset % PERSONAS.len()])
+            .unwrap_or(("Original", "Your conversation's familiar face"))
+    }
+
+    fn dressed_look(&self, worker: &Worker, base: WorkerLook) -> WorkerLook {
+        match self.wardrobe.borrow().get(&worker.id.0) {
+            Some(preset) => {
+                let index = (*preset % 6) as u8;
+                WorkerLook {
+                    head: index,
+                    face: index % 5,
+                    top: index,
+                    desk_prop: index,
+                    hair: index,
+                    ..base
+                }
+            }
+            None => base,
+        }
+    }
+
+    pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
+        let activity = ActivityKind::from_activity(&worker.activity);
+        let look = self.dressed_look(worker, look);
+        self.wardrobe_frame(worker.agent, look, activity, now, WorkerResolution::Full)
+    }
+
+    pub(crate) fn worker_frame_fitting(
+        &self,
+        worker: &Worker,
+        look: WorkerLook,
+        now: Millis,
+        width: usize,
+        height: usize,
+    ) -> Sprite {
+        self.wardrobe_frame(
+            worker.agent,
+            self.dressed_look(worker, look),
+            ActivityKind::from_activity(&worker.activity),
+            now,
+            worker_resolution(width, height),
+        )
+    }
+
+    pub(crate) fn worker_head_fitting(
+        &self,
+        worker: &Worker,
+        look: WorkerLook,
+        now: Millis,
+        width: usize,
+        height: usize,
+    ) -> (Sprite, (usize, usize, usize, usize)) {
+        let (resolution, region) = if width >= 24 && height >= WORKER_HEAD_HEIGHT {
+            (WorkerResolution::Full, (0, 0, 24, WORKER_HEAD_HEIGHT))
+        } else if width >= 14 && height >= 10 {
+            (WorkerResolution::Compact, (0, 0, 14, 10))
+        } else {
+            (WorkerResolution::Mini, (1, 0, 5, 5))
+        };
+        (
+            self.wardrobe_frame(
+                worker.agent,
+                self.dressed_look(worker, look),
+                ActivityKind::from_activity(&worker.activity),
+                now,
+                resolution,
+            ),
+            region,
+        )
+    }
+
+    #[cfg(test)]
     pub(crate) fn manager_frame(&self, needs_attention: bool, now: Millis) -> Sprite {
+        self.manager_frame_fitting(needs_attention, now, WORKER_WIDTH, WORKER_HEIGHT)
+    }
+
+    pub(crate) fn manager_frame_fitting(
+        &self,
+        needs_attention: bool,
+        now: Millis,
+        width: usize,
+        height: usize,
+    ) -> Sprite {
         let activity = if needs_attention {
             ActivityKind::Waiting
         } else {
@@ -365,6 +511,7 @@ impl SpriteSet {
             },
             activity,
             now,
+            worker_resolution(width, height),
         )
     }
 
@@ -374,17 +521,19 @@ impl SpriteSet {
         look: WorkerLook,
         activity: ActivityKind,
         now: Millis,
+        resolution: WorkerResolution,
     ) -> Sprite {
         let key = WorkerRenderKey {
             agent,
             activity,
             look,
+            resolution,
         };
         let mut cache = self.wardrobe_cache.borrow_mut();
         let animation_now = self.animation_time.get().unwrap_or(now);
         cache
             .entry(key)
-            .or_insert_with(|| worker_animation_for_look(agent, look, activity))
+            .or_insert_with(|| worker_animation_for_look(agent, look, activity, resolution))
             .frame_at(animation_now)
             .clone()
     }
@@ -502,7 +651,22 @@ fn activity_props(kind: ActivityKind, frame: usize) -> Vec<String> {
     rows
 }
 
-fn worker_animation_for_look(agent: Agent, look: WorkerLook, kind: ActivityKind) -> Animation {
+fn worker_resolution(width: usize, height: usize) -> WorkerResolution {
+    if width >= WORKER_WIDTH && height >= WORKER_HEIGHT {
+        WorkerResolution::Full
+    } else if width >= 14 && height >= 20 {
+        WorkerResolution::Compact
+    } else {
+        WorkerResolution::Mini
+    }
+}
+
+fn worker_animation_for_look(
+    agent: Agent,
+    look: WorkerLook,
+    kind: ActivityKind,
+    resolution: WorkerResolution,
+) -> Animation {
     let duration = match kind {
         ActivityKind::Typing => 260,
         ActivityKind::Reading => 620,
@@ -516,10 +680,141 @@ fn worker_animation_for_look(agent: Agent, look: WorkerLook, kind: ActivityKind)
     };
     Animation::new(
         (0..2)
-            .map(|frame| wardrobe_frame(agent, look, kind, frame))
+            .map(|frame| match resolution {
+                WorkerResolution::Full => wardrobe_frame(agent, look, kind, frame),
+                _ => compact_wardrobe_frame(agent, look, kind, frame, resolution),
+            })
             .collect(),
         duration,
     )
+}
+
+const COMPACT_WORKER_ROWS: &[&str] = &[
+    "....######....",
+    "...#hhhhhh#...",
+    "..#hhiiiihh#..",
+    "..#hhhhhhhh#..",
+    "..#lssssssl#..",
+    "..#ssessess#..",
+    "..#ssssssss#..",
+    "..#sssmmsss#..",
+    "..#ssssssss#..",
+    "...#dddddd#...",
+    "....######....",
+    "...vvccccvv...",
+    "..#vccbbccv#..",
+    "..svccbbccvs..",
+    "..svccccccvs..",
+    "...vccccccv...",
+    "....######....",
+    "....pp..pp....",
+    "....pp..pp....",
+    "...ooo..ooo...",
+];
+
+const MINI_WORKER_ROWS: &[&str] = &[
+    ".hhhhh.", ".hissh.", ".seses.", ".ssmss.", "..ddd..", ".vcccv.", "svbbvs.", ".vcccv.",
+    "..p.p..", ".oo.oo.",
+];
+
+fn compact_wardrobe_frame(
+    agent: Agent,
+    look: WorkerLook,
+    kind: ActivityKind,
+    frame: usize,
+    resolution: WorkerResolution,
+) -> Sprite {
+    let mini = resolution == WorkerResolution::Mini;
+    let mut rows = if mini {
+        MINI_WORKER_ROWS
+    } else {
+        COMPACT_WORKER_ROWS
+    }
+    .iter()
+    .map(|row| (*row).to_string())
+    .collect::<Vec<_>>();
+    let eye_row = if mini { 2 } else { 5 };
+    let eyes = if mini { [2, 4] } else { [5, 8] };
+    // Preserve the same wardrobe choices while simplifying each silhouette at
+    // its own grid. Accessories use cool neutrals, leaving amber to alerts.
+    match look.head {
+        0 => {}
+        1 => {
+            let row = if mini { 1 } else { 3 };
+            for column in if mini { 0..7 } else { 1..13 } {
+                replace_char(&mut rows[row], column, 'k');
+            }
+        }
+        2 => {
+            for row in rows.iter_mut().take(if mini { 1 } else { 3 }) {
+                *row = row.replace(['h', 'i', '#'], "k");
+            }
+        }
+        3 => {
+            replace_char(&mut rows[0], if mini { 3 } else { 6 }, 'i');
+            replace_char(&mut rows[0], if mini { 4 } else { 7 }, 'i');
+        }
+        4 => {
+            for row in rows.iter_mut().take(eye_row + 2).skip(eye_row) {
+                replace_char(row, if mini { 0 } else { 1 }, 'h');
+                replace_char(row, if mini { 6 } else { 12 }, 'h');
+            }
+        }
+        _ => {
+            for column in if mini {
+                vec![1, 3, 5]
+            } else {
+                vec![4, 6, 8, 10]
+            } {
+                replace_char(&mut rows[0], column, 'i');
+            }
+        }
+    }
+    if look.face == 1 || look.face == 3 {
+        replace_char(&mut rows[eye_row], if mini { 3 } else { 6 }, '#');
+        if !mini {
+            replace_char(&mut rows[eye_row], 7, '#');
+        }
+    }
+    if look.face == 2 {
+        let beard_row = if mini { 3 } else { 8 };
+        for column in if mini { 2..5 } else { 4..10 } {
+            replace_char(&mut rows[beard_row], column, 'g');
+        }
+    }
+    let torso = if mini { 6 } else { 13 };
+    match look.top {
+        1 => replace_char(&mut rows[torso], if mini { 3 } else { 7 }, 'v'),
+        2 => replace_char(&mut rows[torso], if mini { 2 } else { 5 }, 'k'),
+        3 => {
+            for column in if mini { 2..5 } else { 4..10 } {
+                replace_char(&mut rows[torso], column, 'b');
+            }
+        }
+        4 => replace_char(&mut rows[torso], if mini { 4 } else { 8 }, 'k'),
+        5 => replace_char(&mut rows[torso + 1], if mini { 3 } else { 7 }, 'v'),
+        _ => {}
+    }
+    if kind == ActivityKind::Waiting {
+        let raised = if mini { 4 } else { 9 };
+        replace_char(&mut rows[raised - frame], 0, 's');
+        replace_char(&mut rows[raised + 1 - frame], 0, 'v');
+    } else if kind == ActivityKind::Thinking && frame == 1 {
+        for column in eyes {
+            replace_char(&mut rows[eye_row], column, 's');
+        }
+    } else if matches!(kind, ActivityKind::Typing | ActivityKind::Editing) {
+        replace_char(&mut rows[torso + frame], if mini { 0 } else { 1 }, 's');
+    } else if kind == ActivityKind::Reading {
+        replace_char(&mut rows[torso], if mini { 0 } else { 1 }, 'k');
+    } else if kind == ActivityKind::Talking {
+        replace_char(
+            &mut rows[if mini { 3 } else { 7 }],
+            if mini { 3 } else { 6 },
+            if frame == 0 { 'm' } else { 'e' },
+        );
+    }
+    Sprite::from_owned_rows(rows, &wardrobe_palette(agent, look))
 }
 fn wardrobe_frame(agent: Agent, look: WorkerLook, kind: ActivityKind, frame: usize) -> Sprite {
     let mut rows: Vec<String> = DESIGN_WORKER_ROWS
@@ -762,7 +1057,7 @@ fn wardrobe_palette(agent: Agent, look: WorkerLook) -> Vec<(char, Color)> {
         ('q', Color::Rgb(28, 24, 48)),
         ('o', Color::Rgb(74, 58, 42)),
         ('a', Color::Rgb(232, 52, 44)),
-        ('n', Color::Rgb(240, 180, 41)),
+        ('n', Color::Rgb(134, 164, 183)),
         ('t', Color::Rgb(86, 194, 106)),
         ('k', Color::Rgb(201, 194, 214)),
         ('z', Color::Rgb(88, 214, 232)),
@@ -941,6 +1236,8 @@ mod tests {
         assert_eq!(sprite.pixel(1, 0), None);
         assert_eq!(sprite.pixel(0, 1), None);
         assert_eq!(sprite.pixel(1, 1), Some(Color::Red));
+        assert_eq!(sprite.pixel(2, 0), None);
+        assert_eq!(sprite.pixel(0, 2), None);
     }
 
     #[test]
@@ -993,6 +1290,115 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn small_workers_have_authored_eyes_and_preserve_agent_colours() {
+        let sprites = SpriteSet::new();
+        for agent in [Agent::Codex, Agent::Claude] {
+            let worker = test_worker(agent);
+            let look = WorkerLook {
+                head: 0,
+                face: 0,
+                top: 0,
+                desk_prop: 0,
+                skin: 0,
+                hair: 0,
+                contractor: false,
+            };
+            for (width, height, eye, shirt) in [(7, 10, (2, 2), (3, 5)), (14, 20, (5, 5), (5, 11))]
+            {
+                let sprite = sprites.worker_frame_fitting(&worker, look, 0, width, height);
+                assert_eq!((sprite.width(), sprite.height()), (width, height));
+                assert_eq!(sprite.pixel(eye.0, eye.1), Some(Color::Rgb(26, 22, 38)));
+                assert_eq!(
+                    sprite.pixel(shirt.0, shirt.1),
+                    Some(
+                        wardrobe_palette(agent, look)
+                            .iter()
+                            .find(|(key, _)| *key == 'c')
+                            .unwrap()
+                            .1
+                    )
+                );
+                assert!(sprite
+                    .pixels()
+                    .iter()
+                    .flatten()
+                    .all(|pixel| *pixel != Color::Rgb(240, 180, 41)));
+            }
+        }
+    }
+
+    #[test]
+    fn compact_worker_and_manager_keep_the_same_anatomy() {
+        let sprites = SpriteSet::new();
+        let mut worker = test_worker(Agent::Claude);
+        worker.activity = Activity::Waiting {
+            detail: String::new(),
+        };
+        for (width, height) in [(7, 10), (14, 20), (72, 102)] {
+            let worker =
+                sprites.worker_frame_fitting(&worker, worker_look(&worker), 0, width, height);
+            let manager = sprites.manager_frame_fitting(true, 0, width, height);
+            assert_eq!(
+                (worker.width(), worker.height()),
+                (manager.width(), manager.height())
+            );
+        }
+        for rows in [COMPACT_WORKER_ROWS, MINI_WORKER_ROWS] {
+            assert!(rows.iter().all(|row| row.len() == rows[0].len()));
+        }
+    }
+
+    #[test]
+    fn wardrobe_choices_follow_thread_identity_across_resolutions_and_reset() {
+        let sprites = SpriteSet::new();
+        let worker = test_worker(Agent::Codex);
+        let original = worker_look(&worker);
+        let other = Worker {
+            id: theywork_core::WorkerId("other-thread".into()),
+            ..worker.clone()
+        };
+        let frames = (0..6)
+            .map(|preset| {
+                sprites.set_wardrobe(&BTreeMap::from([(worker.id.0.clone(), preset)]));
+                assert_ne!(sprites.persona_label(&worker).0, "Original");
+                assert_eq!(sprites.persona_label(&other).0, "Original");
+                assert_eq!(sprites.dressed_look(&worker, original).skin, original.skin);
+                let frame = sprites.worker_frame_fitting(&worker, original, 0, 14, 20);
+                let (head, region) = sprites.worker_head_fitting(&worker, original, 0, 14, 10);
+                assert_eq!(region, (0, 0, 14, 10));
+                for y in 0..10 {
+                    for x in 0..14 {
+                        assert_eq!(head.pixel(x, y), frame.pixel(x, y));
+                    }
+                }
+                frame.pixels().to_vec()
+            })
+            .collect::<std::collections::HashSet<_>>();
+        assert_eq!(frames.len(), 6);
+        sprites.set_wardrobe(&BTreeMap::new());
+        assert_eq!(sprites.persona_label(&worker).0, "Original");
+        assert_eq!(sprites.dressed_look(&worker, original), original);
+    }
+
+    #[test]
+    fn room_palettes_belong_to_office_ids_and_reset_to_their_stable_default() {
+        let sprites = SpriteSet::new();
+        let office = Office::new(theywork_core::OfficeId("/office-one".into()), "One".into());
+        let other = Office::new(theywork_core::OfficeId("/office-two".into()), "Two".into());
+        let initial = sprites.office_palette_index(&office);
+        let initial_other = sprites.office_palette_index(&other);
+        for palette in 0..4 {
+            sprites.set_office_palettes(&BTreeMap::from([(office.id.0.clone(), palette)]));
+            assert_eq!(sprites.office_palette_index(&office), palette);
+            assert_eq!(sprites.office_palette_index(&other), initial_other);
+            assert_ne!(sprites.office_palette_label(&office), "Auto");
+        }
+        sprites.set_office_palettes(&BTreeMap::new());
+        assert_eq!(sprites.office_palette_index(&office), initial);
+        assert_eq!(sprites.office_palette_label(&office), "Auto");
     }
 
     #[test]

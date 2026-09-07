@@ -151,6 +151,7 @@ pub(crate) fn draw(
         .map(safe_display)
         .unwrap_or_else(|| "no branch".to_string());
     let status = worker_status(worker, now);
+    let approval_request = matches!(worker.activity, Activity::Waiting { .. });
     let worker_title = short_path(&worker.name, area.width.saturating_sub(11) as usize);
     let office_title = short_path(&office.name, area.width.saturating_sub(20) as usize);
     let (header, body, footer) = super::vertical_bands(area, 2, 2);
@@ -174,7 +175,7 @@ pub(crate) fn draw(
             footer.width,
             footer.height.min(1),
         ),
-        "↑↓ scroll  ←→ desks  p phone  Esc floor  q quit · read-only",
+        "↑↓ scroll  ←→ desks  w character  W reset  p phone  Esc floor · read-only",
     );
     if footer.height > 1 {
         Paragraph::new(Line::from(vec![
@@ -207,8 +208,8 @@ pub(crate) fn draw(
         canvas.resize_for_cells(avatar.width as usize, avatar.height as usize);
         canvas.fill(PANEL);
         let look = look_for_worker(&office.workers, worker);
-        let width = canvas.scale_width(9).min(canvas.width()).max(1);
-        let height = canvas.scale_half_height(12).min(canvas.height()).max(1);
+        let width = canvas.width();
+        let height = canvas.height();
         render_worker_with_look(
             canvas,
             sprites,
@@ -232,6 +233,7 @@ pub(crate) fn draw(
         profile.height,
     );
     if has_area(info) {
+        let (persona, quirk) = sprites.persona_label(worker);
         let metadata = vec![
             Line::from(vec![
                 Span::styled(
@@ -261,11 +263,18 @@ pub(crate) fn draw(
                 format!("{} tokens", human_tokens(worker.tokens_used)),
                 Style::default().fg(MUTED),
             )),
+            Line::from(Span::styled(
+                short_path(
+                    &format!("CHARACTER · {persona} · {quirk} [w]"),
+                    info.width as usize,
+                ),
+                Style::default().fg(ACCENT),
+            )),
         ];
         Paragraph::new(metadata)
             .style(Style::default().bg(BACKGROUND))
             .render(
-                Rect::new(info.x, info.y, info.width, info.height.min(3)),
+                Rect::new(info.x, info.y, info.width, info.height.min(4)),
                 frame.buffer_mut(),
             );
         if info.height > 4 {
@@ -287,7 +296,8 @@ pub(crate) fn draw(
             };
             paint_opaque(frame, notice, Style::default().bg(background));
             let label = match status {
-                theywork_core::WorkerStatus::Blocked => " WAITING ON YOU",
+                theywork_core::WorkerStatus::Blocked if approval_request => " WAITING ON YOU",
+                theywork_core::WorkerStatus::Blocked => " NEEDS ATTENTION",
                 theywork_core::WorkerStatus::Failed => " NEEDS ATTENTION",
                 _ => " CURRENT WORK",
             };
@@ -303,11 +313,14 @@ pub(crate) fn draw(
                     frame.buffer_mut(),
                 );
             if notice.height >= 2 {
-                let instruction = if status == theywork_core::WorkerStatus::Blocked {
-                    " Review in the original thread; this view is read-only."
-                } else {
-                    " Latest activity"
-                };
+                let instruction =
+                    if status == theywork_core::WorkerStatus::Blocked && approval_request {
+                        " Review in the original thread; this view is read-only."
+                    } else if status == theywork_core::WorkerStatus::Blocked {
+                        " No recent activity; check the original conversation."
+                    } else {
+                        " Latest activity"
+                    };
                 Paragraph::new(instruction)
                     .style(Style::default().fg(INK).bg(background))
                     .render(
@@ -323,12 +336,16 @@ pub(crate) fn draw(
                     notice.height - 2,
                 );
                 paint_opaque(frame, detail, Style::default().bg(BACKGROUND));
-                Paragraph::new(safe_display(
-                    worker.activity.detail().unwrap_or("No detail available"),
-                ))
-                .style(Style::default().fg(accent).bg(BACKGROUND))
-                .wrap(Wrap { trim: false })
-                .render(detail, frame.buffer_mut());
+                let detail_text =
+                    if status == theywork_core::WorkerStatus::Blocked && !approval_request {
+                        "No approval was identified."
+                    } else {
+                        worker.activity.detail().unwrap_or("No detail available")
+                    };
+                Paragraph::new(safe_display(detail_text))
+                    .style(Style::default().fg(accent).bg(BACKGROUND))
+                    .wrap(Wrap { trim: false })
+                    .render(detail, frame.buffer_mut());
             }
             for y in notice.y..notice.y + notice.height {
                 Paragraph::new("▌")
@@ -386,6 +403,59 @@ pub(crate) fn draw(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stale_work_is_attention_without_an_invented_approval_request() {
+        use ratatui::{backend::TestBackend, Terminal};
+        use theywork_core::{Agent, OfficeId, WorkerId, BLOCKED_AFTER_MS};
+        let office = Office::new(OfficeId("/quiet".into()), "Quiet".into());
+        let mut worker = Worker::new(
+            WorkerId("quiet-worker".into()),
+            office.id.clone(),
+            Agent::Codex,
+            "Quiet worker".into(),
+            0,
+        );
+        worker.activity = Activity::Typing {
+            detail: "an earlier command".into(),
+        };
+        worker.turn_in_flight = true;
+        let mut terminal = Terminal::new(TestBackend::new(120, 32)).unwrap();
+        let mut canvas = Canvas::new(0, 0);
+        let mut scroll = 0;
+        terminal
+            .draw(|frame| {
+                draw(
+                    frame,
+                    Some(&office),
+                    Some(&worker),
+                    &mut canvas,
+                    &SpriteSet::new(),
+                    BLOCKED_AFTER_MS + 1,
+                    &mut scroll,
+                )
+            })
+            .unwrap();
+        let text = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(text.contains("NEEDS ATTENTION"));
+        assert!(text.contains("No approval was identified."));
+        assert!(!text.contains("WAITING ON YOU"));
+        let profile = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .take(120 * 12)
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(!profile.contains("an earlier command"));
+    }
 
     #[test]
     fn timeline_wraps_complete_detail_and_retains_outcome() {

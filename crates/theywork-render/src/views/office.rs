@@ -90,6 +90,22 @@ fn outline_color(canvas: &Canvas) -> Color {
     }
 }
 
+pub(super) fn apply_room_palette(canvas: &mut Canvas, palette: usize) {
+    let [_, wall, floor, _] = super::guard_scene::palette(palette, canvas.is_light_mode());
+    let dark = blend_color(floor, Color::Rgb(26, 22, 38), 65);
+    let mid = blend_color(floor, dark, 120);
+    canvas.remap_materials(&[
+        (FLOOR_LIGHT, floor),
+        (FLOOR_DARK, dark),
+        (FLOOR_DITHER, mid),
+        (WALL, wall),
+        (Color::Rgb(188, 145, 93), floor),
+        (Color::Rgb(224, 181, 115), mid),
+        (Color::Rgb(91, 82, 112), wall),
+        (Color::Rgb(117, 103, 139), blend_color(wall, floor, 32)),
+    ]);
+}
+
 /// The desk grid and pagination information for an office floor.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct OfficeLayout {
@@ -120,7 +136,7 @@ impl Projection {
 
     pub(crate) fn previous(self) -> Self {
         match self {
-            Self::Auto => Self::Side,
+            Self::Auto => Self::List,
             Self::Iso => Self::Auto,
             Self::TopDown => Self::Iso,
             Self::Side => Self::TopDown,
@@ -327,6 +343,7 @@ impl RoomScale {
                 (24 * 3, 34 * 3)
             }
             Self::Floor if grid.encoding == PixelEncoding::Sextants => (14, 20),
+            Self::Floor if grid.encoding == PixelEncoding::Quadrants => (14, 10),
             Self::Floor => (7, 10),
         }
     }
@@ -1581,6 +1598,8 @@ fn blit_floor_worker(
     width: usize,
     height: usize,
 ) {
+    debug_assert!(width.is_multiple_of(sprite.width()));
+    debug_assert!(height.is_multiple_of(sprite.height()));
     blit_scaled_signed(canvas, sprite, x, y, width, height);
 }
 
@@ -1772,8 +1791,8 @@ fn draw_item(
             let Some(look) = looks.get(index) else {
                 return;
             };
-            let sprite = sprites.worker_frame(worker, *look, now);
             let (x, y, width, height) = worker_bounds(grid, scale, index);
+            let sprite = sprites.worker_frame_fitting(worker, *look, now, width, height);
             if scale == RoomScale::Floor {
                 blit_floor_worker(canvas, &sprite, x, y, width, height);
             } else {
@@ -1783,7 +1802,7 @@ fn draw_item(
         IsoKind::Manager => {
             let (x, y, width, height, attention) =
                 manager_bounds(grid, scale, (item.tile_x, item.tile_y), now);
-            let sprite = sprites.manager_frame(attention, now);
+            let sprite = sprites.manager_frame_fitting(attention, now, width, height);
             blit_floor_worker(canvas, &sprite, x, y, width, height);
             if attention {
                 set_pixel(canvas, x + width as i32 + 1, y, WARNING);
@@ -2657,14 +2676,14 @@ pub(crate) fn draw(
     draw_header(frame, header, &format!("FLOOR / {title}"), &subtitle);
     let footer_text = if overflow > 0 {
         format!(
-            "←↑↓→ / hjkl desks   Enter open   Tab cameras   c camera   page {}/{}   +{} overflow   p phone   ? help",
+            "←↑↓→ / hjkl desks   Enter open   Tab floor   Esc tower   v view   page {}/{}   +{} overflow   p phone   o palette   c sources   ? help",
             page.saturating_add(1),
             layout.pages.max(1),
             overflow
         )
     } else {
         format!(
-            "←↑↓→ / hjkl desks   Enter open   Tab cameras   c camera   page {}/{}   p phone   ? help",
+            "←↑↓→ / hjkl desks   Enter open   Tab floor   Esc tower   v view   page {}/{}   p phone   o palette   c sources   ? help",
             page.saturating_add(1),
             layout.pages.max(1)
         )
@@ -2706,6 +2725,9 @@ pub(crate) fn draw(
             None
         }
     };
+    if effective != Projection::List {
+        apply_room_palette(canvas, sprites.office_palette_index(office));
+    }
     canvas.render(frame.buffer_mut(), body);
     if effective == Projection::List {
         draw_list_rows(
@@ -2867,6 +2889,20 @@ mod tests {
     use theywork_core::{Agent, OfficeId, WorkerId};
 
     use super::*;
+
+    #[test]
+    fn projection_cycle_is_reversible_for_every_view() {
+        for projection in [
+            Projection::Auto,
+            Projection::Iso,
+            Projection::TopDown,
+            Projection::Side,
+            Projection::List,
+        ] {
+            assert_eq!(projection.next().previous(), projection);
+            assert_eq!(projection.previous().next(), projection);
+        }
+    }
 
     #[test]
     fn desk_layout_caps_the_main_floor_and_pages_overflow() {
@@ -3630,9 +3666,9 @@ mod tests {
         );
         let sprites = SpriteSet::new();
         let modes = [
-            (PixelEncoding::HalfBlocks, 12, 17, None),
-            (PixelEncoding::Quadrants, 12, 17, None),
-            (PixelEncoding::Sextants, 24, 34, None),
+            (PixelEncoding::HalfBlocks, 7, 10, None),
+            (PixelEncoding::Quadrants, 14, 10, None),
+            (PixelEncoding::Sextants, 14, 20, None),
             (PixelEncoding::Sextants, 96, 136, Some((10, 20))),
         ];
         for (encoding, width, height, cell_size) in modes {
@@ -3647,7 +3683,7 @@ mod tests {
                         hair: variant,
                         contractor: false,
                     };
-                    let sprite = sprites.worker_frame(&worker, look, 0);
+                    let sprite = sprites.worker_frame_fitting(&worker, look, 0, width, height);
                     let mut canvas = Canvas::with_color_depth_and_encoding(
                         width,
                         height,
@@ -3675,7 +3711,7 @@ mod tests {
     }
 
     #[test]
-    fn sextants_is_the_lowest_cell_rung_that_retains_eye_detail() {
+    fn every_floor_density_uses_native_pixels_or_integer_enlargement() {
         let worker = Worker::new(
             WorkerId("/office#face".into()),
             OfficeId("/office".into()),
@@ -3683,23 +3719,14 @@ mod tests {
             "face".into(),
             0,
         );
-        let look = WorkerLook {
-            head: 0,
-            face: 0,
-            top: 0,
-            desk_prop: 0,
-            skin: 0,
-            hair: 0,
-            contractor: false,
-        };
-        let sprite = SpriteSet::new().worker_frame(&worker, look, 0);
-        let modes = [
-            (PixelEncoding::HalfBlocks, None, false),
-            (PixelEncoding::Quadrants, None, false),
-            (PixelEncoding::Sextants, None, true),
-            (PixelEncoding::Sextants, Some((10, 20)), true),
-        ];
-        for (encoding, cell_size, expected) in modes {
+        let sprites = SpriteSet::new();
+        let look = crate::sprite::worker_look(&worker);
+        for (encoding, cell_size) in [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::Sextants, Some((10, 20))),
+        ] {
             let pixels_per_cell =
                 cell_size.unwrap_or((encoding.width_per_cell(), encoding.height_per_cell()));
             let grid = make_grid_with_encoding(
@@ -3711,22 +3738,24 @@ mod tests {
                 pixels_per_cell,
             );
             let (width, height) = RoomScale::Floor.worker_size(grid);
+            let sprite = sprites.worker_frame_fitting(&worker, look, 0, width, height);
+            assert_eq!(width % sprite.width(), 0, "{encoding:?} squeezes columns");
+            assert_eq!(height % sprite.height(), 0, "{encoding:?} squeezes rows");
             let mut canvas = Canvas::with_color_depth_and_encoding(
                 width,
                 height,
                 crate::canvas::ColorDepth::TrueColor,
                 encoding,
             );
-            canvas.set_cell_pixel_size(cell_size);
-            canvas.resize(width, height);
             blit_floor_worker(&mut canvas, &sprite, 0, 0, width, height);
-            let has_eye_white = (0..width)
-                .flat_map(|x| (0..height / 2).map(move |y| (x, y)))
-                .any(|(x, y)| canvas.pixel(x, y) == Some(Color::Rgb(255, 255, 255)));
-            assert_eq!(
-                has_eye_white, expected,
-                "{encoding:?}/{cell_size:?} face readability changed"
-            );
+            for y in 0..sprite.height() {
+                for x in 0..sprite.width() {
+                    assert_eq!(
+                        canvas.pixel(x * width / sprite.width(), y * height / sprite.height()),
+                        sprite.pixel(x, y)
+                    );
+                }
+            }
         }
     }
 
@@ -4007,5 +4036,37 @@ mod tests {
                 .len(),
             labels.len()
         );
+    }
+    #[test]
+    fn office_palettes_change_room_materials_but_keep_worker_and_alert_colours() {
+        for light in [false, true] {
+            let mut floors = std::collections::HashSet::new();
+            for palette in 0..4 {
+                let mut canvas = Canvas::with_color_depth_and_encoding(
+                    4,
+                    1,
+                    crate::canvas::ColorDepth::TrueColor,
+                    PixelEncoding::HalfBlocks,
+                );
+                canvas.set_light_mode(light);
+                for (x, color) in [FLOOR, WALL, Color::Rgb(79, 158, 232), WARNING]
+                    .into_iter()
+                    .enumerate()
+                {
+                    canvas.set(x, 0, color);
+                }
+                let worker = canvas.pixel(2, 0);
+                let warning = canvas.pixel(3, 0);
+                apply_room_palette(&mut canvas, palette);
+                floors.insert(canvas.pixel(0, 0));
+                assert_eq!(canvas.pixel(2, 0), worker);
+                assert_eq!(canvas.pixel(3, 0), warning);
+            }
+            assert_eq!(
+                floors.len(),
+                4,
+                "each office palette needs a distinct floor"
+            );
+        }
     }
 }

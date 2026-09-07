@@ -124,6 +124,29 @@ outside the viewport, dark internal floor seams, and a small `K` that read as
 reasons to change the codec again. The reviewed preview is intermediate evidence;
 the main iteration report records the final scenes after those corrections.
 
+### Final review with the corrected colour mapper
+
+The subsequent `review3` native buffers use `TERM_PROGRAM=Apple_Terminal` without
+an encoding or true-colour override. Four full frames were replayed through the
+same installed Menlo font after the scene and palette corrections:
+
+- `evidence/review3/apple-terminal-1-iso-192x58-menlo.png`: continuous floor,
+  contained rug and readable `K`; no repeated glyph teeth or detached stripes.
+- `evidence/review3/apple-terminal-3-side-192x58-menlo.png`: contained clouds,
+  readable faces and furniture, with skin and wood retaining their nearest
+  brown palette colours. This is the selected README image.
+- `evidence/review3/apple-terminal-20-top-192x58-menlo.png`: ten visible workers
+  with readable conversation titles, selection, and `page 1/2` for the twenty
+  workers in the fixture.
+- `evidence/review3/surface-desk-192x58-menlo.png`: readable character identity,
+  idle state and latest activity, with no clipped portrait or text.
+
+The corresponding `.font.json` records contain only Menlo-Regular and
+Menlo-Bold, with no LastResort symbols. No further concrete raster defect was
+found in these four frames. This conclusion applies to the tested replay,
+font and cell pitch; the user-supplied native screenshots remain the direct
+Terminal.app evidence, and were the reason this audit was reopened.
+
 ## Reproduction
 
 The two-colour mapping check is portable and reads the baseline without checking

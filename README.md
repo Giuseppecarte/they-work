@@ -14,11 +14,12 @@ SQLite store, SQLite may update an already-existing `-shm` coordination sidecar;
 the container mounts stores read-only, and a cold WAL store without its existing
 sidecars is refused rather than created.
 
-![The office floor, reconstructed from the character renderer](docs/design-audit/evidence/after-office-sextants.png)
+![Three conversations in the side-view office, replayed with Menlo](docs/design-audit/iteration-2/evidence/review3/apple-terminal-3-side-192x58-menlo.png)
 
-The preview images reconstruct renderer buffers at 160×86 terminal cells using
-sextant characters. They are not screenshots from a particular terminal emulator;
-the [audit](docs/design-audit/README.md) records native execution and visual checks.
+The previews replay native macOS PTY output at 192×58 terminal cells through
+CoreText with the installed Menlo font, half blocks and 256 colors. They are
+font replays, not screenshots of Terminal.app. The [audit](docs/design-audit/iteration-2/REVIEW.md)
+records the resize cases and evidence limits.
 
 ## Start here
 
@@ -81,7 +82,7 @@ and `o` to change the selected floor's palette. `W` and `O` restore defaults.
 Pass `--config-dir <folder>` to remember sources, the selected floor, and these
 appearance choices. Git worktrees of the same repository share one floor.
 
-![A worker's desk, reconstructed from the character renderer](docs/design-audit/evidence/after-desk-sextants.png)
+![A worker's desk, replayed with Menlo](docs/design-audit/iteration-2/evidence/review3/surface-desk-192x58-menlo.png)
 
 Colour means the same thing everywhere. **Shirt** is which agent — orange for
 Claude Code, blue for Codex. The **bar under a name** is status: green running,
@@ -147,9 +148,10 @@ draws whatever `World` currently says. Nothing downstream parses an agent's
 format, and nothing upstream knows how anything is drawn.
 
 Without a graphics protocol, the picture is built from **half-block, quadrant
-or sextant characters**, whichever your terminal and font supports. At the
-captured office region, that remains a 160×86 character canvas; it is not a
-claim about the physical pixels displayed by every terminal.
+or sextant characters**, whichever your terminal and font supports. Terminal
+on macOS defaults to half blocks to avoid gaps in its usual font geometry.
+Use Settings to compare encodings with your own font. The room adjusts to the
+window and pages its workers when there is insufficient space for everyone.
 
 When a graphics protocol is negotiated and the terminal reports its cell
 geometry, the renderer makes one source pixel per physical terminal pixel in

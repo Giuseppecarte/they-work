@@ -1,0 +1,129 @@
+{
+  "recorded_at": "2026-09-07T21:05:55.733539+00:00",
+  "binary": "target/native-macos/release/they-work",
+  "binary_architecture": "Mach-O arm64",
+  "binary_sha256": "c4d27515b393d88f0ea768a2b41bf9dd9efbdec6dce72af8927ba275d25a083b",
+  "branch": "audit/design-and-usability",
+  "native": {
+    "passed": 221,
+    "failed": 0,
+    "ignored": 2,
+    "strict_clippy": true,
+    "format_check": true
+  },
+  "linux": {
+    "passed": 221,
+    "failed": 0,
+    "ignored": 2,
+    "strict_clippy": true,
+    "format_check": true
+  },
+  "review3": {
+    "apple-terminal-1-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "apple-terminal-3-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "apple-terminal-20-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "other-surfaces": {
+      "exit": 0,
+      "terminal_restored": true
+    }
+  },
+  "other-encodings": {
+    "quadrants-1-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "quadrants-3-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "quadrants-20-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "sextants-1-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "sextants-3-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    "sextants-20-resize": {
+      "exit": 0,
+      "terminal_restored": true
+    }
+  },
+  "final-navigation": {
+    "paging": true,
+    "resize_preserves_identity": true,
+    "inspector": true,
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "visual_limit": "ANSI reconstructions and CoreText Menlo replays; no Terminal.app, Windows, WSL, Kitty, Sixel or iTerm2 native visual capture.",
+  "motion": {
+    "scenarios_passed": 116,
+    "captured_frames": 1392,
+    "successful_recorded_exits": 62,
+    "groups": [
+      {
+        "stage": "motion",
+        "cases": 36,
+        "on": 18,
+        "off": 18,
+        "clothing_frame_range": [
+          3,
+          12
+        ],
+        "frozen_room_frames": 1,
+        "successful_recorded_exits": 18
+      },
+      {
+        "stage": "motion-small",
+        "cases": 36,
+        "on": 18,
+        "off": 18,
+        "clothing_frame_range": [
+          6,
+          12
+        ],
+        "frozen_room_frames": 1,
+        "successful_recorded_exits": 18
+      },
+      {
+        "stage": "motion-apple256",
+        "cases": 36,
+        "on": 18,
+        "off": 18,
+        "clothing_frame_range": [
+          6,
+          12
+        ],
+        "frozen_room_frames": 1,
+        "successful_recorded_exits": 18
+      },
+      {
+        "stage": "motion-apple256-views",
+        "cases": 8,
+        "on": 4,
+        "off": 4,
+        "clothing_frame_range": [
+          12,
+          12
+        ],
+        "frozen_room_frames": 1,
+        "successful_recorded_exits": 8
+      }
+    ],
+    "evidence_kind": "Native macOS PTYs; images reconstruct emitted ANSI cells. Fixtures are synthetic and confined to the repository."
+  }
+}

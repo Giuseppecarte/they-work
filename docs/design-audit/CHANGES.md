@@ -1,5 +1,14 @@
 # Implemented changes
 
+The original verification below records the first iteration. Native-terminal
+feedback reopened the visual audit: [second-iteration requirements](iteration-2/REQUIREMENTS.md).
+The [second-iteration review](iteration-2/REVIEW.md) records a font-compatible
+macOS default, corrected 256-color conversion, independently checked Unicode
+masks, occupied-room layouts, animated native-size characters, larger inspection
+portraits and office paging keys. Its macOS and Linux workspace runs each pass
+221 tests; strict Clippy and formatting pass. Earlier counts below describe
+the first iteration and do not establish visual acceptance of the redesign.
+
 Work is on `audit/design-and-usability`, created from `main`. Commits separate installation, navigation, rendered references, data correctness and the host connection flow. No merge, push or release publication was performed.
 
 ## Product behavior

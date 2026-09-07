@@ -1,5 +1,19 @@
 # Design and usability findings
 
+## Reopened after native-terminal feedback
+
+The user's resize screenshots disproved the first visual completion judgment.
+The source and installation fixes below remain valid, but the floor still had
+font-dependent gaps, disproportionate composition and motion that disappeared
+at smaller sprite sizes. The second iteration is tracked in
+[the review](iteration-2/REVIEW.md), [font evidence](iteration-2/raster.md)
+and [motion verification](iteration-2/MOTION.md). Earlier screenshots and test
+counts below describe the first iteration, not final acceptance of the redesign.
+
+The three priorities for this iteration are continuous pixels with the actual
+terminal font, proportionate rooms at different occupancy and window sizes,
+and visible character motion without inventing worker activity.
+
 The first three things to fix were:
 
 1. **Let the owner choose sources, and read the current stores.** Starting the program silently read both providers; a real Codex installation appeared empty because it retained an old database under `sqlite/` beside the current one.

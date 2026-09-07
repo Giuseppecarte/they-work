@@ -200,8 +200,10 @@ Docker daemon cannot read your local laptop's files.
 - **Docker unavailable:** start Docker Desktop/the daemon, or use a native build.
 - **Native asset missing:** no native release has been published for that tag;
   build the checkout. A failed installer never reports successful installation.
-- **Poor-looking glyphs:** use a Unicode monospace font and try
-  `THEYWORK_ENCODING=quadrants` or `half-blocks`. Inspect `--doctor` in that terminal.
+- **Gaps or broken glyphs:** open Settings (`s`) and compare the pixel encodings.
+  Terminal on macOS defaults to half blocks; some fonts do not contain sextants
+  or leave gaps around quadrant glyphs. Remove an old `THEYWORK_ENCODING`
+  override to restore automatic selection. Inspect `--doctor` in that terminal.
 - **Tiny window:** increase terminal size; compact layouts retain worker status.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for verification commands and

@@ -3,6 +3,11 @@
 The working folder for the second audit of `they-work`. `GOAL.md` is the brief;
 everything the audit produces belongs here beside it.
 
+The user's native resize feedback reopened visual acceptance. Start with the
+[second-iteration review](iteration-2/REVIEW.md) for the repaired encoder,
+room layouts, motion and evidence limits. Earlier verification records describe
+the first implementation pass.
+
 | File | |
 | --- | --- |
 | `GOAL.md` | the brief: appearance, design fidelity, ease of use, and the blind spots to attack |

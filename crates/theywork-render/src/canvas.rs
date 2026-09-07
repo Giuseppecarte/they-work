@@ -91,12 +91,14 @@ impl PixelEncoding {
         let forced = std::env::var("THEYWORK_ENCODING").ok();
         let terminal = std::env::var("TERM").ok();
         let terminal_program = std::env::var("TERM_PROGRAM").ok();
+        let windows_terminal_session = std::env::var("WT_SESSION").ok();
         let sextants_hint = std::env::var("THEYWORK_SEXTANTS").ok();
         let quadrants_hint = std::env::var("THEYWORK_QUADRANTS").ok();
         Self::select(
             forced.as_deref(),
             terminal.as_deref(),
             terminal_program.as_deref(),
+            windows_terminal_session.as_deref(),
             sextants_hint.as_deref(),
             quadrants_hint.as_deref(),
         )
@@ -119,6 +121,7 @@ impl PixelEncoding {
         forced: Option<&str>,
         terminal: Option<&str>,
         terminal_program: Option<&str>,
+        windows_terminal_session: Option<&str>,
         sextants_hint: Option<&str>,
         quadrants_hint: Option<&str>,
     ) -> (Self, bool, String) {
@@ -133,7 +136,9 @@ impl PixelEncoding {
         let terminal_is_usable = terminal.is_none_or(|value| {
             !value.eq_ignore_ascii_case("dumb") && !value.eq_ignore_ascii_case("cons25")
         });
-        let sextants = truthy(sextants_hint) || terminal_program.is_some_and(sextant_terminal);
+        let sextants = truthy(sextants_hint)
+            || windows_terminal_session.is_some_and(|session| !session.is_empty())
+            || terminal_program.is_some_and(sextant_terminal);
         let quadrants = truthy(quadrants_hint) || terminal_is_usable;
         let encoding = Self::resolve(
             None,
@@ -145,6 +150,11 @@ impl PixelEncoding {
         let reason = match encoding {
             Self::Sextants if truthy(sextants_hint) => {
                 "sextants selected by THEYWORK_SEXTANTS terminal hint".to_string()
+            }
+            Self::Sextants
+                if windows_terminal_session.is_some_and(|session| !session.is_empty()) =>
+            {
+                "sextants selected from the Windows Terminal capability signal".to_string()
             }
             Self::Sextants => "sextants selected for a known compatible terminal".to_string(),
             Self::Quadrants => concat!(
@@ -1178,14 +1188,14 @@ mod tests {
 
     #[test]
     fn locale_less_terminals_use_the_conservative_dense_fallback() {
-        let (encoding, locked, reason) = PixelEncoding::select(None, None, None, None, None);
+        let (encoding, locked, reason) = PixelEncoding::select(None, None, None, None, None, None);
         assert_eq!(encoding, PixelEncoding::Quadrants);
         assert!(!locked);
         assert!(reason.contains("THEYWORK_ENCODING=sextants"));
 
         for terminal in ["dumb", "cons25", "DUMB"] {
             let (encoding, locked, reason) =
-                PixelEncoding::select(None, Some(terminal), None, None, None);
+                PixelEncoding::select(None, Some(terminal), None, None, None, None);
             assert_eq!(encoding, PixelEncoding::HalfBlocks);
             assert!(!locked);
             assert!(reason.contains("dumb or cons25"));
@@ -1195,10 +1205,25 @@ mod tests {
     #[test]
     fn explicit_sextants_override_is_reported() {
         let (encoding, locked, reason) =
-            PixelEncoding::select(Some("sextants"), Some("dumb"), None, None, None);
+            PixelEncoding::select(Some("sextants"), Some("dumb"), None, None, None, None);
         assert_eq!(encoding, PixelEncoding::Sextants);
         assert!(locked);
         assert_eq!(reason, "sextants selected by THEYWORK_ENCODING");
+    }
+
+    #[test]
+    fn windows_terminal_session_selects_sextants_without_a_program_name() {
+        let (encoding, locked, reason) = PixelEncoding::select(
+            None,
+            Some("xterm-256color"),
+            None,
+            Some("session-id"),
+            None,
+            None,
+        );
+        assert_eq!(encoding, PixelEncoding::Sextants);
+        assert!(!locked);
+        assert!(reason.contains("Windows Terminal capability signal"));
     }
 
     #[test]

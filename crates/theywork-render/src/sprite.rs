@@ -315,8 +315,6 @@ impl ActivityKind {
 pub(crate) struct SpriteSet {
     wardrobe_cache: RefCell<HashMap<WorkerRenderKey, Animation>>,
     animation_time: Cell<Option<Millis>>,
-    pub(crate) manager_walk: Animation,
-    pub(crate) manager_attention: Animation,
     pub(crate) desk: Sprite,
     pub(crate) monitor: Sprite,
     pub(crate) plant: Sprite,
@@ -330,8 +328,6 @@ impl SpriteSet {
         Self {
             wardrobe_cache: RefCell::new(HashMap::new()),
             animation_time: Cell::new(None),
-            manager_walk: manager_animation(false),
-            manager_attention: manager_animation(true),
             desk: desk(),
             monitor: monitor(),
             plant: plant(),
@@ -341,22 +337,46 @@ impl SpriteSet {
         }
     }
 
-    pub(crate) fn manager_animation(&self, needs_attention: bool) -> &Animation {
-        if needs_attention {
-            &self.manager_attention
-        } else {
-            &self.manager_walk
-        }
-    }
-
     pub(crate) fn set_animation_time(&self, now: Option<Millis>) {
         self.animation_time.set(now);
     }
 
     pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
         let activity = ActivityKind::from_activity(&worker.activity);
+        self.wardrobe_frame(worker.agent, look, activity, now)
+    }
+
+    pub(crate) fn manager_frame(&self, needs_attention: bool, now: Millis) -> Sprite {
+        let activity = if needs_attention {
+            ActivityKind::Waiting
+        } else {
+            ActivityKind::Idle
+        };
+        self.wardrobe_frame(
+            Agent::Claude,
+            WorkerLook {
+                head: 0,
+                face: 0,
+                top: 4,
+                desk_prop: 0,
+                skin: 3,
+                hair: 3,
+                contractor: false,
+            },
+            activity,
+            now,
+        )
+    }
+
+    fn wardrobe_frame(
+        &self,
+        agent: Agent,
+        look: WorkerLook,
+        activity: ActivityKind,
+        now: Millis,
+    ) -> Sprite {
         let key = WorkerRenderKey {
-            agent: worker.agent,
+            agent,
             activity,
             look,
         };
@@ -364,18 +384,13 @@ impl SpriteSet {
         let animation_now = self.animation_time.get().unwrap_or(now);
         cache
             .entry(key)
-            .or_insert_with(|| worker_animation_for_look(worker.agent, look, activity))
+            .or_insert_with(|| worker_animation_for_look(agent, look, activity))
             .frame_at(animation_now)
             .clone()
     }
 
     #[cfg(test)]
     pub(crate) fn parse_all_cached_frames(&self) {
-        for animation in [&self.manager_walk, &self.manager_attention] {
-            for frame in animation.frames.iter() {
-                let _ = frame.pixels();
-            }
-        }
         for sprite in [
             &self.desk,
             &self.monitor,
@@ -395,9 +410,7 @@ impl SpriteSet {
 
     #[cfg(test)]
     pub(crate) fn parsed_count(&self) -> usize {
-        self.manager_walk.parsed_count()
-            + self.manager_attention.parsed_count()
-            + usize::from(self.desk.is_parsed())
+        usize::from(self.desk.is_parsed())
             + usize::from(self.monitor.is_parsed())
             + usize::from(self.plant.is_parsed())
             + usize::from(self.water_cooler.is_parsed())
@@ -915,37 +928,6 @@ pub fn water_cooler() -> Sprite {
     SPRITE.get_or_init(make_water_cooler_sprite).clone()
 }
 
-fn manager_animation(needs_attention: bool) -> Animation {
-    let frame_duration = if needs_attention { 900 } else { 260 };
-    Animation::new(
-        (0..2)
-            .map(|frame| manager_frame(needs_attention, frame))
-            .collect(),
-        frame_duration,
-    )
-}
-
-fn manager_frame(needs_attention: bool, frame: usize) -> Sprite {
-    wardrobe_frame(
-        Agent::Claude,
-        WorkerLook {
-            head: 0,
-            face: 0,
-            top: 4,
-            desk_prop: 0,
-            skin: 3,
-            hair: 3,
-            contractor: false,
-        },
-        if needs_attention {
-            ActivityKind::Waiting
-        } else {
-            ActivityKind::Idle
-        },
-        frame,
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1032,8 +1014,8 @@ mod tests {
             .flatten()
             .any(|color| *color == Color::Rgb(240, 180, 41)));
 
-        let walk = sprites.manager_animation(false).frame_at(0);
-        let attention = sprites.manager_animation(true).frame_at(0);
+        let walk = sprites.manager_frame(false, 0);
+        let attention = sprites.manager_frame(true, 0);
         assert_ne!(walk.pixels(), attention.pixels());
         assert_eq!((walk.width(), walk.height()), (WORKER_WIDTH, WORKER_HEIGHT));
         assert_eq!(

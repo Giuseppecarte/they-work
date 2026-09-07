@@ -61,7 +61,9 @@ const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
 const DAY_SKY_TOP: Color = Color::Rgb(88, 214, 232);
 const DAY_SKY_BOTTOM: Color = Color::Rgb(90, 169, 201);
 
-const ISO_ROOM_COLUMNS: usize = 5;
+// The sixth column is a composition gutter: the outer occupied tile still has
+// room for a full-width worker and desk instead of ending at the floor edge.
+const ISO_ROOM_COLUMNS: usize = 6;
 const ISO_ROOM_ROWS: usize = 4;
 const ISO_DESK_TILES: [(usize, usize); 10] = [
     (2, 0),
@@ -78,7 +80,7 @@ const ISO_DESK_TILES: [(usize, usize); 10] = [
 const ISO_RUG_TILE: (usize, usize) = (2, 3);
 const ISO_PLANT_TILE: (usize, usize) = (0, 0);
 const ISO_COOLER_TILE: (usize, usize) = (1, 0);
-const ISO_MEETING_TABLE_TILE: (usize, usize) = (0, 3);
+const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 3);
 
 fn outline_color(canvas: &Canvas) -> Color {
     if canvas.is_light_mode() {
@@ -1781,8 +1783,8 @@ fn draw_item(
         IsoKind::Manager => {
             let (x, y, width, height, attention) =
                 manager_bounds(grid, scale, (item.tile_x, item.tile_y), now);
-            let sprite = sprites.manager_animation(attention).frame_at(now);
-            blit_floor_worker(canvas, sprite, x, y, width, height);
+            let sprite = sprites.manager_frame(attention, now);
+            blit_floor_worker(canvas, &sprite, x, y, width, height);
             if attention {
                 set_pixel(canvas, x + width as i32 + 1, y, WARNING);
             }
@@ -1801,7 +1803,14 @@ fn draw_item(
                 monitor_width,
                 monitor_height,
             );
-            draw_nameplate_chip(canvas, grid, slot, selected_slot == Some(slot));
+            draw_nameplate_chip(
+                canvas,
+                grid,
+                slot,
+                workers,
+                now,
+                selected_slot == Some(slot),
+            );
         }
     }
 }
@@ -2224,48 +2233,7 @@ fn worker_plate_width(body: Rect, grid: IsoGrid) -> u16 {
     (tile_width_cells / 2).max(12).min(body.width)
 }
 
-fn worker_plate_rect(body: Rect, grid: IsoGrid, slot: usize) -> Rect {
-    let label_width = worker_plate_width(body, grid);
-    let (center_x, y) = worker_plate_position(grid, slot);
-    let x = (center_x - i32::from(label_width) / 2)
-        .clamp(0, i32::from(body.width.saturating_sub(label_width)));
-    let y = y.clamp(0, i32::from(body.height.saturating_sub(1)));
-    Rect::new(
-        body.x.saturating_add(x as u16),
-        body.y.saturating_add(y as u16),
-        label_width,
-        1,
-    )
-}
-
-fn draw_nameplate_chip(canvas: &mut Canvas, grid: IsoGrid, slot: usize, selected: bool) {
-    let cell_width = canvas.width() / grid.pixels_per_cell.0.max(1);
-    let cell_height = canvas.height() / grid.pixels_per_cell.1.max(1);
-    let body = Rect::new(
-        0,
-        0,
-        u16::try_from(cell_width).unwrap_or(u16::MAX),
-        u16::try_from(cell_height).unwrap_or(u16::MAX),
-    );
-    let rect = worker_plate_rect(body, grid, slot);
-    fill_rect(
-        canvas,
-        i32::from(rect.x) * grid.pixels_per_cell.0 as i32,
-        i32::from(rect.y) * grid.pixels_per_cell.1 as i32,
-        i32::from(rect.width) * grid.pixels_per_cell.0 as i32,
-        i32::from(rect.height) * grid.pixels_per_cell.1 as i32,
-        if selected { PANEL_HIGHLIGHT } else { PANEL },
-    );
-}
-
-#[cfg(test)]
-fn worker_cell_rect(grid: IsoGrid, slot: usize) -> Rect {
-    let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
-    physical_cell_rect(grid, x, y, width, height)
-}
-
-#[cfg(test)]
-fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize) -> Rect {
+fn scene_cell_rect(body: Rect, grid: IsoGrid, x: i32, y: i32, width: usize, height: usize) -> Rect {
     let x_scale = grid.pixels_per_cell.0.max(1) as i32;
     let y_scale = grid.pixels_per_cell.1.max(1) as i32;
     let left = x.div_euclid(x_scale).max(0) as u16;
@@ -2279,6 +2247,34 @@ fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize
         .saturating_add(y_scale - 1)
         .div_euclid(y_scale) as u16;
     Rect::new(
+        body.x.saturating_add(left),
+        body.y.saturating_add(top),
+        right.saturating_sub(left),
+        bottom.saturating_sub(top),
+    )
+}
+
+fn rects_overlap(first: Rect, second: Rect) -> bool {
+    first.x < second.x.saturating_add(second.width)
+        && second.x < first.x.saturating_add(first.width)
+        && first.y < second.y.saturating_add(second.height)
+        && second.y < first.y.saturating_add(first.height)
+}
+
+fn expanded_rect(rect: Rect, body: Rect, margin: u16) -> Rect {
+    let left = rect.x.saturating_sub(margin).max(body.x);
+    let top = rect.y.saturating_sub(margin).max(body.y);
+    let right = rect
+        .x
+        .saturating_add(rect.width)
+        .saturating_add(margin)
+        .min(body.x.saturating_add(body.width));
+    let bottom = rect
+        .y
+        .saturating_add(rect.height)
+        .saturating_add(margin)
+        .min(body.y.saturating_add(body.height));
+    Rect::new(
         left,
         top,
         right.saturating_sub(left),
@@ -2286,12 +2282,173 @@ fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize
     )
 }
 
+fn blocked_slot(workers: &[&Worker], now: Millis) -> Option<usize> {
+    workers
+        .iter()
+        .position(|worker| worker_status(worker, now) == WorkerStatus::Blocked)
+}
+
+fn plate_obstacles(
+    body: Rect,
+    grid: IsoGrid,
+    owner: usize,
+    worker_count: usize,
+    manager_for: Option<usize>,
+    now: Millis,
+) -> Vec<Rect> {
+    let owner_tile = grid.desk_tile(owner);
+    let owner_key = painter_key(IsoItem {
+        tile_x: owner_tile.0,
+        tile_y: owner_tile.1,
+        footprint: IsoFootprint {
+            width: 1,
+            depth: 1,
+            height: 1,
+        },
+        kind: IsoKind::Desk(owner),
+    });
+    let mut obstacles = Vec::with_capacity(worker_count.saturating_add(1));
+    for front in 0..worker_count {
+        if front == owner {
+            continue;
+        }
+        let front_tile = grid.desk_tile(front);
+        let front_item = IsoItem {
+            tile_x: front_tile.0,
+            tile_y: front_tile.1,
+            footprint: IsoFootprint {
+                width: 1,
+                depth: 1,
+                height: 2,
+            },
+            kind: IsoKind::Worker(front),
+        };
+        if painter_key(front_item) > owner_key {
+            let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, front);
+            obstacles.push(expanded_rect(
+                scene_cell_rect(body, grid, x, y, width, height),
+                body,
+                1,
+            ));
+        }
+    }
+    if let Some(blocked) = manager_for {
+        let tile = manager_tile(grid, worker_count, blocked);
+        let manager_item = IsoItem {
+            tile_x: tile.0,
+            tile_y: tile.1,
+            footprint: IsoFootprint {
+                width: 1,
+                depth: 1,
+                height: 2,
+            },
+            kind: IsoKind::Manager,
+        };
+        if painter_key(manager_item) > owner_key {
+            let (x, y, width, height, _) = manager_bounds(grid, RoomScale::Floor, tile, now);
+            obstacles.push(expanded_rect(
+                scene_cell_rect(body, grid, x, y, width, height),
+                body,
+                1,
+            ));
+        }
+    }
+    obstacles
+}
+
+fn worker_plate_rect(
+    body: Rect,
+    grid: IsoGrid,
+    slot: usize,
+    worker_count: usize,
+    manager_for: Option<usize>,
+    now: Millis,
+) -> Rect {
+    let label_width = worker_plate_width(body, grid);
+    let (center_x, y) = worker_plate_position(grid, slot);
+    let max_x = body.width.saturating_sub(label_width);
+    let preferred_x = (center_x - i32::from(label_width) / 2).clamp(0, i32::from(max_x)) as u16;
+    let y = y.clamp(0, i32::from(body.height.saturating_sub(1)));
+    let obstacles = plate_obstacles(body, grid, slot, worker_count, manager_for, now);
+    let x = (0..=max_x)
+        .filter(|candidate| {
+            let rect = Rect::new(
+                body.x.saturating_add(*candidate),
+                body.y.saturating_add(y as u16),
+                label_width,
+                1,
+            );
+            obstacles
+                .iter()
+                .all(|obstacle| !rects_overlap(rect, *obstacle))
+        })
+        .min_by_key(|candidate| candidate.abs_diff(preferred_x))
+        .unwrap_or(preferred_x);
+    Rect::new(
+        body.x.saturating_add(x),
+        body.y.saturating_add(y as u16),
+        label_width,
+        1,
+    )
+}
+
+fn draw_nameplate_chip(
+    canvas: &mut Canvas,
+    grid: IsoGrid,
+    slot: usize,
+    workers: &[&Worker],
+    now: Millis,
+    selected: bool,
+) {
+    let cell_width = canvas.width() / grid.pixels_per_cell.0.max(1);
+    let cell_height = canvas.height() / grid.pixels_per_cell.1.max(1);
+    let body = Rect::new(
+        0,
+        0,
+        u16::try_from(cell_width).unwrap_or(u16::MAX),
+        u16::try_from(cell_height).unwrap_or(u16::MAX),
+    );
+    let rect = worker_plate_rect(
+        body,
+        grid,
+        slot,
+        workers.len(),
+        blocked_slot(workers, now),
+        now,
+    );
+    fill_rect(
+        canvas,
+        i32::from(rect.x) * grid.pixels_per_cell.0 as i32,
+        i32::from(rect.y) * grid.pixels_per_cell.1 as i32,
+        i32::from(rect.width) * grid.pixels_per_cell.0 as i32,
+        i32::from(rect.height) * grid.pixels_per_cell.1 as i32,
+        if selected { PANEL_HIGHLIGHT } else { PANEL },
+    );
+}
+
 #[cfg(test)]
-fn rects_overlap(first: Rect, second: Rect) -> bool {
-    first.x < second.x.saturating_add(second.width)
-        && second.x < first.x.saturating_add(first.width)
-        && first.y < second.y.saturating_add(second.height)
-        && second.y < first.y.saturating_add(first.height)
+fn worker_cell_rect(grid: IsoGrid, slot: usize) -> Rect {
+    let (x, y, width, height) = worker_bounds(grid, RoomScale::Floor, slot);
+    scene_cell_rect(
+        Rect::new(0, 0, u16::MAX, u16::MAX),
+        grid,
+        x,
+        y,
+        width,
+        height,
+    )
+}
+
+#[cfg(test)]
+fn physical_cell_rect(grid: IsoGrid, x: i32, y: i32, width: usize, height: usize) -> Rect {
+    scene_cell_rect(
+        Rect::new(0, 0, u16::MAX, u16::MAX),
+        grid,
+        x,
+        y,
+        width,
+        height,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2324,7 +2481,14 @@ fn draw_nameplates(
     });
     for slot in slots {
         let worker = workers[slot];
-        let rect = worker_plate_rect(body, grid, slot);
+        let rect = worker_plate_rect(
+            body,
+            grid,
+            slot,
+            workers.len(),
+            blocked_slot(workers, now),
+            now,
+        );
         let mut prefix = " ";
         let status = worker_status(worker, now);
         if start + slot == selected {
@@ -2988,7 +3152,14 @@ mod tests {
                     "{encoding:?}/{cell_size:?} should render exactly one plate for worker {slot}"
                 );
 
-                let rect = worker_plate_rect(body, grid, slot);
+                let rect = worker_plate_rect(
+                    body,
+                    grid,
+                    slot,
+                    workers.len(),
+                    blocked_slot(&visible_workers, 0),
+                    0,
+                );
                 plate_rects.push(rect);
                 let tile_width_cells =
                     physical_to_cell(grid.tile_width, grid.pixels_per_cell.0).max(12) as u16;
@@ -3054,8 +3225,11 @@ mod tests {
                         continue;
                     }
                     assert!(
-                        !rects_overlap(plate, worker_cell_rect(grid, front)),
-                        "{encoding:?}/{cell_size:?} plate {owner} overlaps foreground worker {front}"
+                        !rects_overlap(
+                            plate,
+                            expanded_rect(worker_cell_rect(grid, front), body, 1)
+                        ),
+                        "{encoding:?}/{cell_size:?} plate {owner} enters the safety gap around foreground worker {front}"
                     );
                 }
             }
@@ -3092,8 +3266,8 @@ mod tests {
                 };
                 if painter_key(manager_item) > painter_key(owner_item) {
                     assert!(
-                        !rects_overlap(plate, manager_rect),
-                        "{encoding:?}/{cell_size:?} plate {owner} obscures the full-scale manager"
+                        !rects_overlap(plate, expanded_rect(manager_rect, body, 1)),
+                        "{encoding:?}/{cell_size:?} plate {owner} enters the safety gap around the full-scale manager"
                     );
                 }
             }

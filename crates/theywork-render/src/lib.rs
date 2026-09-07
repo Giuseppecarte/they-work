@@ -1254,7 +1254,7 @@ mod m3_tests {
         );
         assert_eq!(
             colors.len(),
-            59,
+            58,
             "native-density palette changes must stay within the Sixel register budget"
         );
         let checksum = frame

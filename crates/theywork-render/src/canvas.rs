@@ -1030,9 +1030,20 @@ fn palette_color(color: Color) -> Color {
 
 fn nearest_xterm_index(red: u8, green: u8, blue: u8) -> u8 {
     let cube = [0_u8, 95, 135, 175, 215, 255];
-    let red_cube = ((red as u16 * 5 + 127) / 255) as usize;
-    let green_cube = ((green as u16 * 5 + 127) / 255) as usize;
-    let blue_cube = ((blue as u16 * 5 + 127) / 255) as usize;
+    // The xterm colour cube is not evenly spaced: its first interval is
+    // 0..95, followed by intervals of 40. Uniform 0..255 scaling changes even
+    // colours already present in the palette and can turn skin tones pink.
+    let nearest_cube = |component| match component {
+        0..=47 => 0,
+        48..=114 => 1,
+        115..=154 => 2,
+        155..=194 => 3,
+        195..=234 => 4,
+        _ => 5,
+    };
+    let red_cube = nearest_cube(red);
+    let green_cube = nearest_cube(green);
+    let blue_cube = nearest_cube(blue);
     let cube_color = (cube[red_cube], cube[green_cube], cube[blue_cube]);
     let cube_distance = color_distance((red, green, blue), cube_color);
 
@@ -1291,6 +1302,44 @@ mod tests {
         assert_eq!(
             ColorDepth::resolve(false, Some("none"), Some("truecolor")),
             ColorDepth::None
+        );
+    }
+
+    #[test]
+    fn quantization_preserves_every_fixed_xterm_palette_colour() {
+        for index in 16..=255 {
+            let (red, green, blue) = indexed_rgb(index);
+            let actual = nearest_xterm_index(red, green, blue);
+            assert_eq!(actual, index, "palette index {index} must map to itself");
+        }
+    }
+
+    #[test]
+    fn xterm_quantization_matches_a_brute_force_palette_oracle() {
+        let mut colours = Vec::new();
+        for red in (0..=255).step_by(17) {
+            for green in (0..=255).step_by(17) {
+                for blue in (0..=255).step_by(17) {
+                    colours.push((red, green, blue));
+                }
+            }
+        }
+        colours.extend([(189, 119, 94), (188, 145, 93), (37, 67, 91), (232, 52, 44)]);
+        for colour in colours {
+            let actual = nearest_xterm_index(colour.0, colour.1, colour.2);
+            let distance = color_distance(colour, indexed_rgb(actual));
+            let optimum = (16..=255)
+                .map(|index| color_distance(colour, indexed_rgb(index)))
+                .min()
+                .unwrap();
+            assert_eq!(
+                distance, optimum,
+                "{colour:?} selected palette index {actual}"
+            );
+        }
+        assert_eq!(
+            indexed_rgb(nearest_xterm_index(189, 119, 94)),
+            (175, 135, 95)
         );
     }
 

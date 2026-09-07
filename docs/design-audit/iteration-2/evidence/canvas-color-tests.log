@@ -1,0 +1,29 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.44s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 22 tests
+test canvas::tests::encoding_detection_prefers_dense_support_and_accepts_forcing ... ok
+test canvas::tests::color_settings_honor_no_color_and_explicit_modes ... ok
+test canvas::tests::explicit_sextants_override_is_reported ... ok
+test canvas::tests::apple_terminal_uses_lower_density_unless_explicitly_overridden ... ok
+test canvas::tests::locale_less_terminals_use_the_conservative_dense_fallback ... ok
+test canvas::tests::palette_mode_is_fixed_and_maps_rgb_to_indexed_colour ... ok
+test canvas::tests::half_block_bottom_only_preserves_the_existing_background ... ok
+test canvas::tests::monochrome_mode_renders_luminance_glyphs_without_colour ... ok
+test canvas::tests::half_blocks_preserve_all_opaque_and_transparent_sample_pairs ... ok
+test canvas::tests::half_block_packs_bottom_into_foreground_and_top_into_background ... ok
+test canvas::tests::pixel_frame_owns_rgba_pixels_and_last_cell_area ... ok
+test canvas::tests::quadrant_quantizer_preserves_a_two_colour_split ... ok
+test canvas::tests::quantization_preserves_every_fixed_xterm_palette_colour ... ok
+test canvas::tests::transparent_pixels_leave_existing_cells_untouched ... ok
+test canvas::tests::windows_terminal_session_selects_sextants_without_a_program_name ... ok
+test canvas::tests::sextant_quantizer_uses_a_supported_glyph_for_six_samples ... ok
+test canvas::tests::cell_resize_matches_the_three_encoding_ladder ... ok
+test canvas::tests::dense_encodings_preserve_every_two_colour_mask_using_unicode_names ... ok
+test canvas::tests::partial_dense_pixels_reveal_background_even_when_the_glyph_is_inverted ... ok
+test canvas::tests::xterm_quantization_matches_a_brute_force_palette_oracle ... ok
+test canvas::tests::requested_cell_density_controls_canvas_dimensions ... ok
+test canvas::tests::dropped_pixel_frames_reuse_the_rgba_allocation ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 94 filtered out; finished in 0.08s

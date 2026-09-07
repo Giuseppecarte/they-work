@@ -6,7 +6,7 @@ user screenshots. Its description of those gaps as artificial was wrong for a
 terminal that renders the font's glyph outlines. `capture_visual.py` now names
 its output an ideal geometry diagnostic and prints that limitation on every run.
 
-Three separate causes were found. They must not be conflated: fixing Unicode
+Four separate causes were found. They must not be conflated: fixing Unicode
 masks does not repair a font's metrics, and changing the encoding does not repair
 an oversized sign or a misplaced floor tile.
 
@@ -87,6 +87,28 @@ Before quantization, missing samples now resolve to that background. Fully
 transparent cells remain untouched. Regressions cover all 78 non-empty partial
 quadrant/sextant patterns and all nine top/bottom pairs made from two colours or
 transparency.
+
+## 4. The 256-colour mapper used the wrong cube spacing
+
+Reviewing the new Apple Terminal fixtures exposed pink skin and washed-out
+furniture that true-colour previews had hidden. `nearest_xterm_index` converted
+RGB channels into cube indexes as if all six levels were evenly spaced across
+0–255. Its own decoder uses the actual fixed levels `0, 95, 135, 175, 215, 255`.
+The encoder and decoder therefore disagreed even for colours already present
+in the palette: `(95, 135, 175)` became `(135, 175, 175)`.
+
+The conversion now chooses each cube component using the midpoints between the
+actual levels, then compares the cube candidate with the nearest gray entry.
+For the skin colour `(189, 119, 94)`, the selected cube colour changes from pink
+`(215, 135, 135)` to brown `(175, 135, 95)`. Squared RGB error falls from 2613 to
+453. The wood colour `(188, 145, 93)` improves from error 3393 to 273.
+
+Two regressions check that all 240 fixed palette colours map to themselves and
+that 4,100 RGB samples match a brute-force nearest-colour search across all 240
+entries. This corrects the mathematical quantizer; it does not claim that a
+256-colour palette can retain every dark hue from the true-colour artwork.
+`evidence/canvas-color-tests.log` records the 22 focused canvas tests after this
+additional correction.
 
 ## Full-frame review
 

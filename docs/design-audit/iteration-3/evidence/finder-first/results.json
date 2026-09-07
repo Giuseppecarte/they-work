@@ -1,0 +1,14 @@
+{
+  "slash-and-escape": true,
+  "modal-global-characters": true,
+  "provider-pagination": true,
+  "bracketed-paste-exact-target": true,
+  "escape-retains-desk": true,
+  "editing-and-unicode-cursor": true,
+  "tiny-and-resize-recovery": true,
+  "light-appearance": true,
+  "terminal": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

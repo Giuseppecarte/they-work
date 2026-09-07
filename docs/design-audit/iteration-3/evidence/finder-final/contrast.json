@@ -1,0 +1,27 @@
+{
+  "title": {
+    "foreground": "#145360",
+    "background": "#e6dfd0",
+    "contrast_ratio": 6.499
+  },
+  "keys": {
+    "foreground": "#145360",
+    "background": "#e6dfd0",
+    "contrast_ratio": 6.499
+  },
+  "selected_context": {
+    "foreground": "#554b5f",
+    "background": "#cbc0aa",
+    "contrast_ratio": 4.558
+  },
+  "attention": {
+    "foreground": "#694500",
+    "background": "#e6dfd0",
+    "contrast_ratio": 6.456
+  },
+  "selected_error": {
+    "foreground": "#911c1c",
+    "background": "#cbc0aa",
+    "contrast_ratio": 4.885
+  }
+}

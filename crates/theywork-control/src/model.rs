@@ -126,6 +126,7 @@ pub struct ControlSnapshot {
     pub connection_generation: String,
     pub codex_home: PathBuf,
     pub connected: bool,
+    pub observed_at: i64,
     pub provider_info: Value,
     pub threads: BTreeMap<String, ManagedThread>,
     pub pending_requests: Vec<PendingRequest>,

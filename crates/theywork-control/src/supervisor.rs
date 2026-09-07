@@ -212,7 +212,9 @@ impl Host {
 
     fn handle(&self, request: Request) -> Result<Value> {
         if matches!(request, Request::Snapshot) {
-            let bytes = bounded_state(&self.state.lock().unwrap())?;
+            let mut state = self.state.lock().unwrap();
+            state.observed_at = now();
+            let bytes = bounded_state(&state)?;
             return Ok(serde_json::from_slice(&bytes)?);
         }
         let _mutation = self.mutations.lock().unwrap();
@@ -460,6 +462,18 @@ impl Host {
                     .is_some_and(|thread| thread.managed)
                 {
                     return Err(reject("This host does not own the conversation"));
+                }
+                if self
+                    .state
+                    .lock()
+                    .unwrap()
+                    .threads
+                    .get(thread_id)
+                    .is_some_and(|thread| thread.active_turn_id.is_some())
+                {
+                    return Err(reject(
+                        "Conversation still has a live turn; reconnect was not sent",
+                    ));
                 }
                 let rpc = self.provider().map_err(|e| reject(&e.to_string()))?;
                 // Explicit resume loads history only, never starts a user turn.

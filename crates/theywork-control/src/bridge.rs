@@ -40,7 +40,7 @@ pub fn snapshot_events(snapshot: &ControlSnapshot, after_sequence: u64) -> Vec<E
                     CoverageLevel::Unavailable
                 },
                 available: snapshot.connected,
-                observed_at: crate::model::now(),
+                observed_at: snapshot.observed_at,
                 detail: if snapshot.connected {
                     "Live managed connection; relationship coverage depends on provider events"
                 } else {

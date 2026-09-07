@@ -152,6 +152,26 @@ fn closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interru
     assert!(state.threads["managed-1"].capabilities.steer);
     assert_eq!(
         client
+            .reconnect_codex("managed-1", "busy-reconnect")
+            .unwrap()
+            .status,
+        OperationStatus::Rejected
+    );
+    assert!(!fixture
+        .requests()
+        .iter()
+        .any(|request| request["method"] == "thread/resume"));
+    let poll_time = state.observed_at;
+    assert!(poll_time > 0);
+    assert!(theywork_control::snapshot_events(&state, 0)
+        .iter()
+        .filter_map(|event| match &event.kind {
+            theywork_core::EventKind::Coverage(coverage) => Some(coverage.observed_at),
+            _ => None,
+        })
+        .all(|timestamp| timestamp == poll_time));
+    assert_eq!(
+        client
             .send_codex("managed-1", "wrong", Some("old-turn".into()), "bad-steer")
             .unwrap()
             .status,

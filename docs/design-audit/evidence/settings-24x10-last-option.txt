@@ -1,0 +1,9 @@
+0 >1 of…!  1/1 · ? help
+ ┌ CUSTOMIZE OFFICE ──┐r
+ │  names  on         │
+>│  pixels quadrants  │
+█│> room   Auto       │█
+█│                    │█
+█│↑↓ select · ←→ edit │█
+█│s close · c sources │█
+ └────────────────────┘

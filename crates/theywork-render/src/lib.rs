@@ -1293,13 +1293,23 @@ mod m3_tests {
         let text = buffer
             .content
             .chunks(width)
-            .map(|row| row.iter().map(|cell| cell.symbol()).collect::<String>())
+            .map(|row| {
+                row.iter()
+                    .map(|cell| cell.symbol())
+                    .collect::<String>()
+                    .trim_end()
+                    .to_string()
+            })
             .collect::<Vec<_>>()
             .join("\n");
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../docs/design-audit/evidence");
         std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(root.join(format!("{name}.txt")), text).unwrap();
+        std::fs::write(
+            root.join(format!("{name}.txt")),
+            format!("{}\n", text.trim_end()),
+        )
+        .unwrap();
     }
 
     #[test]

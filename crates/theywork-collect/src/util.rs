@@ -5,6 +5,19 @@ use std::time::Duration;
 use serde_json::Value;
 use theywork_core::Millis;
 
+pub(crate) fn source_id(home: &Path) -> theywork_core::SourceId {
+    // Do not use office normalization: distinct WSL distributions and homes
+    // must not collapse into the same source just because their projects do.
+    let absolute = std::fs::canonicalize(home).unwrap_or_else(|_| {
+        if home.is_absolute() {
+            home.to_path_buf()
+        } else {
+            std::env::current_dir().unwrap_or_default().join(home)
+        }
+    });
+    theywork_core::SourceId(absolute.to_string_lossy().into_owned())
+}
+
 /// Convert the path spellings used by Windows and WSL into one stable office id.
 pub fn normalize_office_path(input: &str) -> String {
     let input = input.trim();

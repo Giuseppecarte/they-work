@@ -89,8 +89,19 @@ fn has_activity(events: &[Event], expected: &Activity) -> bool {
     })
 }
 
+fn quiet(events: &[Event]) -> bool {
+    events.iter().all(|event| {
+        matches!(
+            event.kind,
+            EventKind::Coverage(_) | EventKind::Relationship(_)
+        )
+    })
+}
+
 fn has_worker(events: &[Event], worker: &str) -> bool {
-    events.iter().any(|event| event.worker.0 == worker)
+    events
+        .iter()
+        .any(|event| event.worker.native_id() == worker)
 }
 
 fn snapshot_live_codex_timestamps(home: &Path) -> Option<HashMap<String, i64>> {
@@ -132,12 +143,12 @@ fn assert_live_codex_timestamps(world: &World, timestamps: &HashMap<String, i64>
         .collect();
     let target = codex_workers
         .iter()
-        .filter(|worker| timestamps.contains_key(&worker.id.0))
+        .filter(|worker| timestamps.contains_key(worker.id.native_id()))
         .count()
         .min(3);
     let mut checked = 0;
     for worker in codex_workers {
-        let Some(&updated_at_ms) = timestamps.get(&worker.id.0) else {
+        let Some(&updated_at_ms) = timestamps.get(worker.id.native_id()) else {
             continue;
         };
         assert!(
@@ -337,7 +348,7 @@ fn claude_maps_tools_text_turns_and_names() {
             if name == "Custom title" && branch == "main"
     )));
     assert!(events.iter().any(|event| {
-        event.worker.0 == "agent-abc"
+        event.worker.native_id() == "agent-abc"
             && matches!(&event.kind, EventKind::Seen { name, .. } if name == "sub:lint worker")
     }));
 }
@@ -358,8 +369,8 @@ fn claude_tails_incrementally_rotates_and_discovers_sessions() {
     append_jsonl(&transcript, initial);
 
     let mut source = ClaudeSource::new(temp.path());
-    assert!(!source.poll(1_000).unwrap().is_empty());
-    assert!(source.poll(1_001).unwrap().is_empty());
+    assert!(!quiet(&source.poll(1_000).unwrap()));
+    assert!(quiet(&source.poll(1_001).unwrap()));
 
     let new_session = project_dir.join("session-new.jsonl");
     append_jsonl(
@@ -464,20 +475,22 @@ fn claude_carries_real_timestamps_and_accumulates_usage() {
     );
     let now = 9_000_000;
     let events = source.poll(now).unwrap();
-    assert!(events
-        .iter()
-        .any(|event| { event.worker.0 == "session-timestamps" && event.at == 6_000_000 }));
     assert!(events.iter().any(|event| {
-        event.worker.0 == "session-timestamps"
+        event.worker.native_id() == "session-timestamps" && event.at == 6_000_000
+    }));
+    assert!(events.iter().any(|event| {
+        event.worker.native_id() == "session-timestamps"
             && event.at == 7_000_000
             && matches!(&event.kind, EventKind::Tokens(100))
     }));
     assert!(events.iter().any(|event| {
-        event.worker.0 == "session-timestamps"
+        event.worker.native_id() == "session-timestamps"
             && event.at == 8_000_000
             && matches!(&event.kind, EventKind::Tokens(104))
     }));
-    assert!(!events.iter().any(|event| event.at == now));
+    assert!(!events
+        .iter()
+        .any(|event| event.at == now && !matches!(event.kind, EventKind::Coverage(_))));
 }
 
 #[test]
@@ -505,7 +518,7 @@ fn claude_uses_file_mtime_for_all_untimestamped_lines_and_honors_recency() {
     let recent_events = source.poll(4_030_000).unwrap();
     assert!(recent_events
         .iter()
-        .any(|event| event.worker.0 == "session-mtime" && event.at == 4_000_000));
+        .any(|event| event.worker.native_id() == "session-mtime" && event.at == 4_000_000));
 
     let ancient = project_dir.join("session-ancient.jsonl");
     append_jsonl(
@@ -558,7 +571,7 @@ fn claude_collapses_nested_workdirs_to_the_nearest_git_root() {
     let root = normalize_office_path(&repo.to_string_lossy());
     let mut source = ClaudeSource::new(temp.path());
     let events = source.poll(1_000).unwrap();
-    assert!(!events.is_empty());
+    assert!(!quiet(&events));
     assert!(events.iter().all(|event| event.office_path == root));
     assert!(events.iter().all(|event| event.office.0 == root));
 }
@@ -590,7 +603,7 @@ fn claude_uses_project_key_when_repository_is_unmounted() {
     let root = normalize_office_path(&repo.to_string_lossy());
     let mut source = ClaudeSource::new(temp.path());
     let events = source.poll(2_000_000).unwrap();
-    assert!(!events.is_empty());
+    assert!(!quiet(&events));
     assert!(events.iter().all(|event| event.office_path == root));
 }
 
@@ -661,7 +674,7 @@ fn claude_keeps_one_worker_in_one_office_across_path_spellings() {
         .collect();
     assert_eq!(world.office_count(), 1);
     assert_eq!(workers.len(), 1);
-    assert_eq!(workers[0].id.0, "session-spellings");
+    assert_eq!(workers[0].id.native_id(), "session-spellings");
 }
 
 fn create_acceptance_claude_fixture(home: &Path, repo: &Path) {
@@ -1554,13 +1567,12 @@ fn collector_acceptance_fixtures() {
 
     let internal_visible = codex_events.iter().any(|event| {
         matches!(
-            event.worker.0.as_str(),
+            event.worker.native_id(),
             "assessor-edge"
                 | "assessor-fallback"
                 | "assessor-structural"
                 | "guardian-empty"
                 | "subagent-empty"
-                | "subagent-thread"
         )
     });
     report.record(
@@ -1571,7 +1583,7 @@ fn collector_acceptance_fixtures() {
         } else {
             AcceptanceStatus::Pass
         },
-        "guardian, review, subagent, and assessor fixture threads are absent from the roster",
+        "guardian and assessor fixture threads are absent; work subagents are visible",
     );
 
     let invalid_name = world.offices().find_map(|office| {
@@ -1590,7 +1602,7 @@ fn collector_acceptance_fixtures() {
         office
             .workers
             .iter()
-            .any(|worker| worker.id.0 == "deadbeef-named" && worker.name == "Dev named")
+            .any(|worker| worker.id.native_id() == "deadbeef-named" && worker.name == "Dev named")
     });
     let names_ok = invalid_name.is_none() && named_worker_ok;
     let names_reason = if let Some(detail) = invalid_name {
@@ -1657,11 +1669,11 @@ fn collector_acceptance_fixtures() {
         codex_workers
             .iter()
             .filter(|worker| {
-                let Some(updated_at_ms) = timestamps.get(&worker.id.0) else {
+                let Some(updated_at_ms) = timestamps.get(worker.id.native_id()) else {
                     return false;
                 };
                 codex_events.iter().any(|event| {
-                    event.worker.0 == worker.id.0
+                    event.worker == worker.id
                         && event.at == *updated_at_ms
                         && matches!(event.kind, EventKind::Seen { .. })
                 }) && worker.last_seen >= *updated_at_ms
@@ -1684,7 +1696,7 @@ fn collector_acceptance_fixtures() {
     );
 
     let repo_root = normalize_office_path(&repo.to_string_lossy());
-    let repo_events_collapsed = !claude_events.is_empty()
+    let repo_events_collapsed = !quiet(&claude_events)
         && claude_events
             .iter()
             .all(|event| event.office_path == repo_root)
@@ -1727,7 +1739,7 @@ fn collector_acceptance_fixtures() {
 
     let subagent_ok = claude_workers
         .iter()
-        .any(|worker| worker.id.0 == "agent-lint" && worker.name == "sub:lint worker");
+        .any(|worker| worker.id.native_id() == "agent-lint" && worker.name == "sub:lint worker");
     report.record(
         8,
         "Claude subagent transcripts surface with sub names",
@@ -1746,25 +1758,21 @@ fn collector_acceptance_fixtures() {
     let edge_waiting = codex_events.iter().any(|event| {
         matches!(
             &event.kind,
-            EventKind::Acted(Activity::Waiting { detail })
-                if event.worker.0 == "developer-edge"
-                    && detail.contains("cargo deploy")
-                    && !detail.contains("cwd/time fallback")
+            EventKind::Wait(Some(theywork_core::WaitReason::AutomaticReview))
+                if event.worker.native_id() == "developer-edge"
         )
     });
     let fallback_waiting = codex_events.iter().any(|event| {
         matches!(
             &event.kind,
-            EventKind::Acted(Activity::Waiting { detail })
-                if event.worker.0 == "developer-fallback"
-                    && detail.contains("rm -rf target")
-                    && detail.contains("cwd/time fallback")
+            EventKind::Wait(Some(theywork_core::WaitReason::Unknown))
+                if event.worker.native_id() == "developer-fallback"
         )
     });
     let blocked_ok = edge_waiting && fallback_waiting;
     report.record(
         9,
-        "blocked detection reports pending approval",
+        "automatic review and uncertain waiting are not human approval",
         if blocked_ok {
             AcceptanceStatus::Pass
         } else {
@@ -1924,15 +1932,15 @@ fn codex_reads_roster_items_and_turn_state_incrementally() {
     assert!(events.iter().any(|event| matches!(
         &event.kind,
         EventKind::Seen { name, git_branch: Some(branch) }
-            if event.worker.0 == "thread-active" && name == "Dev 3" && branch == "feature/demo"
+            if event.worker.native_id() == "thread-active" && name == "Dev 3" && branch == "feature/demo"
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Tokens(42) if event.worker.0 == "thread-active"
+        EventKind::Tokens(42) if event.worker.native_id() == "thread-active"
     )));
     assert!(events.iter().any(|event| {
         event.at == 2_000
-            && matches!(&event.kind, EventKind::Tokens(42) if event.worker.0 == "thread-active")
+            && matches!(&event.kind, EventKind::Tokens(42) if event.worker.native_id() == "thread-active")
     }));
     assert!(events.iter().any(|event| {
         event.at == 2_000
@@ -1971,9 +1979,9 @@ fn codex_reads_roster_items_and_turn_state_incrementally() {
     ));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Turn { in_flight: true } if event.worker.0 == "thread-active"
+        EventKind::Turn { in_flight: true } if event.worker.native_id() == "thread-active"
     )));
-    assert!(!events.iter().any(|event| matches!(&event.kind, EventKind::Turn { in_flight: false } if event.worker.0 == "thread-active")));
+    assert!(!events.iter().any(|event| matches!(&event.kind, EventKind::Turn { in_flight: false } if event.worker.native_id() == "thread-active")));
     assert!(has_activity(
         &events,
         &Activity::Error {
@@ -2027,13 +2035,13 @@ fn codex_reads_roster_items_and_turn_state_incrementally() {
         }
     ));
     assert!(next.iter().any(|event| {
-        event.worker.0 == "thread-other"
+        event.worker.native_id() == "thread-other"
             && event.at == 650
             && matches!(&event.kind, EventKind::Did(Beat { activity: Activity::Talking { detail }, .. }) if detail == "late")
     }));
     assert!(next.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Turn { in_flight: false } if event.worker.0 == "thread-active"
+        EventKind::Turn { in_flight: false } if event.worker.native_id() == "thread-active"
     )));
 
     let mut filtered = CodexSource::with_paths(temp.path(), vec![PathBuf::from("/workspace/app")]);
@@ -2061,7 +2069,7 @@ fn codex_groups_home_and_conversation_cwds_under_one_non_project_office() {
 
     let mut source = CodexSource::new(temp.path());
     let events = source.poll(10_000).unwrap();
-    assert!(!events.is_empty());
+    assert!(!quiet(&events));
     assert!(events.iter().all(|event| {
         event.office.0 == NON_PROJECT_OFFICE && event.office_path == NON_PROJECT_OFFICE
     }));
@@ -2083,7 +2091,7 @@ fn codex_applies_configured_recency_bound() {
         Vec::new(),
         Duration::from_millis(1),
     );
-    assert!(source.poll(10_000).unwrap().is_empty());
+    assert!(quiet(&source.poll(10_000).unwrap()));
 }
 
 #[test]
@@ -2102,38 +2110,31 @@ fn codex_hides_assessors_and_correlates_waiting_developers() {
     assert!(!has_worker(&events, "assessor-structural"));
     assert!(!has_worker(&events, "guardian-empty"));
     assert!(!has_worker(&events, "subagent-empty"));
-    assert!(!has_worker(&events, "subagent-thread"));
+    assert!(has_worker(&events, "subagent-thread"));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Acted(Activity::Waiting { detail })
-            if event.worker.0 == "developer-edge"
-                && detail.contains("cargo deploy")
-                && !detail.contains("cwd/time fallback")
+        EventKind::Wait(Some(theywork_core::WaitReason::AutomaticReview))
+            if event.worker.native_id() == "developer-edge"
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Acted(Activity::Waiting { detail })
-            if event.worker.0 == "developer-fallback"
-                && detail.contains("rm -rf target")
-                && detail.contains("cwd/time fallback")
-                && detail.ends_with("preserve-this-suffix")
+        EventKind::Wait(Some(theywork_core::WaitReason::Unknown))
+            if event.worker.native_id() == "developer-fallback"
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
-        EventKind::Acted(Activity::Waiting { detail })
-            if event.worker.0 == "developer-structural"
-                && detail.contains("cargo deploy structural")
-                && !detail.contains("cwd/time fallback")
+        EventKind::Wait(Some(theywork_core::WaitReason::AutomaticReview))
+            if event.worker.native_id() == "developer-structural"
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
         EventKind::Seen { name, .. }
-            if event.worker.0 == "nickname-worker" && name == "Dev nickname"
+            if event.worker.native_id() == "nickname-worker" && name == "Dev nickname"
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,
         EventKind::Seen { name, .. }
-            if event.worker.0 == "short-id-worker" && name == "short-id"
+            if event.worker.native_id() == "short-id-worker" && name == "short-id"
     )));
 
     let mut world = World::new();
@@ -2141,7 +2142,7 @@ fn codex_hides_assessors_and_correlates_waiting_developers() {
         .iter()
         .filter_map(|event| {
             if !matches!(
-                event.worker.0.as_str(),
+                event.worker.native_id(),
                 "01a04930-first" | "01a04930-second"
             ) {
                 return None;
@@ -2164,14 +2165,14 @@ fn codex_hides_assessors_and_correlates_waiting_developers() {
     let waiting_workers: Vec<_> = world
         .offices()
         .flat_map(|office| office.workers.iter())
-        .filter(|worker| matches!(worker.activity, Activity::Waiting { .. }))
+        .filter(|worker| worker.wait_reason.is_some())
         .collect();
     assert!(waiting_workers
         .iter()
-        .any(|worker| worker.id.0 == "developer-edge"));
+        .any(|worker| worker.id.native_id() == "developer-edge"));
     assert!(waiting_workers
         .iter()
-        .any(|worker| worker.id.0 == "developer-fallback"));
+        .any(|worker| worker.id.native_id() == "developer-fallback"));
     for office in world.offices() {
         let mut names = HashSet::new();
         for worker in &office.workers {
@@ -2201,19 +2202,19 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
     let history_path = temp.path().join("sqlite/thread_history_1.sqlite");
     let mut source = CodexSource::new(temp.path());
 
-    assert!(!source.poll(10_000).unwrap().is_empty());
+    assert!(!quiet(&source.poll(10_000).unwrap()));
 
     let replacement = temp.path().join("sqlite/history-replacement.sqlite");
     fs::copy(&history_path, &replacement).unwrap();
     fs::remove_file(&history_path).unwrap();
     fs::rename(&replacement, &history_path).unwrap();
-    assert!(source.poll(10_001).unwrap().is_empty());
+    assert!(quiet(&source.poll(10_001).unwrap()));
 
     {
         let history = Connection::open(&history_path).unwrap();
         history.execute_batch("VACUUM").unwrap();
     }
-    assert!(source.poll(10_002).unwrap().is_empty());
+    assert!(quiet(&source.poll(10_002).unwrap()));
 
     {
         let state = Connection::open(&state_path).unwrap();
@@ -2221,7 +2222,7 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
             .execute("ALTER TABLE threads ADD COLUMN migration_marker TEXT", [])
             .unwrap();
     }
-    assert!(source.poll(10_003).unwrap().is_empty());
+    assert!(quiet(&source.poll(10_003).unwrap()));
 
     {
         let state = Connection::open(&state_path).unwrap();
@@ -2245,7 +2246,7 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
     }
     let after_schema_loss = source.poll(10_004).unwrap();
     assert!(after_schema_loss.iter().any(|event| {
-        event.worker.0 == "thread-active"
+        event.worker.native_id() == "thread-active"
             && matches!(
                 &event.kind,
                 EventKind::Seen { name, .. } if name == "thread-a"
@@ -2260,7 +2261,7 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
     lock.execute_batch("BEGIN IMMEDIATE").unwrap();
     for now in 10_005..10_008 {
         assert!(
-            source.poll(now).unwrap().is_empty(),
+            quiet(&source.poll(now).unwrap()),
             "a live WAL writer must not wedge the read poll"
         );
     }
@@ -2283,7 +2284,7 @@ fn codex_recovers_after_replacement_schema_loss_and_wal_lock() {
     ));
 
     history.execute("DROP TABLE thread_items", []).unwrap();
-    assert!(source.poll(10_009).unwrap().is_empty());
+    assert!(quiet(&source.poll(10_009).unwrap()));
 
     history
         .execute_batch(
@@ -2368,7 +2369,11 @@ fn claude_recovers_from_home_gap_deletion_and_same_size_replacement() {
     ));
 
     fs::remove_file(&transcript).unwrap();
-    assert!(source.poll(initial_now + 2).unwrap().is_empty());
+    assert!(source
+        .poll(initial_now + 2)
+        .unwrap()
+        .iter()
+        .any(|event| matches!(event.kind, EventKind::Left)));
 
     append_jsonl(
         &transcript,
@@ -2390,7 +2395,7 @@ fn claude_recovers_from_home_gap_deletion_and_same_size_replacement() {
 
     let hidden_projects = temp.path().join("projects-hidden");
     fs::rename(temp.path().join("projects"), &hidden_projects).unwrap();
-    assert!(source.poll(initial_now + 4).unwrap().is_empty());
+    assert!(quiet(&source.poll(initial_now + 4).unwrap()));
     fs::rename(&hidden_projects, temp.path().join("projects")).unwrap();
     assert!(has_activity(
         &source.poll(initial_now + 5).unwrap(),
@@ -2431,8 +2436,8 @@ fn collectors_soak_for_hours_with_changing_stores() {
     assert_eq!(
         first
             .iter()
-            .filter(|event| event.worker.0.starts_with("soak-"))
-            .map(|event| event.worker.0.as_str())
+            .filter(|event| event.worker.native_id().starts_with("soak-"))
+            .map(|event| event.worker.native_id())
             .collect::<HashSet<_>>()
             .len(),
         WORKER_COUNT
@@ -2440,7 +2445,7 @@ fn collectors_soak_for_hours_with_changing_stores() {
     for event in first {
         world.apply(event);
     }
-    assert!(source.poll(INITIAL_CODEX_NOW + 1).unwrap().is_empty());
+    assert!(quiet(&source.poll(INITIAL_CODEX_NOW + 1).unwrap()));
 
     let mut codex_poll_times = Vec::with_capacity(POLL_COUNT);
     let mut codex_event_count = 0;
@@ -2527,8 +2532,8 @@ fn collectors_soak_for_hours_with_changing_stores() {
         Vec::new(),
         Duration::from_secs(24 * 60 * 60),
     );
-    assert!(!claude.poll(initial_claude_now).unwrap().is_empty());
-    assert!(claude.poll(initial_claude_now + 1).unwrap().is_empty());
+    assert!(!quiet(&claude.poll(initial_claude_now).unwrap()));
+    assert!(quiet(&claude.poll(initial_claude_now + 1).unwrap()));
 
     let mut claude_poll_times = Vec::with_capacity(POLL_COUNT);
     let mut claude_event_count = 0;
@@ -2579,10 +2584,16 @@ fn collectors_soak_for_hours_with_changing_stores() {
     for (_, path) in active_files {
         fs::remove_file(path).unwrap();
     }
-    assert!(claude
+    let ended = claude
         .poll(initial_claude_now + (POLL_COUNT as i64 + 1) * STEP_MS)
-        .unwrap()
-        .is_empty());
+        .unwrap();
+    assert_eq!(
+        ended
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::Left))
+            .count(),
+        WORKER_COUNT
+    );
 
     let rss_peak = process_rss_bytes();
     let rss_end = process_rss_bytes();
@@ -2891,7 +2902,7 @@ fn real_machine_smoke_when_homes_exist() {
             panic!("real-machine smoke poll failed: {error}");
         }));
     }
-    if events.is_empty() {
+    if quiet(&events) {
         eprintln!("real-machine smoke skipped: no events in active horizon");
         return;
     }
@@ -3493,11 +3504,11 @@ fn collector_acceptance_live_when_homes_exist() {
                     .into_iter()
                     .flatten()
                     .any(|timestamps| {
-                        let Some(updated_at_ms) = timestamps.get(&worker.id.0) else {
+                        let Some(updated_at_ms) = timestamps.get(worker.id.native_id()) else {
                             return false;
                         };
                         codex_events.iter().any(|event| {
-                            event.worker.0.as_str() == worker.id.0.as_str()
+                            event.worker == worker.id
                                 && event.at == *updated_at_ms
                                 && matches!(&event.kind, EventKind::Seen { .. })
                         }) && worker.last_seen >= *updated_at_ms
@@ -3645,14 +3656,14 @@ fn collector_acceptance_live_when_homes_exist() {
     if !codex_present {
         report.record(
             9,
-            "blocked detection reports pending approval",
+            "automatic review and uncertain waiting are not human approval",
             AcceptanceStatus::Skip,
             "Codex home absent",
         );
     } else if let Some(error) = codex_poll_error {
         report.record(
             9,
-            "blocked detection reports pending approval",
+            "automatic review and uncertain waiting are not human approval",
             AcceptanceStatus::Fail,
             error,
         );
@@ -3669,14 +3680,14 @@ fn collector_acceptance_live_when_homes_exist() {
         if blocked.is_empty() {
             report.record(
                 9,
-                "blocked detection reports pending approval",
+                "automatic review and uncertain waiting are not human approval",
                 AcceptanceStatus::Skip,
                 "no current blocked candidate; the source diagnostic above reports assessor, turn, and edge counts",
             );
         } else {
             report.record(
                 9,
-                "blocked detection reports pending approval",
+                "automatic review and uncertain waiting are not human approval",
                 AcceptanceStatus::Pass,
                 format!("current blocked set: {}", blocked.join(" | ")),
             );

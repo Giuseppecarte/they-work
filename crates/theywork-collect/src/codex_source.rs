@@ -7,13 +7,15 @@ use std::time::Duration;
 use rusqlite::{params_from_iter, Connection, OpenFlags};
 use serde_json::Value;
 use theywork_core::{
-    Activity, Agent, Beat, Event, EventKind, Millis, OfficeId, Outcome, Source, SourceError,
-    WorkerId, BLOCKED_AFTER_MS,
+    Activity, Agent, Beat, CollaborationEvent, CollaborationKind, CoverageLevel, Event, EventKind,
+    Evidence, Millis, OfficeId, Outcome, Relationship, RelationshipKind, Source, SourceCoverage,
+    SourceError, SourceId, ThreadIdentity, WaitReason, WorkerId, WorkerLifecycle, WorkerRole,
+    BLOCKED_AFTER_MS,
 };
 
 use crate::util::{
-    path_allowed, recency_cutoff, repository_root_or_recorded_project, sanitize_terminal_text,
-    short_id, truncate_detail, truncate_timeline_text, unified_diff_counts, NON_PROJECT_OFFICE,
+    path_allowed, recency_cutoff, repository_root_or_recorded_project, short_id, truncate_detail,
+    truncate_timeline_text, unified_diff_counts, NON_PROJECT_OFFICE,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 const ASSESSOR_TITLE_PREFIX: &str =
@@ -33,6 +35,7 @@ pub struct CodexSource {
     office_cache: HashMap<String, String>,
     items_initialized: bool,
     turn_states: HashMap<String, TurnState>,
+    item_fingerprints: HashMap<String, BTreeMap<String, (Millis, String)>>,
 }
 
 impl CodexSource {
@@ -58,6 +61,7 @@ impl CodexSource {
             last_item_watermark: -1,
             items_initialized: false,
             turn_states: HashMap::new(),
+            item_fingerprints: HashMap::new(),
             office_cache: HashMap::new(),
         }
     }
@@ -279,10 +283,13 @@ impl CodexSource {
         self.office_cache.clear();
         self.items_initialized = false;
         self.turn_states.clear();
+        self.item_fingerprints.clear();
     }
 
     fn prune_runtime_state(&mut self) {
         let active_ids: HashSet<String> = self.threads.keys().cloned().collect();
+        self.item_fingerprints
+            .retain(|thread_id, _| active_ids.contains(thread_id));
         self.item_watermarks
             .retain(|thread_id, _| active_ids.contains(thread_id));
         self.turn_states
@@ -297,10 +304,28 @@ impl CodexSource {
             .retain(|_, office_path| active_offices.contains(office_path));
     }
 
-    fn unavailable_poll(&mut self, reason: &str) -> Vec<Event> {
+    fn unavailable_poll(&mut self, reason: &str, now: Millis) -> Vec<Event> {
+        let events = self
+            .threads
+            .values()
+            .map(|thread| {
+                thread.event(
+                    now,
+                    EventKind::Coverage(SourceCoverage {
+                        available: false,
+                        incomplete: true,
+                        relationships: CoverageLevel::Unavailable,
+                        messages: CoverageLevel::Unavailable,
+                        lifecycle: CoverageLevel::Unavailable,
+                        observed_at: now,
+                        detail: "Local store unavailable; last observations retained.".into(),
+                    }),
+                )
+            })
+            .collect();
         self.clear_runtime_state();
         debug_blocked_unavailable(reason);
-        Vec::new()
+        events
     }
 }
 
@@ -313,25 +338,48 @@ impl Source for CodexSource {
         let cutoff_ms = recency_cutoff(now, self.active_within);
         let state = match open_read_only(&self.state_path()) {
             Ok(connection) => connection,
-            Err(reason) => return Ok(self.unavailable_poll(&reason)),
+            Err(reason) => return Ok(self.unavailable_poll(&reason, now)),
         };
         let Ok(roster) = read_threads(&state, cutoff_ms, &mut self.office_cache) else {
-            return Ok(self.unavailable_poll("thread roster query failed"));
+            return Ok(self.unavailable_poll("thread roster query failed", now));
         };
-        let assessor_ids: Vec<String> = roster
+        let roster_ids: Vec<String> = roster.iter().map(|thread| thread.id.clone()).collect();
+        let edges_supported = table_has_column(&state, "thread_spawn_edges", "parent_thread_id")
+            .unwrap_or(false)
+            && table_has_column(&state, "thread_spawn_edges", "child_thread_id").unwrap_or(false);
+        let edges = read_spawn_edges(&state, &roster_ids).unwrap_or_default();
+        let source = crate::util::source_id(&self.home);
+        let endpoint_ids = edges
             .iter()
-            .filter(|thread| thread.classification.kind == ThreadKind::ApprovalAssessor)
-            .map(|thread| thread.id.clone())
+            .flat_map(|edge| [edge.parent_thread_id.clone(), edge.child_thread_id.clone()])
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .take(4096)
+            .collect::<Vec<_>>();
+        let mut related = read_related_metadata(&state, &endpoint_ids, &mut self.office_cache)
+            .unwrap_or_default();
+        for thread in related.values_mut() {
+            thread.source_id = source.clone();
+        }
+        let excluded_ids: HashSet<_> = roster
+            .iter()
+            .chain(related.values())
+            .filter(|thread| {
+                matches!(
+                    thread.classification.kind,
+                    ThreadKind::ApprovalAssessor | ThreadKind::InternalReview
+                )
+            })
+            .map(|thread| ThreadIdentity::new(Agent::Codex, source.clone(), &thread.id).worker_id())
             .collect();
-        let edges = read_spawn_edges(&state, &assessor_ids).unwrap_or_default();
         let history = match open_read_only(&self.history_path()) {
             Ok(connection) => connection,
-            Err(reason) => return Ok(self.unavailable_poll(&reason)),
+            Err(reason) => return Ok(self.unavailable_poll(&reason, now)),
         };
         let turns = match read_turns(&history) {
             Ok(turns) => turns,
             Err(_) => {
-                return Ok(self.unavailable_poll("turn history query failed"));
+                return Ok(self.unavailable_poll("turn history query failed", now));
             }
         };
         let turns_by_thread: HashMap<String, TurnRecord> = turns
@@ -342,7 +390,8 @@ impl Source for CodexSource {
         let mut assessors = Vec::new();
         let mut current = BTreeMap::new();
         let mut exclusions: BTreeMap<&'static str, (usize, String)> = BTreeMap::new();
-        for thread in roster {
+        for mut thread in roster {
+            thread.source_id = source.clone();
             match thread.classification.kind {
                 ThreadKind::ApprovalAssessor => {
                     record_exclusion(&mut exclusions, &thread);
@@ -352,14 +401,14 @@ impl Source for CodexSource {
                         assessors.push(thread);
                     }
                 }
-                ThreadKind::Developer => {
+                ThreadKind::Developer | ThreadKind::Subagent => {
                     if path_allowed(&thread.raw_office_path, &self.only_paths)
                         || path_allowed(&thread.office_path, &self.only_paths)
                     {
                         current.insert(thread.id.clone(), thread);
                     }
                 }
-                ThreadKind::Subagent | ThreadKind::InternalReview => {
+                ThreadKind::InternalReview => {
                     record_exclusion(&mut exclusions, &thread);
                 }
             }
@@ -370,18 +419,19 @@ impl Source for CodexSource {
             .map(|edge| edge.parent_thread_id.clone())
             .filter(|parent_id| !current.contains_key(parent_id))
             .collect();
-        for parent in
+        for mut parent in
             read_threads_by_ids(&state, &parent_ids, &mut self.office_cache).unwrap_or_default()
         {
+            parent.source_id = source.clone();
             match parent.classification.kind {
-                ThreadKind::Developer => {
+                ThreadKind::Developer | ThreadKind::Subagent => {
                     if path_allowed(&parent.raw_office_path, &self.only_paths) {
                         current.insert(parent.id.clone(), parent);
                     }
                 }
-                ThreadKind::ApprovalAssessor
-                | ThreadKind::Subagent
-                | ThreadKind::InternalReview => record_exclusion(&mut exclusions, &parent),
+                ThreadKind::ApprovalAssessor | ThreadKind::InternalReview => {
+                    record_exclusion(&mut exclusions, &parent)
+                }
             }
         }
         debug_exclusion_summary(&exclusions);
@@ -391,14 +441,7 @@ impl Source for CodexSource {
         // The global cursor keeps steady-state polls incremental. Threads with
         // no observed item still get a targeted backfill because their first
         // item can be older than that cursor.
-        let uninitialized_thread_ids: Vec<String> = self
-            .threads
-            .keys()
-            .filter(|thread_id| !self.item_watermarks.contains_key(*thread_id))
-            .cloned()
-            .collect();
         let minimum_watermark = self.minimum_item_watermark();
-        let items_initialized = self.items_initialized;
 
         let mut events = Vec::new();
 
@@ -421,6 +464,13 @@ impl Source for CodexSource {
             if seen_changed {
                 events.push(thread.event(
                     thread.updated_at_ms,
+                    EventKind::Identity {
+                        identity: thread.identity(),
+                        role: thread.role(),
+                    },
+                ));
+                events.push(thread.event(
+                    thread.updated_at_ms,
                     EventKind::Seen {
                         name: thread.name.clone(),
                         git_branch: thread.git_branch.clone(),
@@ -434,36 +484,118 @@ impl Source for CodexSource {
             }
         }
 
+        for thread in self.threads.values() {
+            events.push(thread.event(now, EventKind::Coverage(SourceCoverage {
+                available: true, incomplete: true,
+                relationships: if edges_supported { CoverageLevel::Supported } else { CoverageLevel::Partial },
+                messages: CoverageLevel::Partial, lifecycle: CoverageLevel::Supported,
+                observed_at: now, detail: "Local history tail; only typed collaboration and explicit final messages are known.".into(),
+            })));
+            if let Some(parent) = &thread.delegated_from {
+                events.push(thread.event(
+                    thread.updated_at_ms,
+                    EventKind::Relationship(Relationship {
+                        parent:
+                            ThreadIdentity::new(Agent::Codex, source.clone(), parent).worker_id(),
+                        child: thread.identity().worker_id(),
+                        kind: RelationshipKind::Delegation,
+                        evidence: Evidence::NativeMetadata,
+                        at: thread.updated_at_ms,
+                        correlation_id: None,
+                    }),
+                ));
+            }
+            if let Some(parent) = &thread.forked_from {
+                events.push(thread.event(
+                    thread.updated_at_ms,
+                    EventKind::Relationship(Relationship {
+                        parent:
+                            ThreadIdentity::new(Agent::Codex, source.clone(), parent).worker_id(),
+                        child: thread.identity().worker_id(),
+                        kind: RelationshipKind::Fork,
+                        at: thread.updated_at_ms,
+                        evidence: Evidence::NativeMetadata,
+                        correlation_id: None,
+                    }),
+                ));
+            }
+        }
+        for edge in &edges {
+            // Classify the child before exposing it: internal assessors are not workers.
+            let Some(child) = self
+                .threads
+                .get(&edge.child_thread_id)
+                .or_else(|| related.get(&edge.child_thread_id))
+            else {
+                continue;
+            };
+            if matches!(
+                child.classification.kind,
+                ThreadKind::ApprovalAssessor | ThreadKind::InternalReview
+            ) {
+                continue;
+            }
+            let parent = ThreadIdentity::new(Agent::Codex, source.clone(), &edge.parent_thread_id)
+                .worker_id();
+            events.push(child.event(
+                child.updated_at_ms,
+                EventKind::Relationship(Relationship {
+                    parent,
+                    child: child.identity().worker_id(),
+                    kind: RelationshipKind::Delegation,
+                    evidence: Evidence::NativeMetadata,
+                    at: child.updated_at_ms,
+                    correlation_id: None,
+                }),
+            ));
+        }
         let mut watermark_updates: HashMap<String, i64> = HashMap::new();
         let mut last_item_watermark = self.last_item_watermark;
         let read_result = read_items(
             &history,
             minimum_watermark,
-            &uninitialized_thread_ids,
+            &self.threads.keys().cloned().collect::<Vec<_>>(),
             |item| {
                 last_item_watermark = last_item_watermark.max(item.created_at_ms);
-                let previous_watermark = self
-                    .item_watermarks
-                    .get(&item.thread_id)
-                    .copied()
-                    .unwrap_or(if items_initialized {
-                        DEFAULT_ITEM_WATERMARK
-                    } else {
-                        -1
-                    });
-                if item.created_at_ms <= previous_watermark {
-                    return;
-                }
-
                 let Some(thread) = self.threads.get(&item.thread_id) else {
                     return;
                 };
+                let fingerprint_key = item.item_id.clone().unwrap_or_else(|| {
+                    format!(
+                        "{}:{}:{}",
+                        item.created_at_ms, item.item_type, item.item_json
+                    )
+                });
+                let fingerprints = self
+                    .item_fingerprints
+                    .entry(item.thread_id.clone())
+                    .or_default();
+                if fingerprints
+                    .get(&fingerprint_key)
+                    .is_some_and(|(_, payload)| payload == &item.item_json)
+                {
+                    return;
+                }
+                fingerprints.insert(
+                    fingerprint_key,
+                    (item.created_at_ms, item.item_json.clone()),
+                );
+                while fingerprints.len() > INITIAL_ITEMS_PER_THREAD as usize * 2 {
+                    if let Some(key) = fingerprints
+                        .iter()
+                        .min_by_key(|(_, (at, _))| *at)
+                        .map(|(key, _)| key.clone())
+                    {
+                        fingerprints.remove(&key);
+                    }
+                }
                 watermark_updates
                     .entry(item.thread_id.clone())
                     .and_modify(|watermark| *watermark = (*watermark).max(item.created_at_ms))
                     .or_insert(item.created_at_ms);
 
                 let payload = serde_json::from_str::<Value>(&item.item_json).unwrap_or(Value::Null);
+                events.extend(collaboration_items(thread, &item, &payload));
                 if let Some(kind) = item_kind(&item.item_type, &payload, item.created_at_ms) {
                     events.push(thread.event(item.created_at_ms, kind));
                 }
@@ -476,7 +608,7 @@ impl Source for CodexSource {
             },
         );
         if read_result.is_err() {
-            return Ok(self.unavailable_poll("activity item query failed"));
+            return Ok(self.unavailable_poll("activity item query failed", now));
         }
         self.last_item_watermark = last_item_watermark.max(DEFAULT_ITEM_WATERMARK);
         for (thread_id, watermark) in watermark_updates {
@@ -510,6 +642,9 @@ impl Source for CodexSource {
 
             if turn_changed {
                 events.push(thread.event(at, EventKind::Turn { in_flight }));
+                if let Some(lifecycle) = lifecycle_from_status(&turn.status) {
+                    events.push(thread.event(at, EventKind::Lifecycle(lifecycle)));
+                }
             }
             if error_changed {
                 if let Some(detail) = state.error_detail.clone() {
@@ -556,9 +691,30 @@ impl Source for CodexSource {
                 }
             };
             debug_waiting(&signal, &detail);
-            events.push(thread.event(at, EventKind::Acted(Activity::Waiting { detail })));
+            let reason = if matches!(signal.strategy, WaitingStrategy::SpawnEdge) {
+                WaitReason::AutomaticReview
+            } else {
+                WaitReason::Unknown
+            };
+            events.push(thread.event(at, EventKind::Wait(Some(reason))));
+            // The assessor is an automated process. A quiet turn still surfaces
+            // via WorkerStatus timing, but does not become a human approval.
+            let _ = detail;
         }
         self.prune_runtime_state();
+        events.retain(|event| match &event.kind {
+            EventKind::Relationship(edge) => {
+                !excluded_ids.contains(&edge.parent) && !excluded_ids.contains(&edge.child)
+            }
+            EventKind::Collaboration(collab) => {
+                !excluded_ids.contains(&collab.actor)
+                    && collab
+                        .recipient
+                        .as_ref()
+                        .is_none_or(|id| !excluded_ids.contains(id))
+            }
+            _ => true,
+        });
         events.sort_by_key(|event| event.at);
         Ok(events)
     }
@@ -575,6 +731,9 @@ struct ThreadRecord {
     updated_at_ms: Millis,
     classification: ThreadClassification,
     name_is_fallback: bool,
+    source_id: SourceId,
+    forked_from: Option<String>,
+    delegated_from: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -592,12 +751,22 @@ struct ThreadClassification {
 }
 
 impl ThreadRecord {
+    fn identity(&self) -> ThreadIdentity {
+        ThreadIdentity::new(Agent::Codex, self.source_id.clone(), &self.id)
+    }
+    fn role(&self) -> WorkerRole {
+        if self.classification.kind == ThreadKind::Subagent {
+            WorkerRole::Subagent
+        } else {
+            WorkerRole::Main
+        }
+    }
     fn event(&self, at: Millis, kind: EventKind) -> Event {
         Event {
             at,
             office: OfficeId(self.office_path.clone()),
             office_path: self.office_path.clone(),
-            worker: WorkerId(sanitize_terminal_text(&self.id)),
+            worker: self.identity().worker_id(),
             agent: Agent::Codex,
             kind,
         }
@@ -609,6 +778,8 @@ struct ItemRecord {
     created_at_ms: i64,
     item_type: String,
     item_json: String,
+    item_id: Option<String>,
+    turn_id: Option<String>,
 }
 
 #[derive(Clone)]
@@ -749,71 +920,57 @@ fn read_threads(
 fn read_items<F>(
     connection: &Connection,
     minimum_watermark: i64,
-    uninitialized_thread_ids: &[String],
-    visit: F,
+    thread_ids: &[String],
+    mut visit: F,
 ) -> rusqlite::Result<()>
 where
     F: FnMut(ItemRecord),
 {
-    let mut visit = visit;
-    let mut backfill = Vec::new();
-    for thread_id in uninitialized_thread_ids {
-        let mut statement = connection.prepare(
-            "SELECT thread_id, created_at_ms, item_type, item_json \
-             FROM thread_items \
-             WHERE thread_id = ?1 AND created_at_ms < ?2 \
-             ORDER BY created_at_ms DESC LIMIT ?3",
-        )?;
-        let mut rows = statement.query(rusqlite::params![
-            thread_id,
-            minimum_watermark,
-            INITIAL_ITEMS_PER_THREAD
-        ])?;
-        while let Some(row) = rows.next()? {
-            backfill.push(ItemRecord {
-                thread_id: row.get(0)?,
-                created_at_ms: row.get(1)?,
-                item_type: row.get(2)?,
-                item_json: row.get(3)?,
-            });
-        }
-    }
-    backfill.sort_by_key(|item| item.created_at_ms);
-    for item in backfill {
-        visit(item);
-    }
-
-    if minimum_watermark < 0 {
-        let mut statement = connection.prepare(
-            "SELECT thread_id, created_at_ms, item_type, item_json \
-             FROM (SELECT thread_id, created_at_ms, item_type, item_json, \
-             ROW_NUMBER() OVER (PARTITION BY thread_id ORDER BY created_at_ms DESC) \
-             AS row_number FROM thread_items) \
-             WHERE row_number <= ?1 ORDER BY created_at_ms ASC",
-        )?;
-        let mut rows = statement.query([INITIAL_ITEMS_PER_THREAD])?;
-        while let Some(row) = rows.next()? {
-            visit(ItemRecord {
-                thread_id: row.get(0)?,
-                created_at_ms: row.get(1)?,
-                item_type: row.get(2)?,
-                item_json: row.get(3)?,
-            });
-        }
+    let item_id = if table_has_column(connection, "thread_items", "item_id")? {
+        "item_id"
     } else {
-        let mut statement = connection.prepare(
-            "SELECT thread_id, created_at_ms, item_type, item_json \
-             FROM thread_items WHERE created_at_ms >= ?1 ORDER BY created_at_ms ASC",
-        )?;
-        let mut rows = statement.query([minimum_watermark])?;
+        "NULL"
+    };
+    let turn_id = if table_has_column(connection, "thread_items", "turn_id")? {
+        "turn_id"
+    } else {
+        "NULL"
+    };
+    let columns = format!("thread_id, created_at_ms, item_type, item_json, {item_id}, {turn_id}");
+    let decode = |row: &rusqlite::Row<'_>| -> rusqlite::Result<ItemRecord> {
+        Ok(ItemRecord {
+            thread_id: row.get(0)?,
+            created_at_ms: row.get(1)?,
+            item_type: row.get(2)?,
+            item_json: row.get(3)?,
+            item_id: row.get(4)?,
+            turn_id: row.get(5)?,
+        })
+    };
+    let mut items = Vec::new();
+    // Revisit the bounded tail: native rows may be completed in-place, and two
+    // messages can share a millisecond. Content fingerprints suppress repeats.
+    let mut recent = connection.prepare(&format!("SELECT {columns} FROM thread_items WHERE thread_id = ?1 ORDER BY created_at_ms DESC LIMIT ?2"))?;
+    for id in thread_ids {
+        let mut rows = recent.query(rusqlite::params![id, INITIAL_ITEMS_PER_THREAD])?;
         while let Some(row) = rows.next()? {
-            visit(ItemRecord {
-                thread_id: row.get(0)?,
-                created_at_ms: row.get(1)?,
-                item_type: row.get(2)?,
-                item_json: row.get(3)?,
-            });
+            items.push(decode(row)?);
         }
+    }
+    if minimum_watermark >= 0 {
+        let ids: HashSet<_> = thread_ids.iter().collect();
+        let mut incremental = connection.prepare(&format!("SELECT {columns} FROM thread_items WHERE created_at_ms >= ?1 ORDER BY created_at_ms ASC"))?;
+        let mut rows = incremental.query([minimum_watermark])?;
+        while let Some(row) = rows.next()? {
+            let item = decode(row)?;
+            if ids.contains(&item.thread_id) {
+                items.push(item);
+            }
+        }
+    }
+    items.sort_by(|a, b| (a.created_at_ms, &a.item_id).cmp(&(b.created_at_ms, &b.item_id)));
+    for item in items {
+        visit(item);
     }
     Ok(())
 }
@@ -899,6 +1056,173 @@ fn message_beat(payload: &Value, at: Millis) -> EventKind {
         },
         outcome: None,
     })
+}
+
+fn lifecycle_from_status(status: &str) -> Option<WorkerLifecycle> {
+    match normalize_marker(status).as_str() {
+        "inprogress" | "running" | "pendinginit" => Some(WorkerLifecycle::Active),
+        "completed" | "done" => Some(WorkerLifecycle::Completed),
+        "failed" | "errored" | "error" => Some(WorkerLifecycle::Failed),
+        "interrupted" | "cancelled" | "canceled" | "shutdown" => Some(WorkerLifecycle::Cancelled),
+        _ => None,
+    }
+}
+
+fn collaboration_items(thread: &ThreadRecord, item: &ItemRecord, payload: &Value) -> Vec<Event> {
+    let at = item.created_at_ms;
+    let native_id = item
+        .item_id
+        .as_deref()
+        .or_else(|| payload.get("id").and_then(Value::as_str));
+    // Missing IDs are not a reason to invent a durable delivery identity.
+    let Some(native_id) = native_id else {
+        return Vec::new();
+    };
+    let actor = thread.identity().worker_id();
+    let make = |kind, recipient: Option<WorkerId>, text: Option<String>, suffix: &str| {
+        thread.event(
+            at,
+            EventKind::Collaboration(CollaborationEvent {
+                id: format!(
+                    "{}:{native_id}:{suffix}",
+                    item.turn_id.as_deref().unwrap_or("")
+                ),
+                at,
+                actor: actor.clone(),
+                recipient,
+                kind,
+                text,
+                correlation_id: Some(native_id.to_string()),
+                native_turn_id: item.turn_id.clone(),
+                native_item_id: Some(native_id.to_string()),
+                evidence: Evidence::NativeEvent,
+            }),
+        )
+    };
+    let mut events = Vec::new();
+    if item.item_type == "agentMessage" {
+        if payload.get("phase").and_then(Value::as_str) == Some("final_answer") {
+            let text = timeline_detail(payload, &["text", "message", "content"]);
+            if !text.is_empty() {
+                events.push(make(CollaborationKind::Result, None, Some(text), "final"));
+            }
+        }
+        return events;
+    }
+    if matches!(
+        item.item_type.as_str(),
+        "requestUserInput" | "toolRequestUserInput" | "requestApproval"
+    ) {
+        let reason = if item.item_type == "requestApproval" {
+            WaitReason::HumanApproval
+        } else {
+            WaitReason::HumanInput
+        };
+        let text = timeline_detail(payload, &["question", "questions", "reason", "message"]);
+        events.push(make(
+            CollaborationKind::HumanRequest,
+            None,
+            Some(text.clone()),
+            "request",
+        ));
+        events.push(thread.event(at, EventKind::Wait(Some(reason))));
+        events.push(thread.event(at, EventKind::Acted(Activity::Waiting { detail: text })));
+        return events;
+    }
+    if !matches!(
+        item.item_type.as_str(),
+        "collabToolCall" | "collabAgentToolCall"
+    ) {
+        return events;
+    }
+    // A record attributed to a different actor must not impersonate this worker.
+    if payload
+        .get("senderThreadId")
+        .and_then(Value::as_str)
+        .is_some_and(|sender| sender != thread.id)
+    {
+        return events;
+    }
+    let tool = payload
+        .get("tool")
+        .and_then(Value::as_str)
+        .map(normalize_marker)
+        .unwrap_or_default();
+    let kind = match tool.as_str() {
+        "spawnagent" | "spawn" => CollaborationKind::Delegated,
+        "sendmessage" | "sendinput" => CollaborationKind::Message,
+        "wait" | "waitagent" => CollaborationKind::Waiting,
+        "closeagent" | "close" => CollaborationKind::Cancelled,
+        "resumeagent" | "resume" => CollaborationKind::Message,
+        _ => return events,
+    };
+    let mut receivers: Vec<&str> = ["newThreadId", "receiverThreadId"]
+        .into_iter()
+        .filter_map(|key| payload.get(key).and_then(Value::as_str))
+        .collect();
+    if let Some(ids) = payload.get("receiverThreadIds").and_then(Value::as_array) {
+        receivers.extend(ids.iter().filter_map(Value::as_str));
+    }
+    receivers.sort_unstable();
+    receivers.dedup();
+    let text = payload
+        .get("prompt")
+        .and_then(Value::as_str)
+        .map(truncate_timeline_text);
+    if receivers.is_empty() {
+        events.push(make(kind, None, text.clone(), "collaboration"));
+    }
+    for receiver in receivers {
+        let recipient =
+            ThreadIdentity::new(Agent::Codex, thread.source_id.clone(), receiver).worker_id();
+        if recipient == actor {
+            continue;
+        }
+        events.push(make(kind, Some(recipient.clone()), text.clone(), receiver));
+        if kind == CollaborationKind::Delegated {
+            events.push(thread.event(
+                at,
+                EventKind::Relationship(Relationship {
+                    parent: actor.clone(),
+                    child: recipient.clone(),
+                    kind: RelationshipKind::Delegation,
+                    evidence: Evidence::NativeEvent,
+                    at,
+                    correlation_id: Some(native_id.to_string()),
+                }),
+            ));
+        }
+        if let Some(status) = payload
+            .get("agentStatus")
+            .and_then(Value::as_str)
+            .and_then(lifecycle_from_status)
+        {
+            let final_kind = match status {
+                WorkerLifecycle::Completed => Some(CollaborationKind::Completed),
+                WorkerLifecycle::Failed => Some(CollaborationKind::Failed),
+                WorkerLifecycle::Cancelled => Some(CollaborationKind::Cancelled),
+                _ => None,
+            };
+            if let Some(final_kind) = final_kind {
+                events.push(make(
+                    final_kind,
+                    Some(recipient),
+                    None,
+                    &format!("{receiver}:status"),
+                ));
+            }
+        }
+    }
+    if kind == CollaborationKind::Waiting {
+        let pending = payload
+            .get("status")
+            .and_then(Value::as_str)
+            .is_some_and(|status| {
+                matches!(normalize_marker(status).as_str(), "inprogress" | "running")
+            });
+        events.push(thread.event(at, EventKind::Wait(pending.then_some(WaitReason::Child))));
+    }
+    events
 }
 
 fn timeline_detail(payload: &Value, keys: &[&str]) -> String {
@@ -1004,7 +1328,7 @@ fn u32_value(value: &Value) -> Option<u32> {
 fn turn_in_flight(status: &str) -> Option<bool> {
     match status {
         "inProgress" => Some(true),
-        "completed" => Some(false),
+        "completed" | "failed" | "interrupted" | "cancelled" | "canceled" => Some(false),
         _ => None,
     }
 }
@@ -1075,6 +1399,7 @@ struct ThreadColumns {
     thread_source_expression: &'static str,
     updated_at_expression: &'static str,
     archived_expression: &'static str,
+    fork_expression: &'static str,
 }
 
 fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
@@ -1116,7 +1441,15 @@ fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
     } else {
         "1 = 1"
     };
+    let fork_expression = if table_has_column(connection, "threads", "forked_from_id")? {
+        "forked_from_id"
+    } else if table_has_column(connection, "threads", "forked_from")? {
+        "forked_from"
+    } else {
+        "NULL"
+    };
     Ok(ThreadColumns {
+        fork_expression,
         name_expression,
         nickname_expression,
         title_expression,
@@ -1129,7 +1462,8 @@ fn thread_columns(connection: &Connection) -> rusqlite::Result<ThreadColumns> {
 
 fn thread_query(columns: &ThreadColumns, filter: &str) -> String {
     format!(
-        "SELECT id, cwd, {name_expression}, {nickname_expression}, {title_expression}, {source_expression}, {thread_source_expression},          tokens_used, git_branch, {updated_at_expression} AS observed_at_ms FROM threads          WHERE {archived_expression} AND {filter}",
+        "SELECT id, cwd, {name_expression}, {nickname_expression}, {title_expression}, {source_expression}, {thread_source_expression},          tokens_used, git_branch, {updated_at_expression} AS observed_at_ms, {fork_expression} FROM threads          WHERE {archived_expression} AND {filter}",
+        fork_expression = columns.fork_expression,
         name_expression = columns.name_expression,
         nickname_expression = columns.nickname_expression,
         title_expression = columns.title_expression,
@@ -1185,6 +1519,20 @@ fn decode_thread_row(
         updated_at_ms,
         classification,
         name_is_fallback,
+        source_id: SourceId(String::new()),
+        forked_from: row
+            .get::<_, Option<String>>(10)?
+            .filter(|id| !id.is_empty()),
+        delegated_from: source
+            .as_deref()
+            .and_then(|source| serde_json::from_str::<Value>(source).ok())
+            .and_then(|source| {
+                source
+                    .pointer("/subagent/thread_spawn/parent_thread_id")
+                    .or_else(|| source.pointer("/subagent/threadSpawn/parentThreadId"))
+                    .and_then(Value::as_str)
+                    .map(str::to_owned)
+            }),
     }))
 }
 
@@ -1220,6 +1568,24 @@ fn classify_thread(
         };
     }
 
+    if source.is_some_and(|source| {
+        serde_json::from_str::<Value>(source)
+            .ok()
+            .is_some_and(|value| {
+                value
+                    .pointer("/subagent/other")
+                    .and_then(Value::as_str)
+                    .is_some_and(|marker| {
+                        let marker = normalize_marker(marker);
+                        marker == "guardian" || is_internal_review_marker(&marker)
+                    })
+            })
+    }) {
+        return ThreadClassification {
+            kind: ThreadKind::InternalReview,
+            reason: "source.subagent.other internal review",
+        };
+    }
     let thread_source_marker = thread_source.map(normalize_marker);
     if thread_source_marker
         .as_deref()
@@ -1558,6 +1924,27 @@ fn read_threads_by_ids(
     Ok(threads)
 }
 
+fn read_related_metadata(
+    connection: &Connection,
+    ids: &[String],
+    cache: &mut HashMap<String, String>,
+) -> rusqlite::Result<HashMap<String, ThreadRecord>> {
+    let mut columns = thread_columns(connection)?;
+    columns.archived_expression = "1=1";
+    let query = thread_query(&columns, "id = ?1");
+    let mut statement = connection.prepare(&query)?;
+    let mut records = HashMap::new();
+    for id in ids {
+        let mut rows = statement.query([id])?;
+        while let Some(row) = rows.next()? {
+            if let Some(record) = decode_thread_row(row, cache)? {
+                records.insert(record.id.clone(), record);
+            }
+        }
+    }
+    Ok(records)
+}
+
 #[derive(Clone)]
 struct SpawnEdge {
     parent_thread_id: String,
@@ -1565,36 +1952,38 @@ struct SpawnEdge {
     status: String,
 }
 
-fn read_spawn_edges(
-    connection: &Connection,
-    assessor_ids: &[String],
-) -> rusqlite::Result<Vec<SpawnEdge>> {
-    if assessor_ids.is_empty()
+fn read_spawn_edges(connection: &Connection, ids: &[String]) -> rusqlite::Result<Vec<SpawnEdge>> {
+    if ids.is_empty()
         || !table_has_column(connection, "thread_spawn_edges", "parent_thread_id")?
         || !table_has_column(connection, "thread_spawn_edges", "child_thread_id")?
-        || !table_has_column(connection, "thread_spawn_edges", "status")?
     {
         return Ok(Vec::new());
     }
-
-    let placeholders = (0..assessor_ids.len())
-        .map(|_| "?")
-        .collect::<Vec<_>>()
-        .join(", ");
-    let query = format!(
-        "SELECT parent_thread_id, child_thread_id, status FROM thread_spawn_edges          WHERE child_thread_id IN ({placeholders})"
-    );
-    let mut statement = connection.prepare(&query)?;
-    let mut rows = statement.query(params_from_iter(assessor_ids.iter()))?;
-    let mut edges = Vec::new();
-    while let Some(row) = rows.next()? {
-        edges.push(SpawnEdge {
-            parent_thread_id: row.get(0)?,
-            child_thread_id: row.get(1)?,
-            status: row.get(2)?,
-        });
+    let status = if table_has_column(connection, "thread_spawn_edges", "status")? {
+        "COALESCE(status, 'unknown')"
+    } else {
+        "'unknown'"
+    };
+    let mut edges = BTreeMap::new();
+    // Keep below SQLite's variable limit and deduplicate edges shared by batches.
+    for batch in ids.chunks(200) {
+        let placeholders = vec!["?"; batch.len()].join(",");
+        let query = format!("SELECT parent_thread_id, child_thread_id, {status} FROM thread_spawn_edges WHERE parent_thread_id IN ({placeholders}) OR child_thread_id IN ({placeholders})");
+        let mut statement = connection.prepare(&query)?;
+        let mut rows = statement.query(params_from_iter(batch.iter().chain(batch.iter())))?;
+        while let Some(row) = rows.next()? {
+            let edge = SpawnEdge {
+                parent_thread_id: row.get(0)?,
+                child_thread_id: row.get(1)?,
+                status: row.get(2)?,
+            };
+            edges.insert(
+                (edge.parent_thread_id.clone(), edge.child_thread_id.clone()),
+                edge,
+            );
+        }
     }
-    Ok(edges)
+    Ok(edges.into_values().collect())
 }
 
 fn edge_is_active(status: &str) -> bool {
@@ -1866,6 +2255,9 @@ mod tests {
 
     fn thread(id: &str, office_path: &str) -> ThreadRecord {
         ThreadRecord {
+            source_id: SourceId("fixture".into()),
+            forked_from: None,
+            delegated_from: None,
             id: id.to_string(),
             raw_office_path: office_path.to_string(),
             office_path: office_path.to_string(),

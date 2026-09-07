@@ -29,6 +29,29 @@ pub struct OfficeId(pub String);
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct WorkerId(pub String);
 
+impl WorkerId {
+    /// Native suffix of a namespaced ID, or the whole ID for legacy/demo data.
+    /// Use Worker.identity for routing: this alone does not identify a source.
+    pub fn native_id(&self) -> &str {
+        fn part(input: &str) -> Option<(&str, &str)> {
+            let (length, tail) = input.split_once(':')?;
+            let length: usize = length.parse().ok()?;
+            Some((tail.get(..length)?, tail.get(length..)?))
+        }
+        let parsed = || {
+            let (provider, tail) = self.0.split_once(':')?;
+            if !matches!(provider, "claude" | "codex") {
+                return None;
+            }
+            let (_, tail) = part(tail)?;
+            let (_, tail) = part(tail.strip_prefix(':')?)?;
+            let (native, tail) = part(tail.strip_prefix(':')?)?;
+            tail.is_empty().then_some(native)
+        };
+        parsed().unwrap_or(&self.0)
+    }
+}
+
 /// What a worker is doing right now.
 ///
 /// The renderer maps each variant to a sprite and an animation, so adding a
@@ -171,6 +194,16 @@ pub struct Worker {
     /// Bounded: a thread that has run for hours must not cost more to remember
     /// than one that just started.
     pub history: VecDeque<Beat>,
+    #[serde(default)]
+    pub identity: Option<crate::ThreadIdentity>,
+    #[serde(default)]
+    pub role: crate::WorkerRole,
+    #[serde(default)]
+    pub lifecycle: crate::WorkerLifecycle,
+    #[serde(default)]
+    pub wait_reason: Option<crate::WaitReason>,
+    #[serde(default)]
+    pub coverage: crate::SourceCoverage,
 }
 
 impl Worker {
@@ -186,15 +219,35 @@ impl Worker {
             last_seen: at,
             turn_in_flight: false,
             history: VecDeque::new(),
+            identity: None,
+            role: crate::WorkerRole::Main,
+            lifecycle: crate::WorkerLifecycle::Unknown,
+            wait_reason: None,
+            coverage: crate::SourceCoverage::default(),
         }
     }
 
     /// How this worker is doing, in the sense a manager would mean it.
     pub fn status_at(&self, now: Millis) -> WorkerStatus {
-        if matches!(self.activity, Activity::Error { .. }) {
+        if matches!(self.activity, Activity::Error { .. })
+            || self.lifecycle == crate::WorkerLifecycle::Failed
+        {
             return WorkerStatus::Failed;
         }
-        if matches!(self.activity, Activity::Waiting { .. }) {
+        if (matches!(self.activity, Activity::Waiting { .. })
+            && !matches!(
+                self.wait_reason,
+                Some(
+                    crate::WaitReason::AutomaticReview
+                        | crate::WaitReason::Child
+                        | crate::WaitReason::Process
+                )
+            ))
+            || matches!(
+                self.wait_reason,
+                Some(crate::WaitReason::HumanApproval | crate::WaitReason::HumanInput)
+            )
+        {
             return WorkerStatus::Blocked;
         }
         if !self.turn_in_flight {
@@ -209,10 +262,18 @@ impl Worker {
 
     /// Record something this worker did, dropping the oldest beat when full.
     pub fn remember(&mut self, beat: Beat) {
-        if self.history.len() >= crate::HISTORY_LEN {
+        if self.history.contains(&beat) {
+            return;
+        }
+        let index = self
+            .history
+            .iter()
+            .position(|existing| existing.at > beat.at)
+            .unwrap_or(self.history.len());
+        self.history.insert(index, beat);
+        if self.history.len() > crate::HISTORY_LEN {
             self.history.pop_front();
         }
-        self.history.push_back(beat);
     }
 
     /// The most recent beats, newest last.

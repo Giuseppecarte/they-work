@@ -9,14 +9,15 @@ use std::os::unix::fs::MetadataExt;
 
 use serde_json::Value;
 use theywork_core::{
-    Activity, Agent, Beat, Event, EventKind, Millis, OfficeId, Outcome, Source, SourceError,
-    WorkerId,
+    Activity, Agent, Beat, CollaborationEvent, CollaborationKind, CoverageLevel, Event, EventKind,
+    Evidence, Millis, OfficeId, Outcome, Relationship, RelationshipKind, Source, SourceCoverage,
+    SourceError, SourceId, ThreadIdentity, WaitReason, WorkerId, WorkerLifecycle, WorkerRole,
 };
 
 use crate::util::{
     normalize_office_path, path_allowed, recency_cutoff, repository_root,
-    repository_root_with_project_hint, sanitize_terminal_text, short_id, text_line_count,
-    timestamp_value, truncate_detail, truncate_timeline_text, unified_diff_counts,
+    repository_root_with_project_hint, short_id, text_line_count, timestamp_value, truncate_detail,
+    truncate_timeline_text, unified_diff_counts,
 };
 use crate::DEFAULT_ACTIVE_WITHIN;
 
@@ -31,6 +32,10 @@ pub struct ClaudeSource {
     files: BTreeMap<PathBuf, FileCursor>,
     office_cache: HashMap<String, String>,
     worker_names: HashMap<(String, String), NameAssignment>,
+    identities: HashMap<WorkerId, ThreadIdentity>,
+    delegations: HashMap<(WorkerId, String), WorkerId>,
+    memberships: BTreeMap<WorkerId, Relationship>,
+    delegation_events: HashMap<(WorkerId, String), Event>,
 }
 
 impl ClaudeSource {
@@ -54,6 +59,10 @@ impl ClaudeSource {
             files: BTreeMap::new(),
             office_cache: HashMap::new(),
             worker_names: HashMap::new(),
+            identities: HashMap::new(),
+            delegations: HashMap::new(),
+            memberships: BTreeMap::new(),
+            delegation_events: HashMap::new(),
         }
     }
 
@@ -151,6 +160,10 @@ impl ClaudeSource {
         self.files.clear();
         self.office_cache.clear();
         self.worker_names.clear();
+        self.identities.clear();
+        self.delegations.clear();
+        self.memberships.clear();
+        self.delegation_events.clear();
     }
 
     fn prune_runtime_state(&mut self) {
@@ -159,7 +172,7 @@ impl ClaudeSource {
             .values()
             .filter_map(|cursor| {
                 let office = cursor.metadata.office_path.as_ref()?;
-                Some((office.clone(), cursor.metadata.worker_id()))
+                Some((office.clone(), cursor.metadata.identity().worker_id().0))
             })
             .collect();
         let active_offices: HashSet<String> = active_workers
@@ -177,18 +190,18 @@ impl ClaudeSource {
             .retain(|key, _| active_worker_keys.contains(key));
     }
 
-    fn discover(&mut self, now: Millis) {
+    fn discover(&mut self, now: Millis) -> bool {
         let cutoff_ms = recency_cutoff(now, self.active_within);
         let projects = self.home.join("projects");
         let discovered = match discover_files(&projects) {
             Ok(discovered) => discovered,
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 self.clear_runtime_state();
-                return;
+                return false;
             }
             Err(_) => {
                 self.clear_runtime_state();
-                return;
+                return false;
             }
         };
 
@@ -221,6 +234,7 @@ impl ClaudeSource {
                 .entry(path)
                 .or_insert_with(|| FileCursor::new(discovery));
         }
+        true
     }
 }
 
@@ -230,31 +244,221 @@ impl Source for ClaudeSource {
     }
 
     fn poll(&mut self, now: Millis) -> Result<Vec<Event>, SourceError> {
-        self.discover(now);
-
+        let previous = self.roster_events(now);
+        let discovered = self.discover(now);
+        if !discovered {
+            return Ok(previous
+                .into_values()
+                .map(|mut event| {
+                    event.kind = EventKind::Coverage(claude_coverage(now, false));
+                    event
+                })
+                .collect());
+        }
+        let source_id = crate::util::source_id(&self.home);
         let paths: Vec<PathBuf> = self.files.keys().cloned().collect();
         let mut events = Vec::new();
+        let mut unreadable = HashSet::new();
         for path in paths {
             let Some(mut cursor) = self.files.remove(&path) else {
                 continue;
             };
-            read_file(
+            cursor.metadata.source_id = source_id.clone();
+            if !read_file(
                 &path,
                 &mut cursor,
                 &self.only_paths,
                 &mut self.office_cache,
                 &mut events,
-            );
+            ) {
+                unreadable.insert(cursor.metadata.identity().worker_id());
+            }
             self.files.insert(path, cursor);
         }
+        let current = self.roster_events(now);
+        for (id, mut event) in previous {
+            if !current.contains_key(&id) {
+                event.kind = EventKind::Left;
+                events.push(event);
+            }
+        }
+        for (id, mut event) in current {
+            event.kind = EventKind::Coverage(claude_coverage(now, !unreadable.contains(&id)));
+            events.push(event);
+        }
+        self.resolve_collaboration(&mut events);
         self.prune_runtime_state();
-
-        // A source may discover several sessions and subagents at once. The
-        // UI gets a stable chronological feed even though directory order is
-        // unspecified by the filesystem.
         events.sort_by_key(|event| event.at);
         disambiguate_names(&mut self.worker_names, &mut events);
         Ok(events)
+    }
+}
+
+fn claude_coverage(now: Millis, available: bool) -> SourceCoverage {
+    SourceCoverage { available, incomplete: true,
+        relationships: CoverageLevel::Partial, messages: CoverageLevel::Partial,
+        lifecycle: CoverageLevel::Partial, observed_at: now,
+        detail: if available { "Local transcripts; session membership is known, immediate parents and final output require explicit metadata." }
+            else { "Local transcript source unavailable; last observations are retained." }.into(),
+    }
+}
+
+impl ClaudeSource {
+    fn roster_events(&mut self, now: Millis) -> HashMap<WorkerId, Event> {
+        let mut events = HashMap::new();
+        for cursor in self.files.values() {
+            let Some(raw) = cursor.metadata.office_path.as_deref() else {
+                continue;
+            };
+            let office_path = repository_root_with_project_hint(
+                raw,
+                &mut self.office_cache,
+                Some(&cursor.metadata.project_key),
+            );
+            if !path_allowed(raw, &self.only_paths) && !path_allowed(&office_path, &self.only_paths)
+            {
+                continue;
+            }
+            let worker = cursor.metadata.identity().worker_id();
+            events.insert(
+                worker.clone(),
+                Event {
+                    at: now,
+                    office: OfficeId(office_path.clone()),
+                    office_path,
+                    worker,
+                    agent: Agent::Claude,
+                    kind: EventKind::Left,
+                },
+            );
+        }
+        events
+    }
+
+    fn resolve_collaboration(&mut self, events: &mut Vec<Event>) {
+        for event in events.iter() {
+            if let EventKind::Identity { identity, .. } = &event.kind {
+                self.identities
+                    .insert(event.worker.clone(), identity.clone());
+            }
+            if let EventKind::Relationship(relationship) = &event.kind {
+                if relationship.kind == RelationshipKind::SessionMembership {
+                    self.memberships
+                        .insert(relationship.child.clone(), relationship.clone());
+                }
+            }
+        }
+        let root_for = |actor: &WorkerId| -> Option<WorkerId> {
+            let identity = self.identities.get(actor)?;
+            Some(if let Some(root) = &identity.session_id {
+                ThreadIdentity::new(Agent::Claude, identity.source.clone(), root).worker_id()
+            } else {
+                actor.clone()
+            })
+        };
+        for event in events.iter() {
+            if let EventKind::Collaboration(collab) = &event.kind {
+                if collab.kind == CollaborationKind::Delegated {
+                    if let (Some(root), Some(correlation)) =
+                        (root_for(&collab.actor), &collab.correlation_id)
+                    {
+                        self.delegations
+                            .insert((root.clone(), correlation.clone()), collab.actor.clone());
+                        self.delegation_events
+                            .insert((root, correlation.clone()), event.clone());
+                    }
+                }
+            }
+        }
+        // Join on the scoped native tool ID only. Filename membership alone
+        // never establishes which nested subagent actually delegated the work.
+        let mut relations = Vec::new();
+        for membership in self.memberships.values() {
+            let Some(correlation) = membership.correlation_id.as_ref() else {
+                continue;
+            };
+            let Some(parent) = self
+                .delegations
+                .get(&(membership.parent.clone(), correlation.clone()))
+            else {
+                continue;
+            };
+            let Some(template) = events.iter().find(|event| event.worker == membership.child)
+            else {
+                continue;
+            };
+            let mut event = template.clone();
+            event.kind = EventKind::Relationship(Relationship {
+                parent: parent.clone(),
+                kind: RelationshipKind::Delegation,
+                evidence: Evidence::NativeEvent,
+                ..membership.clone()
+            });
+            relations.push(event);
+            let key = (membership.parent.clone(), correlation.clone());
+            if let Some(event) = self.delegation_events.get(&key) {
+                let mut updated = event.clone();
+                if let EventKind::Collaboration(collab) = &mut updated.kind {
+                    if self
+                        .memberships
+                        .values()
+                        .filter(|r| {
+                            r.parent == membership.parent
+                                && r.correlation_id.as_ref() == Some(correlation)
+                        })
+                        .count()
+                        == 1
+                    {
+                        collab.recipient = Some(membership.child.clone());
+                        relations.push(updated);
+                    }
+                }
+            }
+        }
+        for event in events.iter_mut() {
+            if let EventKind::Collaboration(collab) = &mut event.kind {
+                let Some(root) = root_for(&collab.actor) else {
+                    continue;
+                };
+                let Some(correlation) = &collab.correlation_id else {
+                    continue;
+                };
+                let children: Vec<_> = self
+                    .memberships
+                    .values()
+                    .filter(|r| r.parent == root && r.correlation_id.as_ref() == Some(correlation))
+                    .map(|r| r.child.clone())
+                    .collect();
+                if children.len() == 1
+                    && matches!(
+                        collab.kind,
+                        CollaborationKind::Delegated | CollaborationKind::Result
+                    )
+                {
+                    if collab.kind == CollaborationKind::Delegated {
+                        collab.recipient = Some(children[0].clone());
+                    } else if collab.id.ends_with(":tool-result") && collab.recipient.is_none() {
+                        collab.recipient = Some(collab.actor.clone());
+                        collab.actor = children[0].clone();
+                    }
+                }
+            }
+        }
+        events.extend(relations);
+        let live: HashSet<_> = self
+            .files
+            .values()
+            .map(|cursor| cursor.metadata.identity().worker_id())
+            .collect();
+        self.identities.retain(|id, _| live.contains(id));
+        self.memberships.retain(|id, _| live.contains(id));
+        self.delegations.retain(|_, actor| live.contains(actor));
+        self.delegation_events
+            .retain(|_, event| live.contains(&event.worker));
+        if self.delegations.len() > 4096 {
+            self.delegations.clear();
+            self.delegation_events.clear();
+        }
     }
 }
 
@@ -342,12 +546,14 @@ struct PendingTool {
     kind: PendingToolKind,
     activity: Activity,
     input_counts: Option<(u32, u32)>,
+    background: bool,
 }
 
 #[derive(Clone, Copy)]
 enum PendingToolKind {
     Command,
     Edit,
+    Delegation,
 }
 
 struct ParseState<'a> {
@@ -367,11 +573,26 @@ struct SessionMetadata {
     ai_title: Option<String>,
     agent_name: Option<String>,
     agent_id: Option<String>,
+    fallback_agent_id: String,
+    source_id: SourceId,
+    parent_tool_use_id: Option<String>,
+    parent_agent_id: Option<String>,
+    forked_from: Option<String>,
 }
 
 impl SessionMetadata {
     fn new(discovery: Discovery) -> Self {
         Self {
+            fallback_agent_id: discovery
+                .path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown-agent")
+                .into(),
+            source_id: SourceId(String::new()),
+            parent_tool_use_id: None,
+            parent_agent_id: None,
+            forked_from: None,
             is_subagent: discovery.is_subagent,
             session_id: discovery.session_id,
             project_key: discovery.project_key,
@@ -391,6 +612,9 @@ impl SessionMetadata {
         self.ai_title = None;
         self.agent_name = None;
         self.agent_id = None;
+        self.parent_tool_use_id = None;
+        self.parent_agent_id = None;
+        self.forked_from = None;
     }
 
     fn update(&mut self, line: &Value) {
@@ -401,6 +625,21 @@ impl SessionMetadata {
         update_optional_string(&mut self.ai_title, line.get("aiTitle"));
         update_optional_string(&mut self.agent_name, line.get("agentName"));
         update_optional_string(&mut self.agent_id, line.get("agentId"));
+        update_optional_string(
+            &mut self.parent_tool_use_id,
+            line.get("parent_tool_use_id")
+                .or_else(|| line.get("parentToolUseId")),
+        );
+        update_optional_string(
+            &mut self.parent_agent_id,
+            line.get("parentAgentId")
+                .or_else(|| line.get("parent_agent_id")),
+        );
+        update_optional_string(
+            &mut self.forked_from,
+            line.get("forkedFromSessionId")
+                .or_else(|| line.get("forked_from_session_id")),
+        );
     }
 
     fn worker_id(&self) -> String {
@@ -408,11 +647,20 @@ impl SessionMetadata {
             self.agent_id
                 .as_deref()
                 .filter(|id| !id.is_empty())
-                .unwrap_or(&self.session_id)
+                .unwrap_or(&self.fallback_agent_id)
                 .to_string()
         } else {
             self.session_id.clone()
         }
+    }
+
+    fn identity(&self) -> ThreadIdentity {
+        let mut identity =
+            ThreadIdentity::new(Agent::Claude, self.source_id.clone(), self.worker_id());
+        if self.is_subagent {
+            identity.session_id = Some(self.session_id.clone());
+        }
+        identity
     }
 
     fn display_name(&self) -> String {
@@ -556,10 +804,10 @@ fn read_file(
     only_paths: &[PathBuf],
     office_cache: &mut HashMap<String, String>,
     events: &mut Vec<Event>,
-) {
+) -> bool {
     let metadata = match fs::metadata(path) {
         Ok(metadata) => metadata,
-        Err(_) => return,
+        Err(_) => return false,
     };
     let length = metadata.len();
     let file_mtime = modified_millis(&metadata);
@@ -582,7 +830,7 @@ fn read_file(
     cursor.last_modified = modified;
     let mut file = match File::open(path) {
         Ok(file) => file,
-        Err(_) => return,
+        Err(_) => return false,
     };
     // Mounted filesystems can round mtime to whole seconds. Check a bounded
     // transcript tail for in-place rewrites with unchanged size and timestamp.
@@ -594,14 +842,18 @@ fn read_file(
         }
     }
     if length == cursor.offset {
-        return;
+        return true;
     }
     if file.seek(SeekFrom::Start(cursor.offset)).is_err() {
-        return;
+        return false;
     }
 
     let mut buffer = [0_u8; CHUNK_SIZE];
-    while let Ok(read) = file.read(&mut buffer) {
+    loop {
+        let read = match file.read(&mut buffer) {
+            Ok(read) => read,
+            Err(_) => return false,
+        };
         if read == 0 {
             break;
         }
@@ -628,6 +880,7 @@ fn read_file(
         );
     }
     cursor.checkpoint = read_checkpoint(&mut file, cursor.offset).unwrap_or_default();
+    true
 }
 
 fn read_checkpoint(file: &mut File, offset: u64) -> io::Result<Vec<u8>> {
@@ -674,6 +927,11 @@ fn parse_line(
     let Some(object) = value.as_object() else {
         return;
     };
+    let previous_identity = state
+        .metadata
+        .office_path
+        .as_ref()
+        .map(|_| state.metadata.identity());
     state.metadata.update(&value);
 
     let at = if let Some(at) = timestamp_value(value.get("timestamp")) {
@@ -701,7 +959,8 @@ fn parse_line(
     if !path_allowed(raw_office_path, only_paths) && !path_allowed(&office_path, only_paths) {
         return;
     }
-    let worker = WorkerId(sanitize_terminal_text(&state.metadata.worker_id()));
+    let identity = state.metadata.identity();
+    let worker = identity.worker_id();
     let office = OfficeId(office_path.clone());
     let make_event = |kind| Event {
         at,
@@ -712,6 +971,55 @@ fn parse_line(
         kind,
     };
 
+    if let Some(previous) = previous_identity.filter(|previous| previous.worker_id() != worker) {
+        let mut old = make_event(EventKind::Left);
+        old.worker = previous.worker_id();
+        events.push(old);
+    }
+    events.push(make_event(EventKind::Identity {
+        identity: identity.clone(),
+        role: if state.metadata.is_subagent {
+            WorkerRole::Subagent
+        } else {
+            WorkerRole::Main
+        },
+    }));
+    let root_identity = ThreadIdentity::new(
+        Agent::Claude,
+        identity.source.clone(),
+        &state.metadata.session_id,
+    );
+    if state.metadata.is_subagent {
+        events.push(make_event(EventKind::Relationship(Relationship {
+            parent: root_identity.worker_id(),
+            child: worker.clone(),
+            kind: RelationshipKind::SessionMembership,
+            evidence: Evidence::TranscriptLayout,
+            at,
+            correlation_id: state.metadata.parent_tool_use_id.clone(),
+        })));
+        if let Some(parent_id) = &state.metadata.parent_agent_id {
+            let mut parent = ThreadIdentity::new(Agent::Claude, identity.source.clone(), parent_id);
+            parent.session_id = Some(state.metadata.session_id.clone());
+            events.push(make_event(EventKind::Relationship(Relationship {
+                parent: parent.worker_id(),
+                child: worker.clone(),
+                kind: RelationshipKind::Delegation,
+                evidence: Evidence::NativeMetadata,
+                at,
+                correlation_id: state.metadata.parent_tool_use_id.clone(),
+            })));
+        }
+    } else if let Some(parent) = &state.metadata.forked_from {
+        events.push(make_event(EventKind::Relationship(Relationship {
+            parent: ThreadIdentity::new(Agent::Claude, identity.source.clone(), parent).worker_id(),
+            child: worker.clone(),
+            kind: RelationshipKind::Fork,
+            evidence: Evidence::NativeMetadata,
+            at,
+            correlation_id: None,
+        })));
+    }
     events.push(make_event(EventKind::Seen {
         name: state.metadata.display_name(),
         git_branch: state.metadata.git_branch.as_deref().map(truncate_detail),
@@ -724,6 +1032,14 @@ fn parse_line(
         }
     }
 
+    record_claude_collaboration(
+        &value,
+        at,
+        &identity,
+        state.pending_tools,
+        &make_event,
+        events,
+    );
     match object.get("type").and_then(Value::as_str) {
         Some("user") => parse_user(&value, at, state.pending_tools, make_event, events),
         Some("assistant") => parse_assistant(&value, at, state.pending_tools, make_event, events),
@@ -734,6 +1050,206 @@ fn parse_line(
 // Keep each content block as an event: a single assistant line can contain a
 // tool call followed by explanatory text, and the latest event is the useful
 // activity for the desk.
+fn record_claude_collaboration<F>(
+    value: &Value,
+    at: Millis,
+    identity: &ThreadIdentity,
+    pending: &HashMap<String, PendingTool>,
+    make_event: &F,
+    events: &mut Vec<Event>,
+) where
+    F: Fn(EventKind) -> Event,
+{
+    let actor = identity.worker_id();
+    let line_kind = value
+        .get("type")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let message_id = value
+        .get("uuid")
+        .or_else(|| value.pointer("/message/id"))
+        .and_then(Value::as_str);
+    let make = |id: &str, suffix: &str, kind, text, correlation: Option<String>, recipient| {
+        make_event(EventKind::Collaboration(CollaborationEvent {
+            id: format!("{id}:{suffix}"),
+            at,
+            actor: actor.clone(),
+            recipient,
+            kind,
+            text,
+            correlation_id: correlation,
+            native_turn_id: None,
+            native_item_id: Some(id.to_string()),
+            evidence: Evidence::NativeEvent,
+        }))
+    };
+    let content = message_content(value).unwrap_or_default();
+    for block in content {
+        match (line_kind, block.get("type").and_then(Value::as_str)) {
+            ("assistant", Some("tool_use")) => {
+                let Some(id) = block.get("id").and_then(Value::as_str) else {
+                    continue;
+                };
+                let input = block.get("input");
+                match block.get("name").and_then(Value::as_str) {
+                    Some("Task" | "Agent") => {
+                        let text = input_text(input, &["prompt", "description"])
+                            .map(truncate_timeline_text);
+                        events.push(make(
+                            id,
+                            "delegated",
+                            CollaborationKind::Delegated,
+                            text,
+                            Some(id.into()),
+                            None,
+                        ));
+                    }
+                    Some("SendMessage") => {
+                        // A display name or `broadcast` is not a native agent ID.
+                        let recipient =
+                            input_text(input, &["agent_id", "target_agent_id"]).map(|id| {
+                                let mut peer =
+                                    ThreadIdentity::new(Agent::Claude, identity.source.clone(), id);
+                                peer.session_id = Some(
+                                    identity
+                                        .session_id
+                                        .as_deref()
+                                        .unwrap_or(&identity.native_id)
+                                        .into(),
+                                );
+                                peer.worker_id()
+                            });
+                        let text =
+                            input_text(input, &["message", "content"]).map(truncate_timeline_text);
+                        events.push(make(
+                            id,
+                            "message",
+                            CollaborationKind::Message,
+                            text,
+                            Some(id.into()),
+                            recipient,
+                        ));
+                    }
+                    Some("AskUserQuestion" | "ExitPlanMode") => {
+                        let text = if block.get("name").and_then(Value::as_str)
+                            == Some("AskUserQuestion")
+                        {
+                            question_detail(input)
+                        } else {
+                            "Review the proposed plan in the original session.".into()
+                        };
+                        events.push(make(
+                            id,
+                            "human-request",
+                            CollaborationKind::HumanRequest,
+                            Some(text),
+                            Some(id.into()),
+                            None,
+                        ));
+                        events.push(make_event(EventKind::Wait(Some(WaitReason::HumanInput))));
+                    }
+                    _ => {}
+                }
+            }
+            ("user", Some("tool_result")) => {
+                let Some(id) = block.get("tool_use_id").and_then(Value::as_str) else {
+                    continue;
+                };
+                if let Some(tool) = pending
+                    .get(id)
+                    .filter(|tool| matches!(tool.kind, PendingToolKind::Delegation))
+                {
+                    let root = identity
+                        .session_id
+                        .as_deref()
+                        .unwrap_or(&identity.native_id);
+                    let child = value
+                        .pointer("/toolUseResult/agentId")
+                        .or_else(|| value.pointer("/toolUseResult/agent_id"))
+                        .and_then(Value::as_str)
+                        .map(|native| {
+                            let mut child =
+                                ThreadIdentity::new(Agent::Claude, identity.source.clone(), native);
+                            child.session_id = Some(root.into());
+                            child.worker_id()
+                        });
+                    if let Some(child) = &child {
+                        events.push(make_event(EventKind::Relationship(Relationship {
+                            parent: actor.clone(),
+                            child: child.clone(),
+                            kind: RelationshipKind::Delegation,
+                            evidence: Evidence::NativeEvent,
+                            at,
+                            correlation_id: Some(id.into()),
+                        })));
+                    }
+                    let explicitly_finished = value
+                        .pointer("/toolUseResult/status")
+                        .and_then(Value::as_str)
+                        .is_some_and(|status| matches!(status, "completed" | "failed"));
+                    if tool.background && !explicitly_finished {
+                        continue;
+                    }
+                    let text = block
+                        .get("content")
+                        .and_then(|content| {
+                            content.as_str().map(str::to_owned).or_else(|| {
+                                content.as_array().map(|blocks| {
+                                    blocks
+                                        .iter()
+                                        .filter_map(|b| b.get("text").and_then(Value::as_str))
+                                        .collect::<Vec<_>>()
+                                        .join("\n")
+                                })
+                            })
+                        })
+                        .map(|text| truncate_timeline_text(&text));
+                    let kind = if block.get("is_error").and_then(Value::as_bool) == Some(true) {
+                        CollaborationKind::Failed
+                    } else {
+                        CollaborationKind::Result
+                    };
+                    let mut result = make(id, "tool-result", kind, text, Some(id.into()), None);
+                    if let (Some(child), EventKind::Collaboration(result)) =
+                        (child, &mut result.kind)
+                    {
+                        result.actor = child;
+                        result.recipient = Some(actor.clone());
+                    }
+                    events.push(result);
+                }
+            }
+            _ => {}
+        }
+    }
+    if line_kind == "assistant"
+        && value
+            .pointer("/message/stop_reason")
+            .and_then(Value::as_str)
+            .is_some_and(|reason| matches!(reason, "end_turn" | "stop_sequence"))
+        && !content
+            .iter()
+            .any(|block| block.get("type").and_then(Value::as_str) == Some("tool_use"))
+    {
+        let text = content
+            .iter()
+            .filter_map(|block| block.get("text").and_then(Value::as_str))
+            .collect::<Vec<_>>()
+            .join("\n");
+        if let Some(id) = message_id.filter(|_| !text.is_empty()) {
+            events.push(make(
+                id,
+                "final",
+                CollaborationKind::Result,
+                Some(truncate_timeline_text(&text)),
+                None,
+                None,
+            ));
+        }
+        events.push(make_event(EventKind::Lifecycle(WorkerLifecycle::Completed)));
+    }
+}
+
 fn parse_assistant<F>(
     value: &Value,
     at: Millis,
@@ -777,6 +1293,11 @@ fn parse_assistant<F>(
                             kind,
                             activity,
                             input_counts: edit_input_counts(name, block.get("input")),
+                            background: block
+                                .pointer("/input/run_in_background")
+                                .or_else(|| block.pointer("/input/runInBackground"))
+                                .and_then(Value::as_bool)
+                                == Some(true),
                         },
                     );
                 }
@@ -873,6 +1394,7 @@ fn pending_tool_kind(name: &str) -> Option<PendingToolKind> {
     match name {
         "Bash" => Some(PendingToolKind::Command),
         "Edit" | "Write" | "NotebookEdit" => Some(PendingToolKind::Edit),
+        "Task" | "Agent" => Some(PendingToolKind::Delegation),
         _ => None,
     }
 }
@@ -899,6 +1421,7 @@ fn edit_input_counts(name: &str, input: Option<&Value>) -> Option<(u32, u32)> {
 
 fn tool_result_outcome(pending: &PendingTool, block: &Value, line: &Value) -> Option<Outcome> {
     match pending.kind {
+        PendingToolKind::Delegation => None,
         PendingToolKind::Command => exit_code_from_values(line, block).map(Outcome::Exited),
         PendingToolKind::Edit => change_counts_from_values(line, block)
             .or(pending.input_counts)
@@ -1300,14 +1823,24 @@ mod tests {
             .office_cache
             .insert("/gone/src".to_string(), "/gone".to_string());
         source.worker_names.insert(
-            ("/repo".to_string(), "active".to_string()),
+            (
+                "/repo".to_string(),
+                ThreadIdentity::new(Agent::Claude, SourceId(String::new()), "active")
+                    .worker_id()
+                    .0,
+            ),
             NameAssignment {
                 base: "worker".to_string(),
                 assigned: "worker".to_string(),
             },
         );
         source.worker_names.insert(
-            ("/gone".to_string(), "ended".to_string()),
+            (
+                "/gone".to_string(),
+                ThreadIdentity::new(Agent::Claude, SourceId(String::new()), "ended")
+                    .worker_id()
+                    .0,
+            ),
             NameAssignment {
                 base: "worker".to_string(),
                 assigned: "worker (ended)".to_string(),
@@ -1322,13 +1855,19 @@ mod tests {
         assert_eq!(source.worker_names.len(), 1);
         assert!(source.files.contains_key(&active_path));
         assert!(source.office_cache.contains_key("/repo/src"));
-        assert!(source
-            .worker_names
-            .contains_key(&("/repo".to_string(), "active".to_string())));
+        assert!(source.worker_names.contains_key(&(
+            "/repo".to_string(),
+            ThreadIdentity::new(Agent::Claude, SourceId(String::new()), "active")
+                .worker_id()
+                .0
+        )));
         assert!(!source.office_cache.contains_key("/gone/src"));
-        assert!(!source
-            .worker_names
-            .contains_key(&("/gone".to_string(), "ended".to_string())));
+        assert!(!source.worker_names.contains_key(&(
+            "/gone".to_string(),
+            ThreadIdentity::new(Agent::Claude, SourceId(String::new()), "ended")
+                .worker_id()
+                .0
+        )));
 
         source.clear_runtime_state();
         assert!(source.files.is_empty());

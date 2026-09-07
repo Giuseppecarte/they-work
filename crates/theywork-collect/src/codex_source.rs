@@ -552,7 +552,7 @@ impl Source for CodexSource {
             let detail = match signal.strategy {
                 WaitingStrategy::SpawnEdge => detail,
                 WaitingStrategy::CwdTimeFallback => {
-                    truncate_detail(&format!("cwd/time fallback: {detail}"))
+                    truncate_timeline_text(&format!("cwd/time fallback: {detail}"))
                 }
             };
             debug_waiting(&signal, &detail);

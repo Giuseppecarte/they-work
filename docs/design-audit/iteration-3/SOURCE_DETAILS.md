@@ -16,3 +16,9 @@ test preserves long question context; limit tests distinguish exactly-at-limit
 text from omitted content. The final inspector PTY capture displays the original
 request suffix. This does not imply that complete transcripts are retained: core
 history is still bounded, and requests are handled in the source conversation.
+
+Final review also checked the inferred cwd/time association path. Its diagnostic
+prefix previously reapplied the 120-character caption budget after recovering a
+long request. It now uses the same request budget. The collector's existing
+end-to-end fixture uses a long target path and asserts that its final suffix
+survives the emitted waiting event, including the association diagnostic.

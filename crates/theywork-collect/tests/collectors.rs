@@ -1411,7 +1411,7 @@ fn create_codex_m3_fixture(home: &Path) {
         "developer-fallback",
         1_650_000,
         "commandExecution",
-        json!({"command": "rm -rf target", "status": "running"}),
+        json!({"command": format!("rm -rf target/{}/preserve-this-suffix", "long-directory-".repeat(20)), "status": "running"}),
     );
     history
         .execute(
@@ -2116,6 +2116,7 @@ fn codex_hides_assessors_and_correlates_waiting_developers() {
             if event.worker.0 == "developer-fallback"
                 && detail.contains("rm -rf target")
                 && detail.contains("cwd/time fallback")
+                && detail.ends_with("preserve-this-suffix")
     )));
     assert!(events.iter().any(|event| matches!(
         &event.kind,

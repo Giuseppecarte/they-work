@@ -1,0 +1,35 @@
+{
+  "unicode_version": "16.0.0",
+  "baseline_commit": "8331017071f5790cad51f04936213de096a833f0",
+  "baseline": {
+    "mapped_patterns": 62,
+    "wrong_unicode_mappings": {},
+    "two_colour_patterns_with_loss": [
+      {
+        "input_mask": 21,
+        "glyph": "🬕",
+        "unicode_name": "BLOCK SEXTANT-1235",
+        "foreground": 1,
+        "background": 0,
+        "reconstructed_mask": 23,
+        "wrong_subpixels": 1
+      },
+      {
+        "input_mask": 42,
+        "glyph": "🬕",
+        "unicode_name": "BLOCK SEXTANT-1235",
+        "foreground": 0,
+        "background": 1,
+        "reconstructed_mask": 40,
+        "wrong_subpixels": 1
+      }
+    ]
+  },
+  "current": {
+    "mapped_patterns": 64,
+    "wrong_unicode_mappings": {},
+    "two_colour_patterns_with_loss": []
+  },
+  "method": "Canonical masks come from Unicode names; colour enumeration mirrors the documented encoder tie-break, while Rust tests independently exercise its real implementation.",
+  "exporter_patterns_verified": 66
+}

@@ -1,0 +1,3 @@
+*.cells.json
+*.svg
+__pycache__/

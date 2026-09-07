@@ -1,0 +1,182 @@
+[
+  {
+    "codepoint" : "U+258C",
+    "label" : "left half",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          -0.3125,
+          -8,
+          9.9375,
+          32.625
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2376
+      }
+    ],
+    "symbol" : "▌"
+  },
+  {
+    "codepoint" : "U+2590",
+    "label" : "right half",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          9.640625,
+          -8,
+          9.9375,
+          32.625
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2380
+      }
+    ],
+    "symbol" : "▐"
+  },
+  {
+    "codepoint" : "U+2580",
+    "label" : "upper half",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          -0.3125,
+          8.3125,
+          19.890625,
+          16.3125
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2364
+      }
+    ],
+    "symbol" : "▀"
+  },
+  {
+    "codepoint" : "U+2584",
+    "label" : "lower half",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          -0.3125,
+          -8,
+          19.890625,
+          16.3125
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2368
+      }
+    ],
+    "symbol" : "▄"
+  },
+  {
+    "codepoint" : "U+2598",
+    "label" : "quadrant UL",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          -0.3125,
+          8.3125,
+          9.9375,
+          16.3125
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2388
+      }
+    ],
+    "symbol" : "▘"
+  },
+  {
+    "codepoint" : "U+2588",
+    "label" : "full",
+    "runs" : [
+      {
+        "advance" : 19.265625,
+        "ascent" : 29.703125,
+        "bounds" : [
+          -0.3125,
+          -8,
+          19.890625,
+          32.625
+        ],
+        "descent" : 7.546875,
+        "font" : "Menlo-Regular",
+        "glyph" : 2372
+      }
+    ],
+    "symbol" : "█"
+  },
+  {
+    "codepoint" : "U+1FB02",
+    "label" : "sextant 12",
+    "runs" : [
+      {
+        "advance" : 35.203125,
+        "ascent" : 30.46875,
+        "bounds" : [
+          3.203125,
+          -3.125,
+          28.78125,
+          28.765625
+        ],
+        "descent" : 7.71875,
+        "font" : "LastResort",
+        "glyph" : 4
+      }
+    ],
+    "symbol" : "🬂"
+  },
+  {
+    "codepoint" : "U+1FB39",
+    "label" : "sextant 3456",
+    "runs" : [
+      {
+        "advance" : 35.203125,
+        "ascent" : 30.46875,
+        "bounds" : [
+          3.203125,
+          -3.125,
+          28.78125,
+          28.765625
+        ],
+        "descent" : 7.71875,
+        "font" : "LastResort",
+        "glyph" : 4
+      }
+    ],
+    "symbol" : "🬹"
+  },
+  {
+    "codepoint" : "U+1FB32",
+    "label" : "sextant 1356",
+    "runs" : [
+      {
+        "advance" : 35.203125,
+        "ascent" : 30.46875,
+        "bounds" : [
+          3.203125,
+          -3.125,
+          28.78125,
+          28.765625
+        ],
+        "descent" : 7.71875,
+        "font" : "LastResort",
+        "glyph" : 4
+      }
+    ],
+    "symbol" : "🬲"
+  }
+]

@@ -139,7 +139,14 @@ impl PixelEncoding {
         let sextants = truthy(sextants_hint)
             || windows_terminal_session.is_some_and(|session| !session.is_empty())
             || terminal_program.is_some_and(sextant_terminal);
-        let quadrants = truthy(quadrants_hint) || terminal_is_usable;
+        // Apple Terminal commonly uses font glyphs whose vertical halves do
+        // not cover the line height. Half blocks with a top-colour background
+        // avoid repeated gaps along every vertical edge. Explicit hints win.
+        let apple_font_safe = terminal_program
+            .is_some_and(|program| program.eq_ignore_ascii_case("Apple_Terminal"))
+            && !sextants
+            && !truthy(quadrants_hint);
+        let quadrants = truthy(quadrants_hint) || (terminal_is_usable && !apple_font_safe);
         let encoding = Self::resolve(
             None,
             EncodingCapabilities {
@@ -159,12 +166,17 @@ impl PixelEncoding {
             Self::Sextants => "sextants selected for a known compatible terminal".to_string(),
             Self::Quadrants => concat!(
                 "quadrants selected for a usable terminal; sextant glyph coverage cannot be ",
-                "queried, so force it with THEYWORK_ENCODING=sextants"
+                "queried; compare encodings in Settings (s)"
+            )
+            .to_string(),
+            Self::HalfBlocks if apple_font_safe => concat!(
+                "half-blocks selected for Apple Terminal's font geometry; sextant glyph coverage ",
+                "cannot be queried; compare encodings in Settings (s)"
             )
             .to_string(),
             Self::HalfBlocks => concat!(
                 "half-blocks selected because TERM is dumb or cons25; sextant glyph coverage ",
-                "cannot be queried, so force it with THEYWORK_ENCODING=sextants"
+                "cannot be queried; compare encodings in Settings (s)"
             )
             .to_string(),
         };
@@ -428,6 +440,7 @@ impl Canvas {
             / 2
     }
 
+    #[cfg(test)]
     pub(crate) fn half_space_height(&self, value: usize) -> usize {
         value.saturating_mul(2) / self.pixels_per_cell().1
     }
@@ -632,7 +645,7 @@ impl Canvas {
         );
         for cell_y in 0..cell_height {
             for cell_x in 0..pixel_width {
-                let (samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
+                let (mut samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
                 if samples[..sample_count].iter().all(Option::is_none) {
                     continue;
                 }
@@ -655,17 +668,29 @@ impl Canvas {
                 if self.encoding == PixelEncoding::HalfBlocks {
                     match (samples[0], samples[1]) {
                         (Some(top), Some(bottom)) => {
-                            cell.set_char('▀').set_fg(top).set_bg(bottom);
+                            // The background reaches the cell's top, including
+                            // font leading. A lower block anchors to the descent;
+                            // an upper block can leave a false line above it.
+                            cell.set_char('▄').set_fg(bottom).set_bg(top);
                         }
                         (Some(top), None) => {
-                            cell.set_char('▀').set_fg(top);
+                            let bottom = cell.bg;
+                            cell.set_char('▄').set_fg(bottom).set_bg(top);
                         }
                         (None, Some(bottom)) => {
-                            cell.set_char('▄').set_bg(bottom);
+                            cell.set_char('▄').set_fg(bottom);
                         }
                         (None, None) => {}
                     }
                     continue;
+                }
+                // A missing subpixel reveals the existing cell background, never
+                // its text foreground. Resolve that colour before choosing a
+                // glyph, since the quantizer may invert foreground/background.
+                for sample in samples.iter_mut().take(sample_count) {
+                    if sample.is_none() {
+                        *sample = Some(cell.bg);
+                    }
                 }
                 let quantized = {
                     let mut cache = self.quantized_cache.borrow_mut();
@@ -869,7 +894,7 @@ fn glyph_for_mask(encoding: PixelEncoding, mask: u8) -> Option<char> {
             0 => Some(' '),
             1 => Some('▀'),
             2 => Some('▄'),
-            3 => Some('▀'),
+            3 => Some('█'),
             _ => None,
         },
         PixelEncoding::Quadrants => {
@@ -883,6 +908,9 @@ fn glyph_for_mask(encoding: PixelEncoding, mask: u8) -> Option<char> {
 }
 
 fn sextant_glyph(mask: u8) -> Option<char> {
+    // Unicode omits full-height columns from the sextant range because the
+    // Block Elements range already contains them as LEFT/RIGHT HALF BLOCK.
+    // They are still valid masks; excluding them damages every vertical edge.
     const MASKS: [u8; 60] = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26,
         27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50,
@@ -890,6 +918,10 @@ fn sextant_glyph(mask: u8) -> Option<char> {
     ];
     if mask == 0 {
         Some(' ')
+    } else if mask == 21 {
+        Some('▌')
+    } else if mask == 42 {
+        Some('▐')
     } else if mask == 63 {
         Some('█')
     } else {
@@ -1030,7 +1062,7 @@ mod tests {
     use ratatui::layout::Rect;
 
     #[test]
-    fn half_block_packs_top_into_foreground_and_bottom_into_background() {
+    fn half_block_packs_bottom_into_foreground_and_top_into_background() {
         let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
         let top = Color::Rgb(255, 50, 90);
         let bottom = Color::Rgb(40, 200, 150);
@@ -1041,9 +1073,125 @@ mod tests {
         let area = buffer.area;
         canvas.render(&mut buffer, area);
         let cell = buffer.cell((0, 0)).expect("one cell");
-        assert_eq!(cell.symbol(), "▀");
-        assert_eq!(cell.fg, top);
-        assert_eq!(cell.bg, bottom);
+        assert_eq!(cell.symbol(), "▄");
+        assert_eq!(cell.fg, bottom);
+        assert_eq!(cell.bg, top);
+    }
+
+    #[test]
+    fn half_block_bottom_only_preserves_the_existing_background() {
+        let foreground = Color::Rgb(12, 80, 190);
+        let background = Color::Rgb(32, 21, 40);
+        let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
+        canvas.set(0, 1, foreground);
+        let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+        buffer[(0, 0)].set_fg(Color::Red).set_bg(background);
+        canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+        assert_eq!(buffer[(0, 0)].symbol(), "▄");
+        assert_eq!(buffer[(0, 0)].fg, foreground);
+        assert_eq!(buffer[(0, 0)].bg, background);
+    }
+
+    // Independent Unicode character-name oracle. Sextant numbers follow
+    // reading order: 12 / 34 / 56. This uses the published names, not the
+    // encoder's numeric mask table or its supported_masks helper.
+    fn unicode_sample_mask(encoding: PixelEncoding, symbol: char) -> u8 {
+        if encoding == PixelEncoding::Sextants && (0x1fb00..=0x1fb3b).contains(&(symbol as u32)) {
+            const NAMES: &str = "1 2 12 3 13 23 123 4 14 24 124 34 134 234 1234 5 15 25 125 35 235 1235 45 145 245 1245 345 1345 2345 12345 6 16 26 126 36 136 236 1236 46 146 1246 346 1346 2346 12346 56 156 256 1256 356 1356 2356 12356 456 1456 2456 12456 3456 13456 23456";
+            return NAMES
+                .split_whitespace()
+                .nth(symbol as usize - 0x1fb00)
+                .unwrap()
+                .bytes()
+                .fold(0, |mask, digit| mask | (1 << (digit - b'1')));
+        }
+        match (encoding, symbol) {
+            (_, ' ') => 0,
+            (PixelEncoding::Sextants, '▌') => 0b010101,
+            (PixelEncoding::Sextants, '▐') => 0b101010,
+            (PixelEncoding::Sextants, '█') => 0b111111,
+            (PixelEncoding::Quadrants, '▘') => 0b0001,
+            (PixelEncoding::Quadrants, '▝') => 0b0010,
+            (PixelEncoding::Quadrants, '▀') => 0b0011,
+            (PixelEncoding::Quadrants, '▖') => 0b0100,
+            (PixelEncoding::Quadrants, '▌') => 0b0101,
+            (PixelEncoding::Quadrants, '▞') => 0b0110,
+            (PixelEncoding::Quadrants, '▛') => 0b0111,
+            (PixelEncoding::Quadrants, '▗') => 0b1000,
+            (PixelEncoding::Quadrants, '▚') => 0b1001,
+            (PixelEncoding::Quadrants, '▐') => 0b1010,
+            (PixelEncoding::Quadrants, '▜') => 0b1011,
+            (PixelEncoding::Quadrants, '▄') => 0b1100,
+            (PixelEncoding::Quadrants, '▙') => 0b1101,
+            (PixelEncoding::Quadrants, '▟') => 0b1110,
+            (PixelEncoding::Quadrants, '█') => 0b1111,
+            _ => panic!("unexpected glyph: {symbol:?}"),
+        }
+    }
+
+    #[test]
+    fn dense_encodings_preserve_every_two_colour_mask_using_unicode_names() {
+        let front = Color::Rgb(220, 34, 43);
+        let back = Color::Rgb(19, 18, 31);
+        for encoding in [PixelEncoding::Quadrants, PixelEncoding::Sextants] {
+            for mask in 0..(1 << encoding.sample_count()) {
+                let samples: Vec<_> = (0..encoding.sample_count())
+                    .map(|bit| Some(if mask & (1 << bit) != 0 { front } else { back }))
+                    .collect();
+                let cell = quantize_cell(encoding, &samples);
+                let actual = unicode_sample_mask(encoding, cell.symbol);
+                for (bit, expected) in samples.into_iter().enumerate() {
+                    let reconstructed = if actual & (1 << bit) != 0 {
+                        cell.foreground
+                    } else {
+                        cell.background
+                    };
+                    assert_eq!(
+                        reconstructed, expected,
+                        "{encoding:?} mask={mask} bit={bit} glyph={:?}",
+                        cell.symbol
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn partial_dense_pixels_reveal_background_even_when_the_glyph_is_inverted() {
+        let front = Color::Rgb(220, 34, 43);
+        let back = Color::Rgb(19, 18, 31);
+        for encoding in [PixelEncoding::Quadrants, PixelEncoding::Sextants] {
+            for mask in 1..(1 << encoding.sample_count()) {
+                let mut canvas = Canvas::with_color_depth_and_encoding(
+                    encoding.width_per_cell(),
+                    encoding.height_per_cell(),
+                    ColorDepth::TrueColor,
+                    encoding,
+                );
+                for bit in 0..encoding.sample_count() {
+                    if mask & (1 << bit) != 0 {
+                        canvas.set(bit % 2, bit / 2, front);
+                    }
+                }
+                let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+                buffer[(0, 0)].set_fg(Color::Green).set_bg(back);
+                canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+                let cell = &buffer[(0, 0)];
+                let actual = unicode_sample_mask(encoding, cell.symbol().chars().next().unwrap());
+                for bit in 0..encoding.sample_count() {
+                    let reconstructed = if actual & (1 << bit) != 0 {
+                        cell.fg
+                    } else {
+                        cell.bg
+                    };
+                    assert_eq!(
+                        reconstructed,
+                        if mask & (1 << bit) != 0 { front } else { back },
+                        "{encoding:?} mask={mask} bit={bit}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -1222,7 +1370,7 @@ mod tests {
         let (encoding, locked, reason) = PixelEncoding::select(None, None, None, None, None, None);
         assert_eq!(encoding, PixelEncoding::Quadrants);
         assert!(!locked);
-        assert!(reason.contains("THEYWORK_ENCODING=sextants"));
+        assert!(reason.contains("compare encodings in Settings (s)"));
 
         for terminal in ["dumb", "cons25", "DUMB"] {
             let (encoding, locked, reason) =
@@ -1255,6 +1403,64 @@ mod tests {
         assert_eq!(encoding, PixelEncoding::Sextants);
         assert!(!locked);
         assert!(reason.contains("Windows Terminal capability signal"));
+    }
+
+    #[test]
+    fn apple_terminal_uses_lower_density_unless_explicitly_overridden() {
+        let select = |forced, sextants, quadrants| {
+            PixelEncoding::select(
+                forced,
+                Some("xterm-256color"),
+                Some("Apple_Terminal"),
+                None,
+                sextants,
+                quadrants,
+            )
+        };
+        let (encoding, locked, reason) = select(None, None, None);
+        assert_eq!(encoding, PixelEncoding::HalfBlocks);
+        assert!(!locked);
+        assert!(reason.contains("Apple Terminal's font geometry"));
+        assert_eq!(
+            select(Some("quadrants"), None, None).0,
+            PixelEncoding::Quadrants
+        );
+        assert_eq!(
+            select(Some("sextants"), None, None).0,
+            PixelEncoding::Sextants
+        );
+        assert_eq!(select(None, Some("1"), None).0, PixelEncoding::Sextants);
+        assert_eq!(select(None, None, Some("1")).0, PixelEncoding::Quadrants);
+    }
+
+    #[test]
+    fn half_blocks_preserve_all_opaque_and_transparent_sample_pairs() {
+        let backdrop = Color::Rgb(19, 18, 31);
+        let red = Color::Rgb(220, 34, 43);
+        let blue = Color::Rgb(14, 170, 210);
+        for top in [None, Some(red), Some(blue)] {
+            for bottom in [None, Some(red), Some(blue)] {
+                let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
+                if let Some(top) = top {
+                    canvas.set(0, 0, top);
+                }
+                if let Some(bottom) = bottom {
+                    canvas.set(0, 1, bottom);
+                }
+                let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+                buffer[(0, 0)].set_fg(Color::Green).set_bg(backdrop);
+                canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+                let cell = &buffer[(0, 0)];
+                if top.is_none() && bottom.is_none() {
+                    assert_eq!(cell.symbol(), " ");
+                    assert_eq!(cell.bg, backdrop);
+                } else {
+                    assert_eq!(cell.symbol(), "▄");
+                    assert_eq!(cell.bg, top.unwrap_or(backdrop));
+                    assert_eq!(cell.fg, bottom.unwrap_or(backdrop));
+                }
+            }
+        }
     }
 
     #[test]
@@ -1316,7 +1522,7 @@ mod tests {
             (cell.foreground == Some(red) && cell.background == Some(blue))
                 || (cell.foreground == Some(blue) && cell.background == Some(red))
         );
-        assert!(sextant_glyph(21).is_none(), "Unicode leaves mask 21 out");
-        assert!(sextant_glyph(42).is_none(), "Unicode leaves mask 42 out");
+        assert_eq!(sextant_glyph(21), Some('▌'));
+        assert_eq!(sextant_glyph(42), Some('▐'));
     }
 }

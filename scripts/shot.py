@@ -890,7 +890,17 @@ def sextant_mask(symbol: str) -> int | None:
     return None
 
 
+def block_pattern(symbol: str) -> tuple[int, int, int] | None:
+    """Return ideal mask/columns/rows, independently of installed font metrics."""
+    quadrants = " ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█"
+    if len(symbol) == 1 and symbol in quadrants:
+        return quadrants.index(symbol), 2, 2
+    mask = sextant_mask(symbol)
+    return None if mask is None else (mask, 2, 3)
+
+
 def render_svg(frame: Frame, light: bool) -> str:
+    """Reconstruct encoded geometry; use real-font replay to audit glyph gaps."""
     cell_width = CELL_WIDTH
     cell_height = CELL_HEIGHT
     padding = FRAME_PADDING
@@ -900,7 +910,7 @@ def render_svg(frame: Frame, light: bool) -> str:
     border = "#786f5f" if light else "#4e4663"
     frame_background = LIGHT_BACKGROUND if light else DARK_BACKGROUND
     title = (
-        f"they-work {frame.surface} at fixed time {frame.now} · "
+        f"they-work {frame.surface} ideal encoded geometry at fixed time {frame.now} · "
         f"{frame.encoding} encoding · terminal size {frame.width}×{frame.height}"
     )
 
@@ -933,8 +943,8 @@ def render_svg(frame: Frame, light: bool) -> str:
             )
             if cell.symbol:
                 symbol = html.escape(cell.symbol, quote=False).replace(" ", "&#160;")
-                mask = sextant_mask(cell.symbol)
-                if mask is None:
+                pattern = block_pattern(cell.symbol)
+                if pattern is None:
                     output.append(
                         f'  <text x="{x + 1}" y="{y + 18}" fill="{cell.foreground}" '
                         'font-family="Cascadia Mono, DejaVu Sans Mono, monospace" '
@@ -950,12 +960,13 @@ def render_svg(frame: Frame, light: bool) -> str:
                         'font-size="18" xml:space="preserve">'
                         f"{symbol}</text>"
                     )
-                    subcell_width = cell_width / 2
-                    subcell_height = cell_height / 3
-                    for subcell in range(6):
+                    mask, columns, rows = pattern
+                    subcell_width = cell_width / columns
+                    subcell_height = cell_height / rows
+                    for subcell in range(columns * rows):
                         if mask & (1 << subcell):
-                            subcell_x = x + (subcell % 2) * subcell_width
-                            subcell_y = y + (subcell // 2) * subcell_height
+                            subcell_x = x + (subcell % columns) * subcell_width
+                            subcell_y = y + (subcell // columns) * subcell_height
                             output.append(
                                 f'  <rect x="{subcell_x}" y="{subcell_y}" '
                                 f'width="{subcell_width}" height="{subcell_height}" '

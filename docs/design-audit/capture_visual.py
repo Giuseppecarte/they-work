@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Render checked-in terminal frames, keeping browser scratch files in this audit."""
+"""Reconstruct encoded pixel geometry; this does not render the terminal's actual font.
+
+Use iteration-2/glyph_metrics.swift to expose font gaps before approving appearance.
+"""
 
 import argparse
 import importlib.util
@@ -10,7 +13,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import xml.etree.ElementTree as ET
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
@@ -23,32 +25,9 @@ spec.loader.exec_module(shot)
 def render_frame(frame, light):
     svg = shot.render_svg(frame, light)
     shot.assert_svg_text_matches_frame(svg, frame)
-    # The shared exporter already reconstructs sextants. Reconstruct older
-    # block glyphs too: browser font ascent/width must not create fake gaps in
-    # screenshots of an otherwise fully occupied terminal cell.
-    masks = {'▘': 1, '▝': 2, '▀': 3, '▖': 4, '▌': 5, '▞': 6, '▛': 7,
-             '▗': 8, '▚': 9, '▐': 10, '▜': 11, '▄': 12, '▙': 13,
-             '▟': 14, '█': 15}
-    namespace = 'http://www.w3.org/2000/svg'
-    ET.register_namespace('', namespace)
-    root = ET.fromstring(svg)
-    for text in list(root):
-        if text.tag != f'{{{namespace}}}text' or text.text not in masks or text.get('fill') == 'none':
-            continue
-        mask = masks[text.text]
-        colour = text.get('fill')
-        text.set('fill', 'none')
-        x = float(text.get('x')) - 1
-        y = float(text.get('y')) - 18
-        for bit in range(4):
-            if mask & (1 << bit):
-                ET.SubElement(root, f'{{{namespace}}}rect', {
-                    'x': str(x + (bit % 2) * shot.CELL_WIDTH / 2),
-                    'y': str(y + (bit // 2) * shot.CELL_HEIGHT / 2),
-                    'width': str(shot.CELL_WIDTH / 2), 'height': str(shot.CELL_HEIGHT / 2),
-                    'fill': colour,
-                })
-    return ET.tostring(root, encoding='unicode')
+    # The shared exporter maps blocks to rectangles. Its result is ideal
+    # geometry, not evidence that a terminal font can render those blocks.
+    return svg
 
 
 def capture(svg_path, png_path, frame, chrome):
@@ -109,6 +88,8 @@ def source_frame(args, view, scratch):
 
 
 def main():
+    print("Geometry reconstruction only: block glyphs become rectangles. "
+          "Check native-font evidence before judging terminal appearance.", file=sys.stderr)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", default="after")
     parser.add_argument("--revision", help="Read golden frames from a git revision without changing the working tree")

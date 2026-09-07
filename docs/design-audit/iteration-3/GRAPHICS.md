@@ -39,10 +39,19 @@ from negative animation-frame timing values in the same protocol.
   in the image area, opaque background pixels, and restoration of the room mask.
 - A separate regression covers nameplates, opaque Help blanks, and tiny views
   with no current image rectangle.
+- The [native PTY harness](review_graphics_pty.py) runs the compiled release's
+  actual loop with `--demo --no-save`, answers its capability probe with Kitty
+  direct support and 8×16 cells, then opens Help and Finder. The
+  [recorded run](evidence/graphics-pty/results.json) passed: each heading followed
+  its image transmission, remained in four subsequent native frames, and the
+  process exited successfully with terminal modes restored. Results include the
+  binary and transcript hashes. Reproduce with
+  `python3 docs/design-audit/iteration-3/review_graphics_pty.py` after a native
+  release build; large raw ANSI payloads remain under ignored audit scratch.
 
 These checks validate composed buffers and encoded bytes. They do not establish
 how a particular physical terminal emulator renders graphics. Terminal.app
 access was declined earlier; no alternate API was used to bypass that decision.
 Windows Terminal/WSL, Linux graphical terminals, Kitty and iTerm2 visual sessions
-remain unmeasured. The native PTY protocol exercise, when present in the final
-review, must be labelled as a capability responder rather than a real Kitty UI.
+remain unmeasured. The native PTY protocol exercise uses a controlled capability
+responder; it is not a real Kitty window or a visual acceptance test.

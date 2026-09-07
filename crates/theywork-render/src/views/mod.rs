@@ -674,7 +674,7 @@ mod tests {
         );
         let look = crate::sprite::worker_look(&worker);
         let sprites = SpriteSet::new();
-        let mut half = Canvas::new(24, 34);
+        let mut half = Canvas::with_color_depth(24, 34, ColorDepth::TrueColor);
         let mut quadrants = Canvas::with_color_depth_and_encoding(
             48,
             34,
@@ -708,6 +708,7 @@ mod tests {
 
     #[test]
     fn phone_avatar_is_the_head_crop_of_the_office_sprite() {
+        use crate::canvas::{ColorDepth, PixelEncoding};
         use theywork_core::{Agent, OfficeId, WorkerId};
 
         let worker = Worker::new(
@@ -719,41 +720,58 @@ mod tests {
         );
         let look = crate::sprite::worker_look(&worker);
         let sprites = SpriteSet::new();
-        let mut full = Canvas::new(24, 34);
-        render_worker_with_look(
-            &mut full,
-            &sprites,
-            &worker,
-            &look,
-            0,
-            PixelRect {
-                x: 0,
-                y: 0,
-                width: 24,
-                height: 34,
-            },
-        );
-        let mut head = Canvas::new(24, WORKER_HEAD_HEIGHT);
-        render_worker_head_with_look(
-            &mut head,
-            &sprites,
-            &worker,
-            &look,
-            0,
-            PixelRect {
-                x: 0,
-                y: 0,
-                width: 24,
-                height: WORKER_HEAD_HEIGHT,
-            },
-        );
-        for y in 0..WORKER_HEAD_HEIGHT {
-            for x in 0..24 {
-                assert_eq!(
-                    head.pixel(x, y),
-                    full.pixel(x, y),
-                    "crop mismatch at ({x}, {y})"
-                );
+        for encoding in [
+            PixelEncoding::HalfBlocks,
+            PixelEncoding::Quadrants,
+            PixelEncoding::Sextants,
+        ] {
+            let width = if encoding == PixelEncoding::Quadrants {
+                48
+            } else {
+                24
+            };
+            let mut full =
+                Canvas::with_color_depth_and_encoding(width, 34, ColorDepth::TrueColor, encoding);
+            render_worker_with_look(
+                &mut full,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: 34,
+                },
+            );
+            let mut head = Canvas::with_color_depth_and_encoding(
+                width,
+                WORKER_HEAD_HEIGHT,
+                ColorDepth::TrueColor,
+                encoding,
+            );
+            render_worker_head_with_look(
+                &mut head,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: WORKER_HEAD_HEIGHT,
+                },
+            );
+            for y in 0..WORKER_HEAD_HEIGHT {
+                for x in 0..width {
+                    assert_eq!(
+                        head.pixel(x, y),
+                        full.pixel(x, y),
+                        "crop mismatch at ({x}, {y}) in {encoding:?}"
+                    );
+                }
             }
         }
     }

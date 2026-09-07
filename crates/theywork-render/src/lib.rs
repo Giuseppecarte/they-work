@@ -835,7 +835,7 @@ impl Ui {
                 }
                 true
             }
-            KeyCode::Esc | KeyCode::Backspace | KeyCode::Char('p') => {
+            KeyCode::Esc | KeyCode::Backspace | KeyCode::Char('p') | KeyCode::Char('q') => {
                 self.phone_open = false;
                 true
             }
@@ -1162,6 +1162,12 @@ mod phone_tests {
         ui.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
         assert!(!ui.phone_open);
         assert_eq!(ui.view, View::Desk);
+        ui.handle_key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
+        assert_eq!(
+            ui.handle_key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)),
+            None
+        );
+        assert!(!ui.phone_open);
     }
 }
 #[cfg(test)]

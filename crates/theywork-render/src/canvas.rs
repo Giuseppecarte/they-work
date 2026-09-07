@@ -283,6 +283,7 @@ pub struct PixelFrame {
     height: usize,
     rgba: Arc<Vec<u8>>,
     cell_area: Option<Rect>,
+    text_cells: Vec<(u16, u16, ratatui::buffer::Cell)>,
 }
 
 impl PixelFrame {
@@ -314,6 +315,37 @@ impl PixelFrame {
     pub fn cell_area(&self) -> Option<Rect> {
         self.cell_area
     }
+
+    /// Native text to paint after the image, including opaque panel blanks.
+    pub fn text_cells(&self) -> &[(u16, u16, ratatui::buffer::Cell)] {
+        &self.text_cells
+    }
+
+    /// Fill text backgrounds in the image so every graphics protocol preserves
+    /// opaque labels. The terminal still draws the actual font glyphs.
+    pub fn with_text_backgrounds(mut self) -> Self {
+        let Some(area) = self.cell_area else {
+            return self;
+        };
+        if self.text_cells.is_empty() || area.width == 0 || area.height == 0 {
+            return self;
+        }
+        let cell_width = self.width / usize::from(area.width);
+        let cell_height = self.height / usize::from(area.height);
+        let rgba = Arc::make_mut(&mut self.rgba);
+        for (x, y, cell) in &self.text_cells {
+            let (r, g, b) = rgb_of_color(cell.bg);
+            let left = usize::from(x - area.x) * cell_width;
+            let top = usize::from(y - area.y) * cell_height;
+            for py in top..(top + cell_height).min(self.height) {
+                for px in left..(left + cell_width).min(self.width) {
+                    let offset = (py * self.width + px) * 4;
+                    rgba[offset..offset + 4].copy_from_slice(&[r, g, b, 255]);
+                }
+            }
+        }
+        self
+    }
 }
 
 /// An in-memory pixel surface whose pixels are terminal colours or transparent.
@@ -329,6 +361,8 @@ pub struct Canvas {
     light_mode: bool,
     quantized_cache: QuantizedCache,
     last_rendered_area: Cell<Option<Rect>>,
+    image_mask_area: Cell<Option<Rect>>,
+    text_cells: Vec<(u16, u16, ratatui::buffer::Cell)>,
 }
 
 impl Canvas {
@@ -368,6 +402,8 @@ impl Canvas {
             light_mode: false,
             quantized_cache: RefCell::new(HashMap::new()),
             last_rendered_area: Cell::new(None),
+            image_mask_area: Cell::new(None),
+            text_cells: Vec::new(),
         };
         canvas.resize(width_px, height_px);
         canvas
@@ -427,6 +463,27 @@ impl Canvas {
 
     pub(crate) fn has_image_density(&self) -> bool {
         self.cell_pixel_size.is_some()
+    }
+
+    pub(crate) fn begin_frame(&mut self) {
+        self.last_rendered_area.set(None);
+        self.image_mask_area.set(None);
+        self.text_cells.clear();
+    }
+
+    pub(crate) fn finish_frame(&mut self, buffer: &mut Buffer) {
+        if let Some(area) = self.image_mask_area.take() {
+            for y in area.y..area.bottom() {
+                for x in area.x..area.right() {
+                    if let Some(cell) = buffer.cell_mut((x, y)) {
+                        if !cell.skip {
+                            self.text_cells.push((x, y, cell.clone()));
+                        }
+                        cell.set_skip(false);
+                    }
+                }
+            }
+        }
     }
 
     pub(crate) fn scale_width(&self, value: usize) -> usize {
@@ -581,6 +638,7 @@ impl Canvas {
             height: self.height,
             rgba: Arc::clone(&self.rgba),
             cell_area: self.last_rendered_area.get(),
+            text_cells: self.text_cells.clone(),
         }
     }
 
@@ -633,6 +691,18 @@ impl Canvas {
 
     /// Emit the surface as encoded cells into a ratatui buffer.
     pub fn render(&self, buffer: &mut Buffer, area: Rect) {
+        // Only the latest canvas is presented as an image. Earlier portraits
+        // remain ordinary cells. Opaque native widgets clear this temporary
+        // mask, and finish_frame removes it before returning a normal buffer.
+        if let Some(previous) = self.image_mask_area.take() {
+            for y in previous.y..previous.bottom() {
+                for x in previous.x..previous.right() {
+                    if let Some(cell) = buffer.cell_mut((x, y)) {
+                        cell.set_skip(false);
+                    }
+                }
+            }
+        }
         let (width_per_cell, height_per_cell) = self.pixels_per_cell();
         let pixel_width = self.width.div_ceil(width_per_cell).min(area.width as usize);
         let cell_height = self
@@ -705,6 +775,18 @@ impl Canvas {
                 if let Some(background) = quantized.background {
                     cell.set_bg(background);
                 }
+            }
+        }
+        if self.has_image_density() {
+            if let Some(area) = self.last_rendered_area.get() {
+                for y in area.y..area.bottom() {
+                    for x in area.x..area.right() {
+                        if let Some(cell) = buffer.cell_mut((x, y)) {
+                            cell.set_skip(true);
+                        }
+                    }
+                }
+                self.image_mask_area.set(Some(area));
             }
         }
     }

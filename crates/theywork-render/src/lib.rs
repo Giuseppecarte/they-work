@@ -98,6 +98,7 @@ pub struct Ui {
     phone_transition_at: Millis,
     phone_selected: usize,
     phone_workers: Vec<Option<theywork_core::WorkerId>>,
+    phone_keys: Vec<String>,
     phone_pending_worker: Option<theywork_core::WorkerId>,
     desk_scroll: usize,
     help_open: bool,
@@ -122,6 +123,8 @@ pub struct Ui {
     wardrobe: BTreeMap<String, usize>,
     office_palettes: BTreeMap<String, usize>,
     selected_office_palette: usize,
+    finder: views::finder::Finder,
+    pending_find: Option<views::finder::Target>,
 }
 
 impl Ui {
@@ -147,6 +150,7 @@ impl Ui {
             phone_transition_at: 0,
             phone_selected: 0,
             phone_workers: Vec::new(),
+            phone_keys: Vec::new(),
             phone_pending_worker: None,
             desk_scroll: 0,
             help_open: false,
@@ -171,6 +175,8 @@ impl Ui {
             wardrobe: BTreeMap::new(),
             office_palettes: BTreeMap::new(),
             selected_office_palette: 0,
+            finder: views::finder::Finder::default(),
+            pending_find: None,
         }
     }
 
@@ -327,11 +333,32 @@ impl Ui {
         self.phone_channel
     }
 
+    /// Insert pasted text in the finder without invoking keyboard shortcuts.
+    pub fn handle_paste(&mut self, text: &str) {
+        if self.finder.open {
+            self.finder.paste(text);
+        }
+    }
+
     /// Handle one key press.
     pub fn handle_key(&mut self, key: KeyEvent) -> Option<UiCommand> {
         use crossterm::event::KeyCode;
 
         if key.kind == crossterm::event::KeyEventKind::Release {
+            return None;
+        }
+
+        if self.finder.open {
+            self.pending_find = self.finder.handle_key(key);
+            return None;
+        }
+        if key.code == KeyCode::Char('/')
+            || (key.code == KeyCode::Char('k') && key.modifiers.contains(KeyModifiers::CONTROL))
+        {
+            self.settings_open = false;
+            self.help_open = false;
+            self.phone_open = false;
+            self.finder.show();
             return None;
         }
 
@@ -448,7 +475,14 @@ impl Ui {
                 None
             }
             KeyCode::Home | KeyCode::End | KeyCode::PageUp | KeyCode::PageDown => {
-                if self.view == View::Cameras {
+                if self.view == View::Desk {
+                    self.desk_scroll = match key.code {
+                        KeyCode::Home => usize::MAX,
+                        KeyCode::End => 0,
+                        KeyCode::PageUp => self.desk_scroll.saturating_add(10),
+                        _ => self.desk_scroll.saturating_sub(10),
+                    };
+                } else if self.view == View::Cameras {
                     self.selected_office = match key.code {
                         KeyCode::Home => 0,
                         KeyCode::End => self.known_office_count.saturating_sub(1),
@@ -629,6 +663,7 @@ impl Ui {
 
     /// Draw the current view.
     pub fn draw(&mut self, f: &mut Frame, world: &World) {
+        self.canvas.begin_frame();
         self.sprites.set_wardrobe(&self.wardrobe);
         self.sprites.set_office_palettes(&self.office_palettes);
         self.canvas.set_color_depth(self.color_depth);
@@ -638,6 +673,29 @@ impl Ui {
         self.sprites
             .set_animation_time(Some(if self.motion { self.now } else { 0 }));
         let offices = views::cameras::ordered_offices(world, self.now);
+        if let Some(target) = self.pending_find.take() {
+            use views::finder::Target;
+            let resolved = match target {
+                Target::Project(id) if world.office(&id).is_some() => {
+                    self.open_office(&id);
+                    true
+                }
+                Target::Worker(office, worker)
+                    if world.office(&office).is_some_and(|office| {
+                        office.workers.iter().any(|item| item.id == worker)
+                    }) =>
+                {
+                    self.phone_pending_worker = Some(worker);
+                    self.desk_scroll = 0;
+                    true
+                }
+                _ => false,
+            };
+            if !resolved {
+                self.finder.open = true;
+                self.finder.unavailable = true;
+            }
+        }
         self.attention_workers = offices
             .iter()
             .flat_map(|office| &office.workers)
@@ -728,6 +786,16 @@ impl Ui {
         }
         if self.phone_open {
             let phone_office = if self.guard_all { None } else { office };
+            let selected_message = self.phone_keys.get(self.phone_selected).cloned();
+            self.phone_keys =
+                views::phone::message_keys(self.phone_channel, world, phone_office, self.now);
+            if let Some(index) = selected_message.and_then(|key| {
+                self.phone_keys
+                    .iter()
+                    .position(|candidate| *candidate == key)
+            }) {
+                self.phone_selected = index;
+            }
             self.phone_workers =
                 views::phone::message_workers(self.phone_channel, world, phone_office, self.now);
             self.phone_selected = self
@@ -778,10 +846,15 @@ impl Ui {
             );
         }
         views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
+        if self.finder.open {
+            self.finder.refresh(world, self.now);
+            self.finder.draw(f);
+        }
         views::remap_buffer_theme(f.buffer_mut(), self.theme);
         if self.canvas.color_depth() == ColorDepth::None {
             Canvas::strip_colors(f.buffer_mut());
         }
+        self.canvas.finish_frame(f.buffer_mut());
     }
 
     fn sync_office_selection(&mut self, offices: &[&theywork_core::Office]) {
@@ -813,6 +886,7 @@ impl Ui {
             self.phone_channel = channel;
             self.phone_selected = 0;
             self.phone_workers.clear();
+            self.phone_keys.clear();
             return true;
         }
 
@@ -821,12 +895,14 @@ impl Ui {
                 self.phone_channel = self.phone_channel.previous();
                 self.phone_selected = 0;
                 self.phone_workers.clear();
+                self.phone_keys.clear();
                 true
             }
             KeyCode::Right | KeyCode::Char('l') => {
                 self.phone_channel = self.phone_channel.next();
                 self.phone_selected = 0;
                 self.phone_workers.clear();
+                self.phone_keys.clear();
                 true
             }
             KeyCode::Up | KeyCode::Char('k') => {
@@ -1300,6 +1376,103 @@ mod m3_tests {
             .collect()
     }
 
+    #[test]
+    fn finder_typing_is_modal_and_opens_the_exact_live_conversation() {
+        let world = world_with_office_counts(&[2, 3], false);
+        let mut ui = Ui::new();
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        let original_view = ui.view;
+        ui.handle_key(KeyEvent::new(KeyCode::Char('/'), KeyModifiers::NONE));
+        for character in "qcs?012".chars() {
+            assert_eq!(
+                ui.handle_key(KeyEvent::new(KeyCode::Char(character), KeyModifiers::NONE)),
+                None
+            );
+        }
+        assert!(ui.finder.open);
+        assert!(!ui.settings_open && !ui.help_open && !ui.phone_open);
+        ui.handle_key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
+        assert_eq!(ui.view, original_view);
+        ui.handle_key(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::CONTROL));
+        for character in "worker 1-2".chars() {
+            ui.handle_key(KeyEvent::new(KeyCode::Char(character), KeyModifiers::NONE));
+        }
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert!(buffer_text(&terminal).contains("Worker 1-2"));
+        ui.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert_eq!(ui.view, View::Desk);
+        assert_eq!(
+            ui.selected_worker_id,
+            Some(WorkerId("/workspace/office-1#worker-2".into()))
+        );
+    }
+
+    #[test]
+    fn finder_never_opens_a_replacement_when_the_chosen_worker_leaves() {
+        let mut world = world_with_office_counts(&[2], false);
+        let mut ui = Ui::new();
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        ui.handle_key(KeyEvent::new(KeyCode::Char('/'), KeyModifiers::NONE));
+        for character in "worker 0-0".chars() {
+            ui.handle_key(KeyEvent::new(KeyCode::Char(character), KeyModifiers::NONE));
+        }
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        ui.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        let worker = WorkerId("/workspace/office-0#worker-0".into());
+        world.apply(event(
+            "/workspace/office-0",
+            &worker,
+            1,
+            Agent::Codex,
+            EventKind::Left,
+        ));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert!(ui.finder.open && ui.finder.unavailable);
+        assert_ne!(ui.view, View::Desk);
+        assert!(buffer_text(&terminal).contains("left the tower"));
+    }
+
+    #[test]
+    fn image_frames_keep_native_labels_and_opaque_help_and_reset_on_tiny_views() {
+        let world = world_with_office_counts(&[3], false);
+        let mut ui = Ui::new();
+        ui.set_image_cell_size(Some((8, 16)));
+        let mut terminal = Terminal::new(TestBackend::new(100, 32)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        let normal = ui.pixel_frame();
+        assert!(normal
+            .text_cells()
+            .iter()
+            .any(|(_, _, cell)| cell.symbol().contains('W')));
+        ui.handle_key(KeyEvent::new(KeyCode::Char('?'), KeyModifiers::NONE));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        let help = ui.pixel_frame();
+        assert!(help.text_cells().len() > normal.text_cells().len());
+        assert!(
+            help.text_cells()
+                .iter()
+                .any(|(_, _, cell)| cell.symbol() == " "),
+            "opaque panel blanks must also cover image pixels"
+        );
+        let composited = help.clone().with_text_backgrounds();
+        assert_ne!(help.rgba(), composited.rgba());
+        assert!(terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .all(|cell| !cell.skip));
+        let mut tiny = Terminal::new(TestBackend::new(1, 1)).unwrap();
+        tiny.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert!(
+            ui.pixel_frame().cell_area().is_none(),
+            "never reuse the preceding room rectangle when no art is drawn"
+        );
+    }
+
     fn capture_audit_frame(terminal: &Terminal<TestBackend>, name: &str) {
         if std::env::var_os("THEYWORK_UPDATE_GOLDEN").is_none() {
             return;
@@ -1336,8 +1509,8 @@ mod m3_tests {
         assert_eq!(
             views::cameras::grid_layout(6, 80, 20),
             views::cameras::GridLayout {
-                columns: 3,
-                rows: 2,
+                columns: 1,
+                rows: 5,
             }
         );
 

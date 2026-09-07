@@ -1348,7 +1348,7 @@ fn kitty_encode(image: &RgbaImage, rectangle: CellRect, image_id: u32) -> Vec<u8
         let more = index + 1 < chunks.len();
         output.extend_from_slice(b"\x1b_G");
         if index == 0 {
-            output.extend_from_slice(b"a=T,f=32");
+            output.extend_from_slice(b"a=T,f=32,z=-1");
             output.extend_from_slice(b",s=");
             append_decimal(&mut output, image.width());
             output.extend_from_slice(b",v=");
@@ -1736,7 +1736,7 @@ mod tests {
     fn kitty_bytes_are_chunked_and_placed() {
         let image = RgbaImage::solid(64, 64, [20, 40, 60, 255]).unwrap();
         let bytes = encode_kitty(&image, CellRect::new(2, 3, 10, 8), 7);
-        assert!(bytes.starts_with(b"\x1b[4;3H\x1b_Ga=T,f=32,s=64,v=64,i=7,c=10,r=8,m=1;"));
+        assert!(bytes.starts_with(b"\x1b[4;3H\x1b_Ga=T,f=32,z=-1,s=64,v=64,i=7,c=10,r=8,m=1;"));
         assert!(bytes.ends_with(b"\x1b\\"));
         assert!(bytes.windows(4).any(|window| window == b"m=1;"));
         assert!(bytes.windows(4).any(|window| window == b"m=0;"));

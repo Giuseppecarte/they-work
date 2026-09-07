@@ -2889,6 +2889,7 @@ fn draw_nameplates(
         } else {
             Style::default().fg(status_color(status))
         };
+        paint_opaque(frame, rect, style);
         Paragraph::new(Line::from(Span::styled(label, style)))
             .style(style)
             .render(rect, frame.buffer_mut());

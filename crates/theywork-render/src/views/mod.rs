@@ -2,6 +2,7 @@
 
 pub mod cameras;
 pub mod desk;
+pub(crate) mod finder;
 mod guard_scene;
 pub mod help;
 pub mod office;
@@ -44,9 +45,11 @@ pub(crate) const LIGHT_WALL_DARK: Color = Color::Rgb(189, 178, 212);
 pub(crate) const LIGHT_FLOOR: Color = Color::Rgb(230, 217, 184);
 pub(crate) const LIGHT_WOOD: Color = Color::Rgb(162, 112, 63);
 pub(crate) const LIGHT_WOOD_DARK: Color = Color::Rgb(131, 87, 41);
-pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(47, 140, 66);
-pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(201, 138, 0);
-pub(crate) const LIGHT_FAILED: Color = Color::Rgb(192, 38, 31);
+pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(32, 86, 34);
+pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(105, 69, 0);
+pub(crate) const LIGHT_FAILED: Color = Color::Rgb(145, 28, 28);
+pub(crate) const LIGHT_ACCENT: Color = Color::Rgb(20, 83, 96);
+pub(crate) const LIGHT_MUTED: Color = Color::Rgb(85, 75, 95);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum UiTheme {
@@ -64,6 +67,10 @@ pub(crate) fn light_color(color: Color) -> Color {
         LIGHT_LINE
     } else if color == INK {
         LIGHT_INK
+    } else if color == ACCENT {
+        LIGHT_ACCENT
+    } else if color == MUTED {
+        LIGHT_MUTED
     } else if color == WALL {
         LIGHT_WALL
     } else if color == Color::Rgb(43, 37, 66) {
@@ -121,7 +128,7 @@ pub(crate) fn paint_opaque(frame: &mut Frame, area: Rect, style: Style) {
     for row in 0..area.height {
         for column in 0..area.width {
             if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
-                cell.set_symbol(" ");
+                cell.set_symbol(" ").set_skip(false);
             }
         }
     }
@@ -173,8 +180,10 @@ pub(crate) fn draw_tab_bar(
     } else {
         format!("{}/{}", selected + 1, offices.len())
     };
-    let tail = if area.width >= 62 {
-        format!(" {counter} · c sources · ? help ")
+    let tail = if area.width >= 90 {
+        format!(" {counter} · / find · c sources · ? help ")
+    } else if area.width >= 62 {
+        format!(" {counter} · / find · ? help ")
     } else if area.width >= 24 {
         format!(" {counter} · ? help ")
     } else {
@@ -449,46 +458,6 @@ fn render_sprite_region(
     }
 }
 
-pub(crate) fn paint_scanlines(buffer: &mut Buffer, area: Rect, now: i64) {
-    if area.width == 0 || area.height == 0 {
-        return;
-    }
-    let phase = now.div_euclid(140).rem_euclid(3) as u16;
-    for row in 0..area.height {
-        if row % 3 != phase {
-            continue;
-        }
-        for column in 0..area.width {
-            if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
-                if cell.symbol() == " " {
-                    cell.set_bg(SCANLINE);
-                }
-            }
-        }
-    }
-}
-
-pub(crate) fn grid_rect(area: Rect, index: usize, columns: usize, rows: usize) -> Rect {
-    if columns == 0 || rows == 0 {
-        return Rect::new(area.x, area.y, 0, 0);
-    }
-    let column = index % columns;
-    let row = index / columns;
-    if row >= rows {
-        return Rect::new(area.x, area.y, 0, 0);
-    }
-    let x0 = area.x as u32 + (area.width as u32 * column as u32 / columns as u32);
-    let x1 = area.x as u32 + (area.width as u32 * (column + 1) as u32 / columns as u32);
-    let y0 = area.y as u32 + (area.height as u32 * row as u32 / rows as u32);
-    let y1 = area.y as u32 + (area.height as u32 * (row + 1) as u32 / rows as u32);
-    Rect::new(
-        x0.min(u16::MAX as u32) as u16,
-        y0.min(u16::MAX as u32) as u16,
-        x1.saturating_sub(x0).min(u16::MAX as u32) as u16,
-        y1.saturating_sub(y0).min(u16::MAX as u32) as u16,
-    )
-}
-
 pub(crate) fn worker_status(worker: &Worker, now: Millis) -> WorkerStatus {
     worker.status_at(now)
 }
@@ -504,14 +473,6 @@ pub(crate) fn status_color(status: WorkerStatus) -> Color {
 
 pub(crate) fn status_style(status: WorkerStatus) -> Style {
     Style::default().fg(status_color(status))
-}
-
-pub(crate) fn status_marker(status: WorkerStatus) -> Option<&'static str> {
-    match status {
-        WorkerStatus::Blocked => Some("!"),
-        WorkerStatus::Failed => Some("×"),
-        WorkerStatus::Running | WorkerStatus::Idle => None,
-    }
 }
 
 pub(crate) fn elapsed_ms(now: Millis, then: Millis) -> Millis {
@@ -549,10 +510,6 @@ pub(crate) fn human_tokens(tokens: u64) -> String {
     } else {
         format!("{whole}.{tenths}{suffix}")
     }
-}
-
-pub(crate) fn timestamp(now: i64) -> String {
-    format!("t+{:06}s", now.max(0).div_euclid(1_000) % 1_000_000)
 }
 
 pub(crate) fn safe_display(text: &str) -> String {
@@ -593,6 +550,38 @@ pub(crate) fn short_path(path: &str, max_chars: usize) -> String {
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn light_text_and_statuses_remain_legible_on_selected_and_attention_panels() {
+        use super::*;
+        let luminance = |color: Color| {
+            let Color::Rgb(r, g, b) = color else {
+                panic!("expected RGB token")
+            };
+            [r, g, b]
+                .into_iter()
+                .zip([0.2126, 0.7152, 0.0722])
+                .map(|(channel, weight)| {
+                    let value = f64::from(channel) / 255.0;
+                    weight
+                        * if value <= 0.04045 {
+                            value / 12.92
+                        } else {
+                            ((value + 0.055) / 1.055).powf(2.4)
+                        }
+                })
+                .sum::<f64>()
+        };
+        for text in [INK, MUTED, ACCENT, GOOD, WARNING, HOT] {
+            for panel in [BACKGROUND, PANEL, PANEL_HIGHLIGHT, ATTENTION_PANEL] {
+                let ratio =
+                    (luminance(light_color(panel)) + 0.05) / (luminance(light_color(text)) + 0.05);
+                assert!(
+                    ratio >= 4.5,
+                    "{text:?} on {panel:?} has contrast {ratio:.2}"
+                );
+            }
+        }
+    }
     use ratatui::backend::TestBackend;
     use ratatui::layout::Rect;
     use ratatui::style::Color;

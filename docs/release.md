@@ -58,9 +58,15 @@ glyphs are valid quadrant masks, so the verifier reports them instead of using
 their raw presence as an encoding test.) It does not accept the runner's
 locally built tag as release evidence. After that gate passes, re-shoot the
 README stills from the published image; do not substitute a locally built image
-for that capture. The same gate also requires an iTerm2 inline-image packet
-from an iTerm2 capability reply, so a source-only implementation cannot quietly
-miss a release. The workflow runs with package-write permission.
+for that capture. Use `scripts/capture-published-image.py --image
+ghcr.io/giuseppecarte/they-work@<digest> --output <still.png> --record
+<still.json>` to extract the released image's direct Kitty pixel transmission.
+Keep the record beside the review artifact until the still is accepted; it
+names the immutable digest and hashes both its RGBA source and PNG. The same
+gate also requires an iTerm2 inline-image packet from an iTerm2 capability
+reply, so a source-only implementation cannot quietly miss a release. The
+workflow runs with package-write permission. Add `--key enter` to capture the
+selected worker's desk after the initial office frame.
 No workflow changes were made to obtain the v0.1.0 success.
 
 After each release, verify both publication and anonymous access separately.

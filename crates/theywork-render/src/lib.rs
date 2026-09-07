@@ -1269,7 +1269,7 @@ mod m3_tests {
             frame.height(),
             colors.len()
         );
-        assert_eq!(checksum, 0x8b26_c904_55e9_4bc0);
+        assert_eq!(checksum, 0xd3a4_d719_66b4_2290);
     }
 
     #[test]

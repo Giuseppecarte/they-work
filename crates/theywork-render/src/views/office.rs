@@ -80,7 +80,7 @@ const ISO_DESK_TILES: [(usize, usize); 10] = [
 const ISO_RUG_TILE: (usize, usize) = (2, 3);
 const ISO_PLANT_TILE: (usize, usize) = (0, 0);
 const ISO_COOLER_TILE: (usize, usize) = (1, 0);
-const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 3);
+const ISO_MEETING_TABLE_TILE: (usize, usize) = (4, 2);
 
 fn outline_color(canvas: &Canvas) -> Color {
     if canvas.is_light_mode() {
@@ -2949,6 +2949,12 @@ mod tests {
                         && y + height as i32 <= canvas.height() as i32,
                     "{encoding:?}/{cell_size:?} worker {slot} clips bottom/right"
                 );
+                if slot == 2 {
+                    assert!(
+                        canvas.width() as i32 - (x + width as i32) >= width as i32 / 2,
+                        "{encoding:?}/{cell_size:?} outer worker has no figure-width gutter"
+                    );
+                }
                 assert!(
                     height * 5 <= plate_height * 2,
                     "{encoding:?}/{cell_size:?} worker height {height} overwhelms plate height {plate_height}"

@@ -139,7 +139,15 @@ pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
     {
         return HOT;
     }
-    GOOD
+    if office
+        .workers
+        .iter()
+        .any(|worker| worker_status(worker, now) == theywork_core::WorkerStatus::Running)
+    {
+        GOOD
+    } else {
+        MUTED
+    }
 }
 
 pub(crate) fn draw_tab_bar(
@@ -153,58 +161,67 @@ pub(crate) fn draw_tab_bar(
     if area.width == 0 || area.height == 0 {
         return;
     }
-    let mut spans = Vec::with_capacity(offices.len().saturating_add(1).saturating_mul(3));
-    let all_dot = if offices
-        .iter()
-        .any(|office| office_dot_color(office, now) == WARNING)
-    {
-        WARNING
-    } else if offices
-        .iter()
-        .any(|office| office_dot_color(office, now) == HOT)
-    {
-        HOT
+    let selected = selected.min(offices.len().saturating_sub(1));
+    let tower_style = Style::default()
+        .fg(if all_selected { INK } else { MUTED })
+        .bg(if all_selected { PANEL_HIGHLIGHT } else { PANEL });
+    let title = if area.width >= 38 { " 0 TOWER " } else { "0 " };
+    let counter = if offices.is_empty() {
+        "no floors".to_string()
     } else {
-        GOOD
+        format!("{}/{}", selected + 1, offices.len())
     };
-    let all_style = if all_selected {
-        Style::default()
-            .fg(INK)
-            .bg(PANEL_HIGHLIGHT)
-            .add_modifier(Modifier::BOLD)
+    let tail = if area.width >= 62 {
+        format!(" {counter} · c sources · ? help ")
+    } else if area.width >= 24 {
+        format!(" {counter} · ? help ")
     } else {
-        Style::default().fg(MUTED).bg(PANEL)
+        format!(" {counter}")
     };
-    spans.push(Span::styled("  0 ALL ", all_style));
-    spans.push(Span::styled("●", all_style.fg(all_dot)));
-    spans.push(Span::styled(" ", all_style));
-    for (index, office) in offices.iter().enumerate() {
-        let number = if index < 9 {
-            (b'1' + index as u8) as char
-        } else {
-            '+'
-        };
-        let style = if !all_selected && index == selected {
-            Style::default()
-                .fg(INK)
-                .bg(PANEL_HIGHLIGHT)
-                .add_modifier(Modifier::BOLD)
-        } else {
-            Style::default().fg(MUTED).bg(PANEL)
-        };
-        spans.push(Span::styled(
-            format!(" {number} {} ", short_path(&office.name, 16)),
-            style,
-        ));
-        spans.push(Span::styled("●", style.fg(office_dot_color(office, now))));
-        spans.push(Span::styled(" ", style));
+    let available =
+        usize::from(area.width).saturating_sub(title.len() + Line::from(tail.as_str()).width());
+    let mut spans = vec![Span::styled(title, tower_style)];
+    if !offices.is_empty() && available > 4 {
+        let visible = (available / 24).max(1).min(offices.len());
+        let first = (selected / visible * visible).min(offices.len().saturating_sub(visible));
+        let slot_width = available / visible;
+        for (index, office) in offices.iter().enumerate().skip(first).take(visible) {
+            let style = Style::default()
+                .fg(if index == selected { INK } else { MUTED })
+                .bg(if index == selected && !all_selected {
+                    PANEL_HIGHLIGHT
+                } else {
+                    PANEL
+                });
+            let number = format!(
+                "{}{} ",
+                if index == selected { ">" } else { " " },
+                index + 1
+            );
+            let marker = match office_dot_color(office, now) {
+                WARNING => "!",
+                HOT => "×",
+                GOOD => "●",
+                _ => "·",
+            };
+            let name = short_path(&office.name, slot_width.saturating_sub(number.len() + 2));
+            let used = number.len() + Line::from(name.as_str()).width() + 1;
+            spans.push(Span::styled(number, style));
+            spans.push(Span::styled(name, style));
+            spans.push(Span::styled(
+                marker,
+                style.fg(office_dot_color(office, now)),
+            ));
+            spans.push(Span::styled(
+                " ".repeat(slot_width.saturating_sub(used)),
+                style,
+            ));
+        }
     }
+    spans.push(Span::styled(tail, Style::default().fg(MUTED).bg(PANEL)));
     Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(BACKGROUND))
-        .render(
-            Rect::new(frame.area().x, frame.area().y, frame.area().width, 1),
-            frame.buffer_mut(),
-        );
+        .style(Style::default().bg(PANEL))
+        .render(Rect::new(area.x, area.y, area.width, 1), frame.buffer_mut());
 }
 
 pub(crate) fn inset(area: Rect, amount: u16) -> Rect {
@@ -274,6 +291,15 @@ pub(crate) fn draw_footer(frame: &mut Frame, area: Rect, text: &str) {
     if !has_area(area) {
         return;
     }
+    let text = if area.width < 28 {
+        "? help · q quit"
+    } else if area.width < 50 {
+        "Enter open · Esc back · ? help"
+    } else if area.width < 76 {
+        "arrows move · Enter open · Esc back · ? help"
+    } else {
+        text
+    };
     Paragraph::new(Line::from(vec![
         Span::styled("  ", Style::default()),
         Span::styled(text.to_string(), Style::default().fg(MUTED)),
@@ -343,7 +369,18 @@ pub(crate) fn render_worker_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let sprite = sprites.worker_frame(worker, *look, now);
+    let horizontal_scale = compact_pixel_width(canvas);
+    let sprite = if placement.width >= 24 && placement.height >= 34 {
+        sprites.worker_frame(worker, *look, now)
+    } else {
+        sprites.worker_frame_fitting(
+            worker,
+            *look,
+            now,
+            placement.width / horizontal_scale,
+            placement.height,
+        )
+    };
     render_sprite_region(
         canvas,
         &sprite,
@@ -360,18 +397,21 @@ pub(crate) fn render_worker_head_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let sprite = sprites.worker_frame(worker, *look, now);
-    render_sprite_region(
-        canvas,
-        &sprite,
-        (
-            0,
-            0,
-            sprite.width(),
-            WORKER_HEAD_HEIGHT.min(sprite.height()),
-        ),
-        placement,
-    );
+    let width = if placement.width >= 24 && placement.height >= WORKER_HEAD_HEIGHT {
+        placement.width
+    } else {
+        placement.width / compact_pixel_width(canvas)
+    };
+    let (sprite, source) = sprites.worker_head_fitting(worker, *look, now, width, placement.height);
+    render_sprite_region(canvas, &sprite, source, placement);
+}
+
+fn compact_pixel_width(canvas: &Canvas) -> usize {
+    if canvas.encoding() == crate::canvas::PixelEncoding::Quadrants && !canvas.has_image_density() {
+        2
+    } else {
+        1
+    }
 }
 
 fn render_sprite_region(
@@ -390,26 +430,23 @@ fn render_sprite_region(
     if width == 0 || height == 0 || source_width == 0 || source_height == 0 {
         return;
     }
-    let integer_scale = (width / source_width).min(height / source_height);
-    let (draw_width, draw_height) = if integer_scale > 0 {
-        (
-            source_width.saturating_mul(integer_scale),
-            source_height.saturating_mul(integer_scale),
-        )
+    let pixel_width = if source_width < 24 {
+        compact_pixel_width(canvas)
     } else {
-        let draw_width = width
-            .min(height.saturating_mul(source_width) / source_height)
-            .max(1);
-        let draw_height = height
-            .min(width.saturating_mul(source_height) / source_width)
-            .max(1);
-        (draw_width, draw_height)
+        1
     };
+    let integer_scale = (width / source_width / pixel_width)
+        .min(height / source_height)
+        .max(1);
+    let draw_width = source_width
+        .saturating_mul(integer_scale)
+        .saturating_mul(pixel_width);
+    let draw_height = source_height.saturating_mul(integer_scale);
     let draw_x = x.saturating_add(width.saturating_sub(draw_width) / 2);
     let draw_y = y.saturating_add(height.saturating_sub(draw_height) / 2);
-    for target_y in 0..draw_height {
+    for target_y in 0..draw_height.min(height) {
         let sample_y = source_y + target_y.saturating_mul(source_height) / draw_height;
-        for target_x in 0..draw_width {
+        for target_x in 0..draw_width.min(width) {
             let sample_x = source_x + target_x.saturating_mul(source_width) / draw_width;
             if let Some(color) = sprite.pixel(sample_x, sample_y) {
                 canvas.set(draw_x + target_x, draw_y + target_y, color);
@@ -545,14 +582,19 @@ pub(crate) fn short_path(path: &str, max_chars: usize) -> String {
         return String::new();
     }
     let safe = safe_display(path);
-    let chars: Vec<char> = safe.chars().collect();
-    if chars.len() <= max_chars {
+    if Line::from(safe.as_str()).width() <= max_chars {
         return safe;
     }
-    if max_chars == 1 {
-        return "…".to_string();
+    let mut head = String::new();
+    let mut width = 0;
+    for character in safe.chars() {
+        let cell_width = Line::from(character.to_string()).width();
+        if width + cell_width > max_chars - 1 {
+            break;
+        }
+        head.push(character);
+        width += cell_width;
     }
-    let head: String = chars.iter().take(max_chars - 1).copied().collect();
     format!("{head}…")
 }
 #[cfg(test)]
@@ -604,12 +646,12 @@ mod tests {
         let unicode = "界🛠️é".repeat(80);
         for width in 0..=16 {
             assert!(
-                short_path(&unicode, width).chars().count() <= width,
+                Line::from(short_path(&unicode, width)).width() <= width,
                 "elided text exceeded width {width}"
             );
         }
         assert_eq!(short_path(&unicode, 1), "…");
-        assert_eq!(short_path(&unicode, 2).chars().count(), 2);
+        assert_eq!(short_path(&unicode, 2), "…");
     }
     #[test]
     fn safe_display_replaces_controls_and_emoji() {

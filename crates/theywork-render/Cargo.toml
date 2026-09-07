@@ -9,3 +9,4 @@ description = "Half-block pixel-art renderer and views for they-work."
 theywork-core = { workspace = true }
 ratatui = { workspace = true }
 crossterm = { workspace = true }
+serde = { workspace = true }

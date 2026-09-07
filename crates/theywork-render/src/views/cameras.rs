@@ -1,4 +1,4 @@
-//! Security-camera grid: the building-wide headline view.
+//! The software tower: a floor directory and readable, paginated office feeds.
 
 use ratatui::layout::Rect;
 use ratatui::style::Style;
@@ -13,7 +13,7 @@ use crate::sprite::SpriteSet;
 use super::{
     below_tab_bar, draw_footer, draw_header, draw_tiny, grid_rect, has_area, inset, paint_opaque,
     paint_scanlines, short_path, status_color, status_marker, status_style, timestamp,
-    worker_status, ACCENT, BACKGROUND, HOT, MUTED, WARNING,
+    worker_status, ACCENT, BACKGROUND, HOT, INK, MUTED, PANEL, PANEL_HIGHLIGHT, WARNING,
 };
 
 /// The dimensions of a camera grid after taking count and terminal space into account.
@@ -61,29 +61,37 @@ pub fn grid_layout(office_count: usize, width: u16, height: u16) -> GridLayout {
     best
 }
 
-/// Return offices in attention-first order while preserving the world's stable
-/// order within each attention tier.
-pub(crate) fn ordered_offices(world: &World, now: Millis) -> Vec<&Office> {
-    let mut indexed = world.offices().enumerate().collect::<Vec<_>>();
-    indexed.sort_by_key(|(index, office)| (office_attention_rank(office, now), *index));
-    indexed.into_iter().map(|(_, office)| office).collect()
+/// Keep floor numbers stable when a worker changes status. The world orders
+/// projects by their canonical path; attention is exposed separately.
+pub(crate) fn ordered_offices(world: &World, _now: Millis) -> Vec<&Office> {
+    world.offices().collect()
 }
 
-fn office_attention_rank(office: &Office, now: Millis) -> u8 {
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Blocked)
-    {
-        0
-    } else if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Failed)
-    {
-        1
-    } else {
-        2
+#[derive(Default)]
+struct StatusCounts {
+    running: usize,
+    idle: usize,
+    blocked: usize,
+    failed: usize,
+}
+
+impl StatusCounts {
+    fn add_office(&mut self, office: &Office, now: Millis) {
+        for worker in &office.workers {
+            match worker_status(worker, now) {
+                WorkerStatus::Running => self.running += 1,
+                WorkerStatus::Idle => self.idle += 1,
+                WorkerStatus::Blocked => self.blocked += 1,
+                WorkerStatus::Failed => self.failed += 1,
+            }
+        }
+    }
+
+    fn label(&self) -> String {
+        format!(
+            "{} working · {} idle · {} waiting · {} failed",
+            self.running, self.idle, self.blocked, self.failed
+        )
     }
 }
 
@@ -102,55 +110,147 @@ pub(crate) fn draw(
         return GridLayout::default();
     }
 
+    let offices = ordered_offices(world, now);
+    let mut counts = StatusCounts::default();
+    for office in &offices {
+        counts.add_office(office, now);
+    }
     let (header, body, footer) = super::vertical_bands(area, 2, 2);
     draw_header(
         frame,
-        header,
-        if all_selected {
-            "GUARD OFFICE"
-        } else {
-            "CAMERAS"
-        },
+        Rect::new(header.x, header.y, header.width, 1),
+        "SOFTWARE TOWER",
         &format!(
-            "{} rooms • {} workers • {}",
-            world.office_count(),
-            world.worker_count(),
-            if all_selected {
-                "all feeds"
-            } else {
-                "selected feed"
-            }
+            "{} floors · {} workers",
+            offices.len(),
+            world.worker_count()
         ),
     );
+    if header.height > 1 {
+        Paragraph::new(format!("  {}", counts.label()))
+            .style(Style::default().fg(INK).bg(BACKGROUND))
+            .render(
+                Rect::new(header.x, header.y + 1, header.width, 1),
+                frame.buffer_mut(),
+            );
+    }
     draw_footer(
         frame,
         footer,
-        if all_selected {
-            "1-9 jump   Tab cycle   Enter open   s settings   q quit"
-        } else {
-            "←↑↓→ / hjkl move   Enter open   0 guard   s settings   q quit"
-        },
+        "arrows move · Enter floor · ! attention · c sources · ? help · q quit",
     );
 
     if !has_area(body) {
         return GridLayout::default();
     }
-    if world.office_count() == 0 {
-        Paragraph::new("No active offices yet — waiting for an agent to arrive.")
+    if offices.is_empty() {
+        Paragraph::new("No conversations found.\n\nPress c to choose local sources, then start a conversation in a project.\nEach project becomes a floor; each conversation becomes a worker.")
             .style(Style::default().fg(MUTED).bg(BACKGROUND))
+            .wrap(ratatui::widgets::Wrap { trim: false })
             .render(body, frame.buffer_mut());
         return GridLayout::default();
     }
 
-    let layout = grid_layout(world.office_count(), body.width, body.height);
-    for (index, office) in ordered_offices(world, now).into_iter().enumerate() {
-        let tile = grid_rect(body, index, layout.columns, layout.rows);
-        if !has_area(tile) {
-            continue;
+    let feeds = if body.width >= 110 && offices.len() > 1 {
+        let directory = Rect::new(body.x, body.y, 30, body.height);
+        draw_directory(frame, directory, &offices, selected, now);
+        Rect::new(body.x + 31, body.y, body.width - 31, body.height)
+    } else {
+        body
+    };
+    let capacity = (usize::from(feeds.width) / 26).max(1) * (usize::from(feeds.height) / 10).max(1);
+    let layout = grid_layout(offices.len().min(capacity), feeds.width, feeds.height);
+    let page_size = layout.columns.saturating_mul(layout.rows).max(1);
+    let first = selected.min(offices.len() - 1) / page_size * page_size;
+    for (index, office) in offices.iter().enumerate().skip(first).take(page_size) {
+        let tile = grid_rect(feeds, index - first, layout.columns, layout.rows);
+        if has_area(tile) {
+            draw_tile(
+                frame,
+                canvas,
+                sprites,
+                office,
+                tile,
+                now,
+                index == selected,
+                index + 1,
+            );
         }
-        draw_tile(frame, canvas, sprites, office, tile, now, index == selected);
     }
+    if footer.height > 1 {
+        let project = offices[selected.min(offices.len() - 1)];
+        let detail = format!(
+            "  Floor {}/{} · page {}/{} · PgUp/PgDn · {}",
+            selected + 1,
+            offices.len(),
+            first / page_size + 1,
+            offices.len().div_ceil(page_size),
+            project.path
+        );
+        Paragraph::new(super::short_path(&detail, usize::from(footer.width)))
+            .style(Style::default().fg(MUTED).bg(BACKGROUND))
+            .render(
+                Rect::new(footer.x, footer.y + 1, footer.width, 1),
+                frame.buffer_mut(),
+            );
+    }
+    let _ = all_selected;
     layout
+}
+
+fn draw_directory(
+    frame: &mut Frame,
+    area: Rect,
+    offices: &[&Office],
+    selected: usize,
+    now: Millis,
+) {
+    let inner = super::draw_panel(frame, area, "FLOORS / PROJECTS", false);
+    if !has_area(inner) {
+        return;
+    }
+    let visible = usize::from(inner.height).max(1);
+    let first = selected
+        .saturating_sub(visible / 2)
+        .min(offices.len().saturating_sub(visible));
+    for (index, office) in offices.iter().enumerate().skip(first).take(visible) {
+        let marker = if super::office_dot_color(office, now) == WARNING {
+            "!"
+        } else if super::office_dot_color(office, now) == HOT {
+            "×"
+        } else {
+            "·"
+        };
+        let style = Style::default()
+            .fg(if index == selected { INK } else { MUTED })
+            .bg(if index == selected {
+                PANEL_HIGHLIGHT
+            } else {
+                PANEL
+            });
+        let line = Line::from(vec![
+            Span::styled(
+                format!(
+                    "{}{:>2}",
+                    if index == selected { ">" } else { " " },
+                    index + 1
+                ),
+                style,
+            ),
+            Span::styled(marker, style.fg(super::office_dot_color(office, now))),
+            Span::styled(
+                format!(
+                    " {}",
+                    short_path(&office.name, usize::from(inner.width.saturating_sub(5)))
+                ),
+                style,
+            ),
+        ]);
+        Paragraph::new(line).style(style).render(
+            Rect::new(inner.x, inner.y + (index - first) as u16, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -162,6 +262,7 @@ fn draw_tile(
     tile: Rect,
     now: Millis,
     selected: bool,
+    floor_number: usize,
 ) {
     let blocked_count = office
         .workers
@@ -183,13 +284,7 @@ fn draw_tile(
         MUTED
     };
     let border_style = Style::default().fg(border_color).bg(BACKGROUND);
-    let title_prefix = if blocked_count > 0 {
-        "! "
-    } else if failed_count > 0 {
-        "× "
-    } else {
-        "CAM "
-    };
+    let title_prefix = format!("{}F{} ", if selected { "> " } else { "" }, floor_number);
     let title_width = tile.width.saturating_sub(4) as usize;
     let office_title = short_path(
         &office.name,
@@ -245,38 +340,25 @@ fn draw_tile(
     } else {
         WorkerStatus::Idle
     };
-    let status = if inner.width < 36 {
-        if blocked_count > 0 {
-            format!("{blocked_count} BLOCKED")
-        } else if failed_count > 0 {
-            format!("{failed_count} FAILED")
-        } else {
-            format!("{}/{} busy", office.busy_count(), office.workers.len())
-        }
-    } else if blocked_count > 0 {
-        format!(
-            "! {} blocked • {} / {} busy",
-            blocked_count,
-            office.busy_count(),
-            office.workers.len()
-        )
+    let running = office
+        .workers
+        .iter()
+        .filter(|worker| worker_status(worker, now) == WorkerStatus::Running)
+        .count();
+    let idle = office
+        .workers
+        .iter()
+        .filter(|worker| worker_status(worker, now) == WorkerStatus::Idle)
+        .count();
+    let status = if blocked_count > 0 {
+        format!("! {blocked_count} WAITING · {running} working")
     } else if failed_count > 0 {
-        format!(
-            "× {} failed • {} / {} busy",
-            failed_count,
-            office.busy_count(),
-            office.workers.len()
-        )
+        format!("× {failed_count} FAILED · {running} working")
     } else {
-        format!(
-            "{} / {} busy • {}",
-            office.busy_count(),
-            office.workers.len(),
-            summary_status.label()
-        )
+        format!("{running} working · {idle} idle")
     };
 
-    let status_width = if inner.width >= 9 && inner.height >= 2 {
+    let status_width = if inner.width >= 42 && inner.height >= 2 {
         inner.width.saturating_sub(8)
     } else {
         inner.width
@@ -289,7 +371,7 @@ fn draw_tile(
     Paragraph::new(status)
         .style(status_text_style)
         .render(status_area, frame.buffer_mut());
-    if inner.width >= 9 && inner.height >= 2 {
+    if inner.width >= 42 && inner.height >= 2 {
         let rec = if now.div_euclid(500) % 2 == 0 {
             "● REC"
         } else {
@@ -393,7 +475,7 @@ mod tests {
         world
     }
     #[test]
-    fn attention_offices_sort_first_and_preserve_order_within_tiers() {
+    fn floor_numbers_do_not_change_when_a_worker_needs_attention() {
         let world = status_world();
         let offices = ordered_offices(&world, BLOCKED_AFTER_MS + 1);
         let names = offices
@@ -402,14 +484,14 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(
             names,
-            ["y-blocked", "z-blocked-later", "a-failed", "b-plain"]
-        );
-        assert_eq!(
-            worker_status(&offices[0].workers[0], BLOCKED_AFTER_MS + 1),
-            WorkerStatus::Blocked
+            ["a-failed", "b-plain", "y-blocked", "z-blocked-later"]
         );
         assert_eq!(
             worker_status(&offices[2].workers[0], BLOCKED_AFTER_MS + 1),
+            WorkerStatus::Blocked
+        );
+        assert_eq!(
+            worker_status(&offices[0].workers[0], BLOCKED_AFTER_MS + 1),
             WorkerStatus::Failed
         );
     }

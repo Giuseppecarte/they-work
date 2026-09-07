@@ -25,21 +25,28 @@ pub fn events(now: Millis) -> Vec<Event> {
             let id = WorkerId(format!("{path}#{name}"));
             let office = OfficeId((*path).to_string());
             let phase = (now / 1500 + i as Millis * 2) % 7;
-            let activity = match phase {
-                0 => Activity::Typing {
+            let activity = match (i, phase) {
+                (4, _) => Activity::Waiting {
+                    detail: "Approve publishing the preview to staging (fictional demo request)."
+                        .into(),
+                },
+                (5, _) => Activity::Error {
+                    detail: "Integration checks failed: the demo database is unavailable.".into(),
+                },
+                (_, 0) => Activity::Typing {
                     detail: "cargo test --workspace".into(),
                 },
-                1 => Activity::Reading {
+                (_, 1) => Activity::Reading {
                     detail: "src/world.rs".into(),
                 },
-                2 => Activity::Editing {
+                (_, 2) => Activity::Editing {
                     detail: "src/render/canvas.rs".into(),
                 },
-                3 => Activity::Searching {
+                (_, 3) => Activity::Searching {
                     detail: "fn apply".into(),
                 },
-                4 => Activity::Thinking,
-                5 => Activity::Talking {
+                (_, 4) => Activity::Thinking,
+                (_, 5) => Activity::Talking {
                     detail: "Tests pass, pushing.".into(),
                 },
                 _ => Activity::Idle,
@@ -58,7 +65,7 @@ pub fn events(now: Millis) -> Vec<Event> {
                     git_branch: Some("main".into()),
                 }),
                 mk(EventKind::Tokens(
-                    12_000 + (now / 90) as u64 * (i as u64 + 1),
+                    12_000 + i as u64 * 4_250 + (now.rem_euclid(60_000) / 90) as u64,
                 )),
                 mk(EventKind::Turn {
                     in_flight: activity.is_busy(),
@@ -67,4 +74,34 @@ pub fn events(now: Millis) -> Vec<Event> {
             ]
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{WorkerStatus, World};
+
+    #[test]
+    fn demo_at_real_clock_times_exposes_attention_without_epoch_sized_usage() {
+        for now in [0, -1, 1_788_818_294_150, i64::MAX / 2] {
+            let mut world = World::new();
+            for event in events(now) {
+                world.apply(event);
+            }
+            let workers = world
+                .offices()
+                .flat_map(|office| &office.workers)
+                .collect::<Vec<_>>();
+            assert_eq!(workers.len(), 6);
+            assert!(workers
+                .iter()
+                .any(|worker| matches!(worker.activity, Activity::Waiting { .. })));
+            assert!(workers
+                .iter()
+                .any(|worker| worker.status_at(now) == WorkerStatus::Failed));
+            assert!(workers
+                .iter()
+                .all(|worker| worker.tokens_used > 0 && worker.tokens_used < 100_000));
+        }
+    }
 }

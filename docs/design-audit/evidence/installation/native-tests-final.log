@@ -1,0 +1,279 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.33s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-f81342928e821f0f)
+
+running 13 tests
+test tests::windows_profile_spellings_map_to_wsl_mounts ... ok
+test util::tests::normalizes_and_caps_details ... ok
+test util::tests::parses_utc_timestamp_to_epoch_millis ... ok
+test util::tests::normalizes_real_office_path_spellings ... ok
+test util::tests::project_key_finds_unmounted_repository_root ... ok
+test codex_source::tests::ended_threads_leave_every_codex_runtime_map ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test util::tests::terminal_controls_are_visible_and_inert_before_truncation ... ok
+test util::tests::windows_canonical_paths_and_wsl_linux_case_keep_project_identity ... ok
+test tests::recent_populated_candidate_wins_over_stale_candidate ... ok
+test util::tests::codex_recorded_project_survives_a_store_only_mount ... ok
+test util::tests::project_hint_cannot_promote_home_or_codex_conversation ... ok
+test util::tests::unknown_paths_share_a_non_project_bucket ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/collectors.rs (target/native-macos/debug/deps/collectors-092e2e69a8f21c61)
+
+running 23 tests
+test claude_uses_file_mtime_for_all_untimestamped_lines_and_honors_recency ... ok
+test claude_uses_project_key_when_repository_is_unmounted ... ok
+test claude_collapses_nested_workdirs_to_the_nearest_git_root ... ok
+test claude_recovers_from_home_gap_deletion_and_same_size_replacement ... ok
+test claude_tails_incrementally_rotates_and_discovers_sessions ... ok
+test claude_carries_real_timestamps_and_accumulates_usage ... ok
+test claude_keeps_one_worker_in_one_office_across_path_spellings ... ok
+test claude_maps_tools_text_turns_and_names ... ok
+test collector_acceptance_live_when_homes_exist ... ignored, requires the live ~/.claude and ~/.codex stores
+test codex_applies_configured_recency_bound ... ok
+test codex_hides_assessors_and_correlates_waiting_developers ... ok
+test codex_reads_roster_items_and_turn_state_incrementally ... ok
+test real_machine_smoke_when_homes_exist ... ignored, requires explicit opt-in to read live agent stores; use --doctor for diagnostics
+test sources_wires_existing_homes_and_skips_missing_ones ... ok
+test collector_acceptance_fixtures ... ok
+test codex_recovers_after_replacement_schema_loss_and_wal_lock ... ok
+test codex_groups_home_and_conversation_cwds_under_one_non_project_office ... ok
+test codex_database_symlinks_cannot_escape_the_configured_home ... ok
+test inspect_rejects_an_incomplete_codex_store ... ok
+test clean_wal_database_is_rejected_without_recreating_sidecars ... ok
+test cold_wal_snapshots_are_rejected_without_creating_shm ... ok
+test inspect_distinguishes_empty_homes_from_unreadable_stores ... ok
+test collectors_soak_for_hours_with_changing_stores ... ok
+
+test result: ok. 21 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 7.08s
+
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_core-97b6ab7f701958c6)
+
+running 10 tests
+test world::tests::a_worker_idle_for_an_hour_is_still_in_the_office ... ok
+test world::tests::a_finished_turn_reads_as_idle_and_ready_for_work ... ok
+test world::tests::first_event_opens_an_office_and_hires_a_worker ... ok
+test world::tests::an_open_turn_gone_silent_reads_as_blocked_not_idle ... ok
+test world::tests::a_worker_who_moves_project_leaves_the_old_office ... ok
+test world::tests::quiet_workers_go_idle_then_offline_and_close_the_office ... ok
+test world::tests::explicit_request_needs_attention_immediately_and_completion_clears_it ... ok
+test world::tests::no_worker_is_ever_seated_in_two_offices ... ok
+test world::tests::token_counts_never_go_backwards ... ok
+test world::tests::history_keeps_the_newest_beats_and_stays_bounded ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 97 tests
+test canvas::tests::encoding_detection_prefers_dense_support_and_accepts_forcing ... ok
+test canvas::tests::color_settings_honor_no_color_and_explicit_modes ... ok
+test canvas::tests::palette_mode_is_fixed_and_maps_rgb_to_indexed_colour ... ok
+test canvas::tests::locale_less_terminals_use_the_conservative_dense_fallback ... ok
+test canvas::tests::explicit_sextants_override_is_reported ... ok
+test canvas::tests::half_block_packs_top_into_foreground_and_bottom_into_background ... ok
+test canvas::tests::pixel_frame_owns_rgba_pixels_and_last_cell_area ... ok
+test canvas::tests::monochrome_mode_renders_luminance_glyphs_without_colour ... ok
+test canvas::tests::quadrant_quantizer_preserves_a_two_colour_split ... ok
+test canvas::tests::transparent_pixels_leave_existing_cells_untouched ... ok
+test canvas::tests::windows_terminal_session_selects_sextants_without_a_program_name ... ok
+test canvas::tests::sextant_quantizer_uses_a_supported_glyph_for_six_samples ... ok
+test golden::tests::snapshot_diff_reports_changed_rows ... ok
+test golden::tests::snapshot_fixture_is_tall_and_contains_attention_states ... ok
+test canvas::tests::cell_resize_matches_the_three_encoding_ladder ... ok
+test m3_tests::failed_worker_floor_has_explicit_alert ... ok
+test m3_tests::attention_shortcut_opens_the_worker_in_a_different_project ... ok
+test m3_tests::help_overlay_lists_bindings_and_closes_cleanly ... ok
+test m3_tests::isometric_floor_renders_project_scene_and_manager_alert ... ok
+test m3_tests::eleven_worker_floor_pagination_is_reachable_and_labeled ... ok
+test m3_tests::pathological_names_render_in_every_view_and_at_tiny_sizes ... ok
+test canvas::tests::requested_cell_density_controls_canvas_dimensions ... ok
+test m3_tests::six_uneven_offices_and_single_worker_floor_render ... ok
+test m3_tests::record_controls_never_reach_terminal_cells ... ok
+test m3_tests::small_settings_scroll_to_every_option_and_help_stays_navigable ... ok
+test m3_tests::ui_pixel_frame_snapshots_the_latest_rendered_floor ... ok
+test golden::tests::sign_glyph_sheets_match_checked_in_goldens ... ok
+test sprite::tests::animation_frame_selection_is_deterministic ... ok
+test sprite::tests::compact_worker_and_manager_keep_the_same_anatomy ... ok
+test sprite::tests::design_worker_has_full_anatomy_and_small_material_palette ... ok
+test phone_tests::phone_overlay_navigates_channels_and_renders_at_tiny_sizes ... ok
+test sprite::tests::motion_setting_freezes_worker_animation_frames ... ok
+test sprite::tests::room_palettes_belong_to_office_ids_and_reset_to_their_stable_default ... ok
+test sprite::tests::rows_parse_with_dot_as_transparent_and_unknown_keys_as_transparent ... ok
+test sprite::tests::small_workers_have_authored_eyes_and_preserve_agent_colours ... ok
+test sprite::tests::waiting_and_manager_attention_poses_share_the_full_character_system ... ok
+test sprite::tests::wardrobe_choices_follow_thread_identity_across_resolutions_and_reset ... ok
+test sprite::tests::wardrobe_is_stable_by_id_and_unique_at_guard_scale ... ok
+test sprite::tests::wardrobe_tops_use_only_agent_hues ... ok
+test sprite::tests::every_activity_has_two_frames_for_each_agent ... ok
+test tests::draw_handles_demo_world_at_normal_and_tiny_sizes ... ok
+test tests::key_releases_do_not_toggle_overlays_or_send_host_commands ... ok
+test tests::character_choice_stays_with_the_conversation_and_can_be_reset ... ok
+test phone_tests::phone_scroll_opens_the_selected_thread_and_escape_only_closes_overlay ... ok
+test tests::saved_preferences_round_trip_without_persisting_automatic_terminal_choices ... ok
+test tests::settings_motion_toggle_updates_the_saved_preference ... ok
+test tests::source_connection_is_an_explicit_host_command ... ok
+test views::cameras::tests::floor_numbers_do_not_change_when_a_worker_needs_attention ... ok
+test views::cameras::tests::wide_guard_office_keeps_feeds_in_balanced_rows ... ok
+test tests::navigation_descends_and_ascends_through_the_view_hierarchy ... ok
+test views::desk::tests::stale_work_is_attention_without_an_invented_approval_request ... ok
+test views::desk::tests::timeline_wraps_complete_detail_and_retains_outcome ... ok
+test views::guard_scene::tests::dense_guard_rooms_keep_markers_bounded_and_edges_opaque ... ok
+test views::office::tests::auto_projection_chooses_room_then_degrades_by_available_space ... ok
+test views::office::tests::chairs_workers_and_desks_form_a_seated_stack_at_one_scale ... ok
+test views::office::tests::common_five_worker_floor_uses_balanced_rows ... ok
+test tests::room_palette_changes_only_the_selected_project_and_survives_restore ... ok
+test views::office::tests::compact_project_sign_keeps_a_flat_face_clear_of_alert_rows ... ok
+test views::guard_scene::tests::native_image_markers_stay_in_terminal_cell_coordinates ... ok
+test views::office::tests::desk_layout_caps_the_main_floor_and_pages_overflow ... ok
+test views::office::tests::every_floor_density_uses_native_pixels_or_integer_enlargement ... ok
+test canvas::tests::dropped_pixel_frames_reuse_the_rgba_allocation ... ok
+test views::office::tests::common_terminal_draws_workers_and_labels_instead_of_a_plain_list ... ok
+test views::office::tests::five_workers_fit_the_plate_without_clipping_or_each_other ... ok
+test views::office::tests::isometric_room_has_a_floor_plate_with_breathing_space ... ok
+test views::office::tests::isometric_room_keeps_objects_separate_and_ground_open ... ok
+test views::office::tests::isometric_sign_stays_in_its_reserved_band ... ok
+test views::office::tests::light_mode_keeps_floor_outlines_dark ... ok
+test views::office::tests::long_isometric_sign_steps_down_without_leaving_its_band ... ok
+test views::office::tests::manager_reaches_attention_pose_after_travel ... ok
+test m3_tests::twenty_floors_keep_the_selected_project_and_page_visible ... ok
+test views::office::tests::occupied_desk_tiles_are_unique_and_spread_across_the_plate ... ok
+test views::office::tests::office_palettes_change_room_materials_but_keep_worker_and_alert_colours ... ok
+test views::office::tests::painter_order_puts_nearer_and_taller_items_last ... ok
+test views::office::tests::project_labels_are_safe_and_split_without_ellipsis ... ok
+test views::office::tests::project_sign_stays_above_floor_and_within_bounded_area ... ok
+test views::office::tests::projection_cycle_is_reversible_for_every_view ... ok
+test views::office::tests::sky_is_deterministic_but_changes_with_time ... ok
+test views::office::tests::worker_marker_positions_use_encoding_cell_density ... ok
+test views::office::tests::worker_plate_names_preserve_distinguishing_suffixes ... ok
+test views::office::tests::complete_they_work_sign_keeps_every_letter_face_at_every_density ... ok
+test views::phone::tests::channels_cycle_in_both_directions ... ok
+test views::phone::tests::channels_include_live_status_and_core_beat_history ... ok
+test views::tests::opaque_paint_replaces_previous_symbols_and_background ... ok
+test views::tests::phone_avatar_is_the_head_crop_of_the_office_sprite ... ok
+test views::tests::safe_display_replaces_controls_and_emoji ... ok
+test views::tests::short_path_never_splits_utf8_and_respects_tiny_widths ... ok
+test views::tests::token_labels_use_human_units ... ok
+test views::office::tests::worker_wardrobe_variants_have_distinct_pixels_at_every_density ... ok
+test views::office::tests::native_room_uses_the_available_image_frame ... ok
+test views::office::tests::every_letter_and_digit_keeps_its_five_by_seven_face_at_every_density ... ok
+test m3_tests::repeated_floor_frames_reuse_canvas_storage ... ok
+test views::office::tests::floor_worker_plates_stay_with_their_desks_at_every_encoding ... ok
+test m3_tests::large_floor_at_ten_fps_reuses_canvas_and_parsed_sprites ... ok
+test m3_tests::image_density_floor_has_native_dimensions_palette_and_checksum ... ok
+test golden::tests::snapshots_match_checked_in_goldens ... ok
+test m3_tests::encoding_frame_cost_stays_within_ten_fps_budget ... ok
+
+test result: ok. 97 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.84s
+
+     Running tests/pixel_frame.rs (target/native-macos/debug/deps/pixel_frame-79394e7bca21912e)
+
+running 1 test
+test external_consumer_can_read_owned_rgb_dimensions ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_terminal_image-70c3b44b6b8b7e47)
+
+running 14 tests
+test tests::measurement_rejects_zero_iterations ... ok
+test tests::malformed_captures_are_rejected_without_panicking ... ok
+test tests::kitty_reply_and_cell_queries_are_parsed ... ok
+test tests::base64_is_standard_without_line_breaks ... ok
+test tests::protocol_preference_is_kitty_then_iterm2_then_sixel ... ok
+test tests::resize_retires_old_kitty_image_and_clips_new_target ... ok
+test tests::sixel_and_derived_cell_size_are_detected_without_kitty ... ok
+test tests::identical_frames_skip_transmission_and_resize_invalidates_cache ... ok
+test tests::sixel_bytes_have_palette_data_and_placement_surface_clears ... ok
+test tests::unsupported_probe_is_bounded_and_emits_all_queries_once ... ok
+test tests::iterm2_png_preserves_rgba_and_places_in_cells ... ok
+test tests::kitty_bytes_are_chunked_and_placed ... ok
+test tests::small_sixel_palettes_keep_source_colours_at_percentage_precision ... ok
+test tests::captured_protocol_streams_decode_back_to_pixels ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/native-macos/debug/deps/they_work-8f65201c07ce41f3)
+
+running 17 tests
+test connections::tests::disabled_sources_have_no_collector_paths ... ok
+test tests::image_presenter_is_a_noop_without_graphics_support ... ok
+test tests::accepts_demo_once_and_help ... ok
+test tests::image_presenter_falls_back_to_cells_without_pixel_geometry ... ok
+test tests::blocked_output_does_not_relabel_old_history_as_pending ... ok
+test tests::formats_plain_text_ages_and_quotes ... ok
+test tests::parses_the_real_command_surface ... ok
+test tests::cli_details_are_one_bounded_line ... ok
+test tests::parses_linux_process_cpu_ticks_and_computes_average ... ok
+test tests::rejects_invalid_values_and_conflicts ... ok
+test tests::parses_bounded_headless_mode ... ok
+test tests::sixel_pacing_limits_rate_bytes_and_slow_writes ... ok
+test tests::explicit_camera_and_light_override_saved_preferences_absolutely ... ok
+test tests::pausing_collectors_preserves_the_last_batch_and_does_not_replay_it ... ok
+test connections::tests::setup_actions_remain_visible_in_supported_sizes ... ok
+test tests::image_presenter_encodes_the_renderer_snapshot_when_supported ... ok
+test tests::doctor_frame_uses_the_real_renderer_destination ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.39s
+
+     Running tests/cli.rs (target/native-macos/debug/deps/cli-a456294c58e31ca0)
+
+running 28 tests
+test an_empty_codex_installation_is_watched_for_its_first_conversation ... ok
+test doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation ... ok
+test doctor_explains_an_explicit_color_override ... ok
+test doctor_explains_the_published_container_terminal_fallback ... ok
+test demo_once_does_not_open_agent_homes ... ok
+test doctor_reports_fixture_homes ... ok
+test doctor_fails_with_no_homes_and_explains_both_paths ... ok
+test doctor_reports_one_agent_without_treating_it_as_a_failure ... ok
+test doctor_reports_an_installed_but_empty_home ... ok
+test disabled_provider_is_not_inspected_even_when_its_store_is_broken ... ok
+test codex_desktop_split_database_layout_is_collected ... ok
+test first_run_without_homes_explains_overrides_and_stops ... ok
+test doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted ... ok
+test first_run_non_tty_prints_discovery_and_picker ... ok
+test invalid_args_report_clear_failure ... ok
+test doctor_reports_owner_and_permissions_for_an_unreadable_home ... ok
+test launching_inside_one_project_keeps_the_other_floors ... ok
+test no_color_remains_authoritative_over_explicit_truecolor ... ok
+test native_codex_root_database_layout_is_collected ... ok
+test once_lists_blocked_project_first_and_reports_unknown_waiting_state ... ok
+test related_git_worktrees_share_the_primary_project_floor ... ok
+test migrated_codex_root_wins_over_leftover_legacy_database ... ok
+test saved_sources_are_respected_and_explicit_choice_overrides_them ... ok
+test requested_config_directory_is_created ... ok
+test setup_in_a_pipe_explains_noninteractive_alternative ... ok
+test once_never_emits_transcript_terminal_controls ... ok
+test project_scopes_once_and_persists_only_with_config_dir ... ok
+test headless_exit_after_runs_the_full_polling_loop ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+   Doc-tests theywork_collect
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests theywork_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests theywork_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests theywork_terminal_image
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

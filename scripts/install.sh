@@ -3,7 +3,7 @@
 set -eu
 
 version=latest
-install_dir=${THEYWORK_INSTALL_DIR:-${HOME:?HOME is required}/.local/bin}
+install_dir=${THEYWORK_INSTALL_DIR:-}
 base_url=https://github.com/Giuseppecarte/they-work/releases
 usage() {
     echo "Usage: sh scripts/install.sh [--version vX.Y.Z] [--install-dir PATH]"
@@ -19,6 +19,13 @@ while [ "$#" -gt 0 ]; do
         *) usage >&2; exit 2 ;;
     esac
 done
+if [ -z "$install_dir" ]; then
+    install_dir="${HOME:?Set HOME or pass --install-dir}/.local/bin"
+fi
+if [ -d "$install_dir/they-work" ]; then
+    echo "$install_dir/they-work is a directory; choose another --install-dir. Nothing installed." >&2
+    exit 1
+fi
 case "$version" in latest|v[0-9]*.[0-9]*.[0-9]*) ;; *) echo "Invalid release version: $version" >&2; exit 2 ;; esac
 case "$version" in *[!a-zA-Z0-9.-]*) echo "Invalid release version" >&2; exit 2 ;; esac
 case "$(uname -s)" in

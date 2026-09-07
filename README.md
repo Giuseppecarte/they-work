@@ -5,8 +5,8 @@
 You start three agents on a project and they scatter into separate threads.
 `they-work` puts them back in one room: every thread is an employee at a desk,
 typing, reading, editing, or waiting on you — drawn as pixel art in your
-terminal. Every project you have open is another office, and one view is a wall
-of camera feeds so you can watch all of them at once.
+terminal. Each project occupies an independent floor in a software tower, so
+you can see the whole company or inspect one worker's activity.
 
 It reads agent transcripts and main database contents. It cannot start or stop
 your agents, alter those records, or reach the network. On a writable native
@@ -14,7 +14,11 @@ SQLite store, SQLite may update an already-existing `-shm` coordination sidecar;
 the container mounts stores read-only, and a cold WAL store without its existing
 sidecars is refused rather than created.
 
-![The office floor](docs/office.png)
+![The office floor, reconstructed from the character renderer](docs/design-audit/evidence/after-office-sextants.png)
+
+The preview images reconstruct renderer buffers at 160×86 terminal cells using
+sextant characters. They are not screenshots from a particular terminal emulator;
+the [audit](docs/design-audit/README.md) records native execution and visual checks.
 
 ## Start here
 
@@ -58,23 +62,33 @@ For Docker, use `make run ARGS="--doctor"` or `ARGS="--once"`.
 
 | View | Key | What it is |
 | --- | --- | --- |
-| **The floor** | default | one project as an isometric office, a desk per thread |
-| **The guard office** | `Tab` or `0` | every project at once, each behind its own camera pane |
+| **The tower** | `0` | all projects and attention counts; the starting view when no floor is selected |
+| **The floor** | `Enter` from the tower | one project's office, with a desk per conversation |
 | **A desk** | `Enter` | one worker up close, with their timeline |
 | **The phone** | `p` | a messaging app: standup, blocked, shipping, watercooler |
 | **Settings** | `s` | camera, light, theme, colour depth, motion |
 | **Help** | `?` | every key |
+| **Sources** | `c` | choose local providers and folders |
 
-Tabs across the top switch offices; `1`–`9` jump straight to one. A tab's dot
+`Tab` / `Shift+Tab` cycle floors; `1`–`9` jump straight to one. In the tower,
+`PageUp` / `PageDown` reach additional floors; `Enter` opens the selected floor.
+Press `!` to jump to a worker needing attention, or `c` to change sources. A tab's dot
 turns amber the moment anyone in that project is blocked, even while you are
 looking somewhere else.
 
-![A desk](docs/desk.png)
+Use `v` to change the camera, `w` at a desk to change that worker's character,
+and `o` to change the selected floor's palette. `W` and `O` restore defaults.
+Pass `--config-dir <folder>` to remember sources, the selected floor, and these
+appearance choices. Git worktrees of the same repository share one floor.
+
+![A worker's desk, reconstructed from the character renderer](docs/design-audit/evidence/after-desk-sextants.png)
 
 Colour means the same thing everywhere. **Shirt** is which agent — orange for
 Claude Code, blue for Codex. The **bar under a name** is status: green running,
-grey idle, amber blocked, red failed. Amber appears nowhere else in the
-interface, so if you see it, someone is waiting on you.
+grey idle, amber needs attention, red failed. Explicit questions and approval
+requests appear immediately. Silence during an open turn also raises an
+attention hint; inspect the desk to distinguish it from a confirmed request.
+Approve requests in the original coding app.
 
 ## What it reads, and what you are agreeing to
 
@@ -82,8 +96,9 @@ The collectors have a narrow, read-only input boundary:
 
 - **Claude Code** — regular `.jsonl` session files below `~/.claude/projects/`.
   Symlinks and non-JSONL files are skipped.
-- **Codex** — the SQLite databases `~/.codex/sqlite/state_5.sqlite` and
-  `~/.codex/sqlite/thread_history_1.sqlite`, opened in SQLite's read-only mode.
+- **Codex** — `state_5.sqlite` and `thread_history_1.sqlite` inside `~/.codex`
+  or its `sqlite/` subdirectory, opened in SQLite's read-only mode. Each current
+  root-level database takes priority over an older copy in `sqlite/`.
 
 The main databases and transcripts are not changed. SQLite can coordinate
 through an existing `-shm` sidecar when a native store is writable; the Docker
@@ -106,7 +121,7 @@ The flags in `make run` are deliberately visible:
 - `--network none` — no external network connectivity; container loopback remains
 - `--read-only` — the container filesystem cannot be written
 - `--cap-drop ALL` and `--security-opt no-new-privileges`
-- `:ro` on both agent mounts
+- `readonly` on each existing agent mount
 - `--user` your own uid, so it reads exactly what you can read and no more
 - `--rm` — nothing persists when you quit
 
@@ -146,7 +161,7 @@ dimensions always come from the terminal report, not this example.
 
 | Platform path | Status tested in this worktree |
 | --- | --- |
-| Windows Terminal under WSL, Sixel | Sixel encoding and the true-density renderer frame are covered by tests, but visual output was **not tested** here: this WSL session is `xterm-256color`, not Windows Terminal. |
+| Windows Terminal under WSL, Sixel | Encoding and renderer frames are covered by tests. No Windows/WSL graphical terminal session was available for this audit, which ran on macOS. |
 | macOS, Kitty protocol | Kitty encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no Kitty graphics session was exercised; see the current audit for native macOS checks. |
 | macOS, iTerm2 inline images | iTerm2 encoding and the true-density renderer frame are covered by tests, but visual output was **not tested**: no iTerm2 graphics session was exercised; see the current audit for native macOS checks. |
 
@@ -167,8 +182,8 @@ board is what was meant.
 | `--setup` | choose local conversation sources |
 | `--sources all\|codex\|claude\|none` | choose providers explicitly |
 | `--codex-home <path>` / `--claude-home <path>` | set a local source root |
-| `--project <path>` | open one project |
-| `--all` | start on the guard office |
+| `--project <path>` | restrict collection to one repository, including its worktrees |
+| `--all` | start on the tower |
 | `--demo` | the imaginary company; reads nothing |
 | `--doctor` | report what was found, then exit |
 | `--once` | report every office and worker, then exit |

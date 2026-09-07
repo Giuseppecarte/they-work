@@ -10,12 +10,12 @@ test_unreadable_data_stops_before_interactive_office (__main__.InstallFailures.t
 test_valid_shell_truncation_never_executes (__main__.InstallFailures.test_valid_shell_truncation_never_executes) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 2.778s
+Ran 10 tests in 3.220s
 
 OK
 
 __main__.InstallFailures.test_complete_release_reaches_pull_and_propagates_failure: exit=17
-/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-aq2m34wr/tmp.UNjUvJQisX: OK
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-j0_288_g/tmp.A1l2KIOy6t: OK
 Pulling example.invalid/test:missing ...
 denied
 
@@ -56,11 +56,11 @@ __main__.InstallFailures.test_local_launcher_quotes_paths_and_skips_missing_home
 Codex home not found; continuing with Claude data only.
 
 __main__.InstallFailures.test_unreadable_data_stops_before_interactive_office: exit=1
-/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-q9t6iiqz/tmp.bXhXDzrrb6: OK
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-ogsti4rh/tmp.ZZYoWehDRm: OK
 Pulling example.invalid/test:missing ...
 claude_store=unavailable status=unreadable reason=Permission denied
 
 __main__.InstallFailures.test_valid_shell_truncation_never_executes: exit=1
 sha256sum: WARNING: 1 computed checksum did NOT match
-/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-zefjy_pk/tmp.cakJfexWHc: FAILED
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-bgsohpab/tmp.2VjpzX9rkj: FAILED
 Installer verification failed: truncated or modified download; nothing was executed.

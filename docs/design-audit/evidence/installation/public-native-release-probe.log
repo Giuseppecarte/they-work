@@ -1,0 +1,3 @@
+Downloading they-work-aarch64-apple-darwin.tar.gz (v0.1.0) ...
+curl: (56) The requested URL returned error: 404
+No downloadable native asset for v0.1.0/aarch64-apple-darwin. Nothing installed. The older v0.1.0 release is Docker-only; see INSTALL.md to build this checkout.

@@ -39,7 +39,9 @@ installer command.
    remove `sha256sum` from PATH and execute the fallback. Other tests exercise
    both OS/CPU asset names, paths with spaces, missing releases, duplicate and
    incorrect checksums, archive traversal, and symlink rejection. Failed
-   downloads/checksums preserve a previous executable. Nine tests pass locally.
+   downloads/checksums preserve a previous executable. An existing directory at
+   the executable path is rejected instead of reporting a false installation.
+   Eleven tests pass locally, including an explicit install path with HOME unset.
 
 5. **Distribution had no native platform gate.** The new reusable workflow
    builds, runs workspace tests and strict Clippy, then executes and packages
@@ -56,14 +58,34 @@ installer command.
    case after normalization, and a live-store smoke test assumed an existing
    Claude directory must contain an active worker. The baseline Docker run also
    exposed assumptions about temporary directories outside a Git checkout and
-   same-size file replacement. These were sent to the collector owner with
-   reproductions. The initial native failure log redacts the live source's
-   identifier/timestamps; fixture-only tests should not depend on personal data.
+   same-size file replacement. These assumptions were corrected; live-store
+   checks are now explicitly opt-in. The final native workspace run passes 201
+   tests, with two live checks ignored. The initial failure log redacts the live
+   source's identifier/timestamps; fixture tests no longer depend on personal data.
 
 7. **Package metadata and Docker locking were misleading.** The Cargo repository
    URL pointed at `OWNER`. It now points at the actual repository. The release
    Dockerfile no longer retries a locked failure with an unlocked build or
-   silently hides the original build error.
+   silently hides the original build error. The Docker context also excludes
+   audit toolchains and local agent configuration directories: the audit-only
+   Rust scratch directory had grown to 658 MB and did not belong in a build.
+
+8. **A second pass found interactions between new controls and saved state.**
+   Reviewing source reconnection uncovered replayed history when collectors were
+   recreated, a potential lost batch when pausing, and inconsistent configuration
+   paths before/after `~` expansion. The fixes retain paused collector state,
+   drain completed events, normalize configuration paths before loading them,
+   and preserve the real floor while exploring the demo. Source selection can
+   now disconnect every provider, and reopening setup retains valid saved paths.
+
+9. **CLI appearance flags did not override saved preferences.** A native PTY
+   demonstrated that saved light mode plus `--light` became dark, `--dark`
+   retained light mode, and `--view side` retained the old camera. The camera
+   flag was still sending the key now assigned to source selection. Overrides
+   now assign absolute preference values. [Initial reproduction](evidence/installation/cli-preferences-review.log)
+   and [fixed PTY replay](evidence/installation/cli-preferences-fixed.log) record
+   all three cases; `review-cli-preferences.py` executes their assertions without
+   reading conversation content.
 
 ## What was actually executed
 
@@ -78,13 +100,19 @@ configuration was edited.
 | --- | --- |
 | Docker baseline with empty cache | Failed DNS as expected; [baseline](baseline-tests.log) |
 | Explicit networked dependency fetch | Passed after updating the lockfile for current source changes; [fetch](evidence/installation/fetch-updated.log) |
+| Documented `make build`, Linux ARM64 | Passed with locked dependencies; [build](evidence/installation/docker-build.log) |
+| Docker shared launcher, demo once/headless | Passed with no source mounts; [once](evidence/installation/docker-demo-once.log), [headless](evidence/installation/docker-headless.log) |
+| Docker doctor with no enabled sources | Expected exit 1, actionable setup guidance, no source mounts; [doctor](evidence/installation/docker-empty-doctor.log) |
 | Native macOS release build | Passed, 53.82 s including an empty native build cache; [build](evidence/installation/native-build.log) |
 | Documented native Cargo install, with repository-local `--root` | Passed; [install](evidence/installation/native-install.log) |
 | Installed binary `--demo --once` | Passed; [output](evidence/installation/native-installed-once.log) |
-| Native strict workspace/all-targets Clippy | Passed; [Clippy](evidence/installation/native-clippy.log) |
+| Final native workspace tests | 201 passed, 0 failed, 2 live checks ignored; [tests](evidence/installation/native-tests-final.log) |
+| Final native strict workspace/all-targets Clippy | Passed; [Clippy](evidence/installation/native-clippy-final.log) |
+| Native CLI fixture integration suite after review fixes | 28 integration tests passed; [tests](evidence/installation/native-cli-final.log) |
 | Native release archive and help/once/headless smoke checks | Passed; [package](evidence/installation/native-package.log) |
 | Release installer against that actual native archive | Checksum, extraction, installation into a path with spaces, and launch passed; [replay](evidence/installation/native-release-install.log) |
-| Nine native shell installer regression tests | Passed; [tests](evidence/installation/native-installer-tests.log) |
+| Public `v0.1.0` macOS native asset | Real GitHub request returned HTTP 404; installer exited 1 and created no destination; [probe](evidence/installation/public-native-release-probe.log) |
+| Eleven native shell installer regression tests | Passed; [tests](evidence/installation/native-installer-tests.log) |
 | Ten Docker launcher/bootstrap regression tests | Passed; [tests](evidence/installation/docker-installer-tests.log) |
 | Workflow YAML parsing | Passed; [syntax](evidence/installation/workflow-syntax.log) |
 

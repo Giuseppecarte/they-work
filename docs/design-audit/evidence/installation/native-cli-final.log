@@ -1,0 +1,58 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running unittests src/main.rs (target/native-macos/debug/deps/they_work-8f65201c07ce41f3)
+
+running 17 tests
+test tests::image_presenter_falls_back_to_cells_without_pixel_geometry ... ok
+test tests::blocked_output_does_not_relabel_old_history_as_pending ... ok
+test connections::tests::disabled_sources_have_no_collector_paths ... ok
+test tests::accepts_demo_once_and_help ... ok
+test tests::formats_plain_text_ages_and_quotes ... ok
+test tests::parses_bounded_headless_mode ... ok
+test tests::image_presenter_is_a_noop_without_graphics_support ... ok
+test tests::parses_linux_process_cpu_ticks_and_computes_average ... ok
+test tests::cli_details_are_one_bounded_line ... ok
+test tests::parses_the_real_command_surface ... ok
+test tests::explicit_camera_and_light_override_saved_preferences_absolutely ... ok
+test tests::rejects_invalid_values_and_conflicts ... ok
+test tests::sixel_pacing_limits_rate_bytes_and_slow_writes ... ok
+test tests::pausing_collectors_preserves_the_last_batch_and_does_not_replay_it ... ok
+test connections::tests::setup_actions_remain_visible_in_supported_sizes ... ok
+test tests::image_presenter_encodes_the_renderer_snapshot_when_supported ... ok
+test tests::doctor_frame_uses_the_real_renderer_destination ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+
+     Running tests/cli.rs (target/native-macos/debug/deps/cli-a456294c58e31ca0)
+
+running 28 tests
+test an_empty_codex_installation_is_watched_for_its_first_conversation ... ok
+test demo_once_does_not_open_agent_homes ... ok
+test doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation ... ok
+test doctor_explains_the_published_container_terminal_fallback ... ok
+test doctor_explains_an_explicit_color_override ... ok
+test doctor_fails_with_no_homes_and_explains_both_paths ... ok
+test doctor_reports_one_agent_without_treating_it_as_a_failure ... ok
+test doctor_reports_fixture_homes ... ok
+test codex_desktop_split_database_layout_is_collected ... ok
+test doctor_reports_an_installed_but_empty_home ... ok
+test disabled_provider_is_not_inspected_even_when_its_store_is_broken ... ok
+test doctor_reports_owner_and_permissions_for_an_unreadable_home ... ok
+test first_run_non_tty_prints_discovery_and_picker ... ok
+test first_run_without_homes_explains_overrides_and_stops ... ok
+test no_color_remains_authoritative_over_explicit_truecolor ... ok
+test doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted ... ok
+test invalid_args_report_clear_failure ... ok
+test launching_inside_one_project_keeps_the_other_floors ... ok
+test native_codex_root_database_layout_is_collected ... ok
+test once_never_emits_transcript_terminal_controls ... ok
+test migrated_codex_root_wins_over_leftover_legacy_database ... ok
+test once_lists_blocked_project_first_and_reports_unknown_waiting_state ... ok
+test related_git_worktrees_share_the_primary_project_floor ... ok
+test setup_in_a_pipe_explains_noninteractive_alternative ... ok
+test requested_config_directory_is_created ... ok
+test saved_sources_are_respected_and_explicit_choice_overrides_them ... ok
+test project_scopes_once_and_persists_only_with_config_dir ... ok
+test headless_exit_after_runs_the_full_polling_loop ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
+

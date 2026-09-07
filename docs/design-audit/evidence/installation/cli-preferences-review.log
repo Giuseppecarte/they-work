@@ -1,0 +1,3 @@
+{"args": ["--light"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "top-down", "light": false}}
+{"args": ["--dark"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "top-down", "light": true}}
+{"args": ["--view", "side"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "top-down", "light": true}}

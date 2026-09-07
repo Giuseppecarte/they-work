@@ -69,6 +69,22 @@ shutil.copyfile(base / ('SHA256SUMS' if output.name == 'SHA256SUMS' else 'releas
         self.assertTrue(os.access(executable, os.X_OK))
         self.assertIn('--setup', result.stdout)
 
+    def test_explicit_directory_works_without_home_environment(self):
+        self.env.pop('HOME', None)
+        result = self.run_installer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.destination / 'they-work').read_bytes(), self.payload)
+
+    def test_existing_directory_cannot_be_reported_as_an_installed_binary(self):
+        previous = self.destination / 'they-work'
+        previous.mkdir(parents=True)
+        marker = previous / 'keep'
+        marker.write_text('existing directory contents')
+        result = self.run_installer()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('is a directory', result.stderr)
+        self.assertEqual(list(previous.iterdir()), [marker])
+
     def test_both_linux_and_macos_architectures_resolve_assets(self):
         for system, suffix in [('Linux', 'unknown-linux-musl'), ('Darwin', 'apple-darwin')]:
             for machine, arch in [('x86_64', 'x86_64'), ('arm64', 'aarch64')]:

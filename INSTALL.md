@@ -8,7 +8,7 @@ Docker additionally enforces read-only data mounts and disables runtime networki
 
 The changes on this branch have not been published as native release assets.
 The older `v0.1.0` release is Docker-only. To run this version today, build from
-this checkout with Rust 1.90 or newer, Git, and a C compiler (SQLite is bundled).
+this checkout with Rust 1.90 or newer and a C compiler (SQLite is bundled).
 Install Rust from [rustup.rs](https://rustup.rs).
 
 | Platform | C compiler prerequisite |
@@ -17,17 +17,14 @@ Install Rust from [rustup.rs](https://rustup.rs).
 | Debian/Ubuntu/WSL | `sudo apt install build-essential` |
 | Windows | Visual Studio Build Tools, “Desktop development with C++” workload |
 
-The following commands work in a shell or PowerShell:
+From the root of this checkout, these commands work in a shell or PowerShell:
 
 ~~~sh
-git clone https://github.com/Giuseppecarte/they-work
-cd they-work
 cargo install --locked --path crates/theywork-tui
 they-work --demo
 ~~~
 
-If you already have this checkout, start at `cargo install`. The binary goes in
-Cargo's user bin directory. Follow rustup's PATH instructions if your current
+The binary goes in Cargo's user bin directory. Follow rustup's PATH instructions if your current
 terminal does not yet recognize `cargo` or `they-work`; opening a new terminal
 usually applies them. Press `q` to leave the demo.
 
@@ -104,9 +101,18 @@ Pass `--config-dir` to opt into remembering choices between runs:
 they-work --config-dir "$HOME/.config/they-work" --setup
 ~~~
 
-Reuse the same flag on later launches. Without it, no application preferences
-are written. On Windows, a suitable choice is
+Reuse the same flag on later launches. The directory is normalized and created
+explicitly; `~` expands to your home directory. Source switches and paths,
+appearance, character choices, room palettes, and the selected real floor are
+remembered there. Exploring the demo does not overwrite the selected real floor.
+Without this flag, no application preferences are written. On Windows, a suitable choice is
 `--config-dir "$env:LOCALAPPDATA\they-work"` in PowerShell.
+
+In the office, `c` opens source selection, `v` changes camera, `w` / `W` changes
+or resets the selected worker's character, and `o` / `O` changes or resets the
+selected room palette. `0` opens the tower, `Tab` / `Shift+Tab` cycles floors,
+and `!` jumps to a worker needing attention. Each repository gets one floor;
+its Git worktrees remain together, including with `--project <path>`.
 
 In WSL, install the Linux binary. Windows-side data can be selected explicitly:
 

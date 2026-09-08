@@ -1,0 +1,15 @@
+{
+  "status": "prepared-not-conducted",
+  "target_sessions": 5,
+  "completed_participant_sessions": 0,
+  "participants_enrolled": 0,
+  "duration_minutes_each": 45,
+  "recruitment_slots": {"codex": 2, "claude_code": 2, "both": 1},
+  "participant_comprehension": "not-tested",
+  "physical_terminal_validation": "not-tested",
+  "assistive_technology_validation": "not-tested",
+  "authenticated_provider_workflows": "not-tested",
+  "diary_workdays_each": 3,
+  "diary_entries_collected": 0,
+  "expert_fixture_walkthroughs_are_participant_sessions": false
+}

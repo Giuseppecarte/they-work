@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+beta-docs / Office
+▸ F02/03 beta-docs                                                                            2 people · ready  [Visit]
+  · Morgan H. · codex                                                                                 Ready      0s ago
+   Verify guide links
+   Partial┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────────────────────────────┐
+ >· Kai Z.│/ Project, task, provider or state…                                                               │   0s ago
+   Draft A│3 projects · type to find conversations                                                           │
+   Partial│> alpha-shop                                                                             PROJECT  │
+          │  Floor 01 · 2 workers · 1 need attention                                                         │
+          │  beta-docs                                                                              PROJECT  │
+          │  Floor 02 · 2 workers · 0 need attention                                                         │
+          │  gamma-payments                                                                         PROJECT  │
+          │  Floor 03 · 2 workers · 1 need attention                                                         │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │                                                                                                  │
+          │…ogramming/they-work/docs/design-audit/tmp/iteration-7-workflows/run-r80zdeez/canonical/alpha-shop│
+          │↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear                                   │
+          └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+ People 2/2 · page 1/1 · arrows people
+[ Back ] Type to search · ↑↓ results · Enter open

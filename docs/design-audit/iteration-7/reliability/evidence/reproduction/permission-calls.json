@@ -1,0 +1,55 @@
+[
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces",
+        "prompt": "working",
+        "operation_id": "write-failed"
+      }
+    },
+    "response": {
+      "value": null,
+      "error": "Permission denied (os error 13)"
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces",
+        "prompt": "working",
+        "operation_id": "write-failed"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Awaiting provider acknowledgement",
+        "id": "write-failed",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+        "status": "Sending",
+        "thread_id": null,
+        "turn_id": null
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces",
+        "prompt": "working",
+        "operation_id": "write-failed"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "write-failed",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  }
+]

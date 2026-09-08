@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "binary": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/they-work-b2c529",
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "real_provider_calls": false,
+  "public_release_calls": false,
+  "scratch": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030",
+  "expected_outcomes": {
+    "install": "The real archived binary installs and runs; replacement is atomic; failed downloads, checksum or extraction preserve the prior binary.",
+    "concurrent": "Eight concurrent copies of one operation execute exactly one native turn; changing its payload is rejected.",
+    "uncertain": "A missing acknowledgement remains uncertain; restart and duplicate operation IDs never replay work.",
+    "crash": "A crash after the provider receives a turn but before its acknowledgement recovers an uncertain receipt without replay.",
+    "permission": "A pre-send storage failure sends nothing; after storage recovers the operation must not remain indefinitely Sending.",
+    "quota": "A file-size quota failure sends nothing and does not falsely confirm execution; restart can recover the empty durable state.",
+    "after-send": "A post-send durable-write failure is not replayed; restart exposes uncertainty for the already executed operation.",
+    "ledger": "At the operation-history bound, new work may be refused, but an owned active turn must remain interruptible and its current request answerable."
+  },
+  "cases": {
+    "permission": {
+      "status": "defect",
+      "checks": [
+        {
+          "check": "failed durable intent executes no provider command",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Permission denied (os error 13)"
+          }
+        },
+        {
+          "check": "storage recovery does not leave permanent Sending",
+          "status": "defect",
+          "actual": {
+            "value": {
+              "detail": "Awaiting provider acknowledgement",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Sending",
+              "thread_id": null,
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "restart after pre-send failure can execute once",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "retry_provider_counts": {
+          "thread/start": 0,
+          "thread/resume": 0,
+          "turn/start": 0,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        },
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-1",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788902431101
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "write-failed": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "ledger": {
+      "status": "defect",
+      "checks": [
+        {
+          "check": "rehearsal reaches exactly 10000 receipts with one current request",
+          "status": "pass",
+          "actual": 10000
+        },
+        {
+          "check": "owned active turn remains interruptible at history limit",
+          "status": "defect",
+          "actual": {
+            "value": null,
+            "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+          }
+        },
+        {
+          "check": "current request can be declined at history limit",
+          "status": "defect",
+          "actual": {
+            "value": null,
+            "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+          }
+        }
+      ],
+      "details": {
+        "seed_scope": "9997 synthetic historical receipts plus an actual initial receipt; only boundary operations execute",
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-2",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/ledger/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/ledger/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788902431543
+            }
+          },
+          "pending_requests": [
+            {
+              "id": "2865aa6035134e01129a0ba412cf56148364490ab279c0b37eb9fbc9a38ec02c:04b218f4070d2f5c8a7f7bca8327dff2dddcb1723f4ac21ef8a66b3d344fff3b:\"approval-1\"",
+              "method": "item/commandExecution/requestApproval",
+              "native_id": "approval-1",
+              "params": {
+                "availableDecisions": [
+                  "accept",
+                  "decline",
+                  "cancel"
+                ],
+                "command": "not executed",
+                "itemId": "fake-command",
+                "threadId": "managed-1",
+                "turnId": "turn-2"
+              },
+              "received_at": 1788902431543,
+              "reply_sent": false,
+              "supported": true,
+              "thread_id": "managed-1",
+              "turn_id": "turn-2"
+            }
+          ],
+          "last_error": null,
+          "operations_count": 10000,
+          "operations": {
+            "boundary-turn": {
+              "detail": "Instruction accepted",
+              "id": "boundary-turn",
+              "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"approval\",\"expected_turn_id\":null,\"operation_id\":\"boundary-turn\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-2"
+            },
+            "initial": {
+              "detail": "Instruction accepted",
+              "id": "initial",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/ledger/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"initial\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "reconnect-boundary": {
+              "detail": "Conversation connected; no turn started",
+              "id": "reconnect-boundary",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"reconnect-boundary\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 2,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    }
+  }
+}

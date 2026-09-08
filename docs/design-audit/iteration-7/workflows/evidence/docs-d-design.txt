@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+beta-docs / Office
+
+ OFFICE DESIGN · preview
+
+ > Preset
+   Laboratory
+   Entrance
+   Emblem
+   Desks
+   Classic
+   Meeting
+   Roundtable
+   Rest
+   Coffee
+
+
+
+
+
+
+
+
+ [ Apply ]  [ Cancel ]
+ Preview: Preset
+
+
+
+
+
+
+
+
+
+
+[ Back ] Tab · Apply / Cancel

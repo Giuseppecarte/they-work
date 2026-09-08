@@ -1,0 +1,322 @@
+{
+  "cases": [
+    {
+      "actual": {
+        "after_warm_poll": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "collector_only": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "first_collector_event_count": 141,
+        "integrated": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "second_collector_event_count": 3,
+        "store_bytes_unchanged": true
+      },
+      "case": "buried_records_300_items",
+      "execution": "actual CodexSource + snapshot_events + same World in host feed order; synthetic bounded snapshot, not another supervisor process run",
+      "finding": "collector recovers durable relationship edge, but not results/delegation items outside per-thread tail on cold load; a subsequent warm poll does not backfill them",
+      "oracle": {
+        "delegation_record": "early-spawn",
+        "edge": [
+          "parent",
+          "child"
+        ],
+        "result_ids": [
+          "early-child-result",
+          "early-parent-result"
+        ]
+      },
+      "snapshot": {
+        "after_sequence": 0,
+        "first_retained_sequence": 46,
+        "input_observations": 300,
+        "last_sequence": 301,
+        "retained": 256
+      },
+      "store": {
+        "early_evidence": [
+          {
+            "exists_in_store": true,
+            "item_id": "early-spawn",
+            "newer_items_same_thread": 149,
+            "owner": "parent",
+            "within_64_item_tail": false
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-child-result",
+            "newer_items_same_thread": 148,
+            "owner": "child",
+            "within_64_item_tail": false
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-parent-result",
+            "newer_items_same_thread": 148,
+            "owner": "parent",
+            "within_64_item_tail": false
+          }
+        ],
+        "item_count": 299,
+        "native_metadata_edge_present": true
+      }
+    },
+    {
+      "actual": {
+        "after_warm_poll": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "collector_only": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "first_collector_event_count": 141,
+        "integrated": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 0,
+          "delivery_rows": 0,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [],
+          "worker_count": 2
+        },
+        "second_collector_event_count": 3,
+        "store_bytes_unchanged": true
+      },
+      "case": "buried_records_3000_items",
+      "execution": "actual CodexSource + snapshot_events + same World in host feed order; synthetic bounded snapshot, not another supervisor process run",
+      "finding": "collector recovers durable relationship edge, but not results/delegation items outside per-thread tail on cold load; a subsequent warm poll does not backfill them",
+      "oracle": {
+        "delegation_record": "early-spawn",
+        "edge": [
+          "parent",
+          "child"
+        ],
+        "result_ids": [
+          "early-child-result",
+          "early-parent-result"
+        ]
+      },
+      "snapshot": {
+        "after_sequence": 0,
+        "first_retained_sequence": 2746,
+        "input_observations": 3000,
+        "last_sequence": 3001,
+        "retained": 256
+      },
+      "store": {
+        "early_evidence": [
+          {
+            "exists_in_store": true,
+            "item_id": "early-spawn",
+            "newer_items_same_thread": 1499,
+            "owner": "parent",
+            "within_64_item_tail": false
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-child-result",
+            "newer_items_same_thread": 1498,
+            "owner": "child",
+            "within_64_item_tail": false
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-parent-result",
+            "newer_items_same_thread": 1498,
+            "owner": "parent",
+            "within_64_item_tail": false
+          }
+        ],
+        "item_count": 2999,
+        "native_metadata_edge_present": true
+      }
+    },
+    {
+      "actual": {
+        "after_warm_poll": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 1,
+          "delivery_rows": 2,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [
+            "early-child-result",
+            "early-parent-result"
+          ],
+          "worker_count": 2
+        },
+        "collector_only": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 1,
+          "delivery_rows": 2,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [
+            "early-child-result",
+            "early-parent-result"
+          ],
+          "worker_count": 2
+        },
+        "first_collector_event_count": 21,
+        "integrated": {
+          "coverage": "Local history · 2 partial",
+          "delegation_record_count": 1,
+          "delivery_rows": 2,
+          "edges": [
+            {
+              "child": "child",
+              "evidence": "NativeMetadata",
+              "parent": "parent"
+            }
+          ],
+          "office_count": 1,
+          "result_ids": [
+            "early-child-result",
+            "early-parent-result"
+          ],
+          "worker_count": 2
+        },
+        "second_collector_event_count": 3,
+        "store_bytes_unchanged": true
+      },
+      "case": "recent_records_3000_deltas",
+      "execution": "actual CodexSource + snapshot_events + same World in host feed order; synthetic bounded snapshot, not another supervisor process run",
+      "finding": "collector recovers both recent results and delegation item; final combined feeds do not duplicate identities or deliveries",
+      "oracle": {
+        "delegation_record": "early-spawn",
+        "edge": [
+          "parent",
+          "child"
+        ],
+        "result_ids": [
+          "early-child-result",
+          "early-parent-result"
+        ]
+      },
+      "snapshot": {
+        "after_sequence": 0,
+        "first_retained_sequence": 2746,
+        "input_observations": 3000,
+        "last_sequence": 3001,
+        "retained": 256
+      },
+      "store": {
+        "early_evidence": [
+          {
+            "exists_in_store": true,
+            "item_id": "early-spawn",
+            "newer_items_same_thread": 2,
+            "owner": "parent",
+            "within_64_item_tail": true
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-child-result",
+            "newer_items_same_thread": 1,
+            "owner": "child",
+            "within_64_item_tail": true
+          },
+          {
+            "exists_in_store": true,
+            "item_id": "early-parent-result",
+            "newer_items_same_thread": 1,
+            "owner": "parent",
+            "within_64_item_tail": true
+          }
+        ],
+        "item_count": 5,
+        "native_metadata_edge_present": true
+      }
+    }
+  ],
+  "kind": "bounded integrated dual-feed discovery",
+  "limits": [
+    "cold collector startup/reopen; not a continuously running collector",
+    "synthetic supported SQLite schema with persisted spawn edge",
+    "snapshot window modeled from already-proven256-event retention",
+    "no live provider or personal data",
+    "no performance claim"
+  ],
+  "schema_version": 1
+}

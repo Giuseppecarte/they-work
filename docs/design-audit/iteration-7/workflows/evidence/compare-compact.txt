@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+▸ F01/03 alpha-shop                                                                             2 people · ! 1  [Visit]
+ >! Nico F. · codex                                                                         Approval needed      0s ago
+   Review checkout release
+   Partial local history
+  · Jules J. · codex                                                                                  Ready      0s ago
+   Checkout test evidence
+   Partial local history
+
+
+
+ People 2/2 · page 1/1 · Enter visit
+  F02/03 beta-docs                                                                            2 people · ready  [Visit]
+  · Morgan H. · codex                                                                                 Ready      0s ago
+   Verify guide links
+   Partial local history
+  · Kai Z. · codex                                                                                    Ready      0s ago
+   Draft API guide
+   Partial local history
+
+
+
+ People 2/2 · page 1/1 · Enter visit
+  F03/03 gamma-payments                                                                         2 people · ! 1  [Visit]
+  × Rene W. · codex                                                                          Error reported      0s ago
+   Investigate payment timeout
+   Partial local history
+  · Cameron I. · codex                                                                                Ready      0s ago
+   Prepare payment release notes
+   Partial local history
+
+
+
+ People 2/2 · page 1/1 · Enter visit
+[ Back ] [ Settings ] [ Design ] Floor 1/3

@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+beta-docs / Office
+ PROJECT NOTEBOOK  /  beta-docs
+f This floor · i Show IDs
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+ > Kai Z. · Draft API guide                                              Result delivered                        6s ago
+   Kai Z. · Draft API guide                                              Result delivered                       31s ago
+ [ Mark seen ]                                                                                         [ Inspect task ]
+ Result delivered · 6s ago  ·  record 1/2
+
+ Kai Z. · Draft API guide delivered a result.
+ NEW WHILE AWAY: API examples now include pagination.
+
+ From: Draft API guide
+ To: Not recorded
+
+ Partial local history
+ Local history tail; only typed collaboration and explicit final messages are known.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Local history · 2 partial
+[ Back ] ↑↓ · Enter opens

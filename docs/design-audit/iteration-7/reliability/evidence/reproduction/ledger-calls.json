@@ -1,0 +1,90 @@
+[
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/ledger/project with spaces",
+        "prompt": "working",
+        "operation_id": "initial"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "initial",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152030/ledger/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"initial\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Reconnect": {
+        "thread_id": "managed-1",
+        "operation_id": "reconnect-boundary"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Conversation connected; no turn started",
+        "id": "reconnect-boundary",
+        "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"reconnect-boundary\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": null
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Send": {
+        "thread_id": "managed-1",
+        "prompt": "approval",
+        "expected_turn_id": null,
+        "operation_id": "boundary-turn"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "boundary-turn",
+        "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"approval\",\"expected_turn_id\":null,\"operation_id\":\"boundary-turn\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-2"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Interrupt": {
+        "thread_id": "managed-1",
+        "turn_id": "turn-2",
+        "operation_id": "stop-at-limit"
+      }
+    },
+    "response": {
+      "value": null,
+      "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+    }
+  },
+  {
+    "request": {
+      "Reply": {
+        "request_id": "2865aa6035134e01129a0ba412cf56148364490ab279c0b37eb9fbc9a38ec02c:04b218f4070d2f5c8a7f7bca8327dff2dddcb1723f4ac21ef8a66b3d344fff3b:\"approval-1\"",
+        "response": {
+          "decision": "decline"
+        },
+        "operation_id": "decline-at-limit"
+      }
+    },
+    "response": {
+      "value": null,
+      "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+    }
+  }
+]

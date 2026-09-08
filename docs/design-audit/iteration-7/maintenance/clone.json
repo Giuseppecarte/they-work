@@ -1,0 +1,7 @@
+{
+  "source_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
+  "clone_seconds": 1.8126412500023434,
+  "clone_exit": 0,
+  "kind": "Local clean checkout, independent git objects; not a network clone or empty dependency cache.",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+}

@@ -1,0 +1,35 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 1 project
+
+ REVIEW REQUEST
+
+ The selected request is no longer pending.
+ ↑/↓ explicitly selects another request.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Confirmed: Reply written; awaiting provider resolution · operation 448efe5bb6ebf3b9c34e4d6b9a9effbfc314cb0af37cdd920aa
+ [ Stop task ] [ Back ]
+
+
+ Tab focus · Enter choose · PgUp/Dn read · Esc back

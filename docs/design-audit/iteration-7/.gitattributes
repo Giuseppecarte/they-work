@@ -1,0 +1,4 @@
+*.ansi -text -diff
+*.log -whitespace
+*.csv whitespace=cr-at-eol
+*.txt -whitespace

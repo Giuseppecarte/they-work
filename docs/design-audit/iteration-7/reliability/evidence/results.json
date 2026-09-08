@@ -1,0 +1,867 @@
+{
+  "schema": 1,
+  "binary": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/they-work-b2c529",
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "real_provider_calls": false,
+  "public_release_calls": false,
+  "scratch": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343",
+  "expected_outcomes": {
+    "install": "The real archived binary installs and runs; replacement is atomic; failed downloads, checksum or extraction preserve the prior binary.",
+    "concurrent": "Eight concurrent copies of one operation execute exactly one native turn; changing its payload is rejected.",
+    "control-actions": "Below the history bound, the same fixture approval can be declined and its owned active turn interrupted exactly once.",
+    "uncertain": "A missing acknowledgement remains uncertain; restart and duplicate operation IDs never replay work.",
+    "crash": "A crash after the provider receives a turn but before its acknowledgement recovers an uncertain receipt without replay.",
+    "permission": "A pre-send storage failure sends nothing; after storage recovers the operation must not remain indefinitely Sending.",
+    "quota": "A file-size quota failure sends nothing and does not falsely confirm execution; restart can recover the empty durable state.",
+    "after-send": "A post-send durable-write failure is not replayed; restart exposes uncertainty for the already executed operation.",
+    "ledger": "At the operation-history bound, new work may be refused, but an owned active turn must remain interruptible and its current request answerable."
+  },
+  "cases": {
+    "install": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "fresh installation matches the archived release",
+          "status": "pass",
+          "actual": 0
+        },
+        {
+          "check": "installed executable runs without source data",
+          "status": "pass",
+          "actual": 0
+        },
+        {
+          "check": "atomic same-build replacement preserves running process",
+          "status": "pass",
+          "actual": {
+            "installer_exit": 0,
+            "running_exit": 0,
+            "stderr": ""
+          }
+        },
+        {
+          "check": "download preserves previous executable",
+          "status": "pass",
+          "actual": {
+            "exit": 1,
+            "preserved_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84"
+          }
+        },
+        {
+          "check": "checksum preserves previous executable",
+          "status": "pass",
+          "actual": {
+            "exit": 1,
+            "preserved_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84"
+          }
+        },
+        {
+          "check": "truncated preserves previous executable",
+          "status": "pass",
+          "actual": {
+            "exit": 1,
+            "preserved_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84"
+          }
+        },
+        {
+          "check": "unwritable preserves previous executable",
+          "status": "pass",
+          "actual": {
+            "exit": 1,
+            "preserved_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84"
+          }
+        }
+      ],
+      "details": {
+        "archive_sha256": "ea4153879a4fbf6b8a806f11dba412b6b41b9ffe64d192e02f82d45fb0fc05c8",
+        "transport": "curl substituted with local archive/checksum files; no HTTP or GitHub request",
+        "update_scope": "same-build executable replacement, not a cross-version migration"
+      }
+    },
+    "concurrent": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "eight same-ID clients execute once",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "same ID with changed payload is rejected",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Operation ID was reused for a different action"
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-1",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788902626675
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "shared": {
+              "detail": "Instruction accepted",
+              "id": "shared",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "control-actions": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "baseline approval belongs to an accepted actual fixture turn",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Instruction accepted",
+              "id": "baseline-approval",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"baseline-approval\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "decline format is accepted below the bound",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Reply written; awaiting provider resolution",
+              "id": "baseline-decline",
+              "request_key": "{\"Reply\":{\"request_id\":\"5d5b8b05068914b2723335f25879c1e580048bbe051f65e26a3211946f76c37f:0153994f51d0acebf840f837fe95ea0486edc81b2793d22f4138245775a667de:\\\"approval-1\\\"\",\"response\":{\"decision\":\"decline\"},\"operation_id\":\"baseline-decline\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "interrupt format is accepted below the bound",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Interrupt requested; waiting for completion",
+              "id": "baseline-stop",
+              "request_key": "{\"Interrupt\":{\"thread_id\":\"managed-1\",\"turn_id\":\"turn-1\",\"operation_id\":\"baseline-stop\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/project with spaces",
+              "role": "Main",
+              "status": "interrupted",
+              "title": "approval",
+              "updated_at": 1788902626844
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 3,
+          "operations": {
+            "baseline-approval": {
+              "detail": "Instruction accepted",
+              "id": "baseline-approval",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"baseline-approval\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "baseline-decline": {
+              "detail": "Reply written; awaiting provider resolution",
+              "id": "baseline-decline",
+              "request_key": "{\"Reply\":{\"request_id\":\"5d5b8b05068914b2723335f25879c1e580048bbe051f65e26a3211946f76c37f:0153994f51d0acebf840f837fe95ea0486edc81b2793d22f4138245775a667de:\\\"approval-1\\\"\",\"response\":{\"decision\":\"decline\"},\"operation_id\":\"baseline-decline\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "baseline-stop": {
+              "detail": "Interrupt requested; waiting for completion",
+              "id": "baseline-stop",
+              "request_key": "{\"Interrupt\":{\"thread_id\":\"managed-1\",\"turn_id\":\"turn-1\",\"operation_id\":\"baseline-stop\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 1
+        }
+      }
+    },
+    "uncertain": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "missing acknowledgement reports uncertainty",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "restart does not launch provider or replay",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "duplicate remains uncertain without execution",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "explicit reconnect does not start another turn",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 1,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/uncertain/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/uncertain/project with spaces",
+              "role": "Main",
+              "status": "idle",
+              "title": "uncertain",
+              "updated_at": 1788902626967
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 2,
+          "operations": {
+            "lost-ack": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "recover": {
+              "detail": "Conversation connected; no turn started",
+              "id": "recover",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"recover\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "crash": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "restart does not launch provider or replay",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "duplicate remains uncertain without execution",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/crash/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "explicit reconnect does not start another turn",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 1,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        }
+      ],
+      "details": {
+        "interrupted_call": "JSONDecodeError",
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/crash/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/crash/project with spaces",
+              "role": "Main",
+              "status": "idle",
+              "title": "uncertain",
+              "updated_at": 1788902628643
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 2,
+          "operations": {
+            "lost-ack": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/crash/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "recover": {
+              "detail": "Conversation connected; no turn started",
+              "id": "recover",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"recover\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "permission": {
+      "status": "defect",
+      "checks": [
+        {
+          "check": "failed durable intent executes no provider command",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Permission denied (os error 13)"
+          }
+        },
+        {
+          "check": "storage recovery does not leave permanent Sending",
+          "status": "defect",
+          "actual": {
+            "value": {
+              "detail": "Awaiting provider acknowledgement",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Sending",
+              "thread_id": null,
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "restart after pre-send failure can execute once",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "restored_write_access_wait_ms": 2000,
+        "retry_provider_counts": {
+          "thread/start": 0,
+          "thread/resume": 0,
+          "turn/start": 0,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        },
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-1",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/permission/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/permission/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788902630901
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "write-failed": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/permission/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "quota": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "failed durable intent executes no provider command",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "File too large (os error 27)"
+          }
+        },
+        {
+          "check": "restart after pre-send failure can execute once",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/quota/project with spaces\",\"prompt\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-1",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/quota/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/quota/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "updated_at": 1788902631032
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "write-failed": {
+              "detail": "Instruction accepted",
+              "id": "write-failed",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/quota/project with spaces\",\"prompt\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"operation_id\":\"write-failed\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "after-send": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "post-send persistence error does not claim durable confirmation",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Permission denied (os error 13)"
+          }
+        },
+        {
+          "check": "post-send restart preserves uncertainty and does not replay",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "after-write",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/after-send/project with spaces\",\"prompt\":\"gate-ack\",\"operation_id\":\"after-write\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": false,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": false,
+                "reply": false,
+                "send": false,
+                "steer": false
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/after-send/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/after-send/project with spaces",
+              "role": "Main",
+              "status": "disconnected",
+              "title": "gate-ack",
+              "updated_at": 1788902631151
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "after-write": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "after-write",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/after-send/project with spaces\",\"prompt\":\"gate-ack\",\"operation_id\":\"after-write\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "ledger": {
+      "status": "defect",
+      "checks": [
+        {
+          "check": "rehearsal reaches exactly 10000 receipts with one current request",
+          "status": "pass",
+          "actual": 10000
+        },
+        {
+          "check": "owned active turn remains interruptible at history limit",
+          "status": "defect",
+          "actual": {
+            "value": null,
+            "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+          }
+        },
+        {
+          "check": "current request can be declined at history limit",
+          "status": "defect",
+          "actual": {
+            "value": null,
+            "error": "Operation ledger is full; keep the existing state and choose a new control directory"
+          }
+        }
+      ],
+      "details": {
+        "seed_scope": "9997 synthetic historical receipts plus an actual initial receipt; only boundary operations execute",
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-2",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/ledger/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/ledger/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788902631698
+            }
+          },
+          "pending_requests": [
+            {
+              "id": "cf3b9480638909be52bd72070c6cc061d4977082a4128ebc63cb581e3b5a6cfb:11b0b4330e314a156fdc553be7888dbd8baca456938a3ff78faf406dbe5ad2ad:\"approval-1\"",
+              "method": "item/commandExecution/requestApproval",
+              "native_id": "approval-1",
+              "params": {
+                "availableDecisions": [
+                  "accept",
+                  "decline",
+                  "cancel"
+                ],
+                "command": "not executed",
+                "itemId": "fake-command",
+                "threadId": "managed-1",
+                "turnId": "turn-2"
+              },
+              "received_at": 1788902631698,
+              "reply_sent": false,
+              "supported": true,
+              "thread_id": "managed-1",
+              "turn_id": "turn-2"
+            }
+          ],
+          "last_error": null,
+          "operations_count": 10000,
+          "operations": {
+            "boundary-turn": {
+              "detail": "Instruction accepted",
+              "id": "boundary-turn",
+              "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"approval\",\"expected_turn_id\":null,\"operation_id\":\"boundary-turn\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-2"
+            },
+            "initial": {
+              "detail": "Instruction accepted",
+              "id": "initial",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/ledger/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"initial\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "reconnect-boundary": {
+              "detail": "Conversation connected; no turn started",
+              "id": "reconnect-boundary",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"reconnect-boundary\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 2,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    }
+  },
+  "summary": {
+    "scenarios": 9,
+    "pass": 26,
+    "defect": 3,
+    "harness_errors": 0
+  }
+}

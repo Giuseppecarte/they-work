@@ -1,0 +1,32 @@
+
+
+ PROJECT NOTEBOOK  /  project-b
+f All floors · i Show IDs
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+ > Synthetic b                                                           Result delivered                        1s ago
+ [ Mark seen ]                                                                                         [ Inspect task ]
+ Result delivered · 1s ago  ·  record 1/1
+
+ Charlie P. · Synthetic b delivered a result.
+ Unread delivery in quiet project B
+
+ From: Synthetic b
+ To: Not recorded
+
+ Partial local history
+ Live managed connection; relationship coverage depends on provider events
+
+
+
+
+
+
+
+
+
+
+
+
+Local history · 1 partial
+Esc return · ↑↓ select · Enter inspect · r seen locally · PgUp/PgDn read lines

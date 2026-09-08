@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+ PROJECT NOTEBOOK  /  All floors
+f All floors · i Show IDs
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+ > Nico F. · alpha-shop / Review checkout release                        FOR YOU · APPROVAL NEEDED               0s ago
+   Rene W. · gamma-payments / Investigate payment timeout                FOLLOW-UP · ERROR                       0s ago
+ [ Mark seen ]                                                                                       [ Review request ]
+ FOR YOU · APPROVAL NEEDED  ·  record 1/2
+ Nico F. · alpha-shop / Review checkout release
+ Run the synthetic checkout migration after the backup check?
+
+ A human request was recorded by the source.
+
+ Partial local history
+ Local history tail; only typed collaboration and explicit final messages are known.
+
+ Marking seen is a local reading marker. It never approves, answers, or completes this request.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Local history · 6 partial
+[ Back ] ↑↓ · Enter opens

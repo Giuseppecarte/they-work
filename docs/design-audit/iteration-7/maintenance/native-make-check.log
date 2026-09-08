@@ -1,0 +1,6 @@
+THEYWORK_CARGO_NETWORK=bridge THEYWORK_DEV_IMAGE=they-work-dev:local ./scripts/cargo fetch --locked
+error: failed to download `winapi v0.3.9`
+
+Caused by:
+  attempting to make an HTTP request, but --offline was specified
+make: *** [fetch] Error 101

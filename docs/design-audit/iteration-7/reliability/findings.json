@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "scope": "Discovery audit; production remains unchanged",
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "findings": [
+    {
+      "id": "REL-01",
+      "title": "Pre-send persistence failure leaves an unresolvable Sending receipt",
+      "classification": "confirmed",
+      "confidence": "high",
+      "impact": "Same-ID retry stays pending although no provider request was sent; host restart recovers.",
+      "frequency": "Not measured",
+      "primary_case": "permission",
+      "evidence": [
+        "evidence/results.json",
+        "evidence/permission-calls.json",
+        "evidence/reproduction/results.json"
+      ],
+      "next": "Classify failed durable intent without implying an outstanding provider acknowledgement; preserve no-replay behavior."
+    },
+    {
+      "id": "REL-02",
+      "title": "History capacity disables Stop and current-request replies",
+      "classification": "confirmed",
+      "confidence": "high",
+      "impact": "At 10000 operations an owned active turn cannot be interrupted or its current approval declined, while capabilities remain advertised.",
+      "frequency": "Boundary forced with seeded historical receipts; organic frequency not measured",
+      "primary_case": "ledger",
+      "evidence": [
+        "evidence/results.json",
+        "evidence/ledger-calls.json",
+        "evidence/ledger-provider.jsonl",
+        "evidence/reproduction/results.json"
+      ],
+      "positive_control": "control-actions",
+      "implementation_brief": "IMPLEMENTATION-BRIEF.md"
+    },
+    {
+      "id": "REL-03",
+      "title": "Windows state replacement has a remove-before-rename interval",
+      "classification": "source-confirmed-runtime-not-tested",
+      "confidence": "High for code order; runtime recovery unknown",
+      "evidence": [
+        "evidence/static-boundaries.json"
+      ],
+      "next": "Windows fault injection in the replacement interval."
+    },
+    {
+      "id": "REL-04",
+      "title": "Container publication precedes its smoke verification",
+      "classification": "source-confirmed-runtime-not-tested",
+      "confidence": "High for workflow order; external partial-release outcome not tested",
+      "evidence": [
+        "evidence/static-boundaries.json"
+      ],
+      "next": "Disposable-registry/workflow rehearsal that fails after push; no public publication."
+    }
+  ]
+}

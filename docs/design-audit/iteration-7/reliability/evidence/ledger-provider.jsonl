@@ -1,0 +1,8 @@
+{"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "they_work", "title": "They Work", "version": "0.1.0"}}}
+{"method": "initialized", "params": {}}
+{"id": 2, "method": "thread/start", "params": {"approvalPolicy": "on-request", "cwd": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/ledger/project with spaces", "sandbox": "workspace-write"}}
+{"id": 3, "method": "turn/start", "params": {"input": [{"text": "working", "type": "text"}], "threadId": "managed-1"}}
+{"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "they_work", "title": "They Work", "version": "0.1.0"}}}
+{"method": "initialized", "params": {}}
+{"id": 2, "method": "thread/resume", "params": {"threadId": "managed-1"}}
+{"id": 3, "method": "turn/start", "params": {"input": [{"text": "approval", "type": "text"}], "threadId": "managed-1"}}

@@ -2,10 +2,12 @@
 
 pub mod cameras;
 pub mod control;
+pub mod customize;
 pub mod desk;
 pub(crate) mod finder;
 mod guard_scene;
 pub mod help;
+pub mod inspector;
 pub mod office;
 pub mod phone;
 pub mod settings;
@@ -110,9 +112,9 @@ pub(crate) fn remap_buffer_theme(buffer: &mut Buffer, theme: UiTheme) {
 pub(crate) fn below_tab_bar(area: Rect) -> Rect {
     Rect::new(
         area.x,
-        area.y.saturating_add(1),
+        area.y.saturating_add(2),
         area.width,
-        area.height.saturating_sub(1),
+        area.height.saturating_sub(2),
     )
 }
 pub(crate) fn has_area(area: Rect) -> bool {
@@ -182,23 +184,29 @@ pub(crate) fn draw_tab_bar(
     selected: usize,
     all_selected: bool,
     now: Millis,
-) {
+) -> Vec<crate::interaction::HitRegion> {
+    use crate::interaction::{Action, HitRegion};
+    let mut hits = Vec::new();
     let area = frame.area();
     if area.width == 0 || area.height == 0 {
-        return;
+        return hits;
     }
     let selected = selected.min(offices.len().saturating_sub(1));
     let tower_style = Style::default()
         .fg(if all_selected { INK } else { MUTED })
         .bg(if all_selected { PANEL_HIGHLIGHT } else { PANEL });
     let title = if area.width >= 38 { " 0 TOWER " } else { "0 " };
+    hits.push(HitRegion::new(
+        Rect::new(area.x, area.y, (title.len() as u16).min(area.width), 1),
+        Action::Tower,
+    ));
     let counter = if offices.is_empty() {
         "no floors".to_string()
     } else {
         format!("{}/{}", selected + 1, offices.len())
     };
     let tail = if area.width >= 90 {
-        format!(" {counter} · / find · c sources · ? help ")
+        format!(" {counter} · / find · c connect · ? help ")
     } else if area.width >= 62 {
         format!(" {counter} · / find · ? help ")
     } else if area.width >= 24 {
@@ -214,6 +222,15 @@ pub(crate) fn draw_tab_bar(
         let first = (selected / visible * visible).min(offices.len().saturating_sub(visible));
         let slot_width = available / visible;
         for (index, office) in offices.iter().enumerate().skip(first).take(visible) {
+            hits.push(HitRegion::new(
+                Rect::new(
+                    area.x + title.len() as u16 + ((index - first) * slot_width) as u16,
+                    area.y,
+                    slot_width as u16,
+                    1,
+                ),
+                Action::EnterFloor(office.id.clone()),
+            ));
             let style = Style::default()
                 .fg(if index == selected { INK } else { MUTED })
                 .bg(if index == selected && !all_selected {
@@ -250,6 +267,7 @@ pub(crate) fn draw_tab_bar(
     Paragraph::new(Line::from(spans))
         .style(Style::default().bg(PANEL))
         .render(Rect::new(area.x, area.y, area.width, 1), frame.buffer_mut());
+    hits
 }
 
 pub(crate) fn inset(area: Rect, amount: u16) -> Rect {

@@ -449,6 +449,7 @@ impl SpriteSet {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn persona_label(&self, worker: &Worker) -> (&'static str, &'static str) {
         const PERSONAS: [(&str, &str); 12] = [
             ("Headphones", "Makes imaginary mixtapes"),

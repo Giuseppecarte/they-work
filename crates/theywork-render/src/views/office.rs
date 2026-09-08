@@ -4851,13 +4851,17 @@ mod tests {
             let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
             terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
             let capacity = if width >= 192 { 10 } else { columns };
-            ui.handle_key(press(KeyCode::PageDown));
+            for _ in 0..capacity {
+                ui.handle_key(press(KeyCode::Right));
+            }
             terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
             assert_eq!(ui.selected_worker(), capacity);
             ui.handle_key(press(KeyCode::End));
             terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
             assert_eq!(ui.selected_worker(), 19);
-            ui.handle_key(press(KeyCode::PageUp));
+            for _ in 0..capacity {
+                ui.handle_key(press(KeyCode::Left));
+            }
             terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
             assert_eq!(ui.selected_worker(), 19 - capacity);
             ui.handle_key(press(KeyCode::Home));

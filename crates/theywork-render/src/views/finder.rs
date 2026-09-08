@@ -1,11 +1,14 @@
 //! Search the live project directory without tying navigation to row numbers.
 
+use crate::design::{profile_for, CharacterProfile};
+use crate::interaction::{Action, HitRegion};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
+use std::collections::BTreeMap;
 use theywork_core::{Activity, Millis, OfficeId, WorkerId, WorkerStatus, World};
 
 use super::{
@@ -39,6 +42,7 @@ pub(crate) struct Finder {
     selected: usize,
     page_size: usize,
     pub unavailable: bool,
+    hits: Vec<HitRegion>,
 }
 
 impl Finder {
@@ -71,7 +75,30 @@ impl Finder {
         self.filter(None);
     }
 
+    #[cfg(test)]
     pub fn refresh(&mut self, world: &World, now: Millis) {
+        self.refresh_entries(world, now, None);
+    }
+
+    pub fn refresh_with_profiles(
+        &mut self,
+        world: &World,
+        now: Millis,
+        profiles: &BTreeMap<String, CharacterProfile>,
+    ) {
+        self.refresh_entries(world, now, Some(profiles));
+    }
+
+    pub fn hit_regions(&self) -> Vec<HitRegion> {
+        self.hits.clone()
+    }
+
+    fn refresh_entries(
+        &mut self,
+        world: &World,
+        now: Millis,
+        profiles: Option<&BTreeMap<String, CharacterProfile>>,
+    ) {
         let selected = self.selected_target();
         self.entries.clear();
         for (floor, office) in world.offices().enumerate() {
@@ -99,7 +126,7 @@ impl Finder {
             });
             for worker in &office.workers {
                 let status = worker.status_at(now);
-                let (badge, aliases) = match status {
+                let (_, aliases) = match status {
                     WorkerStatus::Running => ("WORKING", "working running active"),
                     WorkerStatus::Idle => ("IDLE", "idle ready"),
                     WorkerStatus::Blocked
@@ -110,7 +137,32 @@ impl Finder {
                     WorkerStatus::Blocked => ("ATTENTION", "attention blocked quiet"),
                     WorkerStatus::Failed => ("FAILED", "failed error attention"),
                 };
-                let title = safe_display(&worker.name);
+                let badge = crate::presentation::state_label(worker, now);
+                let aliases = match worker.wait_reason {
+                    Some(theywork_core::WaitReason::HumanApproval) => {
+                        "approval permission request attention"
+                    }
+                    Some(theywork_core::WaitReason::HumanInput) => {
+                        "question input request attention"
+                    }
+                    Some(theywork_core::WaitReason::AutomaticReview) => "automatic review working",
+                    Some(theywork_core::WaitReason::Child) => "waiting team working",
+                    Some(theywork_core::WaitReason::Process) => "waiting process working",
+                    _ if matches!(worker.activity, Activity::Waiting { .. }) => {
+                        "waiting followup attention"
+                    }
+                    _ => aliases,
+                };
+                let title = profiles.map_or_else(
+                    || safe_display(&worker.name),
+                    |profiles| {
+                        format!(
+                            "{} · {}",
+                            safe_display(&profile_for(&worker.id.0, profiles).name),
+                            safe_display(&worker.name)
+                        )
+                    },
+                );
                 let context = format!(
                     "{} · {} · floor {:02}",
                     safe_display(&office.name),
@@ -263,6 +315,7 @@ impl Finder {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
+        self.hits.clear();
         let screen = frame.area();
         let width = screen.width.saturating_sub(4).min(100);
         let height = screen.height.saturating_sub(4).min(25);
@@ -377,6 +430,13 @@ impl Finder {
             let selected = row == self.selected;
             let row_style = style.bg(if selected { PANEL_HIGHLIGHT } else { PANEL });
             let y = results_y + ((row - first) * 2) as u16;
+            self.hits.push(HitRegion::new(
+                Rect::new(inner.x, y, inner.width, 2),
+                match &entry.target {
+                    Target::Project(id) => Action::EnterFloor(id.clone()),
+                    Target::Worker(_, id) => Action::Inspect(id.clone()),
+                },
+            ));
             let badge_width = (entry.badge.len() + 2).min(usize::from(inner.width) / 2);
             let title_width = usize::from(inner.width).saturating_sub(badge_width + 2);
             let line = format!(
@@ -430,7 +490,7 @@ impl Finder {
     }
 }
 
-fn tail(text: &str, width: usize) -> String {
+pub(super) fn tail(text: &str, width: usize) -> String {
     if Line::from(text).width() <= width {
         return text.into();
     }
@@ -599,5 +659,38 @@ mod tests {
         assert_eq!(finder.matches.len(), 1);
         query(&mut finder, "approval");
         assert!(finder.matches.is_empty());
+    }
+
+    #[test]
+    fn aliases_and_real_titles_both_find_the_same_stable_task_target() {
+        let mut world = World::new();
+        world.apply(seen("/project", "worker", "Repair retry handling"));
+        let profiles = BTreeMap::from([(
+            "worker".into(),
+            CharacterProfile {
+                name: "Avery".into(),
+                ..Default::default()
+            },
+        )]);
+        let mut finder = Finder::default();
+        finder.show();
+        finder.refresh_with_profiles(&world, 0, &profiles);
+        for text in ["Avery", "retry handling"] {
+            query(&mut finder, text);
+            assert_eq!(finder.matches.len(), 1);
+            assert!(finder.selected_entry().unwrap().title.contains("Avery"));
+            assert!(finder
+                .selected_entry()
+                .unwrap()
+                .title
+                .contains("Repair retry"));
+            draw(&mut finder, 80, 24);
+            assert!(finder
+                .hit_regions()
+                .iter()
+                .any(|hit| hit.action == Action::Inspect(WorkerId("worker".into()))));
+        }
+        draw(&mut finder, 4, 4);
+        assert!(finder.hit_regions().is_empty());
     }
 }

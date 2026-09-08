@@ -11,8 +11,11 @@ use theywork_core::{Millis, OfficeId, World};
 
 pub mod canvas;
 pub mod design;
+pub mod interaction;
 pub mod living_office;
+pub mod presentation;
 pub mod sprite;
+mod ui_interaction;
 pub mod views;
 
 #[cfg(test)]
@@ -65,6 +68,9 @@ pub struct RendererPreferences {
     pub encoding: Option<String>,
     pub wardrobe: BTreeMap<String, usize>,
     pub office_palettes: BTreeMap<String, usize>,
+    pub character_profiles: BTreeMap<String, design::CharacterProfile>,
+    pub office_designs: BTreeMap<String, design::OfficeDesign>,
+    pub mouse: bool,
 }
 
 impl Default for RendererPreferences {
@@ -78,6 +84,9 @@ impl Default for RendererPreferences {
             encoding: None,
             wardrobe: BTreeMap::new(),
             office_palettes: BTreeMap::new(),
+            character_profiles: BTreeMap::new(),
+            office_designs: BTreeMap::new(),
+            mouse: true,
         }
     }
 }
@@ -138,6 +147,16 @@ pub struct Ui {
     visit_office: Option<OfficeId>,
     controls: views::control::ControlPanel,
     pending_control: Option<bool>,
+    character_profiles: BTreeMap<String, design::CharacterProfile>,
+    office_designs: BTreeMap<String, design::OfficeDesign>,
+    mouse_enabled: bool,
+    frame_hits: Vec<interaction::HitRegion>,
+    presented_hits: Vec<interaction::HitRegion>,
+    presented_size: Option<(u16, u16)>,
+    drawn_size: (u16, u16),
+    focus: Option<usize>,
+    selected_team: Option<theywork_core::WorkerId>,
+    customize: views::customize::Customize,
 }
 
 impl Ui {
@@ -197,6 +216,16 @@ impl Ui {
             visit_office: None,
             controls: views::control::ControlPanel::default(),
             pending_control: None,
+            character_profiles: BTreeMap::new(),
+            office_designs: BTreeMap::new(),
+            mouse_enabled: true,
+            frame_hits: Vec::new(),
+            presented_hits: Vec::new(),
+            presented_size: None,
+            drawn_size: (0, 0),
+            focus: None,
+            selected_team: None,
+            customize: views::customize::Customize::default(),
         }
     }
 
@@ -288,6 +317,9 @@ impl Ui {
             encoding: self.saved_encoding.map(|encoding| encoding.label().into()),
             wardrobe: self.wardrobe.clone(),
             office_palettes: self.office_palettes.clone(),
+            character_profiles: self.character_profiles.clone(),
+            office_designs: self.office_designs.clone(),
+            mouse: self.mouse_enabled,
         }
     }
 
@@ -308,6 +340,35 @@ impl Ui {
         };
         self.motion = preferences.motion;
         self.name_plates = preferences.name_plates;
+        self.mouse_enabled = preferences.mouse;
+        self.character_profiles = preferences
+            .character_profiles
+            .iter()
+            .take(4096)
+            .map(|(id, profile)| {
+                let mut profile = profile.clone();
+                profile.name = profile
+                    .name
+                    .chars()
+                    .filter(|ch| !ch.is_control())
+                    .take(32)
+                    .collect();
+                (id.clone(), profile)
+            })
+            .collect();
+        self.office_designs = preferences
+            .office_designs
+            .iter()
+            .take(1024)
+            .map(|(id, design)| {
+                let mut design = design.clone();
+                design.entrance %= 3;
+                design.desks %= 3;
+                design.meeting %= 3;
+                design.rest %= 3;
+                (id.clone(), design)
+            })
+            .collect();
         self.wardrobe = preferences
             .wardrobe
             .iter()
@@ -379,7 +440,14 @@ impl Ui {
 
     /// Insert pasted text in the finder without invoking keyboard shortcuts.
     pub fn handle_paste(&mut self, text: &str) {
-        if self.controls.open {
+        if self.customize.open {
+            self.customize.paste(text);
+            self.customize.store(
+                &mut self.character_profiles,
+                &mut self.office_designs,
+                &mut self.wardrobe,
+            );
+        } else if self.controls.open {
             self.controls.paste(text);
         } else if self.finder.open {
             self.finder.paste(text);
@@ -394,8 +462,18 @@ impl Ui {
             return None;
         }
 
+        if self.customize.open {
+            self.customize.handle_key(
+                key,
+                &mut self.character_profiles,
+                &mut self.office_designs,
+                &mut self.wardrobe,
+            );
+            return None;
+        }
+
         if self.controls.open {
-            return self.controls.handle_key(key).map(UiCommand::Control);
+            return self.controls.handle_key(key).map(Self::control_command);
         }
         if self.workboard.open {
             match self.workboard.handle_key(key) {
@@ -421,6 +499,10 @@ impl Ui {
                     }
                     self.review_memory.prune();
                 }
+                Some(views::workboard::Action::Review(id)) => {
+                    self.workboard.open = false;
+                    return self.activate(interaction::Action::Review(id));
+                }
                 None => {}
             }
             return None;
@@ -440,7 +522,7 @@ impl Ui {
             return None;
         }
 
-        if key.code == KeyCode::Char('c') {
+        if matches!(key.code, KeyCode::Char('c' | 'C')) {
             if self.controls.busy() {
                 self.controls.open = true;
                 return None;
@@ -448,7 +530,8 @@ impl Ui {
             self.settings_open = false;
             self.help_open = false;
             self.phone_open = false;
-            return Some(UiCommand::Sources);
+            self.controls.show_connections();
+            return None;
         }
         if self.help_open {
             match key.code {
@@ -479,12 +562,44 @@ impl Ui {
             return None;
         }
 
+        if !self.phone_open {
+            if matches!(key.code, KeyCode::Tab | KeyCode::BackTab) {
+                let backwards =
+                    key.code == KeyCode::BackTab || key.modifiers.contains(KeyModifiers::SHIFT);
+                let count = self.frame_hits.len();
+                self.focus = if count == 0 {
+                    None
+                } else if backwards {
+                    Some(
+                        self.focus
+                            .map_or(count - 1, |index| index.checked_sub(1).unwrap_or(count - 1)),
+                    )
+                } else {
+                    Some(self.focus.map_or(0, |index| (index + 1) % count))
+                };
+                return None;
+            }
+            if key.code == KeyCode::Enter {
+                if let Some(action) = self
+                    .focus
+                    .and_then(|index| self.frame_hits.get(index))
+                    .map(|hit| hit.action.clone())
+                {
+                    return self.activate(action);
+                }
+            }
+            if !matches!(key.code, KeyCode::Enter) {
+                self.focus = None;
+            }
+        }
+
         if key.code == KeyCode::Tab && key.modifiers.contains(KeyModifiers::SHIFT) {
             self.cycle_office(false);
             return None;
         }
         match key.code {
             KeyCode::Char('b') | KeyCode::Char('g') => {
+                self.workboard.scope_all = key.code == KeyCode::Char('b');
                 self.workboard.show(if key.code == KeyCode::Char('g') {
                     views::workboard::Channel::Team
                 } else {
@@ -517,6 +632,19 @@ impl Ui {
                 self.settings_open = true;
                 self.settings_cursor = 0;
                 self.phone_open = false;
+                None
+            }
+            KeyCode::Char('d') => {
+                if let Some(id) = self.selected_office_id.clone() {
+                    self.customize.show_office(id, &self.office_designs);
+                }
+                None
+            }
+            KeyCode::Char('a') if self.view == View::Desk => {
+                if let Some(id) = self.selected_worker_id.clone() {
+                    self.customize
+                        .show_character(id, &self.character_profiles, &self.wardrobe);
+                }
                 None
             }
             KeyCode::Char('0') => {
@@ -577,10 +705,10 @@ impl Ui {
             KeyCode::Home | KeyCode::End | KeyCode::PageUp | KeyCode::PageDown => {
                 if self.view == View::Desk {
                     self.desk_scroll = match key.code {
-                        KeyCode::Home => usize::MAX,
-                        KeyCode::End => 0,
-                        KeyCode::PageUp => self.desk_scroll.saturating_add(10),
-                        _ => self.desk_scroll.saturating_sub(10),
+                        KeyCode::Home => 0,
+                        KeyCode::End => usize::MAX,
+                        KeyCode::PageUp => self.desk_scroll.saturating_sub(10),
+                        _ => self.desk_scroll.saturating_add(10),
                     };
                 } else if self.view == View::Cameras {
                     self.selected_office = match key.code {
@@ -597,6 +725,10 @@ impl Ui {
                     self.selected_office_id = None;
                     self.selected_worker = 0;
                 } else if self.view == View::Office {
+                    if matches!(key.code, KeyCode::PageUp | KeyCode::PageDown) {
+                        self.cycle_office(key.code == KeyCode::PageDown);
+                        return None;
+                    }
                     self.selected_worker = match key.code {
                         KeyCode::Home => 0,
                         KeyCode::End => self.known_worker_count.saturating_sub(1),
@@ -656,6 +788,7 @@ impl Ui {
     }
 
     fn cycle_office(&mut self, forward: bool) {
+        self.selected_team = None;
         if self.known_office_count == 0 {
             self.guard_all = true;
             self.view = View::Cameras;
@@ -692,12 +825,12 @@ impl Ui {
                 self.settings_open = false;
                 None
             }
-            KeyCode::Up | KeyCode::Char('k') => {
-                self.settings_cursor = (self.settings_cursor + 6) % 7;
+            KeyCode::Up | KeyCode::Char('k') | KeyCode::BackTab => {
+                self.settings_cursor = (self.settings_cursor + 7) % 8;
                 None
             }
-            KeyCode::Down | KeyCode::Char('j') => {
-                self.settings_cursor = (self.settings_cursor + 1) % 7;
+            KeyCode::Down | KeyCode::Char('j') | KeyCode::Tab => {
+                self.settings_cursor = (self.settings_cursor + 1) % 8;
                 None
             }
             KeyCode::Left | KeyCode::Char('h') => {
@@ -757,12 +890,19 @@ impl Ui {
                 self.saved_encoding = Some(self.encoding);
             }
             6 => self.adjust_office_palette(forward),
+            7 => self.mouse_enabled = !self.mouse_enabled,
             _ => {}
         }
     }
 
     /// Draw the current view.
     pub fn draw(&mut self, f: &mut Frame, world: &World) {
+        let focused_action = self
+            .focus
+            .and_then(|index| self.frame_hits.get(index))
+            .map(|hit| hit.action.clone());
+        self.frame_hits.clear();
+        self.drawn_size = (f.area().width, f.area().height);
         self.canvas.begin_frame();
         views::paint_opaque(
             f,
@@ -907,83 +1047,131 @@ impl Ui {
             }
         }
 
-        views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
-        let graphical = if self.view == View::Cameras
-            || (self.view == View::Office
-                && matches!(
-                    self.projection,
-                    views::office::Projection::Auto | views::office::Projection::Side
-                )) {
+        self.controls.set_projects(
+            offices
+                .iter()
+                .map(|office| (office.name.clone(), office.path.clone()))
+                .collect(),
+        );
+        let full = f.area();
+        let body = ratatui::layout::Rect::new(
+            full.x,
+            full.y.saturating_add(2),
+            full.width,
+            full.height.saturating_sub(4),
+        );
+        let panel_open = self.view == View::Desk || self.controls.open || self.customize.open;
+        let remaining = body.width.saturating_sub(41);
+        let (cw, ch) = self.canvas.pixels_per_cell();
+        let lateral = panel_open
+            && self.canvas.has_image_density()
+            && remaining as usize * cw >= 608
+            && body.height as usize * ch >= 300;
+        let panel = if lateral {
+            ratatui::layout::Rect::new(body.right() - 40, body.y, 40, body.height)
+        } else {
+            body
+        };
+        let scene = if lateral {
+            ratatui::layout::Rect::new(body.x, body.y, remaining, body.height)
+        } else {
+            body
+        };
+        let _ = views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
+        let graphical = if (!panel_open || lateral)
+            && (self.view == View::Cameras
+                || self.view == View::Desk
+                || (self.view == View::Office
+                    && matches!(
+                        self.projection,
+                        views::office::Projection::Auto | views::office::Projection::Side
+                    ))) {
             views::tower::draw(
                 f,
                 &mut self.canvas,
                 &mut self.studio,
                 views::tower::Context {
+                    area: scene,
                     world,
                     offices: &offices,
                     selected_floor: self.selected_office,
                     selected_worker: self.selected_worker_id.as_ref(),
+                    team: self.selected_team.as_ref(),
                     now: self.now,
                     tower: self.view == View::Cameras,
                     motion: self.motion,
                     light: self.theme == views::UiTheme::Light,
                     palette: self.selected_office_palette,
                     wardrobe: &self.wardrobe,
+                    profiles: &self.character_profiles,
+                    designs: &self.office_designs,
                 },
             )
         } else {
             None
         };
-        match self.view {
-            View::Cameras if graphical.is_some() => {
-                self.camera_columns = 1;
-                self.camera_page_size = 3;
+        if let Some(layout) = &graphical {
+            self.frame_hits.extend(layout.hits.clone());
+        }
+        if !panel_open || lateral {
+            match self.view {
+                View::Cameras if graphical.is_some() => {
+                    self.camera_columns = 1;
+                    self.camera_page_size =
+                        graphical.as_ref().map_or(1, |layout| layout.visible_floors);
+                }
+                View::Office if graphical.is_some() => {
+                    self.office_columns = 1;
+                    self.office_page_size = graphical.as_ref().map_or(1, |layout| layout.capacity);
+                }
+                View::Cameras => {
+                    let layout = views::cameras::draw(
+                        f,
+                        world,
+                        &mut self.canvas,
+                        &self.sprites,
+                        self.now,
+                        self.selected_office,
+                        self.guard_all,
+                    );
+                    self.camera_columns = layout.columns.max(1);
+                    self.camera_page_size = layout.columns.saturating_mul(layout.rows).max(1);
+                }
+                View::Office => {
+                    let layout = views::office::draw(
+                        f,
+                        office,
+                        &mut self.canvas,
+                        &self.sprites,
+                        self.now,
+                        self.selected_worker,
+                        self.projection,
+                        self.name_plates,
+                    );
+                    self.office_columns = layout.columns.max(1);
+                    self.office_page_size = layout.page_size.max(1);
+                }
+                View::Desk => {}
             }
-            View::Office if graphical.is_some() => {
-                self.office_columns = 1;
-                self.office_page_size = graphical.unwrap_or(1);
-            }
-            View::Cameras => {
-                let layout = views::cameras::draw(
+        }
+        if self.view == View::Desk && !self.controls.open && !self.customize.open {
+            if let Some(worker) = self.selected_worker_id.as_ref() {
+                self.frame_hits.extend(views::inspector::draw(
                     f,
-                    world,
-                    &mut self.canvas,
-                    &self.sprites,
-                    self.now,
-                    self.selected_office,
-                    self.guard_all,
-                );
-                self.camera_columns = layout.columns.max(1);
-                self.camera_page_size = layout.columns.saturating_mul(layout.rows).max(1);
-            }
-            View::Office => {
-                let layout = views::office::draw(
-                    f,
-                    office,
-                    &mut self.canvas,
-                    &self.sprites,
-                    self.now,
-                    self.selected_worker,
-                    self.projection,
-                    self.name_plates,
-                );
-                self.office_columns = layout.columns.max(1);
-                self.office_page_size = layout.page_size.max(1);
-            }
-            View::Desk => {
-                let worker = office.and_then(|value| value.workers.get(self.selected_worker));
-                views::desk::draw(
-                    f,
-                    office,
-                    worker,
-                    &mut self.canvas,
-                    &self.sprites,
-                    self.now,
-                    &mut self.desk_scroll,
-                );
+                    panel,
+                    &views::inspector::InspectorContext {
+                        world,
+                        worker_id: worker,
+                        profiles: &self.character_profiles,
+                        status: &self.controls.status,
+                        now: self.now,
+                        scroll: self.desk_scroll,
+                    },
+                ));
             }
         }
         if self.phone_open {
+            self.frame_hits.clear();
             let phone_office = if self.guard_all { None } else { office };
             let selected_message = self.phone_keys.get(self.phone_selected).cloned();
             self.phone_keys =
@@ -1015,16 +1203,18 @@ impl Ui {
             );
         }
         if self.help_open {
+            self.frame_hits.clear();
             views::help::draw(f, &mut self.help_scroll);
         }
         if self.settings_open {
+            self.frame_hits.clear();
             let settings_worker = office.and_then(|office| {
                 office
                     .workers
                     .get(self.selected_worker)
                     .map(|worker| (worker, look_for_worker(&office.workers, worker)))
             });
-            views::settings::draw(
+            self.frame_hits.extend(views::settings::draw(
                 f,
                 views::settings::SettingsDrawContext {
                     projection: self.projection,
@@ -1034,6 +1224,7 @@ impl Ui {
                     encoding: self.encoding,
                     encoding_locked: self.encoding_locked,
                     motion: self.motion,
+                    mouse: self.mouse_enabled,
                     name_plates: self.name_plates,
                     cursor: self.settings_cursor,
                     worker: settings_worker,
@@ -1042,26 +1233,52 @@ impl Ui {
                     canvas: &mut self.canvas,
                     sprites: &self.sprites,
                 },
-            );
+            ));
         }
-        views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
+        let tab_hits =
+            views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
         if self.finder.open {
-            self.finder.refresh(world, self.now);
+            self.frame_hits.clear();
+            self.finder
+                .refresh_with_profiles(world, self.now, &self.character_profiles);
             self.finder.draw(f);
+            self.frame_hits.extend(self.finder.hit_regions());
         }
         if self.workboard.open {
-            self.workboard.refresh(
+            self.frame_hits.clear();
+            self.workboard.refresh_with_profiles(
                 world,
-                if self.guard_all { None } else { office },
+                office,
                 &self.review_memory,
                 &self.visit_baselines,
                 self.now,
+                &self.character_profiles,
             );
             self.workboard.draw(f);
+            self.frame_hits.extend(self.workboard.hit_regions());
         }
         if self.controls.open {
-            self.controls.draw(f);
+            let panel = ratatui::layout::Rect::new(
+                panel.x,
+                panel.y,
+                panel.width,
+                full.bottom().saturating_sub(panel.y),
+            );
+            self.frame_hits.retain(|hit| !hit.area.intersects(panel));
+            self.controls.draw_in(f, panel);
+            self.frame_hits.extend(self.controls.hit_regions());
         }
+        if self.customize.open {
+            self.frame_hits.retain(|hit| !hit.area.intersects(panel));
+            self.frame_hits.extend(self.customize.draw(f, panel));
+        }
+        self.frame_hits.extend(tab_hits);
+        self.draw_toolbar(f);
+        self.draw_footer(f);
+        if let Some(action) = focused_action {
+            self.focus = self.frame_hits.iter().position(|hit| hit.action == action);
+        }
+        self.draw_focus(f);
         views::remap_buffer_theme(f.buffer_mut(), self.theme);
         if self.canvas.color_depth() == ColorDepth::None {
             Canvas::strip_colors(f.buffer_mut());
@@ -1154,10 +1371,10 @@ impl Ui {
             }
             View::Desk => match code {
                 KeyCode::Up | KeyCode::Char('k') => {
-                    self.desk_scroll = self.desk_scroll.saturating_add(1)
+                    self.desk_scroll = self.desk_scroll.saturating_sub(1)
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
-                    self.desk_scroll = self.desk_scroll.saturating_sub(1)
+                    self.desk_scroll = self.desk_scroll.saturating_add(1)
                 }
                 _ => {
                     self.selected_worker =
@@ -1258,7 +1475,7 @@ mod tests {
         let escape = KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE);
         let first_office = ui.selected_office;
         assert_eq!(ui.view(), View::Office);
-        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        ui.handle_key(KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE));
         assert_eq!(ui.view(), View::Office);
         assert_ne!(ui.selected_office, first_office);
         ui.handle_key(enter);
@@ -1292,6 +1509,7 @@ mod tests {
             encoding: Some("half-blocks".into()),
             wardrobe: BTreeMap::new(),
             office_palettes: BTreeMap::new(),
+            ..RendererPreferences::default()
         };
         ui.restore_preferences(&saved);
         assert_eq!(ui.preferences(), saved);
@@ -1326,6 +1544,7 @@ mod tests {
     fn room_palette_changes_only_the_selected_project_and_survives_restore() {
         let world = demo_world(0);
         let mut ui = Ui::new();
+        ui.set_image_cell_size(Some((8, 16)));
         ui.color_depth = ColorDepth::TrueColor;
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
@@ -1334,7 +1553,7 @@ mod tests {
         ui.handle_key(KeyEvent::new(KeyCode::Char('o'), KeyModifiers::NONE));
         terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
         assert_ne!(before.rgba(), ui.pixel_frame().rgba());
-        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        ui.handle_key(KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE));
         terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
         let second = ui.selected_office_id.clone().unwrap();
         assert_ne!(first, second);
@@ -1354,10 +1573,18 @@ mod tests {
 
     #[test]
     fn source_connection_is_an_explicit_host_command() {
-        assert_eq!(
-            Ui::new().handle_key(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE)),
-            Some(UiCommand::Sources)
-        );
+        for code in ['c', 'C'] {
+            let mut ui = Ui::new();
+            assert_eq!(
+                ui.handle_key(KeyEvent::new(KeyCode::Char(code), KeyModifiers::NONE)),
+                None
+            );
+            assert!(ui.controls.open);
+            assert_eq!(
+                ui.activate(interaction::Action::Sources),
+                Some(UiCommand::Sources)
+            );
+        }
     }
 
     #[test]
@@ -1747,7 +1974,7 @@ mod m3_tests {
         let mut ui = Ui::new();
         ui.tick(BLOCKED_AFTER_MS + 1);
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
-        ui.handle_key(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        ui.open_tower();
         terminal
             .draw(|frame| ui.draw(frame, &world))
             .expect("crowded camera wall should render");
@@ -1857,12 +2084,8 @@ mod m3_tests {
             .expect("first floor page");
         assert_eq!(views::office::desk_layout(11, 100, 26).pages, 2);
 
-        for _ in 0..2 {
-            ui.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
-            terminal
-                .draw(|frame| ui.draw(frame, &world))
-                .expect("next floor page");
-        }
+        ui.handle_key(KeyEvent::new(KeyCode::End, KeyModifiers::NONE));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
         assert_eq!(ui.selected_worker(), 10);
         let text = buffer_text(&terminal);
         assert!(
@@ -1870,7 +2093,7 @@ mod m3_tests {
             "page indicator should remain visible on the final page"
         );
         assert!(
-            text.contains("+1 overflow"),
+            text.contains("people shown"),
             "overflow indicator should identify workers beyond the visible desks"
         );
     }
@@ -1988,9 +2211,10 @@ mod m3_tests {
     }
 
     #[test]
-    fn isometric_floor_renders_project_scene_and_manager_alert() {
+    fn isometric_compatibility_preserves_paging_and_opens_the_exact_task() {
         let world = world_with_office_counts(&[11, 8, 6, 4, 1, 1], false);
         let mut ui = Ui::new();
+        ui.projection = views::office::Projection::Iso;
         ui.tick(BLOCKED_AFTER_MS + 1);
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).expect("test terminal");
         terminal
@@ -2002,15 +2226,26 @@ mod m3_tests {
             assert!(initial.contains(label), "floor should show {label}");
         }
 
-        ui.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
-        ui.handle_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+        ui.handle_key(KeyEvent::new(KeyCode::End, KeyModifiers::NONE));
         terminal
             .draw(|frame| ui.draw(frame, &world))
             .expect("overflow floor frame");
         let overflow = buffer_text(&terminal);
         assert_eq!(ui.selected_worker(), 10);
-        assert!(overflow.contains("page 2/2"));
-        assert!(overflow.contains("+1 overflow"));
+        assert!(overflow.contains(&format!(
+            "page {0}/{0}",
+            11usize.div_ceil(ui.office_page_size)
+        )));
+        // The compatible isometric plate is deliberately abbreviated. The
+        // inspector must still open this exact task and display its full title.
+        ui.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        assert_eq!(ui.view(), View::Desk);
+        assert_eq!(
+            ui.selected_worker_id.as_ref(),
+            Some(&world.offices().next().unwrap().workers[10].id)
+        );
+        assert!(buffer_text(&terminal).contains(&world.offices().next().unwrap().workers[10].name));
     }
 
     #[test]
@@ -2096,6 +2331,7 @@ mod m3_tests {
     fn ui_pixel_frame_snapshots_the_latest_rendered_floor() {
         let world = world_with_office_counts(&[5], false);
         let mut ui = Ui::new();
+        ui.set_image_cell_size(Some((8, 16)));
         ui.tick(BLOCKED_AFTER_MS + 1);
         let mut terminal = Terminal::new(TestBackend::new(160, 48)).expect("floor terminal");
         terminal
@@ -2214,6 +2450,7 @@ mod m3_tests {
         let world = world_with_office_counts(&[5], false);
         for encoding in PixelEncoding::ALL {
             let mut ui = Ui::new();
+            ui.projection = views::office::Projection::Iso;
             ui.color_depth = ColorDepth::TrueColor;
             ui.encoding = encoding;
             let mut terminal =
@@ -2285,7 +2522,10 @@ mod m3_tests {
             .draw(|frame| ui.draw(frame, &world))
             .expect("failed worker floor frame");
         let text = buffer_text(&terminal);
-        assert!(text.contains("FAILED"));
-        assert!(text.contains("CHECK DESK"));
+        assert!(text.contains("Error reported"));
+        assert!(ui
+            .hit_regions()
+            .iter()
+            .any(|hit| hit.action == interaction::Action::Inspect(failed.clone())));
     }
 }

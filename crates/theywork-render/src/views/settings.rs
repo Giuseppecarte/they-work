@@ -24,6 +24,7 @@ pub(crate) struct SettingsDrawContext<'a> {
     pub(crate) encoding: PixelEncoding,
     pub(crate) encoding_locked: bool,
     pub(crate) motion: bool,
+    pub(crate) mouse: bool,
     pub(crate) name_plates: bool,
     pub(crate) cursor: usize,
     pub(crate) worker: Option<(&'a Worker, WorkerLook)>,
@@ -33,7 +34,11 @@ pub(crate) struct SettingsDrawContext<'a> {
     pub(crate) sprites: &'a SpriteSet,
 }
 
-pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
+pub(crate) fn draw(
+    frame: &mut Frame,
+    context: SettingsDrawContext<'_>,
+) -> Vec<crate::interaction::HitRegion> {
+    let mut hits = Vec::new();
     let SettingsDrawContext {
         projection,
         theme,
@@ -42,6 +47,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
         encoding,
         encoding_locked,
         motion,
+        mouse,
         name_plates,
         cursor,
         worker,
@@ -53,7 +59,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
     let area = frame.area();
     if area.width < 20 || area.height < 8 {
         super::draw_tiny(frame, "settings need a little more terminal space");
-        return;
+        return hits;
     }
 
     let popup_width = area.width.saturating_sub(2).clamp(20, 76);
@@ -77,7 +83,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
 
     let inner = inset(popup, 1);
     if !has_area(inner) {
-        return;
+        return hits;
     }
     let left_width = if inner.width >= 58 { 30 } else { inner.width };
     let left = Rect::new(inner.x, inner.y, left_width, inner.height);
@@ -129,6 +135,14 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
             "room",
             office.map_or("no project", |office| sprites.office_palette_label(office)),
         ),
+        (
+            "mouse",
+            if mouse {
+                "on · click to inspect"
+            } else {
+                "off · terminal selection"
+            },
+        ),
     ];
     if has_area(options_inner) {
         let visible = usize::from(options_inner.height);
@@ -138,6 +152,10 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
             if row >= options_inner.y.saturating_add(options_inner.height) {
                 break;
             }
+            hits.push(crate::interaction::HitRegion::new(
+                Rect::new(options_inner.x, row, options_inner.width, 1),
+                crate::interaction::Action::Setting(index),
+            ));
             let selected = index == cursor;
             let style = if selected {
                 Style::default()
@@ -245,6 +263,7 @@ pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
             canvas.render(frame.buffer_mut(), preview);
         }
     }
+    hits
 }
 
 pub(crate) fn color_depth_label(depth: ColorDepth) -> &'static str {

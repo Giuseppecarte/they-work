@@ -698,6 +698,11 @@ fn observed_pose(worker: &Worker, now: Millis) -> Pose {
     if worker.status_at(now) == WorkerStatus::Failed {
         return Pose::Error;
     }
+    // A Wait event can follow Editing without replacing the last activity.
+    // Explicit human input/approval is sufficient evidence for the raised hand.
+    if crate::presentation::human_request(worker) {
+        return Pose::Waiting;
+    }
     match &worker.activity {
         Activity::Waiting { .. }
             if matches!(
@@ -1028,6 +1033,32 @@ mod tests {
             },
         );
         assert_eq!(canvas.pixel_frame().rgba(), expected.rgba());
+    }
+
+    #[test]
+    fn explicit_human_wait_overrides_previous_editing_but_not_a_failure() {
+        use theywork_core::WaitReason;
+        let mut worker = office(1).workers.remove(0);
+        worker.activity = Activity::Editing {
+            detail: "src/account.rs".into(),
+        };
+        for reason in [WaitReason::HumanApproval, WaitReason::HumanInput] {
+            worker.wait_reason = Some(reason);
+            assert_eq!(observed_pose(&worker, 0), Pose::Waiting);
+        }
+        for reason in [
+            WaitReason::AutomaticReview,
+            WaitReason::Child,
+            WaitReason::Process,
+        ] {
+            worker.wait_reason = Some(reason);
+            assert_ne!(observed_pose(&worker, 0), Pose::Waiting);
+        }
+        worker.wait_reason = Some(WaitReason::HumanInput);
+        worker.activity = Activity::Error {
+            detail: "Process failed".into(),
+        };
+        assert_eq!(observed_pose(&worker, 0), Pose::Error);
     }
 
     #[test]

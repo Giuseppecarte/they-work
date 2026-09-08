@@ -19,8 +19,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use anyhow::{anyhow, Result};
 use crossterm::cursor::{MoveTo, Show};
 use crossterm::event::{
-    self, DisableBracketedPaste, EnableBracketedPaste, Event as TermEvent, KeyCode, KeyEvent,
-    KeyModifiers,
+    self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+    Event as TermEvent, KeyCode, KeyEvent, KeyModifiers,
 };
 use crossterm::execute;
 use crossterm::terminal::{
@@ -68,6 +68,7 @@ OPTIONS:
   --dark                   Start with the dark appearance
   --color <auto|true|256|none>
                            Choose terminal color handling
+  --mouse <on|off>         Enable clicks or keep terminal text selection
   --setup                  Choose local sources and their folders
   --sources <all|codex|claude|none>
                            Choose which conversations may be read
@@ -109,6 +110,7 @@ struct Args {
     light: bool,
     dark: bool,
     color: Option<ColorMode>,
+    mouse: Option<bool>,
     config_dir: Option<PathBuf>,
     setup: bool,
     no_save: bool,
@@ -128,6 +130,37 @@ impl Args {
             && !self.once
             && !self.headless
             && !self.doctor
+    }
+}
+
+fn parse_mouse(value: &str) -> std::result::Result<bool, String> {
+    match value {
+        "on" => Ok(true),
+        "off" => Ok(false),
+        _ => Err("--mouse must be on or off".into()),
+    }
+}
+
+/// Releases capture on every return path, including failures during a handoff.
+struct MouseCaptureGuard {
+    enabled: bool,
+}
+impl MouseCaptureGuard {
+    fn sync(&mut self, enabled: bool) -> Result<()> {
+        if self.enabled != enabled {
+            if enabled {
+                execute!(io::stdout(), EnableMouseCapture)?;
+            } else {
+                execute!(io::stdout(), DisableMouseCapture)?;
+            }
+            self.enabled = enabled;
+        }
+        Ok(())
+    }
+}
+impl Drop for MouseCaptureGuard {
+    fn drop(&mut self) {
+        let _ = execute!(io::stdout(), DisableMouseCapture);
     }
 }
 
@@ -183,6 +216,10 @@ where
                     "--claude-home",
                     &value["--claude-home=".len()..],
                 )?))
+            }
+            "--mouse" => parsed.mouse = Some(parse_mouse(&next_value(&mut arguments, "--mouse")?)?),
+            value if value.starts_with("--mouse=") => {
+                parsed.mouse = Some(parse_mouse(&value["--mouse=".len()..])?)
             }
             "--light" => parsed.light = true,
             "--dark" => parsed.dark = true,
@@ -509,6 +546,7 @@ impl TerminalModeGuard {
             execute!(
                 io::stdout(),
                 DisableBracketedPaste,
+                DisableMouseCapture,
                 LeaveAlternateScreen,
                 Show
             )
@@ -1361,6 +1399,9 @@ fn configure_ui(
     if args.color == Some(ColorMode::Auto) {
         preferences.color_depth = None;
     }
+    if let Some(mouse) = args.mouse {
+        preferences.mouse = mouse;
+    }
     ui.restore_preferences(&preferences);
     if start_guard {
         ui.open_tower();
@@ -1643,6 +1684,8 @@ fn run(
             ui.open_office(&office.id);
         }
     }
+    let mut mouse_capture = MouseCaptureGuard { enabled: false };
+    mouse_capture.sync(ui.mouse_enabled())?;
     let mut active_args = args.clone();
     let mut control = control_host::Host::start(
         connections::Connections::from_args(args)?,
@@ -1655,6 +1698,7 @@ fn run(
     let mut control_cursor = (String::new(), 0u64);
     let mut notebook_save = Instant::now();
     let terminal_cells = terminal.size()?;
+    let mut presented_size = (terminal_cells.width, terminal_cells.height);
     let image_cell_size = capabilities
         .graphics
         .can_transmit_pixels()
@@ -1764,7 +1808,10 @@ fn run(
                         }
                         persist_notebook(runtime, &ui)?;
                         image_presenter.present(terminal.backend_mut(), None)?;
+                        ui.invalidate_pointer();
+                        mouse_capture.sync(false)?;
                         let status = handoff_console(terminal, &command);
+                        mouse_capture.sync(ui.mouse_enabled())?;
                         match status {
                             Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
                             Ok(false) => ui.complete_control("Official console exited without confirming success. Inspect its output before sending again.".into(), false),
@@ -1789,7 +1836,13 @@ fn run(
             runtime.world.tick(now);
             ui.tick(now);
 
+            mouse_capture.sync(ui.mouse_enabled())?;
             let terminal_cells = terminal.size()?;
+            let current_size = (terminal_cells.width, terminal_cells.height);
+            if current_size != presented_size {
+                ui.invalidate_pointer();
+                presented_size = current_size;
+            }
             image_presenter.resize(
                 terminal.backend_mut(),
                 (terminal_cells.width, terminal_cells.height),
@@ -1808,6 +1861,9 @@ fn run(
                     pixel_frame = Some(ui.pixel_frame().with_text_backgrounds());
                 }
             })?;
+            if ui.actions_changed_since_presented() {
+                image_presenter.next_frame = Instant::now();
+            }
             if let Some(native_frame) = native_frame {
                 present_composed_frame(
                     terminal.backend_mut(),
@@ -1817,18 +1873,35 @@ fn run(
                 )?;
             }
 
+            if !image_presenter.enabled() || image_presenter.current_frame_presented {
+                ui.frame_presented();
+            }
+
             if event::poll(FRAME)? {
                 let input = event::read()?;
+                // Input updates must not wait for an animation pacing interval.
+                image_presenter.next_frame = Instant::now();
                 if let TermEvent::Paste(text) = input {
                     ui.handle_paste(&text);
                     continue;
                 }
-                if let TermEvent::Key(input) = input {
-                    if is_ctrl_c(input) {
-                        return Ok(());
-                    }
+                {
                     let previous_view = ui.view();
-                    match ui.handle_key(input) {
+                    let command = match input {
+                        TermEvent::Key(key) => {
+                            if is_ctrl_c(key) {
+                                return Ok(());
+                            }
+                            ui.handle_key(key)
+                        }
+                        TermEvent::Mouse(mouse) => ui.handle_mouse(mouse),
+                        TermEvent::Resize(_, _) => {
+                            ui.invalidate_pointer();
+                            None
+                        }
+                        _ => None,
+                    };
+                    match command {
                         Some(UiCommand::Quit) => return Ok(()),
                         Some(UiCommand::Control(mut command)) => {
                             if let theywork_render::views::control::Command::Start {
@@ -1883,13 +1956,17 @@ fn run(
                             let mut connection_args = active_args.clone();
                             connection_args.setup = true;
                             let value = connections::Connections::from_args(&connection_args)?;
+                            ui.invalidate_pointer();
+                            mouse_capture.sync(false)?;
                             let action = connections::show(
                                 terminal,
                                 value,
                                 active_args.config_dir.as_deref(),
                                 active_args.remember.unwrap_or(true),
                                 !active_args.no_save,
+                                ui.mouse_enabled(),
                             )?;
+                            mouse_capture.sync(ui.mouse_enabled())?;
                             match action {
                                 connections::Action::Connect { value, remember } => {
                                     active_args.remember = Some(remember);
@@ -1978,6 +2055,7 @@ fn handoff_console(
     execute!(
         io::stdout(),
         DisableBracketedPaste,
+        DisableMouseCapture,
         LeaveAlternateScreen,
         Show
     )?;
@@ -1993,6 +2071,7 @@ struct TerminalImagePresenter {
     next_frame: Instant,
     last_area: Option<Rect>,
     last_frame: Option<theywork_render::PixelFrame>,
+    current_frame_presented: bool,
 }
 
 impl TerminalImagePresenter {
@@ -2010,6 +2089,7 @@ impl TerminalImagePresenter {
             next_frame: Instant::now(),
             last_area: None,
             last_frame: None,
+            current_frame_presented: false,
         }
     }
 
@@ -2037,6 +2117,7 @@ impl TerminalImagePresenter {
         output: &mut W,
         pixel_frame: Option<theywork_render::PixelFrame>,
     ) -> Result<bool> {
+        self.current_frame_presented = true;
         let Some(surface) = self.surface.as_mut() else {
             return Ok(false);
         };
@@ -2060,6 +2141,7 @@ impl TerminalImagePresenter {
             u32::try_from(pixel_frame.height())?,
         );
         if surface.geometry().pixel_size(rectangle) != Some(frame_size) {
+            self.current_frame_presented = false;
             surface.clear(output)?;
             self.last_area = None;
             self.last_frame = None;
@@ -2077,6 +2159,7 @@ impl TerminalImagePresenter {
                 .as_ref()
                 .is_some_and(|previous| previous.text_cells() == pixel_frame.text_cells())
         {
+            self.current_frame_presented = false;
             return Ok(true);
         }
         let image = RgbaImage::new(frame_size.0, frame_size.1, pixel_frame.rgba().to_vec())?;
@@ -2452,6 +2535,29 @@ mod tests {
     }
 
     #[test]
+    fn mouse_option_overrides_saved_preference_and_rejects_ambiguous_values() {
+        for flags in [vec!["--mouse=off"], vec!["--mouse", "off"]] {
+            let args = parse(&flags).unwrap();
+            let mut ui = Ui::new();
+            configure_ui(&mut ui, &args, false, Default::default());
+            assert!(!ui.mouse_enabled());
+        }
+        let mut ui = Ui::new();
+        configure_ui(
+            &mut ui,
+            &parse(&["--mouse=on"]).unwrap(),
+            false,
+            theywork_render::RendererPreferences {
+                mouse: false,
+                ..Default::default()
+            },
+        );
+        assert!(ui.mouse_enabled());
+        assert!(parse(&["--mouse=maybe"]).is_err());
+        assert!(parse(&["--mouse"]).is_err());
+    }
+
+    #[test]
     fn accepts_demo_once_and_help() {
         assert!(parse(&["--demo", "--once"]).unwrap().demo);
         assert!(parse(&["--help"]).unwrap().help);
@@ -2715,8 +2821,47 @@ mod tests {
         let frame = diagnostic_frame(Ui::new(), capabilities, (160, 48))
             .expect("diagnostic renderer frame");
         assert_eq!(frame.mode, "graphics");
-        assert_eq!((frame.area.width, frame.area.height), (160, 43));
-        assert_eq!((frame.width, frame.height), (1_600, 860));
+        assert_eq!((frame.area.width, frame.area.height), (160, 44));
+        assert_eq!((frame.width, frame.height), (1_600, 880));
+    }
+
+    #[test]
+    fn paced_sixel_frames_do_not_acknowledge_unseen_pointer_geometry() {
+        use ratatui::style::Color;
+        use theywork_render::canvas::Canvas;
+        let mut canvas = Canvas::with_color_depth(8, 16, ColorDepth::TrueColor);
+        canvas.set_image_cell_size(Some((8, 16)));
+        let area = Rect::new(0, 0, 1, 1);
+        let mut buffer = Buffer::empty(area);
+        canvas.fill(Color::Red);
+        canvas.render(&mut buffer, area);
+        let first = canvas.pixel_frame();
+        let capabilities = Capabilities {
+            graphics: GraphicsProtocol::Sixel,
+            cell_size: Some(CellSize::new(8, 16)),
+            terminal_cells: Some((1, 1)),
+        };
+        let mut presenter = TerminalImagePresenter::new(capabilities, (1, 1));
+        let mut output = Vec::new();
+        assert!(presenter.present(&mut output, Some(first.clone())).unwrap());
+        assert!(presenter.current_frame_presented);
+        canvas.fill(Color::Blue);
+        canvas.render(&mut buffer, area);
+        let second = canvas.pixel_frame();
+        presenter.next_frame = Instant::now() + Duration::from_secs(1);
+        let bytes = output.len();
+        assert!(presenter
+            .present(&mut output, Some(second.clone()))
+            .unwrap());
+        assert!(!presenter.current_frame_presented);
+        assert_eq!(output.len(), bytes);
+        assert_eq!(presenter.last_frame, Some(first));
+        presenter.next_frame = Instant::now();
+        presenter
+            .present(&mut output, Some(second.clone()))
+            .unwrap();
+        assert!(presenter.current_frame_presented);
+        assert_eq!(presenter.last_frame, Some(second));
     }
 
     #[test]

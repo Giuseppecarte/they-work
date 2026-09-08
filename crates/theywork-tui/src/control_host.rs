@@ -415,6 +415,7 @@ impl Backend {
     fn execute(&mut self, job: Job) -> Result<Outcome> {
         let clear_draft = matches!(job.command, Command::Start { .. } | Command::Send { .. });
         match job.command {
+            Command::Sources => anyhow::bail!("Source selection belongs to the office interface"),
             Command::Login { provider } => {
                 anyhow::ensure!(self.enabled, "Demo mode cannot launch provider login");
                 let cwd = std::env::current_dir()?;

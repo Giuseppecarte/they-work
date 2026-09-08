@@ -221,6 +221,7 @@ pub(crate) fn prepare(args: &mut Args) -> Result<bool> {
             args.config_dir.as_deref(),
             args.remember.unwrap_or(true),
             !args.no_save,
+            args.mouse.unwrap_or(true),
         );
         drop(terminal);
         guard.restore()?;
@@ -370,7 +371,10 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
     config_dir: Option<&Path>,
     remember: bool,
     allow_remember: bool,
+    mouse_enabled: bool,
 ) -> Result<Action> {
+    let mut mouse = crate::MouseCaptureGuard { enabled: false };
+    mouse.sync(mouse_enabled)?;
     let allow_remember = allow_remember && config_dir.is_some();
     let mut remember = remember && allow_remember;
     let mut selected = 0;
@@ -380,7 +384,11 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
         if let Some(error) = crate::termination_error() {
             return Err(error);
         }
+        let mut presented = Vec::new();
+        let mut presented_size = Rect::default();
         terminal.draw(|frame| {
+            presented_size = frame.area();
+            presented = source_hits(frame.area(), editing.is_some());
             draw(
                 frame,
                 &value,
@@ -415,8 +423,33 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
             }
             continue;
         }
-        let Event::Key(key) = input else {
-            continue;
+        let key = match input {
+            Event::Key(key) => key,
+            Event::Mouse(event)
+                if mouse_enabled
+                    && event.kind
+                        == crossterm::event::MouseEventKind::Down(
+                            crossterm::event::MouseButton::Left,
+                        ) =>
+            {
+                let current = terminal.size()?;
+                if current.width != presented_size.width || current.height != presented_size.height
+                {
+                    continue;
+                }
+                let Some((_, target, code)) = presented
+                    .iter()
+                    .rev()
+                    .find(|(area, _, _)| area.contains((event.column, event.row).into()))
+                else {
+                    continue;
+                };
+                if let Some(index) = target {
+                    selected = *index;
+                }
+                crossterm::event::KeyEvent::new(*code, KeyModifiers::NONE)
+            }
+            _ => continue,
         };
         if key.kind == KeyEventKind::Release {
             continue;
@@ -525,6 +558,79 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
     }
 }
 
+fn source_layout(area: Rect) -> Option<Vec<Rect>> {
+    if area.width < 40 || area.height < 16 {
+        return None;
+    }
+    let width = area.width.min(88);
+    let height = area.height.min(26);
+    let body = Rect::new(
+        area.x + (area.width - width) / 2,
+        area.y + (area.height - height) / 2,
+        width,
+        height,
+    );
+    let compact = height < 22 || width < 64;
+    Some(
+        Layout::vertical([
+            Constraint::Length(if compact { 1 } else { 3 }),
+            Constraint::Length(if compact { 1 } else { 3 }),
+            Constraint::Length(4),
+            Constraint::Length(4),
+            Constraint::Length(2),
+            Constraint::Min(2),
+            Constraint::Length(2),
+        ])
+        .split(body)
+        .to_vec(),
+    )
+}
+fn source_hits(area: Rect, editing: bool) -> Vec<(Rect, Option<usize>, KeyCode)> {
+    let Some(chunks) = source_layout(area) else {
+        return Vec::new();
+    };
+    let mut hits = Vec::new();
+    if !editing {
+        for index in 0..2 {
+            let card = chunks[index + 2];
+            hits.push((
+                Rect::new(card.x, card.y, card.width, 1),
+                Some(index),
+                KeyCode::Char(' '),
+            ));
+            hits.push((
+                Rect::new(card.x + 1, card.y + 1, card.width.saturating_sub(2), 1),
+                Some(index),
+                KeyCode::Char('e'),
+            ));
+        }
+        hits.push((chunks[4], Some(2), KeyCode::Char('m')));
+    }
+    let footer = chunks[6];
+    hits.push((
+        Rect::new(footer.x, footer.y + 1, 15, 1),
+        None,
+        KeyCode::Enter,
+    ));
+    hits.push((
+        Rect::new(footer.x + 16, footer.y + 1, 12, 1),
+        None,
+        if editing {
+            KeyCode::Esc
+        } else {
+            KeyCode::Char('d')
+        },
+    ));
+    if !editing {
+        hits.push((
+            Rect::new(footer.x + 29, footer.y + 1, 10, 1),
+            None,
+            KeyCode::Esc,
+        ));
+    }
+    hits
+}
+
 fn draw(
     frame: &mut Frame,
     value: &Connections,
@@ -543,25 +649,8 @@ fn draw(
         frame.render_widget(Paragraph::new("CONNECT YOUR TEAM\nEnlarge to 40 x 16 to choose sources.\nq: back / quit   d: demo").wrap(Wrap { trim: false }), area);
         return;
     }
-    let width = area.width.min(88);
-    let height = area.height.min(26);
-    let body = Rect::new(
-        area.x + (area.width - width) / 2,
-        area.y + (area.height - height) / 2,
-        width,
-        height,
-    );
-    let compact = height < 22 || width < 64;
-    let chunks = Layout::vertical([
-        Constraint::Length(if compact { 1 } else { 3 }),
-        Constraint::Length(if compact { 1 } else { 3 }),
-        Constraint::Length(4),
-        Constraint::Length(4),
-        Constraint::Length(2),
-        Constraint::Min(2),
-        Constraint::Length(2),
-    ])
-    .split(body);
+    let chunks = source_layout(area).expect("readable source layout");
+    let compact = area.height.min(26) < 22 || area.width.min(88) < 64;
     let heading = if compact {
         "CONNECT YOUR TEAM"
     } else {
@@ -574,7 +663,7 @@ fn draw(
     let intro = if compact {
         "Local messages & activity; no sign-in."
     } else {
-        "Choose whose local conversations appear here. No sign-in or API key needed.\nReads titles, messages and tool activity from app data folders.\nEverything stays on this computer. Approve requests in the original app."
+        "Choose whose local conversations appear here. No sign-in or API key needed.\nReads titles, messages and tool activity from app data folders.\nEverything stays on this computer. Controls need a verified provider connection."
     };
     frame.render_widget(
         Paragraph::new(intro)
@@ -596,7 +685,9 @@ fn draw(
         } else {
             (path_label(path, rect.width.saturating_sub(2) as usize), 0)
         };
-        let status = if !enabled {
+        let status = if active && editing.is_some() {
+            "Editing folder · Enter applies; Esc cancels"
+        } else if !enabled {
             "Off · no conversations will be read"
         } else if path.is_dir() {
             "Ready · reads after you press Enter"
@@ -664,11 +755,11 @@ fn draw(
         chunks[5],
     );
     let footer = if editing.is_some() {
-        "←→ move  Home/End  Ctrl+U clear\nEnter apply folder   Esc cancel edit"
+        "←→ move  Home/End  Ctrl+U clear\n[Enter apply]   [Esc cancel]"
     } else if !value.claude && !value.codex {
-        "↑↓ choose  Space on/off  e edit folder\nEnter empty tower   d demo   Esc back"
+        "↑↓ choose  Space on/off  e edit folder\n[Enter tower]   [d demo]     [Esc back]"
     } else {
-        "↑↓ choose  Space on/off  e edit folder\nEnter connect   d demo   Esc back"
+        "↑↓ choose  Space on/off  e edit folder\n[Enter connect] [d demo]     [Esc back]"
     };
     frame.render_widget(
         Paragraph::new(footer).style(Style::default().fg(ACCENT)),
@@ -689,6 +780,35 @@ mod tests {
             claude_home: "/secret/claude".into(),
             codex_home: "/chosen/codex".into(),
         }
+    }
+
+    #[test]
+    fn source_click_targets_only_visible_explicit_controls() {
+        for size in [(40, 16), (80, 24), (120, 36)] {
+            let area = Rect::new(0, 0, size.0, size.1);
+            let mut terminal = Terminal::new(TestBackend::new(size.0, size.1)).unwrap();
+            terminal
+                .draw(|f| draw(f, &example(), 0, None, "", true, true))
+                .unwrap();
+            let hits = source_hits(area, false);
+            assert_eq!(hits.len(), 8);
+            for (rect, _, _) in &hits {
+                assert_eq!(*rect, rect.intersection(area));
+            }
+            let connect = hits
+                .iter()
+                .find(|(_, target, code)| target.is_none() && *code == KeyCode::Enter)
+                .unwrap()
+                .0;
+            let row = (connect.x..connect.right())
+                .map(|x| terminal.backend().buffer()[(x, connect.y)].symbol())
+                .collect::<String>();
+            assert!(row.contains("connect"));
+            assert!(!source_hits(area, true)
+                .iter()
+                .any(|(_, target, _)| target.is_some()));
+        }
+        assert!(source_hits(Rect::new(0, 0, 39, 15), false).is_empty());
     }
 
     #[test]

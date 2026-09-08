@@ -1,5 +1,10 @@
 //! The project notebook: attention, deliveries, changes and task relationships.
 
+use crate::{
+    design::{profile_for, CharacterProfile},
+    interaction::{Action as HitAction, HitRegion},
+    presentation,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crossterm::event::{KeyCode, KeyEvent};
@@ -85,7 +90,6 @@ pub struct Entry {
     pub branch: bool,
 }
 
-#[derive(Default)]
 pub struct Workboard {
     pub open: bool,
     pub channel: Channel,
@@ -96,10 +100,37 @@ pub struct Workboard {
     selected: usize,
     scroll: u16,
     blocked_by_size: bool,
+    pub scope_all: bool,
+    details_expanded: bool,
+    human_requests: BTreeSet<String>,
+    hits: Vec<HitRegion>,
+    pending_worker: Option<WorkerId>,
+}
+
+impl Default for Workboard {
+    fn default() -> Self {
+        Self {
+            open: false,
+            channel: Channel::default(),
+            rows: Vec::new(),
+            coverage: String::new(),
+            scope: String::new(),
+            folded: BTreeSet::new(),
+            selected: 0,
+            scroll: 0,
+            blocked_by_size: false,
+            scope_all: true,
+            details_expanded: false,
+            human_requests: BTreeSet::new(),
+            hits: Vec::new(),
+            pending_worker: None,
+        }
+    }
 }
 
 pub enum Action {
     Open(WorkerId),
+    Review(WorkerId),
     Mark(String),
 }
 
@@ -120,22 +151,7 @@ fn task_label(world: &World, id: &WorkerId) -> String {
 }
 
 fn coverage_detail(worker: &Worker, now: Millis) -> String {
-    let coverage = &worker.coverage;
-    let state = if coverage.observed_at == 0 {
-        "not recorded"
-    } else if !coverage.available {
-        "unavailable"
-    } else if coverage.is_stale_at(now) {
-        "stale"
-    } else if coverage.incomplete {
-        "partial history"
-    } else {
-        "available history"
-    };
-    format!(
-        "Source: {state}\n{}\nRelationships: {:?} · Messages: {:?} · Lifecycle: {:?}",
-        coverage.detail, coverage.relationships, coverage.messages, coverage.lifecycle
-    )
+    presentation::coverage_text(&worker.coverage, now)
 }
 
 fn coverage_summary(workers: &[&Worker], now: Millis) -> String {
@@ -173,6 +189,47 @@ fn coverage_summary(workers: &[&Worker], now: Millis) -> String {
 }
 
 impl Workboard {
+    /// Select a requested person after the next family roster is populated.
+    pub fn focus_worker(&mut self, id: WorkerId) {
+        self.pending_worker = Some(id);
+        self.scope_all = true;
+        self.scroll = 0;
+    }
+    pub fn hit_regions(&self) -> Vec<HitRegion> {
+        self.hits.clone()
+    }
+    pub fn select_key(&mut self, key: &str) {
+        if let Some(index) = self.rows.iter().position(|row| row.key == key) {
+            self.selected = index;
+            self.scroll = 0;
+        }
+    }
+    pub fn refresh_with_profiles(
+        &mut self,
+        world: &World,
+        office: Option<&Office>,
+        memory: &ReviewMemory,
+        baselines: &BTreeMap<String, Millis>,
+        now: Millis,
+        profiles: &BTreeMap<String, CharacterProfile>,
+    ) {
+        self.refresh(
+            world,
+            office.filter(|_| !self.scope_all),
+            memory,
+            baselines,
+            now,
+        );
+        for row in &mut self.rows {
+            if let Some(worker) = row.worker.as_ref().and_then(|id| world.worker(id)) {
+                row.title = format!(
+                    "{} · {}",
+                    profile_for(&worker.id.0, profiles).name,
+                    row.title
+                );
+            }
+        }
+    }
     pub fn refresh(
         &mut self,
         world: &World,
@@ -181,6 +238,14 @@ impl Workboard {
         baselines: &BTreeMap<String, Millis>,
         now: Millis,
     ) {
+        self.human_requests.clear();
+        if self.channel == Channel::Team {
+            if let Some(id) = &self.pending_worker {
+                for ancestor in world.ancestors(id) {
+                    self.folded.remove(&format!("team:{}", ancestor.0));
+                }
+            }
+        }
         self.scope = office.map_or_else(|| "All floors".into(), |o| o.name.clone());
         let selected = |id: &OfficeId| office.is_none_or(|o| o.id == *id);
         let workers: Vec<_> = world
@@ -235,6 +300,9 @@ impl Workboard {
                             || format!("attention:{}:{}:{label}", worker.id.0, worker.last_seen),
                             |event| format!("attention-request:{}", event_key(event)),
                         );
+                        if !unavailable && presentation::human_request(worker) {
+                            self.human_requests.insert(key.clone());
+                        }
                         let detail = if unavailable {
                             format!("{}\nLast observation: {} ago. The source cannot confirm the current state.", worker.coverage.detail, super::duration_label(now.saturating_sub(worker.coverage.observed_at)))
                         } else {
@@ -263,7 +331,7 @@ impl Workboard {
                 rows.sort_by_key(|row| {
                     (
                         match row.label.as_str() {
-                            "APPROVAL NEEDED" | "QUESTION FOR YOU" | "REQUEST RECORDED" => 0,
+                            "APPROVAL NEEDED" | "QUESTION FOR YOU" => 0,
                             "ERROR" => 1,
                             "SOURCE UNAVAILABLE" | "NO RECENT ACTIVITY" => 2,
                             _ => 3,
@@ -305,7 +373,7 @@ impl Workboard {
                         .map(|id| task_label(world, id))
                         .unwrap_or_else(|| "Not recorded".into());
                     let actor_label = task_label(world, &event.actor);
-                    let detail = format!("{}\n\nFrom: {}\nTo: {}\nRecorded event: {:?}\nTurn: {}\nItem: {}\nEvidence: {:?}\n\n{}{}", event.text.as_deref().unwrap_or("No message body recorded."), actor_label, target, event.kind, event.native_turn_id.as_deref().unwrap_or("not recorded"), event.native_item_id.as_deref().unwrap_or("not recorded"), event.evidence, coverage_detail(worker, now), if actor.is_none() { "\nCoverage belongs to the known recipient; the sender's transcript is unavailable." } else if !world.is_present(&event.actor) { "\nThe sender is no longer in the current roster. Its recorded output is retained." } else { "" });
+                    let detail = format!("{}\n\n{}\n\nFrom: {}\nTo: {}\n\n{}{}\n\nRECORDED IDS\nTurn: {}\nItem: {}\nEvidence: {:?}", presentation::event_summary(event,&actor_label,event.recipient.as_ref().map(|_|target.as_str())),event.text.as_deref().unwrap_or("No message body recorded."),actor_label,target,coverage_detail(worker,now),if actor.is_none(){"\nCoverage belongs to the known recipient; the sender's transcript is unavailable."}else if !world.is_present(&event.actor){"\nThe sender is no longer in the current roster. Its recorded output is retained."}else{""},event.native_turn_id.as_deref().unwrap_or("not recorded"),event.native_item_id.as_deref().unwrap_or("not recorded"),event.evidence);
                     rows.push(Entry {
                         reviewed: memory.reviewed.contains_key(&key),
                         key,
@@ -315,8 +383,8 @@ impl Workboard {
                         office: worker.office.clone(),
                         title: actor_label,
                         label: format!(
-                            "{:?} · {} ago",
-                            event.kind,
+                            "{} · {} ago",
+                            presentation::event_label(event.kind),
                             super::duration_label(now.saturating_sub(event.at))
                         ),
                         detail,
@@ -423,8 +491,8 @@ impl Workboard {
                                 .take(12)
                                 .map(|e| {
                                     format!(
-                                        "{:?}: {}",
-                                        e.kind,
+                                        "{}: {}",
+                                        presentation::event_label(e.kind),
                                         e.text.as_deref().unwrap_or("no detail")
                                     )
                                 })
@@ -447,7 +515,7 @@ impl Workboard {
                                 || "Source: unknown; this task's transcript is unavailable.".into(),
                                 |worker| coverage_detail(worker, now),
                             );
-                            rows.push(Entry { key: key.clone(), worker: worker.filter(|worker| world.is_present(&worker.id)).map(|w| w.id.clone()), office: worker.map_or_else(|| office_id.clone(), |w| w.office.clone()), title: task_label(world, &node.worker), label: format!("{} · {}", relationship, worker.map_or("unknown", |w| if world.is_present(&w.id) { w.activity.label() } else { "not in current roster" })), detail: format!("Relationship shown: {relationship}\n{links}\n\n{}\n\n{source}\n\n{recent}", worker.map_or("No current information; relationship preserved.", |w| w.activity.detail().unwrap_or(w.activity.label()))), at: worker.map_or(0, |w| w.last_seen), reviewed: false, depth: node.depth, branch });
+                            rows.push(Entry { key: key.clone(), worker: worker.filter(|worker| world.is_present(&worker.id)).map(|w| w.id.clone()), office: worker.map_or_else(|| office_id.clone(), |w| w.office.clone()), title: task_label(world, &node.worker), label: format!("{} · {}", relationship, worker.map_or("unknown", |w| if world.is_present(&w.id) { presentation::state_label(w, now) } else { "not in current roster" })), detail: format!("Relationship shown: {relationship}\n{links}\n\n{}\n\n{source}\n\n{recent}", worker.map_or("No current information; relationship preserved.", |w| w.activity.detail().unwrap_or(w.activity.label()))), at: worker.map_or(0, |w| w.last_seen), reviewed: false, depth: node.depth, branch });
                             if self.folded.contains(&key) {
                                 hidden_depth = Some(node.depth);
                             }
@@ -472,7 +540,28 @@ impl Workboard {
                 row.title = format!("{project} / {}", row.title);
             }
         }
+        if self.channel == Channel::Attention {
+            for row in &mut rows {
+                row.label = format!(
+                    "{} · {}",
+                    if self.human_requests.contains(&row.key) {
+                        "FOR YOU"
+                    } else {
+                        "FOLLOW-UP"
+                    },
+                    row.label
+                );
+            }
+        }
         self.replace(rows);
+        if let Some(id) = self.pending_worker.take() {
+            if let Some(index) = self.rows.iter().position(|row| {
+                row.worker.as_ref() == Some(&id) || row.key == format!("team:{}", id.0)
+            }) {
+                self.selected = index;
+                self.scroll = 0;
+            }
+        }
     }
     pub fn show(&mut self, channel: Channel) {
         self.open = true;
@@ -480,6 +569,7 @@ impl Workboard {
         self.selected = 0;
         self.scroll = 0;
         self.rows.clear();
+        self.pending_worker = None;
     }
 
     pub fn replace(&mut self, rows: Vec<Entry>) {
@@ -502,6 +592,14 @@ impl Workboard {
             return None;
         }
         match key.code {
+            KeyCode::Char('f') => {
+                self.scope_all = !self.scope_all;
+                self.scroll = 0;
+            }
+            KeyCode::Char('i') => {
+                self.details_expanded = !self.details_expanded;
+                self.scroll = 0;
+            }
             KeyCode::Esc | KeyCode::Char('b') | KeyCode::Char('q') => self.open = false,
             KeyCode::Char(digit @ '1'..='4') => {
                 self.show(Channel::at((digit as u8 - b'1') as usize))
@@ -544,11 +642,15 @@ impl Workboard {
                     .map(|entry| Action::Mark(entry.key.clone()));
             }
             KeyCode::Enter => {
-                return self
-                    .rows
-                    .get(self.selected)
-                    .and_then(|entry| entry.worker.clone())
-                    .map(Action::Open);
+                return self.rows.get(self.selected).and_then(|entry| {
+                    entry.worker.clone().map(|worker| {
+                        if self.human_requests.contains(&entry.key) {
+                            Action::Review(worker)
+                        } else {
+                            Action::Open(worker)
+                        }
+                    })
+                });
             }
             _ => {}
         }
@@ -556,6 +658,7 @@ impl Workboard {
     }
 
     pub fn draw(&mut self, frame: &mut Frame) {
+        self.hits.clear();
         let screen = super::below_tab_bar(frame.area());
         let area = Rect::new(screen.x, screen.y, screen.width, screen.height);
         paint_opaque(frame, area, Style::default().bg(BACKGROUND).fg(INK));
@@ -569,6 +672,35 @@ impl Workboard {
         Paragraph::new(heading)
             .style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))
             .render(Rect::new(area.x, area.y, area.width, 1), frame.buffer_mut());
+        let filter = format!(
+            "f {} · i {}",
+            if !self.scope_all {
+                "This floor"
+            } else {
+                "All floors"
+            },
+            if self.details_expanded {
+                "Hide IDs"
+            } else {
+                "Show IDs"
+            }
+        );
+        Paragraph::new(filter)
+            .style(Style::default().fg(MUTED))
+            .render(
+                Rect::new(area.x, area.y + 1, area.width, 1),
+                frame.buffer_mut(),
+            );
+        self.hits.push(HitRegion::new(
+            Rect::new(area.x, area.y + 1, area.width.min(14), 1),
+            HitAction::Key(KeyCode::Char('f')),
+        ));
+        if area.width > 15 {
+            self.hits.push(HitRegion::new(
+                Rect::new(area.x + 15, area.y + 1, area.width - 15, 1),
+                HitAction::Key(KeyCode::Char('i')),
+            ));
+        }
         let tabs = (0..4)
             .flat_map(|index| {
                 let channel = Channel::at(index);
@@ -596,6 +728,23 @@ impl Workboard {
             Rect::new(area.x, area.y + 2, area.width, 1),
             frame.buffer_mut(),
         );
+        let mut tab_x = area.x;
+        for index in 0..4 {
+            let channel = Channel::at(index);
+            let label = if area.width < 72 {
+                ["Attn", "Out", "New", "Team"][index]
+            } else {
+                channel.label()
+            };
+            let width = (label.len() + 3) as u16;
+            if tab_x + width <= area.right() {
+                self.hits.push(HitRegion::new(
+                    Rect::new(tab_x, area.y + 2, width, 1),
+                    HitAction::Key(KeyCode::Char((b'1' + index as u8) as char)),
+                ));
+            }
+            tab_x += width;
+        }
         let footer = Rect::new(area.x, area.bottom() - 2, area.width, 2);
         let controls = match (area.width < 72, self.channel) {
             (true, Channel::Attention | Channel::Deliveries) => "Esc back · Enter · r seen",
@@ -637,6 +786,10 @@ impl Workboard {
         let capacity = usize::from(list_height);
         let start = self.selected / capacity * capacity;
         for (offset, row) in self.rows.iter().skip(start).take(capacity).enumerate() {
+            self.hits.push(HitRegion::new(
+                Rect::new(body.x, body.y + offset as u16, body.width, 1),
+                HitAction::NotebookSelect(row.key.clone()),
+            ));
             let selected = self.selected == start + offset;
             let marker = if selected { ">" } else { " " };
             let indent = "  ".repeat(row.depth.min(6));
@@ -671,6 +824,36 @@ impl Workboard {
                 );
         }
         let row = &self.rows[self.selected];
+        if let Some(worker) = &row.worker {
+            let label = if self.human_requests.contains(&row.key) {
+                "[ Review request ]"
+            } else {
+                "[ Inspect task ]"
+            };
+            let width = label.len() as u16;
+            if width <= body.width {
+                let button = Rect::new(body.right() - width, body.y + list_height, width, 1);
+                Paragraph::new(label)
+                    .style(Style::default().fg(INK).bg(PANEL_HIGHLIGHT))
+                    .render(button, frame.buffer_mut());
+                self.hits.push(HitRegion::new(
+                    button,
+                    if self.human_requests.contains(&row.key) {
+                        HitAction::Review(worker.clone())
+                    } else {
+                        HitAction::Inspect(worker.clone())
+                    },
+                ));
+            }
+        }
+        if matches!(self.channel, Channel::Attention | Channel::Deliveries) && body.width >= 36 {
+            let button = Rect::new(body.x, body.y + list_height, 14, 1);
+            Paragraph::new("[ Mark seen ]")
+                .style(Style::default().fg(INK).bg(PANEL_HIGHLIGHT))
+                .render(button, frame.buffer_mut());
+            self.hits
+                .push(HitRegion::new(button, HitAction::Mark(row.key.clone())));
+        }
         let detail_area = Rect::new(
             body.x,
             body.y + list_height + 1,
@@ -685,7 +868,14 @@ impl Workboard {
                 self.selected + 1,
                 self.rows.len(),
                 safe_display(&row.title),
-                super::safe_multiline(&row.detail)
+                super::safe_multiline(if self.details_expanded {
+                    &row.detail
+                } else {
+                    row.detail
+                        .split("\n\nRECORDED IDS\n")
+                        .next()
+                        .unwrap_or(&row.detail)
+                })
             );
             let lines = super::wrap_text(&text, detail_area.width);
             self.scroll = self.scroll.min(
@@ -1193,11 +1383,11 @@ mod tests {
         assert!(board
             .rows
             .iter()
-            .any(|row| row.detail.contains("Source: stale")));
+            .any(|row| row.detail.contains("Source needs refreshing")));
         assert!(board
             .rows
             .iter()
-            .any(|row| row.detail.contains("Source: unavailable")));
+            .any(|row| row.detail.contains("Source unavailable")));
         board.show(Channel::Team);
         board.refresh(
             &world,
@@ -1209,11 +1399,11 @@ mod tests {
         assert!(board
             .rows
             .iter()
-            .any(|row| row.detail.contains("Source: not recorded")));
+            .any(|row| row.detail.contains("Source not checked")));
         assert!(board
             .rows
             .iter()
-            .any(|row| row.detail.contains("Source: partial history")));
+            .any(|row| row.detail.contains("Partial local history")));
     }
 
     #[test]
@@ -1370,6 +1560,112 @@ mod tests {
     }
 
     #[test]
+    fn global_attention_separates_human_requests_and_supports_visible_floor_filter() {
+        let mut world = World::new();
+        hire(&mut world, "human");
+        observe(
+            &mut world,
+            "human",
+            100,
+            EventKind::Wait(Some(WaitReason::HumanInput)),
+        );
+        record(
+            &mut world,
+            "human",
+            None,
+            "question",
+            CollaborationKind::HumanRequest,
+            100,
+        );
+        world.apply(Event {
+            at: 100,
+            office: OfficeId("/other".into()),
+            office_path: "/other".into(),
+            worker: id("process"),
+            agent: Agent::Codex,
+            kind: EventKind::Wait(Some(WaitReason::Process)),
+        });
+        let profiles = BTreeMap::from([(
+            "human".into(),
+            CharacterProfile {
+                name: "Avery".into(),
+                ..Default::default()
+            },
+        )]);
+        let mut board = Workboard::default();
+        board.show(Channel::Attention);
+        board.refresh_with_profiles(
+            &world,
+            world.office(&OfficeId("/project".into())),
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            1000,
+            &profiles,
+        );
+        assert_eq!(board.rows.len(), 2);
+        assert!(board.rows[0].label.starts_with("FOR YOU"));
+        assert!(board.rows[1].label.starts_with("FOLLOW-UP"));
+        assert!(board.rows[0].title.contains("Avery"));
+        assert!(
+            matches!(board.handle_key(key(KeyCode::Enter)),Some(Action::Review(worker)) if worker==id("human"))
+        );
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| board.draw(frame)).unwrap();
+        assert!(buffer_text(&terminal).contains("f All floors"));
+        assert!(board
+            .hit_regions()
+            .iter()
+            .any(|hit| hit.action == HitAction::Review(id("human"))));
+        board.handle_key(key(KeyCode::Char('f')));
+        board.refresh_with_profiles(
+            &world,
+            world.office(&OfficeId("/project".into())),
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            1000,
+            &profiles,
+        );
+        assert_eq!(board.rows.len(), 1);
+        assert!(!board.scope_all);
+    }
+
+    #[test]
+    fn event_details_start_with_a_narrative_and_hide_native_ids_until_expanded() {
+        let mut world = World::new();
+        hire(&mut world, "sender");
+        record(
+            &mut world,
+            "sender",
+            None,
+            "native-item-123",
+            CollaborationKind::Result,
+            100,
+        );
+        let mut board = Workboard::default();
+        board.show(Channel::Deliveries);
+        refresh(&mut board, &world, &ReviewMemory::default());
+        let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+        terminal.draw(|frame| board.draw(frame)).unwrap();
+        let before = buffer_text(&terminal);
+        assert!(before.contains("sender delivered a result"));
+        // The fixture body intentionally contains its ID; test the metadata labels.
+        assert!(!before.contains("Turn: turn-1"));
+        assert!(!before.contains("Item: native-item-123"));
+        board.handle_key(key(KeyCode::Char('i')));
+        terminal.draw(|frame| board.draw(frame)).unwrap();
+        let after = buffer_text(&terminal);
+        assert!(after.contains("Turn: turn-1"));
+        assert!(after.contains("Item: native-item-123"));
+        let key = board.rows[0].key.clone();
+        assert!(board
+            .hit_regions()
+            .iter()
+            .any(|hit| hit.action == HitAction::Mark(key.clone())));
+        board.select_key("no-longer-visible");
+        assert_eq!(board.rows[board.selected].key, key);
+    }
+
+    #[test]
     fn selection_follows_delivery_identity_across_reordering() {
         let row = |key: &str| Entry {
             key: key.into(),
@@ -1396,6 +1692,44 @@ mod tests {
             "A replacement item must start at its own beginning"
         );
     }
+    #[test]
+    fn direct_team_focus_expands_ancestors_and_keeps_the_requested_worker_selected() {
+        let mut world = World::new();
+        for worker in ["a-root", "b-child", "c-grandchild", "z-other"] {
+            observe(
+                &mut world,
+                worker,
+                1,
+                EventKind::Seen {
+                    name: worker.into(),
+                    git_branch: None,
+                },
+            );
+        }
+        link(
+            &mut world,
+            "a-root",
+            "b-child",
+            RelationshipKind::Delegation,
+        );
+        link(
+            &mut world,
+            "b-child",
+            "c-grandchild",
+            RelationshipKind::Delegation,
+        );
+        let mut board = Workboard::default();
+        board.folded.insert(format!("team:{}", id("a-root").0));
+        board.folded.insert(format!("team:{}", id("b-child").0));
+        board.show(Channel::Team);
+        board.focus_worker(id("c-grandchild"));
+        refresh(&mut board, &world, &ReviewMemory::default());
+        assert_eq!(board.rows[board.selected].worker, Some(id("c-grandchild")));
+        assert!(board.folded.is_empty());
+        refresh(&mut board, &world, &ReviewMemory::default());
+        assert_eq!(board.rows[board.selected].worker, Some(id("c-grandchild")));
+    }
+
     #[test]
     fn local_markers_round_trip_and_have_a_bound() {
         let mut state = ReviewMemory::default();

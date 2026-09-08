@@ -7,6 +7,16 @@ use theywork_core::{OfficeId, WorkerId};
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     Tower,
+    More,
+    Advanced,
+    WorkTab(crate::work_brief::WorkTab),
+    WorkLatest,
+    WorkRecord(String),
+    WorkResults,
+    WorkExpand,
+    WorkActions,
+    ApplyAppearance,
+    CancelAppearance,
     Attention,
     Deliveries,
     Find,
@@ -16,6 +26,7 @@ pub enum Action {
     SelectFloor(OfficeId),
     EnterFloor(OfficeId),
     Inspect(WorkerId),
+    InspectRecord(WorkerId, String),
     SelectTeam(WorkerId),
     SelectDesks(OfficeId, WorkerId),
     Team(WorkerId),
@@ -47,4 +58,68 @@ impl HitRegion {
     pub fn contains(&self, x: u16, y: u16) -> bool {
         x >= self.area.x && x < self.area.right() && y >= self.area.y && y < self.area.bottom()
     }
+}
+
+/// One keyboard stop per semantic action. Keep its first position in reading
+/// order, but prefer its last physical target (usually the native nameplate)
+/// for the visible focus marker. Mouse hit regions remain unchanged.
+pub fn focus_targets(hits: &[HitRegion]) -> Vec<HitRegion> {
+    let mut targets: Vec<HitRegion> = Vec::new();
+    for hit in hits
+        .iter()
+        .filter(|hit| hit.area.width > 0 && hit.area.height > 0)
+    {
+        if let Some(existing) = targets.iter_mut().find(|item| item.action == hit.action) {
+            existing.area = hit.area;
+        } else {
+            targets.push(hit.clone());
+        }
+    }
+    targets
+}
+
+impl Action {
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Tower => "Tower",
+            Self::Attention => "Attention",
+            Self::Deliveries => "Deliveries",
+            Self::Find => "Search",
+            Self::NewTask => "New task",
+            Self::Connections => "Connections",
+            Self::More => "More",
+            Self::Advanced => "Advanced",
+            Self::Key(KeyCode::Char('s')) => "Settings",
+            Self::Key(KeyCode::Char('?')) => "Help",
+            Self::Close => "Back",
+            Self::Decorate(_) => "Design",
+            Self::Character(_) => "Character",
+            _ => "Open",
+        }
+    }
+    pub fn shortcut(&self) -> &'static str {
+        match self {
+            Self::Tower => "0",
+            Self::Attention => "b",
+            Self::Find => "/",
+            Self::NewTask => "n",
+            Self::Connections => "c",
+            Self::Key(KeyCode::Char('s')) => "s",
+            Self::Key(KeyCode::Char('?')) => "?",
+            Self::Close => "Esc",
+            Self::Decorate(_) => "d",
+            Self::Character(_) => "a",
+            _ => "",
+        }
+    }
+}
+pub fn navigation_actions() -> Vec<Action> {
+    vec![
+        Action::Tower,
+        Action::Attention,
+        Action::Deliveries,
+        Action::Find,
+        Action::NewTask,
+        Action::Connections,
+    ]
 }

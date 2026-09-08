@@ -16,8 +16,7 @@ use ratatui::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 use theywork_core::{
-    Millis, Office, RelationshipKind, WaitReason, Worker, WorkerId, WorkerLifecycle, WorkerStatus,
-    World,
+    Millis, Office, RelationshipKind, WaitReason, Worker, WorkerId, WorkerLifecycle, World,
 };
 
 pub(crate) struct Context<'a> {
@@ -31,6 +30,8 @@ pub(crate) struct Context<'a> {
     pub now: Millis,
     pub tower: bool,
     pub motion: bool,
+    /// Hide optional aliases, never the selected identity or a recorded request.
+    pub name_plates: bool,
     pub light: bool,
     pub palette: usize,
     pub wardrobe: &'a BTreeMap<String, usize>,
@@ -43,6 +44,8 @@ pub(crate) struct TowerLayout {
     /// Available positions on the selected floor, stable across a partial last page.
     pub capacity: usize,
     pub visible_floors: usize,
+    /// Names the displayed scope rather than deriving a page from all project workers.
+    pub navigation_hint: String,
     /// Back-to-front order. The host resolves the last matching presented hit.
     pub hits: Vec<HitRegion>,
 }
@@ -56,6 +59,78 @@ struct PaintedFloor<'a> {
     independent: usize,
     team: Option<WorkerId>,
     scenes: Vec<(SceneLayout, &'static str)>,
+}
+
+/// Observation health has precedence over the last recorded activity, just as
+/// in the inspector. Unavailable workers must not increase a live work count.
+#[derive(Default)]
+pub(super) struct FloorCounts {
+    pub total: usize,
+    pub working: usize,
+    pub ready: usize,
+    pub attention: usize,
+    pub waiting: usize,
+    pub unavailable: usize,
+    pub stale: usize,
+}
+
+impl FloorCounts {
+    pub fn new(office: &Office, now: Millis) -> Self {
+        let mut result = Self::default();
+        for worker in &office.workers {
+            result.total += 1;
+            match crate::presentation::state_label(worker, now) {
+                "Source unavailable" => result.unavailable += 1,
+                "Last known state" => result.stale += 1,
+                "Working" => result.working += 1,
+                "Ready" => result.ready += 1,
+                "Approval needed" | "Question for you" | "Needs a follow-up" | "Error reported" => {
+                    result.attention += 1
+                }
+                _ => result.waiting += 1,
+            }
+        }
+        result
+    }
+    pub fn compact(&self) -> String {
+        let mut parts = vec![person_count(self.total)];
+        if self.unavailable > 0 {
+            parts.push(format!("{} offline", self.unavailable));
+        }
+        if self.stale > 0 {
+            parts.push(format!("{} stale", self.stale));
+        }
+        if self.attention > 0 {
+            parts.push(format!("! {}", self.attention));
+        }
+        if self.working > 0 {
+            parts.push(format!("{} working", self.working));
+        }
+        if self.waiting > 0 {
+            parts.push(format!("{} waiting", self.waiting));
+        }
+        if self.ready == self.total && self.total > 0 {
+            parts.push("ready".into());
+        }
+        parts.join(" · ")
+    }
+}
+
+fn observed_attention(worker: &Worker, now: Millis) -> bool {
+    crate::presentation::needs_attention(worker, now)
+}
+
+fn state_marker(worker: &Worker, now: Millis) -> &'static str {
+    match crate::presentation::state_label(worker, now) {
+        "Source unavailable" => "-",
+        "Last known state" => "~",
+        "Approval needed" | "Question for you" => "!",
+        "Needs a follow-up" => "?",
+        "Error reported" => "×",
+        "Working" => "▸",
+        "Ready" => "·",
+        _ => "…",
+    }
 }
 
 pub(crate) fn draw(
@@ -291,6 +366,7 @@ pub(crate) fn draw(
     }
     let mut result = TowerLayout {
         visible_floors: visible,
+        navigation_hint: format!("Floor {}/{}", ctx.selected_floor + 1, ctx.offices.len()),
         ..TowerLayout::default()
     };
     for floor in painted {
@@ -313,6 +389,39 @@ pub(crate) fn draw(
         for (scene, kind) in &floor.scenes {
             if focused {
                 result.capacity += scene.capacity;
+                if !ctx.tower
+                    && (scene
+                        .seats
+                        .iter()
+                        .any(|seat| Some(&seat.worker_id) == ctx.selected_worker)
+                        || floor.scenes.len() == 1)
+                {
+                    let scope = if *kind == "TEAM" {
+                        format!(
+                            "Team {}/{}",
+                            floor
+                                .groups
+                                .iter()
+                                .position(|group| Some(&group.parent) == floor.team.as_ref())
+                                .unwrap_or(0)
+                                + 1,
+                            floor.groups.len()
+                        )
+                    } else {
+                        "Desks".into()
+                    };
+                    result.navigation_hint.push_str(&format!(
+                        " · {} · People {}/{}{}",
+                        scope,
+                        scene.seats.len(),
+                        scene.total_workers,
+                        if scene.page_count > 1 {
+                            format!(" · page {}/{}", scene.page + 1, scene.page_count)
+                        } else {
+                            String::new()
+                        }
+                    ));
+                }
             }
             let elevator = native_rect(scene.elevator, area, cw, ch);
             push_hit(
@@ -459,29 +568,8 @@ fn draw_header(
         .style(style)
         .render(button, frame.buffer_mut());
     push_hit(hits, button, Action::EnterFloor(floor.office.id.clone()));
-    let attention = floor
-        .office
-        .workers
-        .iter()
-        .filter(|worker| worker.status_at(now).needs_attention())
-        .count();
-    let working = floor
-        .office
-        .workers
-        .iter()
-        .filter(|worker| worker.status_at(now) == WorkerStatus::Running)
-        .count();
-    let counts = if attention > 0 {
-        format!("{} people · ! {}", floor.office.workers.len(), attention)
-    } else if working > 0 {
-        format!(
-            "{} people · {} working",
-            floor.office.workers.len(),
-            working
-        )
-    } else {
-        format!("{} people · idle", floor.office.workers.len())
-    };
+    let counts = FloorCounts::new(floor.office, now);
+    let count_text = counts.compact();
     let available = header.width.saturating_sub(button.width + 1);
     let prefix = format!(
         "{} F{:02}/{:02} ",
@@ -489,7 +577,7 @@ fn draw_header(
         floor.index + 1,
         total
     );
-    let count_width = counts.chars().count().min(usize::from(available / 2)) as u16;
+    let count_width = count_text.chars().count().min(usize::from(available / 2)) as u16;
     let title_width = available.saturating_sub(count_width + 2);
     let title = format!("{}{}", prefix, safe_display(&floor.office.name));
     Paragraph::new(super::short_path(&title, title_width.into()))
@@ -498,8 +586,8 @@ fn draw_header(
             Rect::new(header.x, header.y, title_width, 1),
             frame.buffer_mut(),
         );
-    Paragraph::new(super::short_path(&counts, count_width.into()))
-        .style(style.fg(if attention > 0 { WARNING } else { MUTED }))
+    Paragraph::new(super::short_path(&count_text, count_width.into()))
+        .style(style.fg(if counts.attention > 0 { WARNING } else { MUTED }))
         .render(
             Rect::new(header.x + available - count_width, header.y, count_width, 1),
             frame.buffer_mut(),
@@ -613,21 +701,21 @@ fn draw_scene_text(
         format!("{} · {}", kind, safe_display(&worker.name))
     } else if kind == "TEAM" {
         format!(
-            "Team {} · {} people",
+            "Team {} · {}",
             floor
                 .team
                 .as_ref()
                 .map(|id| profile_for(&id.0, ctx.profiles).name)
                 .unwrap_or_default(),
-            scene.total_workers
+            person_count(scene.total_workers)
         )
     } else if scene.total_workers == 0 {
         "An empty office · create a task to bring it to life".into()
     } else {
-        format!("{} · {} people", kind, scene.total_workers)
+        format!("{} · {}", kind, person_count(scene.total_workers))
     };
     let page = if scene.page_count > 1 {
-        format!("  {}/{}", scene.page + 1, scene.page_count)
+        format!("  People page {}/{}", scene.page + 1, scene.page_count)
     } else {
         String::new()
     };
@@ -655,19 +743,18 @@ fn draw_scene_text(
         plate.height = plate.height.min(if ctx.tower { 1 } else { 2 });
         native_cells(frame, plate);
         let selected = focused && ctx.selected_worker == Some(&worker.id);
-        let warning = worker.status_at(ctx.now).needs_attention();
-        let marker = if warning {
-            "!"
-        } else if plate.height == 1 && worker.status_at(ctx.now) == WorkerStatus::Running {
-            "▸"
-        } else if plate.height == 1 {
-            "·"
-        } else if selected {
-            "›"
+        let warning = observed_attention(worker, ctx.now);
+        let marker = format!(
+            "{}{}",
+            if selected { ">" } else { " " },
+            state_marker(worker, ctx.now)
+        );
+        let show_name = ctx.name_plates || selected || crate::presentation::human_request(worker);
+        let name = if show_name {
+            character_name(worker, ctx.profiles)
         } else {
-            " "
+            String::new()
         };
-        let name = character_name(worker, ctx.profiles);
         let name = super::short_path(&name, usize::from(plate.width.saturating_sub(2)));
         let text = if plate.height > 1 {
             format!(
@@ -694,12 +781,28 @@ fn draw_scene_text(
             native_rect(seat.bounds, body, cw, ch),
             Action::Inspect(worker.id.clone()),
         );
+        for target in [
+            seat.workstation.selection,
+            seat.workstation.chair,
+            seat.workstation.computer,
+            seat.workstation.keyboard,
+        ] {
+            push_hit(
+                hits,
+                native_rect(target, body, cw, ch),
+                Action::Inspect(worker.id.clone()),
+            );
+        }
         push_hit(hits, plate, Action::Inspect(worker.id.clone()));
     }
 }
 
 fn character_name(worker: &Worker, profiles: &BTreeMap<String, CharacterProfile>) -> String {
     safe_display(&profile_for(&worker.id.0, profiles).name)
+}
+
+fn person_count(count: usize) -> String {
+    format!("{count} {}", if count == 1 { "person" } else { "people" })
 }
 
 fn push_hit(hits: &mut Vec<HitRegion>, area: Rect, action: Action) {
@@ -724,11 +827,9 @@ fn readable_split_width(room: PixelRect, cell_width: usize) -> Option<usize> {
 }
 
 fn native_cells(frame: &mut Frame, area: Rect) {
-    for y in area.y..area.bottom() {
-        for x in area.x..area.right() {
-            frame.buffer_mut()[(x, y)].set_symbol(" ").set_skip(false);
-        }
-    }
+    // A sampled art background does not participate in native theme mapping.
+    // Use a semantic panel so light-theme text never lands on a dark pixel row.
+    super::paint_opaque(frame, area, Style::default().fg(INK).bg(super::PANEL));
 }
 
 /// Text starts on the next complete terminal row. Actor hitboxes expand to
@@ -854,6 +955,141 @@ fn meeting_for(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn light_native_plates_replace_sampled_art_backgrounds() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let mut terminal = Terminal::new(TestBackend::new(12, 3)).unwrap();
+        terminal
+            .draw(|frame| {
+                for (row, foreground) in [INK, ACCENT, WARNING].into_iter().enumerate() {
+                    let area = Rect::new(0, row as u16, 12, 1);
+                    for x in 0..12 {
+                        frame.buffer_mut()[(x, row as u16)]
+                            .set_bg(Color::Rgb(34, 48, 56))
+                            .set_skip(true);
+                    }
+                    native_cells(frame, area);
+                    Paragraph::new("Label")
+                        .style(Style::default().fg(foreground))
+                        .render(area, frame.buffer_mut());
+                }
+                crate::views::remap_buffer_theme(frame.buffer_mut(), crate::views::UiTheme::Light);
+            })
+            .unwrap();
+        for (row, foreground) in [INK, ACCENT, WARNING].into_iter().enumerate() {
+            let cell = &terminal.backend().buffer()[(0, row as u16)];
+            assert_eq!(cell.bg, crate::views::light_color(crate::views::PANEL));
+            assert_eq!(cell.fg, crate::views::light_color(foreground));
+            assert!(!cell.skip);
+        }
+    }
+
+    #[test]
+    fn source_health_excludes_old_activity_from_live_counts() {
+        let mut office = Office::new(theywork_core::OfficeId("p".into()), "p".into());
+        let now = theywork_core::BLOCKED_AFTER_MS + 2;
+        for (id, available, observed) in [
+            ("live", true, now),
+            ("offline", false, now),
+            ("old", true, 1),
+        ] {
+            let mut worker = Worker::new(
+                WorkerId(id.into()),
+                office.id.clone(),
+                theywork_core::Agent::Codex,
+                id.into(),
+                now,
+            );
+            worker.turn_in_flight = true;
+            worker.coverage.available = available;
+            worker.coverage.observed_at = observed;
+            office.workers.push(worker);
+        }
+        let counts = FloorCounts::new(&office, now);
+        assert_eq!(
+            (
+                counts.working,
+                counts.attention,
+                counts.unavailable,
+                counts.stale
+            ),
+            (1, 0, 1, 1)
+        );
+        assert!(counts.compact().contains("1 offline · 1 stale"));
+        assert_eq!(state_marker(&office.workers[1], now), "-");
+        assert_eq!(state_marker(&office.workers[2], now), "~");
+    }
+
+    #[test]
+    fn names_off_keeps_selection_and_requests_distinct_without_color() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let mut world = World::new();
+        let mut profiles = BTreeMap::new();
+        for (id, alias) in [("a", "Leader"), ("b", "Peer"), ("c", "Ask")] {
+            worker(&mut world, 0, id);
+            let mut profile = profile_for(id, &BTreeMap::new());
+            profile.name = alias.into();
+            profiles.insert(id.into(), profile);
+        }
+        apply(
+            &mut world,
+            0,
+            "c",
+            theywork_core::EventKind::Wait(Some(WaitReason::HumanInput)),
+        );
+        let offices = world.offices().collect::<Vec<_>>();
+        for image in [false, true] {
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            let mut canvas = Canvas::new(0, 0);
+            canvas.set_color_depth(crate::canvas::ColorDepth::None);
+            if image {
+                canvas.set_image_cell_size(Some((8, 16)));
+            }
+            let mut studio = Studio::new();
+            terminal
+                .draw(|frame| {
+                    draw(
+                        frame,
+                        &mut canvas,
+                        &mut studio,
+                        Context {
+                            area: Rect::new(0, 0, 80, 24),
+                            world: &world,
+                            offices: &offices,
+                            selected_floor: 0,
+                            selected_worker: Some(&WorkerId("a".into())),
+                            team: None,
+                            now: 1_000,
+                            tower: true,
+                            motion: false,
+                            name_plates: false,
+                            light: false,
+                            palette: 0,
+                            wardrobe: &BTreeMap::new(),
+                            profiles: &profiles,
+                            designs: &BTreeMap::new(),
+                        },
+                    );
+                })
+                .unwrap();
+            let text = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert!(
+                text.contains(">·Leader") || text.contains(">· Leader"),
+                "selected alias must remain visible: {text}"
+            );
+            assert!(
+                text.contains("!Ask") || text.contains("! Ask"),
+                "the requester must remain named"
+            );
+            assert!(!text.contains("Peer"), "optional peer alias must be hidden");
+        }
+    }
     #[test]
     fn room_splits_preserve_character_scale_including_cell_alignment() {
         let mut office = Office::new(theywork_core::OfficeId("/p".into()), "/p".into());
@@ -1009,6 +1245,37 @@ mod tests {
         world
     }
 
+    #[test]
+    fn navigation_names_the_selected_family_instead_of_paging_the_entire_roster() {
+        let world = family_world();
+        for width in [80, 192] {
+            let layout = render(
+                &world,
+                (width, 36),
+                Rect::new(0, 2, width, 32),
+                0,
+                Some(&WorkerId("parent-b".into())),
+                None,
+                false,
+            );
+            assert!(layout.navigation_hint.contains("Floor 1/1"));
+            assert!(
+                layout.navigation_hint.contains("Team 2/2"),
+                "{}",
+                layout.navigation_hint
+            );
+            assert!(
+                layout.navigation_hint.contains("People 2/2"),
+                "{}",
+                layout.navigation_hint
+            );
+            assert!(
+                !layout.navigation_hint.contains("page"),
+                "both members are visible; other families are not extra pages"
+            );
+        }
+    }
+
     fn render(
         world: &World,
         size: (u16, u16),
@@ -1041,6 +1308,7 @@ mod tests {
                         now: 1_000,
                         tower,
                         motion: false,
+                        name_plates: true,
                         light: false,
                         palette: 0,
                         wardrobe: &BTreeMap::new(),

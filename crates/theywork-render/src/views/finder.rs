@@ -26,10 +26,13 @@ struct Entry {
     target: Target,
     title: String,
     context: String,
+    observation_age: String,
     path: String,
     badge: &'static str,
     status: Option<WorkerStatus>,
     searchable: String,
+    preview: String,
+    records: Vec<crate::work_brief::WorkRecord>,
 }
 
 #[derive(Default)]
@@ -89,6 +92,29 @@ impl Finder {
         self.refresh_entries(world, now, Some(profiles));
     }
 
+    fn matching_record<'a>(&self, entry: &'a Entry) -> Option<&'a crate::work_brief::WorkRecord> {
+        let query = self.query.to_lowercase();
+        let terms = query.split_whitespace().collect::<Vec<_>>();
+        let title = entry.title.to_lowercase();
+        if terms.iter().all(|term| title.contains(term)) {
+            return None;
+        }
+        entry
+            .records
+            .iter()
+            .filter_map(|record| {
+                let text = record.text.to_lowercase();
+                let score = terms.iter().filter(|term| text.contains(**term)).count();
+                (score > 0).then_some((score, record))
+            })
+            .max_by(|(left, a), (right, b)| left.cmp(right).then(a.at.cmp(&b.at)))
+            .map(|(_, record)| record)
+    }
+    pub fn selected_record(&self) -> Option<String> {
+        self.selected_entry()
+            .and_then(|entry| self.matching_record(entry))
+            .map(|record| record.key.clone())
+    }
     pub fn hit_regions(&self) -> Vec<HitRegion> {
         self.hits.clone()
     }
@@ -105,7 +131,7 @@ impl Finder {
             let attention = office
                 .workers
                 .iter()
-                .filter(|w| w.status_at(now).needs_attention())
+                .filter(|w| crate::presentation::needs_attention(w, now))
                 .count();
             let context = format!(
                 "Floor {:02} · {} workers · {} need attention",
@@ -120,9 +146,12 @@ impl Finder {
                 searchable: format!("{title} {path} project floor").to_lowercase(),
                 title,
                 context,
+                observation_age: String::new(),
                 path: path.clone(),
                 badge: "PROJECT",
                 status: None,
+                preview: String::new(),
+                records: Vec::new(),
             });
             for worker in &office.workers {
                 let status = worker.status_at(now);
@@ -170,19 +199,27 @@ impl Finder {
                     floor + 1
                 );
                 let searchable = format!(
-                    "{title} {path} {} {aliases} {}",
+                    "{title} {path} {} {aliases} {} {}",
                     worker.agent.label(),
-                    worker.git_branch.as_deref().unwrap_or_default()
+                    worker.git_branch.as_deref().unwrap_or_default(),
+                    crate::work_brief::searchable_work(world, worker)
                 )
                 .to_lowercase();
                 self.entries.push(Entry {
                     target: Target::Worker(office.id.clone(), worker.id.clone()),
                     title,
                     context,
+                    observation_age: crate::presentation::observation_age(&worker.coverage, now),
                     path: path.clone(),
                     badge,
                     status: Some(status),
                     searchable,
+                    preview: crate::work_brief::work_preview(world, worker, now),
+                    records: crate::work_brief::retained_records(
+                        world,
+                        worker,
+                        profiles.unwrap_or(&BTreeMap::new()),
+                    ),
                 });
             }
         }
@@ -368,7 +405,8 @@ impl Finder {
             frame.buffer_mut(),
         );
         let results_y = inner.y + 2;
-        self.page_size = usize::from(inner.height.saturating_sub(5) / 2).max(1);
+        let preview_height = if inner.height >= 13 { 3 } else { 0 };
+        self.page_size = usize::from(inner.height.saturating_sub(5 + preview_height) / 2).max(1);
         let first = self.selected / self.page_size * self.page_size;
         let summary = if self.unavailable {
             "That item left the tower. Choose another result.".to_string()
@@ -434,7 +472,10 @@ impl Finder {
                 Rect::new(inner.x, y, inner.width, 2),
                 match &entry.target {
                     Target::Project(id) => Action::EnterFloor(id.clone()),
-                    Target::Worker(_, id) => Action::Inspect(id.clone()),
+                    Target::Worker(_, id) => self.matching_record(entry).map_or_else(
+                        || Action::Inspect(id.clone()),
+                        |record| Action::InspectRecord(id.clone(), record.key.clone()),
+                    ),
                 },
             ));
             let badge_width = (entry.badge.len() + 2).min(usize::from(inner.width) / 2);
@@ -457,15 +498,55 @@ impl Finder {
                     Rect::new(inner.right() - badge_width as u16, y, badge_width as u16, 1),
                     frame.buffer_mut(),
                 );
+            let age_width = if entry.observation_age.is_empty() {
+                0
+            } else {
+                12.min(inner.width / 2)
+            };
+            let context_width = inner.width.saturating_sub(age_width);
             Paragraph::new(short_path(
                 &format!("  {}", entry.context),
-                inner.width as usize,
+                context_width as usize,
             ))
             .style(row_style.fg(MUTED))
             .render(
-                Rect::new(inner.x, y + 1, inner.width, 1),
+                Rect::new(inner.x, y + 1, context_width, 1),
                 frame.buffer_mut(),
             );
+            if age_width > 0 {
+                Paragraph::new(short_path(&entry.observation_age, age_width as usize))
+                    .alignment(ratatui::layout::Alignment::Right)
+                    .style(row_style.fg(MUTED))
+                    .render(
+                        Rect::new(inner.right() - age_width, y + 1, age_width, 1),
+                        frame.buffer_mut(),
+                    );
+            }
+        }
+        if preview_height > 0 {
+            if let Some(entry) = self.selected_entry() {
+                Paragraph::new(
+                    super::wrap_text(
+                        &super::safe_multiline(
+                            &self
+                                .matching_record(entry)
+                                .map_or_else(|| entry.preview.clone(), |record| record.detail()),
+                        ),
+                        inner.width,
+                    )
+                    .join("\n"),
+                )
+                .style(style.fg(INK))
+                .render(
+                    Rect::new(
+                        inner.x,
+                        inner.bottom() - 2 - preview_height,
+                        inner.width,
+                        preview_height,
+                    ),
+                    frame.buffer_mut(),
+                );
+            }
         }
         let path = self
             .selected_entry()
@@ -542,6 +623,71 @@ mod tests {
     }
 
     #[test]
+    fn long_search_rows_keep_observation_age_and_offline_projects_do_not_request_attention() {
+        let path = format!("/projects/{}", "long-project-".repeat(10));
+        let mut world = World::new();
+        world.apply(seen(
+            &path,
+            "worker",
+            &format!("needle {}", "long title ".repeat(20)),
+        ));
+        let event = |kind| Event {
+            at: 61_000,
+            office: OfficeId(path.clone()),
+            office_path: path.clone(),
+            worker: WorkerId("worker".into()),
+            agent: Agent::Codex,
+            kind,
+        };
+        world.apply(event(EventKind::Coverage(theywork_core::SourceCoverage {
+            observed_at: 1000,
+            available: true,
+            ..Default::default()
+        })));
+        world.apply(event(EventKind::Wait(Some(
+            theywork_core::WaitReason::HumanApproval,
+        ))));
+        let mut finder = Finder::default();
+        finder.show();
+        finder.refresh(&world, 61_000);
+        query(&mut finder, "needle");
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| finder.draw(frame)).unwrap();
+        let rows: Vec<String> = terminal
+            .backend()
+            .buffer()
+            .content
+            .chunks(80)
+            .map(|row| row.iter().map(|cell| cell.symbol()).collect())
+            .collect();
+        let result = rows
+            .iter()
+            .position(|row| row.contains("> needle"))
+            .expect("selected result");
+        assert!(rows[result].contains("Approval needed"));
+        assert!(rows[result + 1].contains("1m ago"), "{}", rows[result + 1]);
+        world.apply(event(EventKind::Coverage(theywork_core::SourceCoverage {
+            observed_at: 1000,
+            available: false,
+            ..Default::default()
+        })));
+        finder.refresh(&world, 61_000);
+        let project = finder
+            .entries
+            .iter()
+            .find(|entry| matches!(entry.target, Target::Project(_)))
+            .unwrap();
+        assert!(project.context.contains("0 need attention"));
+        let worker = finder
+            .entries
+            .iter()
+            .find(|entry| matches!(entry.target, Target::Worker(_, _)))
+            .unwrap();
+        assert_eq!(worker.badge, "Source unavailable");
+        assert_eq!(worker.observation_age, "1m ago");
+    }
+
+    #[test]
     fn search_distinguishes_duplicate_projects_and_prioritizes_exact_task_titles() {
         let mut world = World::new();
         world.apply(seen("/clients/red/api", "red", "Fix login"));
@@ -576,6 +722,71 @@ mod tests {
         );
         query(&mut finder, "feature/search");
         assert_eq!(finder.matches.len(), 2);
+    }
+
+    #[test]
+    fn retained_file_and_result_search_opens_the_exact_shared_record() {
+        let mut world = World::new();
+        world.apply(seen("/checkout", "lead", "Retry policy"));
+        for (at, path) in [(10, "src/old_retry.rs"), (20, "src/current_retry.rs")] {
+            let mut event = seen("/checkout", "lead", "Retry policy");
+            event.at = at;
+            event.kind = EventKind::Did(theywork_core::Beat {
+                at,
+                activity: Activity::Editing {
+                    detail: path.into(),
+                },
+                outcome: None,
+            });
+            world.apply(event);
+        }
+        let mut event = seen("/checkout", "lead", "Retry policy");
+        event.at = 30;
+        event.kind = EventKind::Collaboration(theywork_core::CollaborationEvent {
+            id: "result-1".into(),
+            at: 30,
+            actor: WorkerId("lead".into()),
+            recipient: None,
+            kind: theywork_core::CollaborationKind::Result,
+            text: Some("Validated idempotency behavior".into()),
+            correlation_id: None,
+            native_turn_id: None,
+            native_item_id: Some("message-1".into()),
+            evidence: theywork_core::Evidence::NativeEvent,
+        });
+        world.apply(event);
+        let mut finder = Finder::default();
+        finder.show();
+        finder.refresh(&world, 30);
+        let brief = crate::work_brief::WorkBrief::new(
+            &world,
+            &WorkerId("lead".into()),
+            &BTreeMap::new(),
+            30,
+        )
+        .unwrap();
+        for (query_text, body) in [
+            ("old_retry", "Editing src/old_retry.rs"),
+            ("idempotency", "Validated idempotency behavior"),
+        ] {
+            query(&mut finder, query_text);
+            let key = finder
+                .selected_record()
+                .expect("search should select the actual matching record");
+            assert!(brief
+                .records
+                .iter()
+                .any(|record| record.key == key && record.text.contains(body)));
+            draw(&mut finder, 80, 24);
+            assert!(finder.hit_regions().iter().any(
+                |hit| hit.action == Action::InspectRecord(WorkerId("lead".into()), key.clone())
+            ));
+        }
+        query(&mut finder, "Retry policy");
+        assert!(
+            finder.selected_record().is_none(),
+            "title-only navigation should open Now"
+        );
     }
 
     #[test]

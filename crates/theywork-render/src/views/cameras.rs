@@ -13,7 +13,102 @@ use super::{
     WARNING,
 };
 use crate::canvas::Canvas;
+use crate::interaction::{Action, HitRegion};
 use crate::sprite::SpriteSet;
+
+/// Empty observations have different causes and different next steps. Keep this
+/// visible in the workspace rather than making people infer it from diagnostics.
+pub(crate) fn draw_empty(
+    frame: &mut Frame,
+    area: Rect,
+    observation: &crate::observation::ObservationSummary,
+) -> Vec<HitRegion> {
+    let area = area.intersection(frame.area());
+    if area.width == 0 || area.height == 0 {
+        return Vec::new();
+    }
+    paint_opaque(frame, area, Style::default().fg(INK).bg(BACKGROUND));
+    let (title, detail, primary, action) = if observation.enabled_sources == 0 {
+        ("YOUR TOWER STARTS HERE", "No sources connected. Choose where to find your conversations, or create a task using an available provider.", "Connect sources", Action::Sources)
+    } else if observation.scanning {
+        ("LOOKING FOR YOUR TEAM", "Reading the selected local sources. Your projects will appear as floors when conversations are found.", "Connections", Action::Connections)
+    } else if !observation.errors.is_empty() {
+        ("SOURCE NEEDS ATTENTION", "A local source could not be read. Check its folder and connection; an empty tower does not mean there is no work.", "Check sources", Action::Sources)
+    } else if observation.filtered {
+        ("NO CONVERSATIONS IN THIS FILTER", "No conversations match the selected project filter. Start without --project to show all selected sources.", "Check sources", Action::Sources)
+    } else {
+        ("YOUR TEAM HAS NOT ARRIVED YET", "The selected sources contain no conversations yet. Create a task here, or start one in your original agent app.", "New task", Action::NewTask)
+    };
+    let inner = if area.width > 4 { inset(area, 1) } else { area };
+    if !has_area(inner) {
+        return Vec::new();
+    }
+    Paragraph::new(short_path(title, inner.width.into()))
+        .style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))
+        .render(
+            Rect::new(inner.x, inner.y, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    let mut action_y = inner.bottom().saturating_sub(1);
+    if inner.height > 3 {
+        let mut body = detail.to_string();
+        if let Some(error) = observation.errors.first() {
+            body.push_str("\n\n");
+            body.push_str(&super::safe_display(error));
+            if observation.errors.len() > 1 {
+                body.push_str(&format!(
+                    "\n{} additional source errors.",
+                    observation.errors.len() - 1
+                ));
+            }
+        }
+        let rows = wrapped_rows(&body, inner.width).min(inner.height - 3);
+        action_y = (inner.y + 3 + rows).min(action_y);
+        Paragraph::new(body)
+            .style(Style::default().fg(INK))
+            .wrap(ratatui::widgets::Wrap { trim: false })
+            .render(
+                Rect::new(inner.x, inner.y + 2, inner.width, rows),
+                frame.buffer_mut(),
+            );
+    }
+    if action_y <= inner.y {
+        return Vec::new();
+    }
+    let label = format!("[{primary}]");
+    let button = Rect::new(inner.x, action_y, inner.width.min(label.len() as u16), 1);
+    Paragraph::new(short_path(&label, button.width.into()))
+        .style(Style::default().fg(ACCENT).bg(PANEL_HIGHLIGHT))
+        .render(button, frame.buffer_mut());
+    vec![HitRegion::new(button, action)]
+}
+
+fn wrapped_rows(text: &str, width: u16) -> u16 {
+    let width = usize::from(width).max(1);
+    text.split('\n')
+        .map(|line| {
+            let mut rows = 1usize;
+            let mut used = 0usize;
+            for word in line.split_whitespace() {
+                let length = Line::from(word).width();
+                if used > 0 && used + 1 + length > width {
+                    rows += 1;
+                    used = 0;
+                }
+                if used > 0 {
+                    used += 1;
+                }
+                used += length;
+                if used > width {
+                    rows += (used - 1) / width;
+                    used = (used - 1) % width + 1;
+                }
+            }
+            rows
+        })
+        .sum::<usize>()
+        .min(u16::MAX as usize) as u16
+}
 
 /// The directory is one column; rows are its visible project capacity.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -48,6 +143,8 @@ struct StatusCounts {
     idle: usize,
     blocked: usize,
     failed: usize,
+    unavailable: usize,
+    stale: usize,
 }
 impl StatusCounts {
     fn for_office(office: &Office, now: Millis) -> Self {
@@ -57,6 +154,17 @@ impl StatusCounts {
     }
     fn add_office(&mut self, office: &Office, now: Millis) {
         for worker in &office.workers {
+            match crate::presentation::state_label(worker, now) {
+                "Source unavailable" => {
+                    self.unavailable += 1;
+                    continue;
+                }
+                "Last known state" => {
+                    self.stale += 1;
+                    continue;
+                }
+                _ => {}
+            }
             match worker_status(worker, now) {
                 WorkerStatus::Running => self.running += 1,
                 WorkerStatus::Idle => self.idle += 1,
@@ -77,7 +185,9 @@ impl StatusCounts {
         }
     }
     fn marker(&self) -> &'static str {
-        if self.blocked > 0 {
+        if self.unavailable > 0 || self.stale > 0 {
+            "~"
+        } else if self.blocked > 0 {
             "!"
         } else if self.failed > 0 {
             "×"
@@ -89,6 +199,12 @@ impl StatusCounts {
     }
     fn compact(&self) -> String {
         let mut parts = Vec::new();
+        if self.unavailable > 0 {
+            parts.push(format!("{} offline", self.unavailable));
+        }
+        if self.stale > 0 {
+            parts.push(format!("{} stale", self.stale));
+        }
         if self.blocked > 0 {
             parts.push(format!("!{} attention", self.blocked));
         }
@@ -99,7 +215,7 @@ impl StatusCounts {
         parts.join(" · ")
     }
     fn line(&self) -> Line<'static> {
-        Line::from(vec![
+        let mut line = vec![
             Span::styled(
                 format!("  {} working", self.running),
                 Style::default().fg(ACCENT),
@@ -113,7 +229,17 @@ impl StatusCounts {
                 format!(" · {} failed", self.failed),
                 Style::default().fg(if self.failed > 0 { HOT } else { MUTED }),
             ),
-        ])
+        ];
+        if self.unavailable > 0 || self.stale > 0 {
+            line.insert(
+                0,
+                Span::styled(
+                    format!(" {} offline · {} stale ·", self.unavailable, self.stale),
+                    Style::default().fg(WARNING),
+                ),
+            );
+        }
+        Line::from(line)
     }
 }
 
@@ -505,6 +631,68 @@ fn path_tail(path: &str, width: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn empty_states_explain_the_cause_and_keep_a_visible_next_action() {
+        use crate::observation::ObservationSummary;
+        use ratatui::{backend::TestBackend, Terminal};
+        let cases = [
+            (
+                ObservationSummary {
+                    enabled_sources: 0,
+                    ..Default::default()
+                },
+                "YOUR TOWER",
+                Action::Sources,
+            ),
+            (
+                ObservationSummary {
+                    scanning: true,
+                    ..Default::default()
+                },
+                "LOOKING",
+                Action::Connections,
+            ),
+            (
+                ObservationSummary {
+                    errors: vec!["Folder unavailable".into()],
+                    ..Default::default()
+                },
+                "SOURCE NEEDS",
+                Action::Sources,
+            ),
+            (
+                ObservationSummary {
+                    filtered: true,
+                    ..Default::default()
+                },
+                "NO CONVERSATIONS",
+                Action::Sources,
+            ),
+            (ObservationSummary::default(), "YOUR TEAM", Action::NewTask),
+        ];
+        for (summary, expected, action) in cases {
+            for (width, height) in [(32, 14), (80, 24), (192, 58)] {
+                let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+                let area = Rect::new(1, 2, width - 2, height - 3);
+                let mut hits = Vec::new();
+                terminal
+                    .draw(|frame| hits = draw_empty(frame, area, &summary))
+                    .unwrap();
+                assert_eq!(hits.len(), 1);
+                assert_eq!(hits[0].action, action);
+                assert_eq!(hits[0].area.intersection(area), hits[0].area);
+                let text = terminal
+                    .backend()
+                    .buffer()
+                    .content
+                    .iter()
+                    .map(|cell| cell.symbol())
+                    .collect::<String>();
+                assert!(text.contains(expected), "{width}x{height}: {text}");
+                assert!(text.contains('['));
+            }
+        }
+    }
     use theywork_core::{Activity, Agent, Event, EventKind, OfficeId, WorkerId, BLOCKED_AFTER_MS};
 
     fn event(office: &str, worker: &str, at: Millis, kind: EventKind) -> Event {

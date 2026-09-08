@@ -38,6 +38,39 @@ pub fn state_label(worker: &Worker, now: i64) -> &'static str {
     }
 }
 
+pub fn needs_attention(worker: &Worker, now: i64) -> bool {
+    matches!(
+        state_label(worker, now),
+        "Approval needed" | "Question for you" | "Needs a follow-up" | "Error reported"
+    )
+}
+
+pub fn observation_age(coverage: &SourceCoverage, now: i64) -> String {
+    record_age(
+        (coverage.observed_at > 0).then_some(coverage.observed_at),
+        now,
+    )
+}
+
+pub fn record_age(at: Option<i64>, now: i64) -> String {
+    let Some(at) = at else {
+        return "age unknown".into();
+    };
+    let seconds = now.saturating_sub(at).max(0) / 1000;
+    let amount = if seconds < 60 {
+        format!("{seconds}s")
+    } else if seconds < 3600 {
+        format!("{}m", seconds / 60)
+    } else if seconds < 86400 {
+        format!("{}h", seconds / 3600)
+    } else if seconds / 86400 > 999 {
+        ">999d".into()
+    } else {
+        format!("{}d", seconds / 86400)
+    };
+    format!("{amount} ago")
+}
+
 pub fn wait_description(reason: Option<WaitReason>) -> &'static str {
     match reason {
         Some(WaitReason::HumanApproval) => {

@@ -20,11 +20,12 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
-use theywork_core::{Millis, Office, Worker, WorkerStatus};
+use theywork_core::{Millis, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
 #[cfg(test)]
 use crate::sprite::WORKER_HEAD_HEIGHT;
+#[cfg(test)]
 use crate::sprite::{Sprite, SpriteSet, WorkerLook};
 
 pub(crate) const BACKGROUND: Color = Color::Rgb(13, 11, 20);
@@ -34,9 +35,9 @@ pub(crate) const PANEL: Color = Color::Rgb(23, 20, 37);
 pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(42, 36, 64);
 pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(46, 36, 16);
 pub(crate) const INK: Color = Color::Rgb(232, 226, 214);
-pub(crate) const MUTED: Color = Color::Rgb(138, 130, 153);
+pub(crate) const MUTED: Color = Color::Rgb(165, 156, 178);
 pub(crate) const ACCENT: Color = Color::Rgb(88, 214, 232);
-pub(crate) const HOT: Color = Color::Rgb(232, 52, 44);
+pub(crate) const HOT: Color = Color::Rgb(255, 105, 105);
 pub(crate) const WARNING: Color = Color::Rgb(240, 180, 41);
 pub(crate) const GOOD: Color = Color::Rgb(86, 194, 106);
 pub(crate) const SCANLINE: Color = Color::Rgb(42, 36, 64);
@@ -143,133 +144,15 @@ pub(crate) fn paint_opaque(frame: &mut Frame, area: Rect, style: Style) {
         return;
     }
     let buffer = frame.buffer_mut();
-    buffer.set_style(area, style);
     for row in 0..area.height {
         for column in 0..area.width {
             if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
-                cell.set_symbol(" ").set_skip(false);
+                cell.reset();
+                cell.set_symbol(" ").set_style(style).set_skip(false);
             }
         }
     }
 }
-pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Blocked)
-    {
-        return WARNING;
-    }
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Failed)
-    {
-        return HOT;
-    }
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == theywork_core::WorkerStatus::Running)
-    {
-        GOOD
-    } else {
-        MUTED
-    }
-}
-
-pub(crate) fn draw_tab_bar(
-    frame: &mut Frame,
-    offices: &[&Office],
-    selected: usize,
-    all_selected: bool,
-    now: Millis,
-) -> Vec<crate::interaction::HitRegion> {
-    use crate::interaction::{Action, HitRegion};
-    let mut hits = Vec::new();
-    let area = frame.area();
-    if area.width == 0 || area.height == 0 {
-        return hits;
-    }
-    let selected = selected.min(offices.len().saturating_sub(1));
-    let tower_style = Style::default()
-        .fg(if all_selected { INK } else { MUTED })
-        .bg(if all_selected { PANEL_HIGHLIGHT } else { PANEL });
-    let title = if area.width >= 38 { " 0 TOWER " } else { "0 " };
-    hits.push(HitRegion::new(
-        Rect::new(area.x, area.y, (title.len() as u16).min(area.width), 1),
-        Action::Tower,
-    ));
-    let counter = if offices.is_empty() {
-        "no floors".to_string()
-    } else {
-        format!("{}/{}", selected + 1, offices.len())
-    };
-    let tail = if area.width >= 90 {
-        format!(" {counter} · / find · c connect · ? help ")
-    } else if area.width >= 62 {
-        format!(" {counter} · / find · ? help ")
-    } else if area.width >= 24 {
-        format!(" {counter} · ? help ")
-    } else {
-        format!(" {counter}")
-    };
-    let available =
-        usize::from(area.width).saturating_sub(title.len() + Line::from(tail.as_str()).width());
-    let mut spans = vec![Span::styled(title, tower_style)];
-    if !offices.is_empty() && available > 4 {
-        let visible = (available / 24).max(1).min(offices.len());
-        let first = (selected / visible * visible).min(offices.len().saturating_sub(visible));
-        let slot_width = available / visible;
-        for (index, office) in offices.iter().enumerate().skip(first).take(visible) {
-            hits.push(HitRegion::new(
-                Rect::new(
-                    area.x + title.len() as u16 + ((index - first) * slot_width) as u16,
-                    area.y,
-                    slot_width as u16,
-                    1,
-                ),
-                Action::EnterFloor(office.id.clone()),
-            ));
-            let style = Style::default()
-                .fg(if index == selected { INK } else { MUTED })
-                .bg(if index == selected && !all_selected {
-                    PANEL_HIGHLIGHT
-                } else {
-                    PANEL
-                });
-            let number = format!(
-                "{}{} ",
-                if index == selected { ">" } else { " " },
-                index + 1
-            );
-            let marker = match office_dot_color(office, now) {
-                WARNING => "!",
-                HOT => "×",
-                GOOD => "●",
-                _ => "·",
-            };
-            let name = short_path(&office.name, slot_width.saturating_sub(number.len() + 2));
-            let used = number.len() + Line::from(name.as_str()).width() + 1;
-            spans.push(Span::styled(number, style));
-            spans.push(Span::styled(name, style));
-            spans.push(Span::styled(
-                marker,
-                style.fg(office_dot_color(office, now)),
-            ));
-            spans.push(Span::styled(
-                " ".repeat(slot_width.saturating_sub(used)),
-                style,
-            ));
-        }
-    }
-    spans.push(Span::styled(tail, Style::default().fg(MUTED).bg(PANEL)));
-    Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(PANEL))
-        .render(Rect::new(area.x, area.y, area.width, 1), frame.buffer_mut());
-    hits
-}
-
 pub(crate) fn inset(area: Rect, amount: u16) -> Rect {
     let horizontal = amount.saturating_mul(2).min(area.width);
     let vertical = amount.saturating_mul(2).min(area.height);
@@ -372,34 +255,8 @@ pub(crate) fn draw_panel(frame: &mut Frame, area: Rect, title: &str, selected: b
     inset(area, 1)
 }
 
-pub(crate) fn fill_office_background(canvas: &mut Canvas, sprites: &SpriteSet) -> usize {
-    canvas.fill(WALL);
-    let wall_height = canvas.height().saturating_mul(2) / 3;
-    let floor_start = wall_height.min(canvas.height());
-    for y in floor_start..canvas.height() {
-        for x in 0..canvas.width() {
-            canvas.set(x, y, FLOOR);
-        }
-    }
-    let wall_width = canvas.scale_width(sprites.wall_tile.width().max(1));
-    let wall_height_tile = canvas.scale_half_height(sprites.wall_tile.height().max(1));
-    for y in (0..floor_start).step_by(wall_height_tile) {
-        for x in (0..canvas.width()).step_by(wall_width) {
-            canvas.blit_scaled(&sprites.wall_tile, x, y, wall_width, wall_height_tile);
-        }
-    }
-
-    let floor_width = canvas.scale_width(sprites.floor_tile.width().max(1));
-    let floor_height = canvas.scale_half_height(sprites.floor_tile.height().max(1));
-    for y in (floor_start..canvas.height()).step_by(floor_height) {
-        for x in (0..canvas.width()).step_by(floor_width) {
-            canvas.blit_scaled(&sprites.floor_tile, x, y, floor_width, floor_height);
-        }
-    }
-    floor_start
-}
-
 #[derive(Clone, Copy)]
+#[cfg(test)]
 pub(crate) struct PixelRect {
     pub(crate) x: usize,
     pub(crate) y: usize,
@@ -407,6 +264,7 @@ pub(crate) struct PixelRect {
     pub(crate) height: usize,
 }
 
+#[cfg(test)]
 pub(crate) fn render_worker_with_look(
     canvas: &mut Canvas,
     sprites: &SpriteSet,
@@ -435,6 +293,7 @@ pub(crate) fn render_worker_with_look(
     );
 }
 
+#[cfg(test)]
 pub(crate) fn render_worker_head_with_look(
     canvas: &mut Canvas,
     sprites: &SpriteSet,
@@ -456,6 +315,7 @@ fn sprite_pixel_width(canvas: &Canvas) -> usize {
     }
 }
 
+#[cfg(test)]
 fn render_sprite_region(
     canvas: &mut Canvas,
     sprite: &Sprite,
@@ -504,10 +364,6 @@ pub(crate) fn status_color(status: WorkerStatus) -> Color {
         WorkerStatus::Blocked => WARNING,
         WorkerStatus::Failed => HOT,
     }
-}
-
-pub(crate) fn status_style(status: WorkerStatus) -> Style {
-    Style::default().fg(status_color(status))
 }
 
 pub(crate) fn elapsed_ms(now: Millis, then: Millis) -> Millis {
@@ -632,6 +488,7 @@ mod tests {
                 for cell in &mut frame.buffer_mut().content {
                     cell.set_symbol("X");
                     cell.set_bg(Color::Blue);
+                    cell.set_style(Style::default().add_modifier(Modifier::BOLD));
                 }
                 paint_opaque(frame, area, Style::default().bg(PANEL));
             })
@@ -642,6 +499,7 @@ mod tests {
                 let cell = &buffer.content[usize::from(row) * 12 + usize::from(column)];
                 assert_eq!(cell.symbol(), " ");
                 assert_eq!(cell.bg, PANEL);
+                assert!(!cell.modifier.contains(Modifier::BOLD));
             }
         }
     }

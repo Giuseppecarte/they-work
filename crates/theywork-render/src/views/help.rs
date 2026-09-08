@@ -6,10 +6,16 @@ use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
 
-use super::{has_area, inset, paint_opaque, INK, MUTED, PANEL, PANEL_HIGHLIGHT};
+use super::{has_area, inset, paint_opaque, INK, MUTED, PANEL};
 
 pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
-    let area = frame.area();
+    let full = frame.area();
+    let area = Rect::new(
+        full.x,
+        full.y.saturating_add(2),
+        full.width,
+        full.height.saturating_sub(3),
+    );
     if !has_area(area) {
         return;
     }
@@ -28,7 +34,7 @@ pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
     let block = Block::default()
         .title(" ? HELP / YOUR TOWER ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(PANEL_HIGHLIGHT))
+        .border_style(Style::default().fg(super::ACCENT))
         .style(block_style);
     block.render(popup, frame.buffer_mut());
 
@@ -36,39 +42,37 @@ pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
     if !has_area(inner) {
         return;
     }
-    let entries = [
-        "Each floor is a project. Each worker is a conversation.",
-        "/ or Ctrl+K finds a project, task, provider or state.",
-        "Enter visits a floor, then a desk. Esc / Backspace returns.",
-        "Arrows / hjkl select · Tab / Shift-Tab focuses controls.",
-        "0 tower · 1–9 floor · ! next worker needing attention.",
-        "WORKING: active turn. IDLE: ready for a new task.",
-        "WAITING ON YOU: a recorded request needs your response.",
-        "NEEDS HELP: an open turn went quiet; inspect its history.",
-        "FAILED: the last recorded activity reported an error.",
-        "m controls the selected task; n creates a new task.",
-        "Codex managed tasks: F5 send, F2 stop, F4 live requests.",
-        "F6 reconnects a saved managed task without starting a turn.",
-        "Claude: F3 opens its verified official background console.",
-        "b notebook: attention, deliveries, changes and team tree.",
-        "g team: recorded delegation, session membership or fork.",
-        "Notebook r marks seen; it never resolves or approves work.",
-        "C connection controls and official provider login.",
-        "p phone · 1–4: Now / Attention / Edits / Messages.",
-        "Phone: ←→ channel · ↑↓ message · Enter inspect worker.",
-        "Scene: PgUp/PgDn floors · Home/End first/last item.",
-        "Desk: ↑↓ history · PgUp/PgDn page · ←→ other worker.",
-        "Inspector: Home top · End bottom of recorded context.",
-        "d office design · a character in inspector · s settings.",
-        "Desk: w character · W original. Traits are fictional.",
-        "c / C Connections: sources, capabilities and official login.",
-        "Click a person to inspect; approving needs its own action.",
-        "Mouse is on by default; Settings or --mouse=off disables it.",
-        "Observation is read-only and needs no they-work account.",
-        "Keep Remember enabled to retain managed Codex tasks.",
-        "? help · q quits (or closes the current overlay).",
+    let mut entries = vec![
+        "Each floor is a project; each worker is a real task.".to_string(),
+        "Select a worker, read its work brief, then choose an available action.".into(),
     ];
-    let content_height = inner.height.saturating_sub(1);
+    entries.extend(
+        crate::interaction::navigation_actions()
+            .into_iter()
+            .map(|action| format!("{}  {}", action.shortcut(), action.label())),
+    );
+    entries.extend([
+        "Tab / Shift+Tab focus controls. Arrows select or scroll; Enter activates.",
+        "Esc returns. Mouse clicks use the same available actions.",
+        "Scene: PgUp/PgDn changes floors. 1–9 jumps to a floor; ! finds attention.",
+        "Work brief: Now, Activity, Team and Details. e / F7 expands the panel.",
+        "Activity: read retained events; Back to latest resumes following updates.",
+        "Thinking reports an observed state, not a progress estimate.",
+        "Question / approval means human input; team/process waits do not.",
+        "Source unavailable / last known means the observation is not current.",
+        "m opens an instruction draft for the selected task. F7 expands with the draft intact.",
+        "Send and approval choices are explicit. Opening a worker never approves.",
+        "Claude messages and decisions use its available official conversation.",
+        "b Attention; g the selected worker’s Team. Seen/reviewed marks are local.",
+        "d Office design; a Character. Preview changes, Apply to save, Esc to cancel.",
+        "s Settings. Advanced contains compatibility cameras and text graphics.",
+        "Older cameras retain limited artwork and controls; Tower and Office are the main views.",
+        "p Phone: recorded updates. 1–4 or ←→ selects Now, Attention, Edits or Messages.",
+        "Mouse is on by default; Settings or --mouse=off returns terminal text selection.",
+        "Observation needs no they-work account. Provider controls require their own connection.",
+        "q quits outside text entry; ? opens this help.",
+    ].into_iter().map(str::to_string));
+    let content_height = inner.height;
     if content_height == 0 {
         return;
     }
@@ -102,12 +106,6 @@ pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
         .scroll(((*scroll).min(u16::MAX as usize) as u16, 0))
         .render(
             Rect::new(inner.x, inner.y, inner.width, content_height),
-            frame.buffer_mut(),
-        );
-    Paragraph::new("↑↓ scroll · Esc close")
-        .style(Style::default().fg(INK).bg(PANEL_HIGHLIGHT))
-        .render(
-            Rect::new(inner.x, inner.y + content_height, inner.width, 1),
             frame.buffer_mut(),
         );
 }

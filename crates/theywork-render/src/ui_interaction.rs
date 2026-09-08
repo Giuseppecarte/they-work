@@ -80,19 +80,64 @@ impl Ui {
         self.phone_open = false;
         self.settings_open = false;
         self.help_open = false;
-        if self.customize.open {
-            self.customize.store(
-                &mut self.character_profiles,
-                &mut self.office_designs,
-                &mut self.wardrobe,
-            );
-            self.customize.open = false;
-        }
+        self.customize.open = false;
+        self.more_open = false;
         self.focus = None;
     }
     pub(crate) fn activate(&mut self, action: Action) -> Option<UiCommand> {
         let enter_floor = matches!(&action, Action::EnterFloor(_));
         match action {
+            Action::More => {
+                self.more_open = !self.more_open;
+                self.more_cursor = 0;
+                None
+            }
+            Action::Advanced => {
+                self.close_panels();
+                self.settings_open = true;
+                self.advanced_settings = true;
+                self.settings_cursor = 0;
+                None
+            }
+            Action::WorkTab(tab) => {
+                self.work_panel.select_tab(tab);
+                None
+            }
+            Action::WorkLatest => {
+                self.work_panel.latest();
+                None
+            }
+            Action::WorkRecord(id) => {
+                self.work_panel.focus_record(id);
+                None
+            }
+            Action::WorkResults => {
+                self.work_panel.results();
+                None
+            }
+            Action::WorkExpand => {
+                self.work_panel.expanded = !self.work_panel.expanded;
+                None
+            }
+            Action::WorkActions => {
+                self.work_panel.toggle_actions();
+                None
+            }
+            Action::ApplyAppearance => {
+                if self.customize.open && self.customize.valid() {
+                    self.customize.store(
+                        &mut self.character_profiles,
+                        &mut self.office_designs,
+                        &mut self.wardrobe,
+                    );
+                    self.customize.open = false;
+                }
+                None
+            }
+            Action::CancelAppearance => {
+                self.customize.open = false;
+                None
+            }
             Action::Control(command) => self.controls.activate(command).map(Self::control_command),
             Action::Sources => {
                 if self.controls.busy() {
@@ -128,10 +173,19 @@ impl Ui {
             }
             Action::CustomizeField(field) => {
                 self.customize.field = field;
+                self.customize.handle_key(
+                    crossterm::event::KeyEvent::new(
+                        KeyCode::Enter,
+                        crossterm::event::KeyModifiers::NONE,
+                    ),
+                    &mut self.character_profiles,
+                    &mut self.office_designs,
+                    &mut self.wardrobe,
+                );
                 None
             }
             Action::Setting(index) => {
-                self.settings_cursor = index.min(7);
+                self.settings_cursor = index.min(if self.advanced_settings { 3 } else { 5 });
                 self.handle_settings_key(KeyCode::Right)
             }
             Action::ToggleMouse => {
@@ -199,8 +253,17 @@ impl Ui {
             }
             Action::Inspect(id) => {
                 self.close_panels();
+                self.work_panel.select_worker(&id);
+                self.work_panel.select_tab(crate::work_brief::WorkTab::Now);
                 self.phone_pending_worker = Some(id);
                 self.desk_scroll = 0;
+                None
+            }
+            Action::InspectRecord(id, record) => {
+                self.close_panels();
+                self.work_panel.select_worker(&id);
+                self.work_panel.focus_record(record);
+                self.phone_pending_worker = Some(id);
                 None
             }
             Action::Controls(id) => {
@@ -233,9 +296,8 @@ impl Ui {
             Action::Team(id) => {
                 self.close_panels();
                 self.phone_pending_worker = Some(id.clone());
-                self.workboard.scope_all = false;
-                self.workboard.show(views::workboard::Channel::Team);
-                self.workboard.focus_worker(id);
+                self.work_panel.select_worker(&id);
+                self.work_panel.select_tab(crate::work_brief::WorkTab::Team);
                 None
             }
             Action::SelectTeam(id) => {
@@ -263,123 +325,254 @@ impl Ui {
             }
         }
     }
+    pub(crate) fn more_actions(&self) -> Vec<Action> {
+        let mut actions = crate::interaction::navigation_actions();
+        actions.extend([
+            Action::Key(KeyCode::Char('s')),
+            Action::Key(KeyCode::Char('?')),
+        ]);
+        actions
+    }
     pub(crate) fn draw_toolbar(&mut self, frame: &mut Frame) {
-        let area = frame.area();
-        if area.height < 3 {
+        let full = frame.area();
+        if full.height == 0 {
             return;
         }
-        let actions = [
-            ("Tower", Action::Tower),
-            ("Attention", Action::Attention),
-            ("Deliveries", Action::Deliveries),
-            ("Find", Action::Find),
-            ("New task", Action::NewTask),
-            ("Connections", Action::Connections),
-        ];
-        let compact = area.width < 64;
-        let short = ["Tower", "Help!", "Results", "Find", "New", "Connect"];
+        let area = Rect::new(full.x, full.y, full.width, 1);
+        views::paint_opaque(frame, area, Style::default().bg(views::PANEL));
+        let actions = crate::interaction::navigation_actions();
+        let total: usize = actions
+            .iter()
+            .map(|a| a.label().len() + 5)
+            .sum::<usize>()
+            .saturating_sub(1);
+        let overflow = total > area.width as usize;
         let mut x = area.x;
-        for (index, (name, action)) in actions.into_iter().enumerate() {
-            let label = format!("[{}]", if compact { short[index] } else { name });
-            let width = (label.len() as u16).min(area.right().saturating_sub(x));
-            if width < label.len() as u16 {
+        for action in actions {
+            let width = action.label().len() as u16 + 4;
+            let reserve = if overflow { 9 } else { 0 };
+            if x + width + reserve > area.right() {
                 break;
             }
-            let rect = Rect::new(x, area.y + 1, width, 1);
-            views::paint_opaque(frame, rect, Style::default().bg(views::PANEL));
-            Paragraph::new(label)
-                .style(Style::default().fg(views::ACCENT).bg(views::PANEL))
-                .render(rect, frame.buffer_mut());
-            self.frame_hits.push(HitRegion::new(rect, action));
-            x += width + 1;
+            if let Some(hit) = crate::components::button(
+                frame,
+                Rect::new(x, area.y, area.right() - x, 1),
+                action.label(),
+                action.clone(),
+                crate::components::ButtonKind::Secondary,
+            ) {
+                x = hit.area.right() + 1;
+                self.frame_hits.push(hit);
+            }
+        }
+        if overflow {
+            if let Some(hit) = crate::components::button(
+                frame,
+                Rect::new(x, area.y, area.right().saturating_sub(x), 1),
+                "More",
+                Action::More,
+                crate::components::ButtonKind::Primary,
+            ) {
+                self.frame_hits.push(hit);
+            }
+        }
+    }
+    pub(crate) fn draw_context(
+        &mut self,
+        frame: &mut Frame,
+        office: Option<&theywork_core::Office>,
+    ) {
+        let full = frame.area();
+        if full.height < 2 {
+            return;
+        }
+        let area = Rect::new(full.x, full.y + 1, full.width, 1);
+        let issue = self.observation.errors.first();
+        let text = if let Some(issue) = issue {
+            format!(
+                "! Source issue · c Connections · {}",
+                views::safe_display(issue)
+            )
+        } else if self.view == View::Cameras {
+            format!(
+                "Software tower · {} {}",
+                self.known_office_count,
+                if self.known_office_count == 1 {
+                    "project"
+                } else {
+                    "projects"
+                }
+            )
+        } else {
+            format!(
+                "{} / {}",
+                office.map_or("No project", |o| o.name.as_str()),
+                if self.view == View::Desk {
+                    "Work brief"
+                } else if matches!(
+                    self.projection,
+                    views::office::Projection::Auto | views::office::Projection::Side
+                ) {
+                    "Office"
+                } else {
+                    "Compatibility view · limited controls"
+                }
+            )
+        };
+        let style = Style::default()
+            .fg(if issue.is_some() {
+                views::WARNING
+            } else {
+                views::MUTED
+            })
+            .bg(views::PANEL);
+        views::paint_opaque(frame, area, style);
+        Paragraph::new(views::safe_display(&text))
+            .style(style)
+            .render(area, frame.buffer_mut());
+    }
+    pub(crate) fn draw_more(&mut self, frame: &mut Frame) {
+        let full = frame.area();
+        if full.height < 4 {
+            return;
+        }
+        let actions = self.more_actions();
+        let area = Rect::new(
+            full.x,
+            full.y + 2,
+            full.width.min(48),
+            full.height.saturating_sub(3).min(actions.len() as u16 + 1),
+        );
+        self.frame_hits
+            .retain(|hit| hit.area.y >= full.bottom() - 1);
+        views::paint_opaque(
+            frame,
+            area,
+            Style::default().fg(views::INK).bg(views::PANEL),
+        );
+        crate::components::heading(
+            frame,
+            Rect::new(area.x + 1, area.y, area.width.saturating_sub(2), 1),
+            "Navigation · Esc back",
+        );
+        let visible = area.height.saturating_sub(1).max(1) as usize;
+        let first = self.more_cursor.saturating_sub(visible - 1);
+        for (i, action) in actions.into_iter().enumerate().skip(first).take(visible) {
+            let row = Rect::new(
+                area.x + 1,
+                area.y + 1 + (i - first) as u16,
+                area.width.saturating_sub(2),
+                1,
+            );
+            let style = Style::default()
+                .fg(if i == self.more_cursor {
+                    views::ACCENT
+                } else {
+                    views::INK
+                })
+                .bg(if i == self.more_cursor {
+                    views::PANEL_HIGHLIGHT
+                } else {
+                    views::PANEL
+                });
+            let text = format!(
+                "{} {:<14} {}",
+                if i == self.more_cursor { ">" } else { " " },
+                action.label(),
+                action.shortcut()
+            );
+            Paragraph::new(text)
+                .style(style)
+                .render(row, frame.buffer_mut());
+            self.frame_hits.push(HitRegion::new(row, action));
         }
     }
     pub(crate) fn draw_footer(&mut self, frame: &mut Frame) {
         if self.controls.open {
             return;
         }
-        let area = frame.area();
-        if area.height < 5 {
+        let full = frame.area();
+        if full.height < 3 {
             return;
         }
-        let row = area.bottom() - 2;
-        let footer = Rect::new(area.x, row, area.width, 2);
-        views::paint_opaque(frame, footer, Style::default().bg(views::PANEL));
-        let mut actions = vec![
-            ("Back", Action::Close),
-            ("Settings", Action::Key(KeyCode::Char('s'))),
-        ];
-        if !self.controls.open && !self.customize.open && !self.workboard.open && !self.finder.open
-        {
-            if let Some(office) = self.selected_office_id.clone() {
-                actions.push(("Design", Action::Decorate(office)));
-            }
-            if self.view == View::Desk {
-                if let Some(worker) = self.selected_worker_id.clone() {
-                    actions.push(("Character", Action::Character(worker)));
-                }
-            }
-        }
-        if self.controls.open
-            || self.customize.open
-            || self.workboard.open
-            || self.finder.open
+        let area = Rect::new(full.x, full.bottom() - 1, full.width, 1);
+        views::paint_opaque(frame, area, Style::default().bg(views::PANEL));
+        let modal = self.customize.open
             || self.settings_open
             || self.help_open
-        {
-            actions.truncate(1);
+            || self.finder.open
+            || self.workboard.open
+            || self.phone_open
+            || self.more_open;
+        let mut actions = vec![if self.more_open {
+            Action::More
+        } else if self.settings_open && self.advanced_settings {
+            Action::Key(KeyCode::Esc)
+        } else {
+            Action::Close
+        }];
+        if !modal {
+            actions.push(Action::Key(KeyCode::Char('s')));
+            if let Some(id) = self.selected_office_id.clone() {
+                actions.push(Action::Decorate(id));
+            }
         }
         let mut x = area.x;
-        for (label, action) in actions {
-            let text = format!("[{}]", label);
-            let width = text.len() as u16;
-            if x + width > area.right() {
-                break;
+        for action in actions {
+            let label = if matches!(action, Action::Key(KeyCode::Esc) | Action::More) {
+                "Back"
+            } else {
+                action.label()
+            };
+            if let Some(hit) = crate::components::button(
+                frame,
+                Rect::new(x, area.y, area.right().saturating_sub(x), 1),
+                label,
+                action,
+                crate::components::ButtonKind::Quiet,
+            ) {
+                x = hit.area.right() + 1;
+                self.frame_hits.push(hit);
             }
-            let rect = Rect::new(x, row, width, 1);
-            Paragraph::new(text)
-                .style(Style::default().fg(views::ACCENT).bg(views::PANEL))
-                .render(rect, frame.buffer_mut());
-            self.frame_hits.push(HitRegion::new(rect, action));
-            x += width + 1;
         }
-        let hint = if self.controls.open {
-            "Tab fields · Enter action · Esc back"
+        let hint = if self.more_open {
+            "↑↓ choose · Enter opens".into()
         } else if self.customize.open {
-            "Tab fields · arrows edit · Esc save & return"
-        } else if self.view == View::Cameras {
-            "Tab controls · arrows select · Enter office · PgUp/PgDn floors · q quit"
+            "Tab · Apply / Cancel".into()
+        } else if self.settings_open {
+            "↑↓ select · ←→ edit".into()
+        } else if self.help_open {
+            "↑↓ scroll · Esc back".into()
+        } else if self.finder.open {
+            if area.width < 60 {
+                "Type · ↑↓ · Enter opens"
+            } else {
+                "Type to search · ↑↓ results · Enter open"
+            }
+            .into()
+        } else if self.workboard.open || self.phone_open {
+            "↑↓ · Enter opens".into()
+        } else if self.view == View::Desk {
+            if area.width < 60 {
+                "↑↓ read · e expand"
+            } else {
+                "Tab controls · ↑↓ read · e expand"
+            }
+            .into()
+        } else if !self.navigation_hint.is_empty() {
+            self.navigation_hint.clone()
         } else {
-            "Tab controls · arrows select · Enter inspect · Esc back · q quit"
+            "Tab controls · Enter open · ? help".into()
         };
-        let pagination = if self.view == View::Office
-            && self.known_worker_count > self.office_page_size
-        {
-            format!(
-                "page {}/{} · ",
-                self.selected_worker / self.office_page_size.max(1) + 1,
-                self.known_worker_count
-                    .div_ceil(self.office_page_size.max(1))
-            )
-        } else if self.view == View::Cameras && self.known_office_count > self.camera_page_size {
-            format!(
-                "page {}/{} · ",
-                self.selected_office / self.camera_page_size.max(1) + 1,
-                self.known_office_count
-                    .div_ceil(self.camera_page_size.max(1))
-            )
-        } else {
-            String::new()
-        };
-        Paragraph::new(format!("{pagination}{hint}"))
-            .style(Style::default().fg(views::MUTED).bg(views::PANEL))
+        Paragraph::new(hint)
+            .style(Style::default().fg(views::MUTED))
             .render(
-                Rect::new(area.x, row + 1, area.width, 1),
+                Rect::new(x, area.y, area.right().saturating_sub(x), 1),
                 frame.buffer_mut(),
             );
     }
     pub(crate) fn draw_focus(&self, frame: &mut Frame) {
-        if let Some(hit) = self.focus.and_then(|index| self.frame_hits.get(index)) {
+        if let Some(hit) = self.focus.and_then(|index| self.focus_targets.get(index)) {
             if hit.area.width == 0 || hit.area.height == 0 {
                 return;
             }

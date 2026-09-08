@@ -2045,6 +2045,16 @@ fn draw_room_project_sign(canvas: &mut Canvas, label: &str, top: usize, wall_hei
         .max(1);
     let x = (canvas.width() - face_width * scale) / 2;
     let y = top + wall_height.saturating_sub(gh * scale) / 2;
+    // The native attention banner owns row 1 and its first 36 cells. Keep
+    // this space reserved even when no alert is present, so a state change
+    // cannot erase part of the lettering. The native FLOOR header already
+    // identifies the project when the artwork title cannot fit beside it.
+    let sign_left = x.saturating_sub(px * 2);
+    let sign_top = y.saturating_sub(1);
+    let sign_bottom = y.saturating_add(gh * scale).saturating_add(1);
+    if sign_left < px * 36 && sign_top < py * 2 && sign_bottom > py {
+        return;
+    }
     fill_rect(
         canvas,
         x.saturating_sub(px * 2) as i32,
@@ -2885,9 +2895,9 @@ fn draw_nameplates(
         let label = format!("{prefix} {name}");
         let label = format!("{label:<width$}", width = usize::from(rect.width));
         let style = if start + slot == selected {
-            Style::default().fg(INK)
+            Style::default().fg(INK).bg(PANEL_HIGHLIGHT)
         } else {
-            Style::default().fg(status_color(status))
+            Style::default().fg(status_color(status)).bg(PANEL)
         };
         paint_opaque(frame, rect, style);
         Paragraph::new(Line::from(Span::styled(label, style)))
@@ -4392,6 +4402,65 @@ mod tests {
         }
     }
     #[test]
+    fn isometric_worker_labels_use_theme_surfaces_over_the_art() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let id = OfficeId("/label-contrast".into());
+        let mut office = Office::new(id.clone(), "Contrast".into());
+        for name in ["ALPHA", "BRAVO"] {
+            office.workers.push(Worker::new(
+                WorkerId(name.into()),
+                id.clone(),
+                Agent::Codex,
+                name.into(),
+                0,
+            ));
+        }
+        let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            crate::canvas::ColorDepth::TrueColor,
+            PixelEncoding::HalfBlocks,
+        );
+        canvas.set_image_cell_size(Some((8, 16)));
+        terminal
+            .draw(|frame| {
+                draw(
+                    frame,
+                    Some(&office),
+                    &mut canvas,
+                    &SpriteSet::new(),
+                    0,
+                    0,
+                    Projection::Iso,
+                    true,
+                );
+            })
+            .unwrap();
+        let buffer = terminal.backend().buffer();
+        for (name, background) in [("ALPHA", PANEL_HIGHLIGHT), ("BRAVO", PANEL)] {
+            let row = buffer
+                .content
+                .chunks(120)
+                .find(|row| {
+                    row.iter()
+                        .map(|cell| cell.symbol())
+                        .collect::<String>()
+                        .contains(name)
+                })
+                .expect("worker label should be visible");
+            let text = row.iter().map(|cell| cell.symbol()).collect::<String>();
+            let start = text.find(name).unwrap();
+            assert!(
+                row[start..start + name.len()]
+                    .iter()
+                    .all(|cell| cell.bg == background),
+                "{name} must use a semantic theme surface instead of the sampled dark artwork"
+            );
+        }
+    }
+
+    #[test]
     fn project_sign_stays_above_floor_and_within_bounded_area() {
         let mut canvas =
             crate::canvas::Canvas::with_color_depth(80, 40, crate::canvas::ColorDepth::TrueColor);
@@ -4439,6 +4508,47 @@ mod tests {
         assert_eq!(count_color(TITLE_SIGN), 0);
         for y in 0..canvas.pixels_per_cell().1 * 2 {
             assert!((0..canvas.width()).all(|x| canvas.pixel(x, y) != Some(TITLE_COLOR)));
+        }
+    }
+
+    #[test]
+    fn flat_project_titles_never_cross_the_native_attention_banner() {
+        for (encoding, cell_size) in [
+            (PixelEncoding::HalfBlocks, None),
+            (PixelEncoding::Quadrants, None),
+            (PixelEncoding::Sextants, None),
+            (PixelEncoding::HalfBlocks, Some((8, 16))),
+        ] {
+            for columns in [80, 120] {
+                for label in ["00-CHECKOUT", "A-LONG-PROJECT-TITLE"] {
+                    let mut canvas = Canvas::with_color_depth_and_encoding(
+                        0,
+                        0,
+                        crate::canvas::ColorDepth::TrueColor,
+                        encoding,
+                    );
+                    canvas.set_cell_pixel_size(cell_size);
+                    canvas.resize_for_cells(columns, 18);
+                    let (px, py) = canvas.pixels_per_cell();
+                    draw_room_project_sign(&mut canvas, label, 0, py * 3);
+                    for y in py..py * 2 {
+                        for x in 0..px * 36 {
+                            assert_ne!(
+                                canvas.pixel(x, y),
+                                Some(TITLE_COLOR),
+                                "title intersects alert at {columns} columns, {encoding:?}, {cell_size:?}: ({x}, {y})"
+                            );
+                        }
+                    }
+                    if columns == 120 && cell_size.is_some() && label == "00-CHECKOUT" {
+                        assert!(
+                            (0..canvas.height()).any(|y| (0..canvas.width())
+                                .any(|x| canvas.pixel(x, y) == Some(TITLE_COLOR))),
+                            "wide artwork title should remain visible beside the alert"
+                        );
+                    }
+                }
+            }
         }
     }
     #[test]
@@ -4844,6 +4954,7 @@ mod tests {
         let press = |code| KeyEvent::new(code, KeyModifiers::NONE);
         for (width, height, columns) in [(80, 24, 3), (120, 32, 5), (192, 58, 5)] {
             let mut ui = crate::Ui::new();
+            ui.set_image_cell_size(Some((8, 16)));
             ui.restore_preferences(&crate::RendererPreferences {
                 projection: "isometric".into(),
                 ..Default::default()

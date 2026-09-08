@@ -105,6 +105,8 @@ pub struct Workboard {
     human_requests: BTreeSet<String>,
     hits: Vec<HitRegion>,
     pending_worker: Option<WorkerId>,
+    profiles: BTreeMap<String, CharacterProfile>,
+    row_ages: BTreeMap<String, String>,
 }
 
 impl Default for Workboard {
@@ -124,12 +126,15 @@ impl Default for Workboard {
             human_requests: BTreeSet::new(),
             hits: Vec::new(),
             pending_worker: None,
+            profiles: BTreeMap::new(),
+            row_ages: BTreeMap::new(),
         }
     }
 }
 
 pub enum Action {
     Open(WorkerId),
+    Record(WorkerId, String),
     Review(WorkerId),
     Mark(String),
 }
@@ -195,6 +200,13 @@ impl Workboard {
         self.scope_all = true;
         self.scroll = 0;
     }
+    fn record_key(&self, entry: &Entry) -> String {
+        if entry.key.starts_with("beat:") {
+            entry.key.clone()
+        } else {
+            format!("event:{}", entry.key)
+        }
+    }
     pub fn hit_regions(&self) -> Vec<HitRegion> {
         self.hits.clone()
     }
@@ -213,6 +225,7 @@ impl Workboard {
         now: Millis,
         profiles: &BTreeMap<String, CharacterProfile>,
     ) {
+        self.profiles.clone_from(profiles);
         self.refresh(
             world,
             office.filter(|_| !self.scope_all),
@@ -306,7 +319,7 @@ impl Workboard {
                         let detail = if unavailable {
                             format!("{}\nLast observation: {} ago. The source cannot confirm the current state.", worker.coverage.detail, super::duration_label(now.saturating_sub(worker.coverage.observed_at)))
                         } else {
-                            format!("{}\n\n{}", worker.activity.detail().unwrap_or(worker.activity.label()), match label {
+                            format!("{}\n\n{}", crate::work_brief::activity_text(&worker.activity), match label {
                                 "AUTOMATIC REVIEW" => "An automatic reviewer is working. This is not a human approval request.",
                                 "WAITING FOR TEAM" => "The source recorded a wait for another agent. Inspect Team for the available relationships.",
                                 "NO RECENT ACTIVITY" => "Silence does not prove a pending approval. Check the original task.",
@@ -373,7 +386,22 @@ impl Workboard {
                         .map(|id| task_label(world, id))
                         .unwrap_or_else(|| "Not recorded".into());
                     let actor_label = task_label(world, &event.actor);
-                    let detail = format!("{}\n\n{}\n\nFrom: {}\nTo: {}\n\n{}{}\n\nRECORDED IDS\nTurn: {}\nItem: {}\nEvidence: {:?}", presentation::event_summary(event,&actor_label,event.recipient.as_ref().map(|_|target.as_str())),event.text.as_deref().unwrap_or("No message body recorded."),actor_label,target,coverage_detail(worker,now),if actor.is_none(){"\nCoverage belongs to the known recipient; the sender's transcript is unavailable."}else if !world.is_present(&event.actor){"\nThe sender is no longer in the current roster. Its recorded output is retained."}else{""},event.native_turn_id.as_deref().unwrap_or("not recorded"),event.native_item_id.as_deref().unwrap_or("not recorded"),event.evidence);
+                    let record = crate::work_brief::event_record(world, event, &self.profiles);
+                    let detail = format!(
+                        "{}\n\nFrom: {}\nTo: {}\n\n{}{}\n\nRECORDED IDS\n{}",
+                        record.detail(),
+                        actor_label,
+                        target,
+                        coverage_detail(worker, now),
+                        if actor.is_none() {
+                            "\nCoverage belongs to the known recipient; the sender's transcript is unavailable."
+                        } else if !world.is_present(&event.actor) {
+                            "\nThe sender is no longer in the current roster. Its recorded output is retained."
+                        } else {
+                            ""
+                        },
+                        record.provenance
+                    );
                     rows.push(Entry {
                         reviewed: memory.reviewed.contains_key(&key),
                         key,
@@ -420,9 +448,9 @@ impl Workboard {
                                     super::duration_label(now.saturating_sub(beat.at))
                                 ),
                                 detail: format!(
-                                    "{}\n\nRecorded outcome: {:?}\n\n{}",
-                                    beat.activity.detail().unwrap_or(beat.activity.label()),
-                                    beat.outcome,
+                                    "{}\n\n{}\n\n{}",
+                                    crate::work_brief::activity_text(&beat.activity),
+                                    crate::work_brief::outcome_text(beat.outcome),
                                     coverage_detail(worker, now)
                                 ),
                                 at: beat.at,
@@ -488,7 +516,6 @@ impl Workboard {
                             let recent = world
                                 .collaboration_for(&node.worker)
                                 .rev()
-                                .take(12)
                                 .map(|e| {
                                     format!(
                                         "{}: {}",
@@ -515,7 +542,7 @@ impl Workboard {
                                 || "Source: unknown; this task's transcript is unavailable.".into(),
                                 |worker| coverage_detail(worker, now),
                             );
-                            rows.push(Entry { key: key.clone(), worker: worker.filter(|worker| world.is_present(&worker.id)).map(|w| w.id.clone()), office: worker.map_or_else(|| office_id.clone(), |w| w.office.clone()), title: task_label(world, &node.worker), label: format!("{} · {}", relationship, worker.map_or("unknown", |w| if world.is_present(&w.id) { presentation::state_label(w, now) } else { "not in current roster" })), detail: format!("Relationship shown: {relationship}\n{links}\n\n{}\n\n{source}\n\n{recent}", worker.map_or("No current information; relationship preserved.", |w| w.activity.detail().unwrap_or(w.activity.label()))), at: worker.map_or(0, |w| w.last_seen), reviewed: false, depth: node.depth, branch });
+                            rows.push(Entry { key: key.clone(), worker: worker.filter(|worker| world.is_present(&worker.id)).map(|w| w.id.clone()), office: worker.map_or_else(|| office_id.clone(), |w| w.office.clone()), title: task_label(world, &node.worker), label: format!("{} · {}", worker.map_or("unknown", |w| if world.is_present(&w.id) { presentation::state_label(w, now) } else { "not in current roster" }), relationship), detail: format!("Relationship shown: {relationship}\n{links}\n\n{}\n\n{source}\n\n{recent}", worker.map_or("No current information; relationship preserved.", |w| w.activity.detail().unwrap_or(w.activity.label()))), at: worker.map_or(0, |w| w.last_seen), reviewed: false, depth: node.depth, branch });
                             if self.folded.contains(&key) {
                                 hidden_depth = Some(node.depth);
                             }
@@ -553,6 +580,29 @@ impl Workboard {
                 );
             }
         }
+        self.row_ages = rows
+            .iter()
+            .map(|row| {
+                let observed = if matches!(self.channel, Channel::Attention | Channel::Team) {
+                    row.worker
+                        .as_ref()
+                        .and_then(|id| world.worker(id))
+                        .or_else(|| {
+                            row.key
+                                .strip_prefix("team:")
+                                .and_then(|id| world.worker(&WorkerId(id.into())))
+                        })
+                        .map(|worker| worker.coverage.observed_at)
+                        .filter(|at| *at > 0)
+                } else {
+                    Some(row.at).filter(|at| *at > 0)
+                };
+                (
+                    row.key.clone(),
+                    crate::presentation::record_age(observed, now),
+                )
+            })
+            .collect();
         self.replace(rows);
         if let Some(id) = self.pending_worker.take() {
             if let Some(index) = self.rows.iter().position(|row| {
@@ -646,6 +696,8 @@ impl Workboard {
                     entry.worker.clone().map(|worker| {
                         if self.human_requests.contains(&entry.key) {
                             Action::Review(worker)
+                        } else if matches!(self.channel, Channel::Deliveries | Channel::Changes) {
+                            Action::Record(worker, self.record_key(entry))
                         } else {
                             Action::Open(worker)
                         }
@@ -751,13 +803,13 @@ impl Workboard {
             (true, Channel::Team) => "Esc · Enter · ←/→ fold",
             (true, Channel::Changes) => "Esc back · Enter · PgUp/Dn",
             (false, Channel::Attention | Channel::Deliveries) => {
-                "Esc return · ↑↓ select · Enter inspect · r seen locally · PgUp/PgDn detail"
+                "Esc return · ↑↓ select · Enter inspect · r seen locally · PgUp/PgDn read lines"
             }
             (false, Channel::Team) => {
-                "Esc return · ↑↓ select · Enter inspect · ←/→ fold · PgUp/PgDn detail"
+                "Esc return · ↑↓ select · Enter inspect · ←/→ fold · PgUp/PgDn read lines"
             }
             (false, Channel::Changes) => {
-                "Esc return · ↑↓ select · Enter inspect · PgUp/PgDn detail"
+                "Esc return · ↑↓ select · Enter inspect · PgUp/PgDn read lines"
             }
         };
         Paragraph::new(format!("{}\n{controls}", safe_display(&self.coverage)))
@@ -803,23 +855,71 @@ impl Workboard {
                 ""
             };
             let read = if row.reviewed { " [seen]" } else { "" };
-            let text = format!(
-                "{marker} {indent}{branch}{} · {}{read}",
-                safe_display(&row.title),
-                safe_display(&row.label)
+            let title = format!(
+                "{marker} {indent}{branch}{}{read}",
+                safe_display(&row.title)
             );
-            Paragraph::new(text)
-                .style(
-                    Style::default()
-                        .fg(if selected { INK } else { MUTED })
-                        .bg(if selected {
-                            PANEL_HIGHLIGHT
-                        } else {
-                            BACKGROUND
-                        }),
-                )
+            let age_width = if body.width >= 48 { 11 } else { 7 };
+            let state_width = (body.width / 2).min(34);
+            let title_width = body.width.saturating_sub(state_width + age_width + 2);
+            let style = Style::default()
+                .fg(if selected { INK } else { MUTED })
+                .bg(if selected {
+                    PANEL_HIGHLIGHT
+                } else {
+                    BACKGROUND
+                });
+            paint_opaque(
+                frame,
+                Rect::new(body.x, body.y + offset as u16, body.width, 1),
+                style,
+            );
+            Paragraph::new(super::short_path(&title, title_width as usize))
+                .style(style)
                 .render(
-                    Rect::new(body.x, body.y + offset as u16, body.width, 1),
+                    Rect::new(body.x, body.y + offset as u16, title_width, 1),
+                    frame.buffer_mut(),
+                );
+            Paragraph::new(super::short_path(
+                &safe_display(
+                    if matches!(self.channel, Channel::Deliveries | Channel::Changes) {
+                        row.label.split(" · ").next().unwrap_or(&row.label)
+                    } else {
+                        &row.label
+                    },
+                ),
+                state_width as usize,
+            ))
+            .style(style)
+            .render(
+                Rect::new(
+                    body.x + title_width + 1,
+                    body.y + offset as u16,
+                    state_width,
+                    1,
+                ),
+                frame.buffer_mut(),
+            );
+            let age = self
+                .row_ages
+                .get(&row.key)
+                .map(String::as_str)
+                .unwrap_or("unknown");
+            let age = if age_width < 11 && age == "age unknown" {
+                "unknown"
+            } else {
+                age
+            };
+            Paragraph::new(super::short_path(age, age_width as usize))
+                .alignment(ratatui::layout::Alignment::Right)
+                .style(style)
+                .render(
+                    Rect::new(
+                        body.right() - age_width,
+                        body.y + offset as u16,
+                        age_width,
+                        1,
+                    ),
                     frame.buffer_mut(),
                 );
         }
@@ -840,6 +940,8 @@ impl Workboard {
                     button,
                     if self.human_requests.contains(&row.key) {
                         HitAction::Review(worker.clone())
+                    } else if matches!(self.channel, Channel::Deliveries | Channel::Changes) {
+                        HitAction::InspectRecord(worker.clone(), self.record_key(row))
                     } else {
                         HitAction::Inspect(worker.clone())
                     },
@@ -863,11 +965,15 @@ impl Workboard {
         if detail_area.height > 0 {
             paint_opaque(frame, detail_area, Style::default().bg(PANEL));
             let text = format!(
-                "{}  ·  {}/{}\n{}\n\n{}",
+                "{}  ·  record {}/{}\n{}\n{}",
                 safe_display(&row.label),
                 self.selected + 1,
                 self.rows.len(),
-                safe_display(&row.title),
+                if matches!(self.channel, Channel::Attention | Channel::Team) {
+                    safe_display(&row.title)
+                } else {
+                    String::new()
+                },
                 super::safe_multiline(if self.details_expanded {
                     &row.detail
                 } else {
@@ -1033,6 +1139,123 @@ mod tests {
             world.worker(&id("reviewer")).unwrap().status_at(1000),
             WorkerStatus::Blocked
         );
+    }
+
+    #[test]
+    fn delivery_and_changes_open_the_shared_record_without_marking_it_read() {
+        let mut world = World::new();
+        hire(&mut world, "lead");
+        record(
+            &mut world,
+            "lead",
+            None,
+            "delivered-1",
+            CollaborationKind::Result,
+            100,
+        );
+        observe(
+            &mut world,
+            "lead",
+            110,
+            EventKind::Did(Beat {
+                at: 110,
+                activity: Activity::Editing {
+                    detail: "src/retry.rs".into(),
+                },
+                outcome: None,
+            }),
+        );
+        let brief =
+            crate::work_brief::WorkBrief::new(&world, &id("lead"), &BTreeMap::new(), 1000).unwrap();
+        let mut board = Workboard::default();
+        let memory = ReviewMemory::default();
+        for channel in [Channel::Deliveries, Channel::Changes] {
+            board.show(channel);
+            refresh(&mut board, &world, &memory);
+            let Some(Action::Record(worker, key)) = board.handle_key(key(KeyCode::Enter)) else {
+                panic!("record detail expected")
+            };
+            assert_eq!(worker, id("lead"));
+            assert!(brief.records.iter().any(|record| record.key == key));
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            assert!(board
+                .hit_regions()
+                .iter()
+                .any(|hit| hit.action == HitAction::InspectRecord(worker.clone(), key.clone())));
+            assert!(memory.reviewed.is_empty());
+        }
+    }
+
+    #[test]
+    fn long_roster_labels_preserve_status_and_source_observation_age() {
+        let mut world = World::new();
+        hire(&mut world, "lead");
+        hire(&mut world, "child");
+        link(
+            &mut world,
+            "lead",
+            "child",
+            RelationshipKind::SessionMembership,
+        );
+        observe(
+            &mut world,
+            "child",
+            1000,
+            EventKind::Coverage(SourceCoverage {
+                observed_at: 1000,
+                available: true,
+                ..Default::default()
+            }),
+        );
+        observe(&mut world,"child",61_000,EventKind::Seen{name:"A very long conversation title that must not consume the status or freshness columns".into(),git_branch:None});
+        observe(
+            &mut world,
+            "child",
+            61_000,
+            EventKind::Wait(Some(WaitReason::HumanApproval)),
+        );
+        let mut board = Workboard::default();
+        for (channel, status) in [
+            (Channel::Attention, "APPROVAL"),
+            (Channel::Team, "Approval needed"),
+        ] {
+            board.show(channel);
+            board.focus_worker(id("child"));
+            board.refresh(
+                &world,
+                None,
+                &ReviewMemory::default(),
+                &BTreeMap::new(),
+                61_000,
+            );
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            let text = buffer_text(&terminal);
+            let selected = text
+                .lines()
+                .find(|line| line.trim_start().starts_with('>'))
+                .unwrap_or_else(|| panic!("selected roster row: {text}"));
+            assert!(selected.contains(status), "{selected}");
+            assert!(
+                selected.contains("1m ago"),
+                "age must use coverage, not the fresh wait/seen event: {selected}"
+            );
+        }
+        board.show(Channel::Team);
+        board.focus_worker(id("lead"));
+        board.refresh(
+            &world,
+            None,
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            61_000,
+        );
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| board.draw(frame)).unwrap();
+        assert!(buffer_text(&terminal)
+            .lines()
+            .any(|line| line.trim_start().starts_with('>') && line.contains("age unknown")));
     }
 
     #[test]
@@ -1553,7 +1776,7 @@ mod tests {
         ));
         assert!(matches!(
             board.handle_key(key(KeyCode::Enter)),
-            Some(Action::Open(_))
+            Some(Action::Record(_, _))
         ));
         board.handle_key(key(KeyCode::Esc));
         assert!(!board.open);

@@ -1466,6 +1466,39 @@ impl Poller {
     }
 }
 
+fn source_observation(
+    runtime: &Runtime,
+    errors: &[String],
+    checked_at: Millis,
+) -> theywork_render::observation::ObservationSummary {
+    let mut errors = errors.to_vec();
+    let configured = [
+        ("Codex", runtime.config.codex_home.as_ref()),
+        ("Claude", runtime.config.claude_home.as_ref()),
+    ];
+    for (provider, path) in configured {
+        if let Some(path) = path {
+            if !path.is_dir() {
+                let message = format!(
+                    "{provider} source folder is unavailable: {}",
+                    path.display()
+                );
+                if !errors.contains(&message) {
+                    errors.push(message);
+                }
+            }
+        }
+    }
+    theywork_render::observation::ObservationSummary {
+        enabled_sources: usize::from(runtime.config.codex_home.is_some())
+            + usize::from(runtime.config.claude_home.is_some()),
+        scanning: false,
+        errors,
+        checked_at,
+        filtered: !runtime.config.only_paths.is_empty(),
+    }
+}
+
 fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u64>) -> Result<()> {
     let started = Instant::now();
     let cpu_started = process_cpu_ticks();
@@ -1708,6 +1741,7 @@ fn run(
     let mut image_presenter =
         TerminalImagePresenter::new(capabilities, (terminal_cells.width, terminal_cells.height));
     let mut poller = Poller::start(std::mem::take(&mut runtime.sources));
+    ui.set_observation_summary(source_observation(runtime, &runtime.errors, runtime.now));
     let result = (|| -> Result<()> {
         loop {
             if let Some(error) = termination_error() {
@@ -1721,6 +1755,7 @@ fn run(
                 }
             } else {
                 for result in poller.drain() {
+                    ui.set_observation_summary(source_observation(runtime, &result.errors, now));
                     for event in result.events {
                         runtime.world.apply(event);
                     }
@@ -1965,6 +2000,7 @@ fn run(
                                 active_args.remember.unwrap_or(true),
                                 !active_args.no_save,
                                 ui.mouse_enabled(),
+                                ui.preferences().light,
                             )?;
                             mouse_capture.sync(ui.mouse_enabled())?;
                             match action {
@@ -1983,6 +2019,11 @@ fn run(
                                 }
                                 connections::Action::Cancel => runtime.sources = paused_sources,
                             }
+                            ui.set_observation_summary(source_observation(
+                                runtime,
+                                &runtime.errors,
+                                now,
+                            ));
                             poller = Poller::start(std::mem::take(&mut runtime.sources));
                             control = control_host::Host::start(
                                 connections::Connections::from_args(&active_args)?,
@@ -2685,6 +2726,49 @@ mod tests {
     }
 
     #[test]
+    fn source_summary_separates_disabled_missing_and_recovered_sources() {
+        let mut runtime = Runtime {
+            config: Config {
+                claude_home: None,
+                codex_home: None,
+                active_within: Duration::from_secs(60),
+                only_paths: vec![],
+            },
+            sources: vec![],
+            world: World::new(),
+            errors: vec!["previous failure".into()],
+            now: 0,
+            demo: false,
+            start_guard: false,
+            initial_project: None,
+            config_dir: None,
+            save_preferences: false,
+        };
+        let disabled = source_observation(&runtime, &[], 100);
+        assert_eq!(disabled.enabled_sources, 0);
+        assert!(disabled.errors.is_empty());
+        runtime.config.codex_home = Some(PathBuf::from("/nonexistent-theywork-fixture-folder"));
+        let missing = source_observation(&runtime, &[], 200);
+        assert_eq!(missing.enabled_sources, 1);
+        assert_eq!(missing.errors.len(), 1);
+        runtime.config.codex_home = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
+        runtime.config.only_paths.push(PathBuf::from("/project"));
+        let recovered = source_observation(&runtime, &[], 300);
+        assert!(
+            recovered.errors.is_empty(),
+            "old poll errors must not poison a recovered source"
+        );
+        assert!(recovered.filtered);
+        assert_eq!(recovered.checked_at, 300);
+        assert_eq!(
+            source_observation(&runtime, &["permission denied".into()], 400)
+                .errors
+                .len(),
+            1
+        );
+    }
+
+    #[test]
     fn composed_frames_keep_help_above_images_and_repaint_after_erasure() {
         let mut world = World::new();
         for event in theywork_core::demo::events(0) {
@@ -2821,8 +2905,8 @@ mod tests {
         let frame = diagnostic_frame(Ui::new(), capabilities, (160, 48))
             .expect("diagnostic renderer frame");
         assert_eq!(frame.mode, "graphics");
-        assert_eq!((frame.area.width, frame.area.height), (160, 44));
-        assert_eq!((frame.width, frame.height), (1_600, 880));
+        assert_eq!((frame.area.width, frame.area.height), (160, 45));
+        assert_eq!((frame.width, frame.height), (1_600, 900));
     }
 
     #[test]

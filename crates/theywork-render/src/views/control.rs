@@ -186,6 +186,8 @@ pub struct ControlPanel {
     projects_open: bool,
     project_index: usize,
     presented: bool,
+    inline_mode: bool,
+    pending_notice_scope: Option<(String, Option<WorkerId>)>,
 }
 
 impl Default for ControlPanel {
@@ -217,11 +219,34 @@ impl Default for ControlPanel {
             projects_open: false,
             project_index: 0,
             presented: false,
+            inline_mode: false,
+            pending_notice_scope: None,
         }
     }
 }
 
 impl ControlPanel {
+    fn notice_scope(&self) -> String {
+        if self.requests_open {
+            self.status
+                .requests
+                .iter()
+                .filter(|request| self.target.as_ref().is_none_or(|id| id == &request.worker))
+                .nth(self.request_index)
+                .map_or_else(
+                    || "request:none".into(),
+                    |request| format!("request:{}", request.id),
+                )
+        } else if self.connections_open {
+            "connections".into()
+        } else {
+            self.draft_key()
+        }
+    }
+    fn begin_send(&mut self) {
+        self.pending_notice_scope = Some((self.notice_scope(), self.target.clone()));
+        self.sending = true;
+    }
     pub fn hit_regions(&self) -> Vec<HitRegion> {
         self.hits.clone()
     }
@@ -251,6 +276,7 @@ impl ControlPanel {
     }
     pub fn show_requests(&mut self, worker: Option<WorkerId>) {
         self.remember_draft();
+        self.status.notice.clear();
         self.target = worker;
         self.open = true;
         self.requests_open = true;
@@ -293,7 +319,7 @@ impl ControlPanel {
                 {
                     return None;
                 }
-                self.sending = true;
+                self.begin_send();
             }
             Command::Interrupt { worker }
             | Command::OpenNative { worker }
@@ -307,7 +333,7 @@ impl ControlPanel {
                 if !allowed {
                     return None;
                 }
-                self.sending = true;
+                self.begin_send();
             }
             Command::Send { worker, prompt } => {
                 if self.target.as_ref() != Some(worker)
@@ -337,7 +363,7 @@ impl ControlPanel {
                 if !self.connections_open || !self.usable_geometry {
                     return None;
                 }
-                self.sending = true;
+                self.begin_send();
             }
             Command::Sources => {
                 if !self.connections_open || !self.usable_geometry {
@@ -505,7 +531,9 @@ impl ControlPanel {
         let mut y = area.y;
         let mut visible = 0;
         for (index, (label, action)) in self.buttons.iter().enumerate() {
-            let text = format!("[ {} ]", safe_display(label));
+            let shown =
+                super::short_path(&safe_display(label), area.width.saturating_sub(4) as usize);
+            let text = format!("[ {shown} ]");
             let width = (ratatui::text::Line::from(text.as_str()).width() as u16).min(area.width);
             if x + width > area.right() {
                 x = area.x;
@@ -515,22 +543,16 @@ impl ControlPanel {
                 break;
             }
             let button = Rect::new(x, y, width, 1);
-            Paragraph::new(text)
-                .style(
-                    Style::default()
-                        .fg(if self.button_focus == Some(index) {
-                            BACKGROUND
-                        } else {
-                            INK
-                        })
-                        .bg(if self.button_focus == Some(index) {
-                            ACCENT
-                        } else {
-                            super::PANEL_HIGHLIGHT
-                        }),
-                )
-                .render(button, frame.buffer_mut());
-            self.hits.push(HitRegion::new(button, action.clone()));
+            let kind = if self.button_focus == Some(index) {
+                crate::components::ButtonKind::Primary
+            } else {
+                crate::components::ButtonKind::Secondary
+            };
+            let Some(hit) = crate::components::button(frame, button, &shown, action.clone(), kind)
+            else {
+                break;
+            };
+            self.hits.push(hit);
             visible += 1;
             x += width + 1;
         }
@@ -607,6 +629,7 @@ impl ControlPanel {
 
     pub fn show_task(&mut self, id: WorkerId, label: String, provider: Agent) {
         self.remember_draft();
+        self.status.notice.clear();
         self.target = Some(id.clone());
         self.target_label = label;
         self.provider = provider;
@@ -625,6 +648,7 @@ impl ControlPanel {
     }
     pub fn show_new(&mut self, project: String) {
         self.remember_draft();
+        self.status.notice.clear();
         self.target = None;
         self.target_label.clear();
         self.project.set(project);
@@ -642,6 +666,7 @@ impl ControlPanel {
     }
     pub fn show_connections(&mut self) {
         self.remember_draft();
+        self.status.notice.clear();
         self.open = true;
         self.connections_open = true;
         self.requests_open = false;
@@ -652,7 +677,19 @@ impl ControlPanel {
     }
     pub fn complete(&mut self, notice: String, accepted: bool) {
         self.sending = false;
-        self.status.notice = notice;
+        let scope = self.notice_scope();
+        if self
+            .pending_notice_scope
+            .take()
+            .is_none_or(|(pending, target)| {
+                pending == scope
+                    || (pending.starts_with("request:")
+                        && scope == "request:none"
+                        && target == self.target)
+            })
+        {
+            self.status.notice = notice;
+        }
         if let Some((key, text)) = self.pending_draft.take().filter(|_| accepted) {
             if self.drafts.get(&key).is_some_and(|draft| *draft == text) {
                 self.drafts.remove(&key);
@@ -695,6 +732,9 @@ impl ControlPanel {
         }
     }
     pub fn handle_key(&mut self, key: KeyEvent) -> Option<Command> {
+        if self.inline_mode && matches!(key.code, KeyCode::F(2) | KeyCode::F(4) | KeyCode::F(6)) {
+            return None;
+        }
         if key.code == KeyCode::Esc {
             self.remember_draft();
             self.open = false;
@@ -813,9 +853,13 @@ impl ControlPanel {
             return command.and_then(|command| self.activate(command));
         }
         if key.code == KeyCode::F(4) {
-            self.requests_open = !self.requests_open;
-            self.request_index = 0;
-            self.scroll = 0;
+            if self.requests_open {
+                self.requests_open = false;
+                self.status.notice.clear();
+                self.button_focus = None;
+            } else {
+                self.show_requests(self.target.clone());
+            }
             return None;
         }
         if self.requests_open {
@@ -865,11 +909,12 @@ impl ControlPanel {
                         answers
                             .insert(question.id.clone(), serde_json::json!({"answers":[answer]}));
                     }
-                    self.sending = true;
-                    return Some(Command::Reply {
+                    let command = Command::Reply {
                         request: request.id.clone(),
                         response: serde_json::json!({"answers":answers}),
-                    });
+                    };
+                    self.begin_send();
+                    return Some(command);
                 }
                 if !matches!(
                     key.code,
@@ -905,11 +950,12 @@ impl ControlPanel {
                             if self.sending {
                                 return None;
                             }
-                            self.sending = true;
-                            return Some(Command::Reply {
+                            let command = Command::Reply {
                                 request: request.id.clone(),
                                 response: choice.response.clone(),
-                            });
+                            };
+                            self.begin_send();
+                            return Some(command);
                         }
                     }
                 }
@@ -922,29 +968,29 @@ impl ControlPanel {
             .as_ref()
             .and_then(|id| self.status.tasks.get(&id.0));
         if key.code == KeyCode::F(6) && access.is_some_and(|a| a.reconnect) {
-            self.sending = true;
+            self.begin_send();
             return self
                 .target
                 .clone()
                 .map(|worker| Command::Reconnect { worker });
         }
         if key.code == KeyCode::F(2) {
-            self.sending = access.is_some_and(|a| a.interrupt);
-            return self
+            let command = self
                 .target
                 .clone()
                 .filter(|_| access.is_some_and(|a| a.interrupt))
                 .map(|worker| Command::Interrupt { worker });
+            return command.and_then(|command| self.activate(command));
         }
         if key.code == KeyCode::F(3)
             || (key.code == KeyCode::Enter && access.is_some_and(|a| a.native))
         {
-            self.sending = access.is_some_and(|a| a.native);
-            return self
+            let command = self
                 .target
                 .clone()
                 .filter(|_| access.is_some_and(|a| a.native))
                 .map(|worker| Command::OpenNative { worker });
+            return command.and_then(|command| self.activate(command));
         }
         if self.sending {
             return None;
@@ -1008,7 +1054,7 @@ impl ControlPanel {
                     prompt: self.message.text.clone(),
                 }
             };
-            self.sending = true;
+            self.begin_send();
             self.status.notice = format!(
                 "Sending to {} · waiting for confirmation",
                 if self.target.is_some() {
@@ -1036,7 +1082,87 @@ impl ControlPanel {
         let area = super::below_tab_bar(frame.area());
         self.draw_in(frame, area);
     }
+    /// A task composer can share the panel with its pinned work context.
+    pub fn composer_worker(&self) -> Option<&WorkerId> {
+        (self.open && !self.requests_open && !self.connections_open && !self.projects_open)
+            .then_some(self.target.as_ref())
+            .flatten()
+    }
+    pub fn draw_composer_in(&mut self, frame: &mut Frame, area: Rect) {
+        use crate::components;
+        self.presented = true;
+        self.inline_mode = true;
+        self.hits.clear();
+        self.usable_geometry = area.width >= 28 && area.height >= 7;
+        paint_opaque(frame, area, Style::default().fg(INK).bg(PANEL));
+        if !self.usable_geometry || self.composer_worker().is_none() {
+            Paragraph::new("Enlarge to write an instruction · Esc back")
+                .render(area, frame.buffer_mut());
+            return;
+        }
+        let inner = Rect::new(area.x + 1, area.y, area.width - 2, area.height);
+        components::heading(
+            frame,
+            Rect::new(inner.x, inner.y, inner.width, 1),
+            &format!("INSTRUCTION TO {}", safe_display(&self.target_label)),
+        );
+        let access = self
+            .target
+            .as_ref()
+            .and_then(|id| self.status.tasks.get(&id.0));
+        let body = Rect::new(
+            inner.x,
+            inner.y + 1,
+            inner.width,
+            inner.height.saturating_sub(5),
+        );
+        let value = if access.is_some_and(|a| a.native) {
+            "Open the original conversation to write or respond.".into()
+        } else if !access.is_some_and(|a| a.send) {
+            "Observation only. This connection cannot accept instructions.".into()
+        } else if self.field == 2 && self.button_focus.is_none() {
+            self.message.display()
+        } else {
+            self.message.text.clone()
+        };
+        let lines = super::wrap_text(&value, body.width);
+        let scroll = super::wrap_text(&self.message.text[..self.message.cursor], body.width)
+            .len()
+            .saturating_sub(body.height as usize)
+            .min(u16::MAX as usize) as u16;
+        Paragraph::new(lines.join("\n"))
+            .scroll((scroll, 0))
+            .render(body, frame.buffer_mut());
+        components::notice(
+            frame,
+            Rect::new(inner.x, inner.bottom() - 3, inner.width, 1),
+            &self.status.notice,
+            false,
+        );
+        self.build_buttons();
+        self.buttons.retain(|(_, action)| {
+            matches!(
+                action,
+                Action::Control(Command::Send { .. } | Command::OpenNative { .. }) | Action::Close
+            )
+        });
+        self.draw_buttons(
+            frame,
+            Rect::new(inner.x, inner.bottom() - 2, inner.width, 1),
+        );
+        Paragraph::new(if inner.width < 34 {
+            "Tab/Enter · F7 size · Esc"
+        } else {
+            "Tab/Enter · F7 expand · Esc cancel"
+        })
+        .style(Style::default().fg(MUTED))
+        .render(
+            Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
+            frame.buffer_mut(),
+        );
+    }
     pub fn draw_in(&mut self, frame: &mut Frame, area: Rect) {
+        self.inline_mode = false;
         self.presented = true;
         self.hits.clear();
         self.build_buttons();
@@ -1047,6 +1173,17 @@ impl ControlPanel {
         };
         self.usable_geometry = area.width >= 28 && area.height >= minimum_height;
         paint_opaque(frame, area, Style::default().fg(INK).bg(BACKGROUND));
+        let height_limit = if self.connections_open {
+            26
+        } else if self.target.is_none() && !self.requests_open && !self.projects_open {
+            36
+        } else {
+            area.height
+        };
+        let area = Rect {
+            height: area.height.min(height_limit),
+            ..area
+        };
         if !self.usable_geometry {
             Paragraph::new("Task controls · enlarge terminal\nEsc return")
                 .render(area, frame.buffer_mut());
@@ -1097,12 +1234,17 @@ impl ControlPanel {
                 self.hits
                     .push(HitRegion::new(row, Action::ControlProject(path.clone())));
             }
-            Paragraph::new("↑↓ choose · Enter select · F7 back")
-                .style(Style::default().fg(MUTED))
-                .render(
-                    Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
-                    frame.buffer_mut(),
-                );
+            Paragraph::new(format!(
+                "{}–{}/{} · ↑↓ · Enter · F7 back",
+                first + 1,
+                (first + capacity).min(self.projects.len()),
+                self.projects.len()
+            ))
+            .style(Style::default().fg(MUTED))
+            .render(
+                Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
+                frame.buffer_mut(),
+            );
             return;
         }
         if self.connections_open {
@@ -1127,12 +1269,16 @@ impl ControlPanel {
                 frame,
                 Rect::new(inner.x, inner.bottom() - 4, inner.width, 3),
             );
-            Paragraph::new("Tab focus · Enter choose · Esc back")
-                .style(Style::default().fg(MUTED))
-                .render(
-                    Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
-                    frame.buffer_mut(),
-                );
+            Paragraph::new(if inner.width < 40 {
+                "Tab controls · Enter · Esc"
+            } else {
+                "Tab focus · Enter choose · Esc back"
+            })
+            .style(Style::default().fg(MUTED))
+            .render(
+                Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
+                frame.buffer_mut(),
+            );
             return;
         }
         let heading = if self.requests_open {
@@ -1192,21 +1338,35 @@ impl ControlPanel {
                     })
                     .collect::<Vec<_>>()
                     .join("\n\n");
+                let long_choices = request
+                    .choices
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, choice)| {
+                        ratatui::text::Line::from(choice.label.as_str()).width() + 6
+                            > inner.width as usize
+                    })
+                    .map(|(index, choice)| {
+                        format!(
+                            "Option {}: {}",
+                            index + 1,
+                            super::safe_multiline(&choice.label)
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
                 format!(
-                    "PENDING REQUEST {}/{} · {}\n{}\n\n{}\n\n{}\n{}",
+                    "PENDING REQUEST {}/{} · {}\n{}\n\n{}\n\n{}",
                     self.request_index + 1,
                     requests.len(),
                     safe_display(&request.origin),
                     safe_display(&request.title),
                     super::safe_multiline(&request.detail),
-                    request
-                        .choices
-                        .iter()
-                        .enumerate()
-                        .map(|(n, c)| format!("{}  {}", n + 1, c.label))
-                        .collect::<Vec<_>>()
-                        .join("\n"),
-                    questions
+                    if long_choices.is_empty() {
+                        questions
+                    } else {
+                        format!("{long_choices}\n\n{questions}")
+                    }
                 )
             } else {
                 "No unresolved requests from this connection.\nA historical request cannot be approved here.".into()
@@ -1246,7 +1406,11 @@ impl ControlPanel {
                     if self.field == 0 { ">" } else { " " },
                     self.provider.label(),
                     if self.field == 1 { ">" } else { " " },
-                    self.project.display()
+                    if self.field == 1 && self.button_focus.is_none() {
+                        self.project.display()
+                    } else {
+                        self.project.text.clone()
+                    }
                 )
             };
             Paragraph::new(identity)
@@ -1256,6 +1420,16 @@ impl ControlPanel {
                     Rect::new(inner.x, inner.y + 2, inner.width, 3),
                     frame.buffer_mut(),
                 );
+            Paragraph::new(if self.field == 2 {
+                "> Task instructions"
+            } else {
+                "Task instructions"
+            })
+            .style(Style::default().fg(INK))
+            .render(
+                Rect::new(inner.x, inner.y + 5, inner.width, 1),
+                frame.buffer_mut(),
+            );
             let body = Rect::new(
                 inner.x,
                 inner.y + 6,
@@ -1265,8 +1439,10 @@ impl ControlPanel {
             paint_opaque(frame, body, Style::default().bg(PANEL));
             let message = if access.is_some_and(|a| a.native) {
                 "Press Enter to talk or approve in the official console.\nReturn here when you detach or exit.".into()
-            } else {
+            } else if self.field == 2 && self.button_focus.is_none() {
                 self.message.display()
+            } else {
+                self.message.text.clone()
             };
             let paragraph = Paragraph::new(super::wrap_text(&message, body.width).join("\n"))
                 .style(Style::default().fg(INK).bg(PANEL));
@@ -1278,7 +1454,25 @@ impl ControlPanel {
                 .scroll((scroll, 0))
                 .render(body, frame.buffer_mut());
         }
-        Paragraph::new(safe_display(&self.status.notice))
+        let availability = if !self.status.notice.is_empty() {
+            self.status.notice.clone()
+        } else if self.target.is_none() && !self.requests_open {
+            if self.project.text.trim().is_empty() {
+                "Choose a project to create".into()
+            } else if self.message.text.trim().is_empty() {
+                "Add instructions to create".into()
+            } else if !match self.provider {
+                Agent::Codex => self.status.can_start_codex,
+                Agent::Claude => self.status.can_start_claude,
+            } {
+                "Open Connections to create".into()
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+        Paragraph::new(safe_display(&availability))
             .style(Style::default().fg(WARNING))
             .render(
                 Rect::new(inner.x, inner.bottom() - 5, inner.width, 1),
@@ -1288,7 +1482,11 @@ impl ControlPanel {
             frame,
             Rect::new(inner.x, inner.bottom() - 4, inner.width, 3),
         );
-        let help = if self.requests_open {
+        let help = if inner.width < 56 && self.requests_open {
+            "Tab/Enter · PgUp/Dn · Esc"
+        } else if inner.width < 56 {
+            "Tab controls · Enter · Esc"
+        } else if self.requests_open {
             "Tab focus · Enter choose · PgUp/Dn read · Esc back"
         } else {
             "Tab fields/buttons · Enter choose · Esc back"
@@ -1447,6 +1645,10 @@ mod tests {
         panel.show_task(WorkerId("b".into()), "B".into(), Agent::Codex);
         panel.complete("Confirmed".into(), true);
         assert_eq!(panel.message.text, "Keep B");
+        assert!(
+            panel.status.notice.is_empty(),
+            "A's receipt must not be shown on B"
+        );
         panel.show_task(WorkerId("a".into()), "A".into(), Agent::Codex);
         assert!(panel.message.text.is_empty());
     }
@@ -1489,6 +1691,127 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect()
+    }
+
+    #[test]
+    fn inline_composer_keeps_target_and_only_executes_visible_capabilities() {
+        let mut panel = ready_panel();
+        panel.show_task(
+            WorkerId("a".into()),
+            "Avery · Retry policy".into(),
+            Agent::Codex,
+        );
+        panel.status.tasks.insert(
+            "a".into(),
+            TaskAccess {
+                send: true,
+                interrupt: true,
+                reconnect: true,
+                ..Default::default()
+            },
+        );
+        panel.status.requests.push(approval("pending"));
+        panel.paste("Keep this exact instruction");
+        let mut terminal =
+            ratatui::Terminal::new(ratatui::backend::TestBackend::new(40, 10)).unwrap();
+        terminal
+            .draw(|frame| panel.draw_composer_in(frame, Rect::new(0, 0, 40, 10)))
+            .unwrap();
+        assert_eq!(panel.composer_worker(), Some(&WorkerId("a".into())));
+        let text = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(text.contains("F7 expand"));
+        for code in [KeyCode::F(2), KeyCode::F(4), KeyCode::F(6)] {
+            assert!(panel
+                .handle_key(KeyEvent::new(code, KeyModifiers::NONE))
+                .is_none());
+            assert!(!panel.busy());
+        }
+        assert!(panel.hit_regions().iter().all(|hit| !matches!(
+            hit.action,
+            Action::Control(
+                Command::Interrupt { .. } | Command::Reconnect { .. } | Command::Reply { .. }
+            )
+        )));
+        assert_eq!(
+            panel.handle_key(KeyEvent::new(KeyCode::F(5), KeyModifiers::NONE)),
+            Some(Command::Send {
+                worker: WorkerId("a".into()),
+                prompt: "Keep this exact instruction".into()
+            })
+        );
+    }
+
+    #[test]
+    fn request_choices_are_not_duplicated_and_long_options_keep_their_meaning() {
+        let mut panel = ready_panel();
+        panel.status.notice = "Previous task acknowledged".into();
+        panel.show_requests(Some(WorkerId("a".into())));
+        panel.set_status(ControlStatus {
+            requests: vec![approval("one")],
+            ..Default::default()
+        });
+        let text = draw_panel(&mut panel, 40, 24);
+        assert_eq!(text.matches("Allow once").count(), 1);
+        assert!(!text.contains("Previous task"));
+        let mut request = approval("long");
+        request.choices[0].label = "Allow this command and all commands in this workspace".into();
+        panel.set_status(ControlStatus {
+            requests: vec![request],
+            ..Default::default()
+        });
+        panel.show_requests(Some(WorkerId("a".into())));
+        let text = draw_panel(&mut panel, 40, 24);
+        assert!(text.contains("this workspace"));
+        let command = panel
+            .hit_regions()
+            .iter()
+            .find_map(|hit| match &hit.action {
+                Action::Control(command @ Command::Reply { .. }) => Some(command.clone()),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(
+            panel.activate(command),
+            Some(Command::Reply {
+                request: "long".into(),
+                response: serde_json::json!({"decision":"accept"})
+            })
+        );
+    }
+
+    #[test]
+    fn request_shortcut_drops_the_previous_instruction_receipt() {
+        let mut panel = ready_panel();
+        panel.show_new("/project".into());
+        panel.status.notice = "Confirmed: Instruction accepted · operation 123".into();
+        panel.status.requests.push(approval("current"));
+        panel.handle_key(KeyEvent::new(KeyCode::F(4), KeyModifiers::NONE));
+        let text = draw_panel(&mut panel, 80, 24);
+        assert!(text.contains("REVIEW REQUEST"));
+        assert!(text.contains("A concrete command"));
+        assert!(!text.contains("Instruction accepted"));
+        assert!(!text.contains("operation 123"));
+    }
+
+    #[test]
+    fn new_task_displays_one_caret_only_in_the_active_field() {
+        let mut panel = ready_panel();
+        panel.show_new("/project".into());
+        panel.paste("A task");
+        let text = draw_panel(&mut panel, 80, 24);
+        assert_eq!(text.matches('▏').count(), 1);
+        assert!(!text.contains("/project▏"));
+        panel.handle_key(KeyEvent::new(KeyCode::BackTab, KeyModifiers::NONE));
+        let text = draw_panel(&mut panel, 80, 24);
+        assert_eq!(text.matches('▏').count(), 1);
+        assert!(text.contains("/project▏"));
+        assert!(!text.contains("A task▏"));
     }
 
     #[test]

@@ -63,12 +63,18 @@ impl Customize {
             self.cursor += text.len();
         }
     }
+    pub fn valid(&self) -> bool {
+        self.worker.is_none() || !self.profile.name.trim().is_empty()
+    }
     pub fn store(
         &self,
         profiles: &mut BTreeMap<String, CharacterProfile>,
         designs: &mut BTreeMap<String, OfficeDesign>,
         wardrobe: &mut BTreeMap<String, usize>,
     ) {
+        if !self.valid() {
+            return;
+        }
         if let Some(id) = &self.worker {
             if !self.profile.name.trim().is_empty() {
                 profiles.insert(id.0.clone(), self.profile.clone());
@@ -87,14 +93,27 @@ impl Customize {
         wardrobe: &mut BTreeMap<String, usize>,
     ) {
         if key.code == KeyCode::Esc {
-            self.store(profiles, designs, wardrobe);
             self.open = false;
             return;
         }
         if !self.readable {
             return;
         }
-        let count = if self.worker.is_some() { 3 } else { 5 };
+        let fields = if self.worker.is_some() { 3 } else { 5 };
+        let count = fields + 2;
+        if key.code == KeyCode::Enter
+            && (self.field == fields || key.modifiers.contains(KeyModifiers::CONTROL))
+        {
+            if self.valid() {
+                self.store(profiles, designs, wardrobe);
+                self.open = false;
+            }
+            return;
+        }
+        if key.code == KeyCode::Enter && self.field == fields + 1 {
+            self.open = false;
+            return;
+        }
         match key.code {
             KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
                 self.field = (self.field + count - 1) % count
@@ -170,12 +189,25 @@ impl Customize {
             }
             _ => {}
         }
-        self.store(profiles, designs, wardrobe);
+    }
+    /// Apply an uncommitted draft to temporary render maps only.
+    pub fn preview(
+        &self,
+        profiles: &mut BTreeMap<String, CharacterProfile>,
+        designs: &mut BTreeMap<String, OfficeDesign>,
+        wardrobe: &mut BTreeMap<String, usize>,
+    ) {
+        if self.open {
+            self.store(profiles, designs, wardrobe);
+        }
     }
     pub fn draw(&mut self, frame: &mut Frame, area: Rect) -> Vec<HitRegion> {
         paint_opaque(frame, area, Style::default().bg(PANEL).fg(INK));
-        self.readable =
-            area.width >= 28 && area.height >= if self.office.is_some() { 18 } else { 15 };
+        let area = Rect {
+            height: area.height.min(24),
+            ..area
+        };
+        self.readable = area.width >= 24 && area.height >= 9;
         if !self.readable {
             Paragraph::new("Appearance · enlarge terminal\nEsc return")
                 .render(area, frame.buffer_mut());
@@ -187,7 +219,7 @@ impl Customize {
         } else {
             "OFFICE DESIGN"
         };
-        Paragraph::new(title)
+        Paragraph::new(format!("{title} · preview"))
             .style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))
             .render(
                 Rect::new(inner.x, inner.y, inner.width, 1),
@@ -197,11 +229,15 @@ impl Customize {
             vec![
                 (
                     "Name",
-                    format!(
-                        "{}▏{}",
-                        safe_display(&self.profile.name[..self.cursor]),
-                        safe_display(&self.profile.name[self.cursor..])
-                    ),
+                    if self.field == 0 {
+                        format!(
+                            "{}▏{}",
+                            safe_display(&self.profile.name[..self.cursor]),
+                            safe_display(&self.profile.name[self.cursor..])
+                        )
+                    } else {
+                        safe_display(&self.profile.name)
+                    },
                 ),
                 (
                     "Outfit",
@@ -233,8 +269,20 @@ impl Customize {
             ]
         };
         let mut hits = Vec::new();
-        for (index, (label, value)) in choices.iter().enumerate() {
-            let rect = Rect::new(inner.x, inner.y + 2 + index as u16 * 2, inner.width, 2);
+        let compact = area.width < 36 || area.height < 18;
+        let row_height = if compact { 1 } else { 2 };
+        let visible = (inner.height.saturating_sub(4) / row_height).max(1) as usize;
+        let first = self
+            .field
+            .min(choices.len().saturating_sub(1))
+            .saturating_sub(visible - 1);
+        for (index, (label, value)) in choices.iter().enumerate().skip(first).take(visible) {
+            let rect = Rect::new(
+                inner.x,
+                inner.y + 2 + (index - first) as u16 * row_height,
+                inner.width,
+                row_height,
+            );
             let style = Style::default()
                 .fg(if index == self.field { INK } else { MUTED })
                 .bg(if index == self.field {
@@ -243,36 +291,63 @@ impl Customize {
                     PANEL
                 });
             paint_opaque(frame, rect, style);
-            Paragraph::new(format!(
-                "{} {label}\n  {value}",
-                if index == self.field { ">" } else { " " }
-            ))
+            Paragraph::new(if compact {
+                format!(
+                    "{} {label}: {value}",
+                    if index == self.field { ">" } else { " " }
+                )
+            } else {
+                format!(
+                    "{} {label}\n  {value}",
+                    if index == self.field { ">" } else { " " }
+                )
+            })
             .style(style)
             .render(rect, frame.buffer_mut());
             hits.push(HitRegion::new(rect, Action::CustomizeField(index)));
         }
         let y = inner.bottom() - 2;
-        for (x, label, action) in [
-            (inner.x, "[ Previous ]", Action::Key(KeyCode::Left)),
-            (inner.x + 13, "[ Next ]", Action::Key(KeyCode::Right)),
+        let field_count = choices.len();
+        for (x, label, action, index) in [
+            (inner.x, "Apply", Action::ApplyAppearance, field_count),
+            (
+                inner.x + 11,
+                "Cancel",
+                Action::CancelAppearance,
+                field_count + 1,
+            ),
         ] {
-            let rect = Rect::new(
-                x,
-                y,
-                (label.len() as u16).min(inner.right().saturating_sub(x)),
-                1,
-            );
-            Paragraph::new(label)
-                .style(Style::default().fg(ACCENT))
-                .render(rect, frame.buffer_mut());
-            hits.push(HitRegion::new(rect, action));
+            let kind = if self.field == index {
+                crate::components::ButtonKind::Primary
+            } else {
+                crate::components::ButtonKind::Secondary
+            };
+            if index != field_count || self.valid() {
+                if let Some(hit) = crate::components::button(
+                    frame,
+                    Rect::new(x, y, inner.right().saturating_sub(x), 1),
+                    label,
+                    action,
+                    kind,
+                ) {
+                    hits.push(hit);
+                }
+            }
         }
-        Paragraph::new("Appearance only · Esc return")
-            .style(Style::default().fg(MUTED))
-            .render(
-                Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
-                frame.buffer_mut(),
-            );
+        let zone = choices
+            .get(self.field)
+            .map(|(name, _)| *name)
+            .unwrap_or("All changes");
+        Paragraph::new(if self.valid() {
+            format!("Preview: {zone}")
+        } else {
+            "Name cannot be empty".into()
+        })
+        .style(Style::default().fg(MUTED))
+        .render(
+            Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
+            frame.buffer_mut(),
+        );
         hits
     }
 }

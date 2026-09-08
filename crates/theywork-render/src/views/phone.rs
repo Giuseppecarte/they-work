@@ -1,26 +1,19 @@
-//! Slide-up message app: a compact view of the company’s current signal.
+//! Native inbox for observed state and recorded history.
 
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
+use ratatui::style::{Modifier, Style};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 use ratatui::Frame;
 use theywork_core::{
     Activity, Beat, Millis, Office, Outcome, Worker, WorkerId, WorkerStatus, World,
 };
 
-use crate::canvas::Canvas;
-use crate::sprite::{look_for_worker, SpriteSet, WorkerLook};
-
 use super::{
-    below_tab_bar, duration_label, elapsed_ms, has_area, inset, paint_opaque,
-    render_worker_head_with_look, safe_display, short_path, status_style, worker_status, PixelRect,
-    ACCENT, ATTENTION_PANEL, BACKGROUND, GOOD, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
+    duration_label, elapsed_ms, has_area, inset, paint_opaque, safe_display, short_path,
+    worker_status, ACCENT, BACKGROUND, INK, MUTED, PANEL, PANEL_HIGHLIGHT, WARNING,
 };
-
-const SLIDE_MS: Millis = 260;
-const MESSAGE_HEIGHT: u16 = 4;
-const MIN_VISIBLE_HEIGHT: u16 = 6;
+use crate::interaction::{Action, HitRegion};
+use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PhoneChannel {
@@ -77,459 +70,274 @@ pub(crate) struct PhoneDrawContext<'a> {
     pub(crate) channel: PhoneChannel,
     pub(crate) selected: usize,
     pub(crate) now: Millis,
-    pub(crate) transition_at: Millis,
-    pub(crate) canvas: &'a mut Canvas,
-    pub(crate) sprites: &'a SpriteSet,
 }
 
-pub(crate) fn draw(frame: &mut Frame, context: PhoneDrawContext<'_>) {
+/// A native inbox for recorded activity. It never answers a provider request.
+pub(crate) fn draw(frame: &mut Frame, context: PhoneDrawContext<'_>) -> Vec<HitRegion> {
     let PhoneDrawContext {
         world,
         office,
         channel,
         selected,
         now,
-        transition_at,
-        canvas,
-        sprites,
     } = context;
-    let area = below_tab_bar(frame.area());
-    if !has_area(area) {
-        return;
-    }
-    let slab_width = area.width.saturating_sub(4).clamp(28, 90).min(area.width);
-    let slab_height = area.height.saturating_sub(2).min(40);
-    if slab_width == 0 || slab_height == 0 {
-        return;
-    }
-    let minimum_visible_height = slab_height.clamp(1, MIN_VISIBLE_HEIGHT);
-    let progress = elapsed_ms(now, transition_at).min(SLIDE_MS);
-    let hidden = (slab_height as Millis)
-        .saturating_mul(SLIDE_MS.saturating_sub(progress))
-        .div_euclid(SLIDE_MS)
-        .clamp(
-            0,
-            slab_height.saturating_sub(minimum_visible_height) as Millis,
-        ) as u16;
-    let panel_x = area
-        .x
-        .saturating_add(area.width.saturating_sub(slab_width) / 2);
-    let panel_y = area
-        .y
-        .saturating_add(area.height.saturating_sub(slab_height))
-        .saturating_add(hidden);
-    let panel_bottom = area.y.saturating_add(area.height);
-    let visible_top = panel_y.min(panel_bottom);
-    let visible_height = panel_bottom.saturating_sub(visible_top).min(slab_height);
-    if visible_height == 0 {
-        return;
-    }
-    let panel = Rect::new(panel_x, visible_top, slab_width, visible_height);
-
-    dim_backdrop(frame, area, canvas.is_light_mode());
-    let shadow = Rect::new(
-        panel.x.saturating_add(2),
-        panel.y.saturating_add(1),
-        panel.width.saturating_sub(2),
-        panel.height.saturating_sub(1),
+    let full = frame.area();
+    let area = Rect::new(
+        full.x,
+        full.y.saturating_add(2),
+        full.width,
+        full.height.saturating_sub(3),
     );
-    paint_opaque(frame, shadow, Style::default().bg(BACKGROUND));
-    paint_opaque(frame, panel, Style::default().bg(PANEL));
+    let mut hits = Vec::new();
+    if !has_area(area) {
+        return hits;
+    }
+    let width = area.width.min(96);
+    let panel = Rect::new(
+        area.x + (area.width - width) / 2,
+        area.y,
+        width,
+        area.height.min(42),
+    );
+    paint_opaque(frame, area, Style::default().fg(INK).bg(BACKGROUND));
+    paint_opaque(frame, panel, Style::default().fg(INK).bg(PANEL));
     let messages = messages_for(channel, world, office, now);
     Block::default()
-        .title(Line::styled(
-            format!(
-                " PHONE / {} · {} ",
-                channel.label().to_uppercase(),
-                messages.len()
-            ),
-            Style::default().fg(INK).add_modifier(Modifier::BOLD),
+        .title(format!(
+            " PHONE / {} · {} ",
+            channel.label().to_uppercase(),
+            messages.len()
         ))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(PANEL_HIGHLIGHT))
+        .border_style(Style::default().fg(MUTED))
         .style(Style::default().bg(PANEL))
         .render(panel, frame.buffer_mut());
-
     let inner = inset(panel, 1);
     if !has_area(inner) {
-        return;
+        return hits;
     }
-    let top_rows = inner.height.min(2);
-    Paragraph::new(format!(
-        " {} · {} conversations",
-        safe_display(office.map_or("All projects", |value| value.name.as_str())),
-        office.map_or_else(|| world.worker_count(), |value| value.workers.len())
+    Paragraph::new(short_path(
+        &format!(
+            "{} · {} conversations",
+            safe_display(office.map_or("All projects", |office| office.name.as_str())),
+            office.map_or_else(|| world.worker_count(), |office| office.workers.len())
+        ),
+        inner.width.into(),
     ))
-    .style(Style::default().fg(MUTED).bg(PANEL))
+    .style(Style::default().fg(MUTED))
     .render(
         Rect::new(inner.x, inner.y, inner.width, 1),
         frame.buffer_mut(),
     );
-    if top_rows > 1 {
-        Paragraph::new(channel_tabs(channel, inner.width))
-            .style(Style::default().bg(PANEL))
-            .render(
-                Rect::new(inner.x, inner.y + 1, inner.width, 1),
-                frame.buffer_mut(),
-            );
-    }
-    let footer_height = if inner.height >= 8 { 2 } else { 0 };
-    let body = Rect::new(
-        inner.x,
-        inner.y + top_rows,
-        inner.width,
-        inner.height.saturating_sub(top_rows + footer_height),
-    );
-    if footer_height > 0 {
-        let selected_position = if messages.is_empty() {
-            0
-        } else {
-            selected.min(messages.len() - 1) + 1
-        };
-        let order = if matches!(channel, PhoneChannel::Shipping | PhoneChannel::Watercooler) {
-            "newest first · recorded history"
-        } else {
-            "attention first · current state"
-        };
-        Paragraph::new(format!(" {selected_position}/{} · {order}", messages.len()))
-            .style(Style::default().fg(MUTED).bg(PANEL))
-            .render(
-                Rect::new(inner.x, inner.bottom() - 2, inner.width, 1),
-                frame.buffer_mut(),
-            );
-        let keys = if inner.width >= 48 {
-            "↑↓ select  Enter inspect  ←→ channel  Esc close"
-        } else if inner.width >= 32 {
-            "↑↓ select · Enter inspect · Esc close"
-        } else {
-            "Enter inspect · Esc close"
-        };
-        Paragraph::new(keys)
-            .style(Style::default().fg(MUTED).bg(PANEL))
-            .render(
-                Rect::new(inner.x, inner.bottom() - 1, inner.width, 1),
-                frame.buffer_mut(),
-            );
-    }
-    if !has_area(body) {
-        return;
-    }
-    if messages.is_empty() {
-        let empty = match channel {
-            PhoneChannel::Standup => "No conversations in this project yet.",
-            PhoneChannel::Blocked => "No conversations need attention.",
-            PhoneChannel::Shipping => "No file edits recorded in the available history.",
-            PhoneChannel::Watercooler => "No messages recorded in the available history.",
-        };
-        Paragraph::new(empty)
-            .style(Style::default().fg(MUTED).bg(PANEL))
-            .wrap(Wrap { trim: false })
-            .render(body, frame.buffer_mut());
-        return;
-    }
-    let selected = selected.min(messages.len() - 1);
-    let selected_height = selected_height(&messages[selected], body.width);
-    let visible = usize::from(
-        body.height
-            .saturating_sub(selected_height.saturating_sub(MESSAGE_HEIGHT))
-            / MESSAGE_HEIGHT,
-    )
-    .max(1);
-    let start = selected.saturating_sub(visible.saturating_sub(1));
-    let mut offset = 0;
-    for (index, message) in messages.iter().enumerate().skip(start) {
-        let remaining = body.height.saturating_sub(offset);
-        let wanted = if index == selected {
-            selected_height
-        } else {
-            MESSAGE_HEIGHT
-        };
-        if remaining == 0 || (remaining < wanted && index != selected) {
-            break;
-        }
-        let row = Rect::new(body.x, body.y + offset, body.width, wanted.min(remaining));
-        draw_message(
-            frame,
-            world,
-            message,
-            canvas,
-            sprites,
-            now,
-            row,
-            index == selected,
-        );
-        offset += row.height;
-    }
-}
-
-fn dim_backdrop(frame: &mut Frame, area: Rect, light: bool) {
-    let base = if light {
-        (244u16, 239u16, 228u16)
-    } else {
-        (13, 11, 20)
-    };
-    let dim = |color| {
-        let color = if light {
-            super::light_color(color)
-        } else {
-            color
-        };
-        match color {
-            Color::Rgb(r, g, b) => Color::Rgb(
-                ((u16::from(r) + base.0 * 7) / 8) as u8,
-                ((u16::from(g) + base.1 * 7) / 8) as u8,
-                ((u16::from(b) + base.2 * 7) / 8) as u8,
-            ),
-            _ => {
-                if light {
-                    super::LIGHT_BACKGROUND
-                } else {
-                    BACKGROUND
-                }
-            }
-        }
-    };
-    for y in area.y..area.bottom() {
-        for x in area.x..area.right() {
-            if let Some(cell) = frame.buffer_mut().cell_mut((x, y)) {
-                let foreground = dim(cell.fg);
-                let background = dim(cell.bg);
-                cell.set_fg(foreground).set_bg(background);
-            }
-        }
-    }
-}
-
-fn channel_tabs(channel: PhoneChannel, width: u16) -> Line<'static> {
-    let tabs = [
+    let channels = [
         PhoneChannel::Standup,
         PhoneChannel::Blocked,
         PhoneChannel::Shipping,
         PhoneChannel::Watercooler,
     ];
-    Line::from(
-        tabs.into_iter()
-            .enumerate()
-            .map(|(index, tab)| {
-                let label = if width < 28 {
-                    ""
-                } else if width < 34 {
-                    ["Now", "!", "Ed", "Msg"][index]
-                } else if width < 44 {
-                    ["Now", "Help", "Edits", "Chat"][index]
-                } else {
-                    tab.label()
-                };
-                let style = if tab == channel {
-                    Style::default()
-                        .fg(BACKGROUND)
-                        .bg(GOOD)
-                        .add_modifier(Modifier::BOLD)
-                } else {
-                    Style::default().fg(MUTED).bg(PANEL)
-                };
-                Span::styled(format!(" {} {label} ", index + 1), style)
-            })
-            .collect::<Vec<_>>(),
-    )
+    let columns = if inner.width >= 44 {
+        4
+    } else if inner.width >= 28 {
+        2
+    } else {
+        1
+    };
+    let tab_rows = 4usize.div_ceil(columns) as u16;
+    let mut x = inner.x;
+    for (index, tab) in channels.into_iter().enumerate() {
+        let row = index / columns;
+        let col = index % columns;
+        if col == 0 {
+            x = inner.x;
+        }
+        let y = inner.y + 1 + row as u16;
+        if y >= inner.bottom().saturating_sub(1) {
+            break;
+        }
+        let slot = if columns == 4 {
+            inner.right().saturating_sub(x)
+        } else {
+            inner.width / columns as u16
+        };
+        if let Some(hit) = crate::components::button(
+            frame,
+            Rect::new(x, y, slot, 1),
+            tab.label(),
+            Action::Key(KeyCode::Char(char::from(b'1' + index as u8))),
+            if tab == channel {
+                crate::components::ButtonKind::Primary
+            } else {
+                crate::components::ButtonKind::Quiet
+            },
+        ) {
+            x = if columns == 4 {
+                hit.area.right() + 1
+            } else {
+                x + slot
+            };
+            hits.push(hit);
+        }
+    }
+    let top = (1 + tab_rows).min(inner.height);
+    let body = Rect::new(
+        inner.x,
+        inner.y + top,
+        inner.width,
+        inner.height.saturating_sub(top + 1),
+    );
+    if !has_area(body) {
+        return hits;
+    }
+    let selected = selected.min(messages.len().saturating_sub(1));
+    let footer = Rect::new(inner.x, inner.bottom() - 1, inner.width, 1);
+    let order = if matches!(channel, PhoneChannel::Shipping | PhoneChannel::Watercooler) {
+        "recorded history"
+    } else {
+        "observed state"
+    };
+    Paragraph::new(short_path(
+        &format!(
+            "{}/{} · {order} · Enter inspect",
+            if messages.is_empty() { 0 } else { selected + 1 },
+            messages.len()
+        ),
+        footer.width.into(),
+    ))
+    .style(Style::default().fg(MUTED))
+    .render(footer, frame.buffer_mut());
+    if messages.is_empty() {
+        let empty = match channel {
+            PhoneChannel::Standup => "No conversations in this scope.",
+            PhoneChannel::Blocked => "No attention items in the available observations.",
+            PhoneChannel::Shipping => "No file edits recorded in the available history.",
+            PhoneChannel::Watercooler => "No messages recorded in the available history.",
+        };
+        Paragraph::new(empty)
+            .style(Style::default().fg(MUTED))
+            .wrap(Wrap { trim: false })
+            .render(body, frame.buffer_mut());
+        return hits;
+    }
+    let selected_height = body.height.min(if inner.width < 44 { 7 } else { 6 });
+    let visible = usize::from(body.height.saturating_sub(selected_height) / 4) + 1;
+    let start = selected.saturating_sub(visible - 1);
+    let mut y = body.y;
+    for (index, message) in messages.iter().enumerate().skip(start) {
+        let remaining = body.bottom().saturating_sub(y);
+        let height = if index == selected {
+            selected_height
+        } else {
+            4
+        };
+        if remaining == 0 || (remaining < height && index != selected) {
+            break;
+        }
+        let row = Rect::new(body.x, y, body.width, height.min(remaining));
+        draw_message(frame, world, message, now, row, index == selected);
+        if let Some(id) = &message.worker_id {
+            hits.push(HitRegion::new(row, Action::Inspect(id.clone())));
+        }
+        y += row.height;
+    }
+    hits
 }
 
-fn selected_height(message: &PhoneMessage, width: u16) -> u16 {
-    let text_width = width.saturating_sub(if width >= 44 { 8 } else { 3 }) as usize;
-    let title = super::desk::wrapped_lines(&message.name, text_width)
-        .len()
-        .clamp(1, 2);
-    let detail = super::desk::wrapped_lines(&message.text, text_width)
-        .len()
-        .clamp(1, 3);
-    (title + detail + 3) as u16
-}
-
-#[allow(clippy::too_many_arguments)]
 fn draw_message(
     frame: &mut Frame,
     world: &World,
     message: &PhoneMessage,
-    canvas: &mut Canvas,
-    sprites: &SpriteSet,
     now: Millis,
     row: Rect,
     selected: bool,
 ) {
-    let Some((office, worker)) = message
-        .worker_id
-        .as_ref()
-        .and_then(|id| find_worker(world, id))
-    else {
-        return;
-    };
-    let look = look_for_worker(&office.workers, worker);
-    let attention = message.status.needs_attention() && !message.historical;
-    let background = if selected {
-        PANEL_HIGHLIGHT
-    } else if attention {
-        ATTENTION_PANEL
-    } else {
-        PANEL
-    };
-    let accent = if attention {
-        status_style(message.status)
-    } else {
-        Style::default().fg(ACCENT)
-    };
-    paint_opaque(frame, row, Style::default().bg(background));
-    Paragraph::new(if selected {
-        ">"
-    } else if attention {
-        "!"
-    } else {
-        " "
-    })
-    .style(accent.bg(background))
-    .render(Rect::new(row.x, row.y, 1, 1), frame.buffer_mut());
-    let avatar_width = if row.width >= 44 { 7 } else { 2 };
-    if avatar_width > 2 {
-        draw_avatar(
-            frame,
-            canvas,
-            sprites,
-            worker,
-            &look,
-            now,
-            Rect::new(row.x + 1, row.y, 5, row.height.min(3)),
-            background,
+    let worker = message.worker_id.as_ref().and_then(|id| world.worker(id));
+    let current = worker.map_or("Source unavailable", |worker| {
+        crate::presentation::state_label(worker, now)
+    });
+    let attention = !message.historical
+        && matches!(
+            current,
+            "Approval needed" | "Question for you" | "Needs a follow-up" | "Error reported"
         );
-    }
-    let text = Rect::new(
-        row.x + avatar_width,
-        row.y,
-        row.width.saturating_sub(avatar_width + 1),
-        row.height,
-    );
+    let background = if selected { PANEL_HIGHLIGHT } else { PANEL };
+    paint_opaque(frame, row, Style::default().fg(INK).bg(background));
+    let text = Rect::new(row.x + 1, row.y, row.width.saturating_sub(1), row.height);
     if !has_area(text) {
         return;
     }
-    let title_height = if selected {
-        (super::desk::wrapped_lines(&message.name, text.width as usize)
-            .len()
-            .clamp(1, 2) as u16)
-            .min(text.height)
+    Paragraph::new(if selected { ">" } else { " " })
+        .style(Style::default().fg(ACCENT))
+        .render(Rect::new(row.x, row.y, 1, 1), frame.buffer_mut());
+    let title_lines = super::desk::wrapped_lines(&message.name, text.width.into());
+    let title_rows = if selected && row.height >= 6 {
+        title_lines.len().clamp(1, 2) as u16
     } else {
         1
     };
-    Paragraph::new(if selected {
-        safe_display(&message.name)
+    Paragraph::new(if title_rows == 1 {
+        short_path(&message.name, text.width.into())
     } else {
-        short_path(&message.name, text.width as usize)
+        format!(
+            "{}\n{}",
+            title_lines[0],
+            short_path(&title_lines[1..].join(" "), text.width.into())
+        )
     })
     .style(
         Style::default()
-            .fg(INK)
-            .bg(background)
+            .fg(if attention { WARNING } else { INK })
             .add_modifier(Modifier::BOLD),
     )
     .wrap(Wrap { trim: false })
     .render(
-        Rect::new(text.x, text.y, text.width, title_height),
+        Rect::new(text.x, text.y, text.width, title_rows.min(text.height)),
         frame.buffer_mut(),
     );
-    let mut y = text.y + title_height;
+    let mut y = text.y + title_rows;
     if y < text.bottom() {
-        let age = duration_label(elapsed_ms(now, message.at));
-        let prefix = format!("{} · {age} ago · ", message.state_label);
-        Paragraph::new(Line::from(vec![
-            Span::styled(prefix.clone(), accent.bg(background)),
-            Span::styled(
-                short_path(
-                    &message.context,
-                    text.width.saturating_sub(Span::raw(prefix).width() as u16) as usize,
-                ),
-                Style::default().fg(MUTED).bg(background),
-            ),
-        ]))
-        .render(Rect::new(text.x, y, text.width, 1), frame.buffer_mut());
+        let state = if message.historical {
+            "Recorded"
+        } else {
+            message.state_label
+        };
+        let line = format!(
+            "{state} · {} ago · {}",
+            duration_label(elapsed_ms(now, message.at)),
+            message.context
+        );
+        Paragraph::new(short_path(&line, text.width.into()))
+            .style(Style::default().fg(if attention { WARNING } else { MUTED }))
+            .render(Rect::new(text.x, y, text.width, 1), frame.buffer_mut());
         y += 1;
     }
-    let detail_height = text
-        .bottom()
-        .saturating_sub(y + if selected { 2 } else { 1 });
-    if detail_height > 0 {
-        Paragraph::new(if selected {
-            message.text.clone()
-        } else {
-            short_path(&message.text, text.width as usize)
-        })
-        .style(Style::default().fg(INK).bg(background))
-        .wrap(Wrap { trim: false })
-        .render(
-            Rect::new(text.x, y, text.width, detail_height),
-            frame.buffer_mut(),
-        );
+    if y < text.bottom() {
+        let coverage = worker.map_or("Source unavailable", |worker| {
+            crate::presentation::coverage_label(&worker.coverage, now)
+        });
+        Paragraph::new(short_path(coverage, text.width.into()))
+            .style(Style::default().fg(MUTED))
+            .render(Rect::new(text.x, y, text.width, 1), frame.buffer_mut());
+        y += 1;
     }
-    if selected && text.height >= 5 {
-        let hint = if message.historical {
-            "Enter: full history and current state"
-        } else if attention && matches!(worker.activity, Activity::Waiting { .. }) {
-            "Enter: inspect · review in the original conversation"
-        } else if attention {
-            "Enter: inspect · check the original conversation"
-        } else {
-            "Enter: full title, activity and conversation details"
-        };
-        Paragraph::new(hint)
-            .style(Style::default().fg(MUTED).bg(background))
+    if y < text.bottom() {
+        let height = usize::from(text.bottom() - y);
+        let mut lines = super::safe_multiline(&message.text)
+            .split('\n')
+            .flat_map(|line| super::desk::wrapped_lines(line, text.width.into()))
+            .collect::<Vec<_>>();
+        if lines.len() > height {
+            let remainder = lines[height - 1..].join(" ");
+            lines.truncate(height);
+            lines[height - 1] = short_path(&remainder, text.width.into());
+        }
+        Paragraph::new(lines.join("\n"))
+            .style(Style::default().fg(INK))
+            .wrap(Wrap { trim: false })
             .render(
-                Rect::new(text.x, text.bottom() - 2, text.width, 1),
+                Rect::new(text.x, y, text.width, text.bottom() - y),
                 frame.buffer_mut(),
             );
     }
-}
-
-// An avatar needs the canvas, where it goes, how big it is and whose it is;
-// a struct would only move the same list somewhere else.
-#[allow(clippy::too_many_arguments)]
-fn draw_avatar(
-    frame: &mut Frame,
-    canvas: &mut Canvas,
-    sprites: &SpriteSet,
-    worker: &Worker,
-    look: &WorkerLook,
-    now: Millis,
-    area: Rect,
-    background: Color,
-) {
-    if !has_area(area) {
-        return;
-    }
-    paint_opaque(frame, area, Style::default().bg(background));
-    let width = area.width as usize;
-    let height = area.height as usize;
-    canvas.resize_for_cells(width, height);
-    canvas.fill(background);
-    render_worker_head_with_look(
-        canvas,
-        sprites,
-        worker,
-        look,
-        now,
-        PixelRect {
-            x: 0,
-            y: 0,
-            width: canvas.width(),
-            height: canvas.height(),
-        },
-    );
-    canvas.render(frame.buffer_mut(), area);
-}
-
-fn find_worker<'a>(world: &'a World, id: &WorkerId) -> Option<(&'a Office, &'a Worker)> {
-    world.offices().find_map(|office| {
-        office
-            .workers
-            .iter()
-            .find(|worker| &worker.id == id)
-            .map(|worker| (office, worker))
-    })
 }
 
 fn messages_for(
@@ -549,7 +357,7 @@ fn messages_for(
     } else {
         messages.sort_by_key(|message| {
             (
-                !message.status.needs_attention(),
+                !message_needs_attention(message),
                 message.status == WorkerStatus::Idle,
                 std::cmp::Reverse(message.at),
             )
@@ -597,7 +405,14 @@ fn standup_messages(world: &World, selected: Option<&Office>, now: Millis) -> Ve
         .flat_map(|office| {
             office.workers.iter().map(move |worker| {
                 let summary = super::desk::inspection_summary(worker, now);
-                worker_message(office, worker, worker.last_seen, summary.detail, now, false)
+                let detail = if worker.status_at(now) != WorkerStatus::Failed
+                    && worker.wait_reason.is_some()
+                {
+                    crate::presentation::wait_description(worker.wait_reason).to_string()
+                } else {
+                    summary.detail
+                };
+                worker_message(office, worker, worker.last_seen, detail, now, false)
             })
         })
         .collect()
@@ -611,6 +426,17 @@ fn worker_message(
     now: Millis,
     historical: bool,
 ) -> PhoneMessage {
+    let text = if !historical
+        && worker.coverage.observed_at > 0
+        && (!worker.coverage.available || worker.coverage.is_stale_at(now))
+    {
+        format!(
+            "Last recorded: {}",
+            crate::work_brief::activity_text(&worker.activity)
+        )
+    } else {
+        text
+    };
     PhoneMessage {
         worker_id: Some(worker.id.clone()),
         name: worker.name.clone(),
@@ -618,22 +444,8 @@ fn worker_message(
         historical,
         state_label: if historical {
             "recorded"
-        } else if worker.wait_reason == Some(theywork_core::WaitReason::AutomaticReview) {
-            "automatic review"
-        } else if worker.wait_reason == Some(theywork_core::WaitReason::Child) {
-            "waiting for team"
-        } else if worker.wait_reason == Some(theywork_core::WaitReason::Process) {
-            "waiting for process"
         } else {
-            match worker_status(worker, now) {
-                WorkerStatus::Blocked if matches!(worker.activity, Activity::Waiting { .. }) => {
-                    "needs review"
-                }
-                WorkerStatus::Blocked => "silent",
-                WorkerStatus::Failed => "error",
-                WorkerStatus::Idle => "idle",
-                WorkerStatus::Running => "working",
-            }
+            crate::presentation::state_label(worker, now)
         },
         at,
         text,
@@ -641,10 +453,18 @@ fn worker_message(
     }
 }
 
+fn message_needs_attention(message: &PhoneMessage) -> bool {
+    !message.historical
+        && matches!(
+            message.state_label,
+            "Approval needed" | "Question for you" | "Needs a follow-up" | "Error reported"
+        )
+}
+
 fn blocked_messages(world: &World, selected: Option<&Office>, now: Millis) -> Vec<PhoneMessage> {
     standup_messages(world, selected, now)
         .into_iter()
-        .filter(|message| message.status.needs_attention())
+        .filter(message_needs_attention)
         .collect()
 }
 
@@ -765,6 +585,134 @@ mod tests {
     }
 
     #[test]
+    fn native_phone_exposes_every_channel_and_real_record_at_compact_sizes() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let (mut world, id) = blocked_world();
+        world.apply(event(
+            "/workspace/app",
+            &id.0,
+            1,
+            EventKind::Coverage(theywork_core::SourceCoverage {
+                observed_at: 1,
+                available: false,
+                ..Default::default()
+            }),
+        ));
+        for (width, height) in [(32, 14), (80, 24), (192, 58)] {
+            let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+            let mut hits = Vec::new();
+            terminal
+                .draw(|frame| {
+                    hits = draw(
+                        frame,
+                        PhoneDrawContext {
+                            world: &world,
+                            office: None,
+                            channel: PhoneChannel::Standup,
+                            selected: 0,
+                            now: 20,
+                        },
+                    );
+                })
+                .unwrap();
+            for key in ['1', '2', '3', '4'] {
+                assert!(
+                    hits.iter()
+                        .any(|hit| hit.action == Action::Key(KeyCode::Char(key))),
+                    "missing {key} at {width}x{height}"
+                );
+            }
+            assert!(hits
+                .iter()
+                .any(|hit| hit.action == Action::Inspect(id.clone())));
+            let body = Rect::new(0, 2, width, height - 3);
+            assert!(hits.iter().all(|hit| hit.area.width > 0
+                && hit.area.height > 0
+                && body.intersection(hit.area) == hit.area));
+            let text = terminal
+                .backend()
+                .buffer()
+                .content
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect::<String>();
+            assert!(text.contains("Source unavailable"));
+            assert!(text.contains("Dev Phone"));
+            assert!(text.contains("Last recorded:"));
+            assert!(!text.contains("Approval needed"));
+        }
+    }
+
+    #[test]
+    fn unavailable_or_stale_source_is_not_a_current_attention_request() {
+        let (mut world, id) = blocked_world();
+        for available in [false, true] {
+            world.apply(event(
+                "/workspace/app",
+                &id.0,
+                1,
+                EventKind::Coverage(theywork_core::SourceCoverage {
+                    observed_at: 1,
+                    available,
+                    ..Default::default()
+                }),
+            ));
+            let now = if available { i64::MAX } else { 20 };
+            assert!(messages_for(PhoneChannel::Blocked, &world, None, now).is_empty());
+            assert!(messages_for(PhoneChannel::Standup, &world, None, now)[0]
+                .text
+                .starts_with("Last recorded:"));
+        }
+    }
+
+    #[test]
+    fn an_explicit_question_never_uses_an_inferred_silence_explanation() {
+        let (mut world, id) = blocked_world();
+        world.apply(event(
+            "/workspace/app",
+            &id.0,
+            1,
+            EventKind::Wait(Some(theywork_core::WaitReason::HumanInput)),
+        ));
+        let records = messages_for(PhoneChannel::Blocked, &world, None, BLOCKED_AFTER_MS + 20);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].state_label, "Question for you");
+        assert!(records[0].text.contains("recorded a question"));
+        assert!(!records[0].text.contains("No recent activity"));
+        assert!(!records[0].text.contains("No approval was identified"));
+    }
+
+    #[test]
+    fn compact_message_truncation_is_explicit_without_changing_recorded_text() {
+        use ratatui::{backend::TestBackend, Terminal};
+        let (world, id) = blocked_world();
+        let original = "First recorded line has a detailed explanation. A second line contains more source evidence than can fit in this compact row.";
+        let message = PhoneMessage {
+            worker_id: Some(id),
+            name: "Recorded task".into(),
+            context: "codex".into(),
+            historical: true,
+            state_label: "recorded",
+            at: 1,
+            text: original.into(),
+            status: WorkerStatus::Idle,
+        };
+        let mut terminal = Terminal::new(TestBackend::new(32, 4)).unwrap();
+        terminal
+            .draw(|frame| draw_message(frame, &world, &message, 20, Rect::new(0, 0, 32, 4), true))
+            .unwrap();
+        let text = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(text.contains('…'));
+        assert_eq!(message.text, original);
+    }
+
+    #[test]
     fn current_message_identity_survives_new_activity_and_reordering() {
         let (mut world, id) = blocked_world();
         let before = message_keys(PhoneChannel::Standup, &world, None, 10)[0].clone();
@@ -784,20 +732,6 @@ mod tests {
         ));
         let after = message_keys(PhoneChannel::Standup, &world, None, 25);
         assert_eq!(after[1], before);
-    }
-
-    #[test]
-    fn phone_tabs_fit_the_smallest_supported_panel() {
-        for width in [22, 26, 30, 40, 72] {
-            for channel in [
-                PhoneChannel::Standup,
-                PhoneChannel::Blocked,
-                PhoneChannel::Shipping,
-                PhoneChannel::Watercooler,
-            ] {
-                assert!(channel_tabs(channel, width).width() <= width as usize);
-            }
-        }
     }
 
     #[test]
@@ -828,8 +762,6 @@ mod tests {
             }),
         ));
         let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
-        let mut canvas = Canvas::new(0, 0);
-        let sprites = SpriteSet::new();
         terminal
             .draw(|frame| {
                 draw(
@@ -840,11 +772,8 @@ mod tests {
                         channel: PhoneChannel::Shipping,
                         selected: 0,
                         now: 500,
-                        transition_at: 0,
-                        canvas: &mut canvas,
-                        sprites: &sprites,
                     },
-                )
+                );
             })
             .unwrap();
         let text = terminal

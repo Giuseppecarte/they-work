@@ -494,10 +494,7 @@ impl Canvas {
         }
     }
 
-    pub(crate) fn scale_width(&self, value: usize) -> usize {
-        value.saturating_mul(self.pixels_per_cell().0)
-    }
-
+    #[cfg(test)]
     pub(crate) fn scale_half_height(&self, value: usize) -> usize {
         value
             .saturating_mul(self.pixels_per_cell().1)
@@ -508,16 +505,6 @@ impl Canvas {
     #[cfg(test)]
     pub(crate) fn half_space_height(&self, value: usize) -> usize {
         value.saturating_mul(2) / self.pixels_per_cell().1
-    }
-
-    pub(crate) fn scale_image_sprite_width(&self, value: usize) -> usize {
-        self.cell_pixel_size
-            .map_or(value, |_| self.scale_width(value))
-    }
-
-    pub(crate) fn scale_image_sprite_height(&self, value: usize) -> usize {
-        self.cell_pixel_size
-            .map_or(value, |_| self.scale_half_height(value))
     }
 
     /// Resize the surface to exactly fill a terminal-cell rectangle.
@@ -538,6 +525,13 @@ impl Canvas {
     pub fn strip_colors(buffer: &mut Buffer) {
         for cell in &mut buffer.content {
             cell.set_fg(Color::Reset).set_bg(Color::Reset);
+        }
+    }
+
+    pub fn quantize_colors(buffer: &mut Buffer) {
+        for cell in &mut buffer.content {
+            cell.set_fg(palette_color(cell.fg));
+            cell.set_bg(palette_color(cell.bg));
         }
     }
 
@@ -641,10 +635,20 @@ impl Canvas {
     /// This accessor deliberately does not select a graphics protocol or write
     /// to the terminal; callers own presenting the returned frame.
     pub fn pixel_frame(&self) -> PixelFrame {
+        let rgba = if self.depth == ColorDepth::None {
+            let mut pixels = self.rgba.as_ref().clone();
+            for pixel in pixels.chunks_exact_mut(4) {
+                let gray = luminance(Color::Rgb(pixel[0], pixel[1], pixel[2]));
+                pixel[..3].fill(gray);
+            }
+            Arc::new(pixels)
+        } else {
+            Arc::clone(&self.rgba)
+        };
         PixelFrame {
             width: self.width,
             height: self.height,
-            rgba: Arc::clone(&self.rgba),
+            rgba,
             cell_area: self.last_rendered_area.get(),
             text_cells: self.text_cells.clone(),
         }
@@ -1406,6 +1410,18 @@ mod tests {
 
         assert_eq!(frame.rgba(), [12, 34, 56, 255, 0, 0, 0, 0]);
         assert_eq!(frame.cell_area(), Some(Rect::new(5, 7, 2, 1)));
+    }
+
+    #[test]
+    fn monochrome_image_frames_preserve_shape_alpha_and_owned_pixels() {
+        let mut canvas = Canvas::with_color_depth(2, 1, ColorDepth::None);
+        canvas.set(0, 0, Color::Rgb(70, 130, 240));
+        let frame = canvas.pixel_frame();
+        assert_eq!(frame.rgba()[0], frame.rgba()[1]);
+        assert_eq!(frame.rgba()[1], frame.rgba()[2]);
+        assert_eq!(&frame.rgba()[3..], [255, 0, 0, 0, 0]);
+        canvas.set(0, 0, Color::White);
+        assert_ne!(frame.rgba()[0], canvas.pixel_frame().rgba()[0]);
     }
 
     #[test]

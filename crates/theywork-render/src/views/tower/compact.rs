@@ -2,6 +2,64 @@
 //! family boundaries remain actionable when image transport is unavailable.
 use super::*;
 
+/// Identity yields space to status and source observation age, never the reverse.
+/// Both native rosters use this row; the real task title stays on the next line.
+fn worker_header(
+    worker: &Worker,
+    ctx: &Context<'_>,
+    selected: bool,
+    alias: bool,
+    width: u16,
+) -> String {
+    let compact = width < 48;
+    let state = crate::presentation::state_label(worker, ctx.now);
+    let state = if compact {
+        match state {
+            "Source unavailable" => "Unavailable",
+            "Last known state" => "Last known",
+            "Approval needed" => "Approval",
+            "Question for you" => "Question",
+            "Needs a follow-up" => "Follow-up",
+            "Error reported" => "Error",
+            "Automatic review" => "Auto review",
+            "Waiting for the team" => "Team wait",
+            "Waiting for a process" => "Process wait",
+            other => other,
+        }
+    } else {
+        state
+    };
+    let observed = crate::presentation::observation_age(&worker.coverage, ctx.now);
+    let age = if compact && observed == "age unknown" {
+        "unknown"
+    } else if compact && observed.len() > 7 {
+        observed.strip_suffix(" ago").unwrap_or(&observed)
+    } else {
+        &observed
+    };
+    let age_width = if compact { 7 } else { 11 };
+    let identity_width = usize::from(width).saturating_sub(5 + state.len() + age_width);
+    let identity = if alias {
+        format!(
+            "{} · {}",
+            character_name(worker, ctx.profiles),
+            worker.agent.label()
+        )
+    } else {
+        worker.agent.label().into()
+    };
+    let identity = super::super::short_path(&identity, identity_width);
+    let padding = " ".repeat(
+        identity_width.saturating_sub(ratatui::text::Line::from(identity.as_str()).width()),
+    );
+    let header = format!(
+        "{}{} {identity}{padding} {state} {age:>age_width$}",
+        if selected { ">" } else { " " },
+        state_marker(worker, ctx.now),
+    );
+    super::super::short_path(&header, width.into())
+}
+
 /// A tall office uses surplus space for actual work, rather than extending its
 /// physical floor indefinitely. This is a project roster, not invented desks.
 pub(super) fn latest(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> Vec<HitRegion> {
@@ -24,20 +82,8 @@ pub(super) fn latest(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> Vec<Hi
         let y = area.y + 1 + row as u16 * 2;
         let record = Rect::new(area.x + 1, y, area.width.saturating_sub(2), 2);
         let focused = ctx.selected_worker == Some(&worker.id);
-        let warning = worker.status_at(ctx.now).needs_attention();
-        let marker = if warning {
-            "!"
-        } else if focused {
-            "›"
-        } else {
-            " "
-        };
-        let label = format!(
-            "{marker} {} · {} · {}",
-            character_name(worker, ctx.profiles),
-            worker.agent.label(),
-            crate::presentation::state_label(worker, ctx.now)
-        );
+        let warning = observed_attention(worker, ctx.now);
+        let label = worker_header(worker, ctx, focused, true, record.width);
         let latest = worker
             .activity
             .detail()
@@ -99,6 +145,7 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
     };
     let mut result = TowerLayout {
         visible_floors: visible,
+        navigation_hint: format!("Floor {}/{}", ctx.selected_floor + 1, ctx.offices.len()),
         ..TowerLayout::default()
     };
     for index in start..start + visible {
@@ -161,6 +208,30 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
         let total = all.len();
         if focused {
             result.capacity = capacity;
+            if !ctx.tower {
+                let scope = group.map_or_else(
+                    || "Desks".into(),
+                    |group| {
+                        format!(
+                            "Team {}/{}",
+                            groups
+                                .iter()
+                                .position(|item| item.parent == group.parent)
+                                .unwrap_or(0)
+                                + 1,
+                            groups.len()
+                        )
+                    },
+                );
+                result
+                    .navigation_hint
+                    .push_str(&format!(" · {scope} · People {}/{total}", people.len()));
+                if pages > 1 {
+                    result
+                        .navigation_hint
+                        .push_str(&format!(" · page {}/{}", page + 1, pages));
+                }
+            }
         }
         let floor = PaintedFloor {
             index,
@@ -195,7 +266,7 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
             }
             let rect = Rect::new(area.x + 1, y, area.width.saturating_sub(2), height);
             let selected = selected == Some(&worker.id);
-            let warning = worker.status_at(ctx.now).needs_attention();
+            let warning = observed_attention(worker, ctx.now);
             let style = Style::default()
                 .fg(if warning {
                     WARNING
@@ -209,20 +280,9 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
                 } else {
                     BACKGROUND
                 });
-            let marker = if warning {
-                "!"
-            } else if selected {
-                "›"
-            } else {
-                " "
-            };
-            let alias = character_name(worker, ctx.profiles);
-            let header = format!(
-                "{marker} {alias} · {} · {}",
-                worker.agent.label(),
-                crate::presentation::state_label(worker, ctx.now)
-            );
-            let mut lines = vec![super::super::short_path(&header, rect.width.into())];
+            let alias = ctx.name_plates || selected || crate::presentation::human_request(worker);
+            let header = worker_header(worker, ctx, selected, alias, rect.width);
+            let mut lines = vec![header];
             if height > 1 {
                 lines.push(super::super::short_path(
                     &format!("  {}", safe_display(&worker.name)),
@@ -252,7 +312,7 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
         if floor_area.height > 2 {
             let footer = Rect::new(area.x + 1, bottom - 1, area.width.saturating_sub(2), 1);
             let text = format!(
-                "{}/{} people shown · Page {}/{}{}",
+                "People {}/{} · page {}/{}{}",
                 people.len(),
                 total,
                 page + 1,
@@ -260,7 +320,7 @@ pub(super) fn draw(frame: &mut Frame, ctx: &Context<'_>, area: Rect) -> TowerLay
                 if ctx.tower {
                     " · Enter visit"
                 } else {
-                    " · PgUp/Dn people"
+                    " · arrows people"
                 }
             );
             Paragraph::new(super::super::short_path(&text, footer.width.into()))
@@ -323,6 +383,7 @@ mod tests {
                         now: 1_000,
                         tower: true,
                         motion: false,
+                        name_plates: true,
                         light: false,
                         palette: 0,
                         wardrobe: &BTreeMap::new(),
@@ -348,9 +409,112 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect::<String>();
-        assert!(text.contains("Page 1/1"));
+        assert!(text.contains("page 1/1"));
         assert!(text.contains("Source not checked"));
         assert!(text.contains("Implement a long shared task title"));
+    }
+
+    #[test]
+    fn both_native_rosters_reserve_state_and_source_age_with_long_aliases() {
+        use theywork_core::{Agent, Event, EventKind, OfficeId, SourceCoverage};
+
+        let selected = WorkerId("long-alias".into());
+        for observed_at in [0, 1_000] {
+            let mut world = World::new();
+            for kind in [
+                EventKind::Seen {
+                    name: "Implement real task title with a long path and many details".into(),
+                    git_branch: None,
+                },
+                EventKind::Coverage(SourceCoverage {
+                    observed_at,
+                    available: true,
+                    ..SourceCoverage::default()
+                }),
+                EventKind::Wait(Some(WaitReason::HumanApproval)),
+            ] {
+                world.apply(Event {
+                    at: 61_000,
+                    office: OfficeId("/project".into()),
+                    office_path: "/project".into(),
+                    worker: selected.clone(),
+                    agent: Agent::Codex,
+                    kind,
+                });
+            }
+            let offices = world.offices().collect::<Vec<_>>();
+            let profiles = BTreeMap::from([(
+                selected.0.clone(),
+                CharacterProfile {
+                    name: "Avery with a very long decorative name 界界界界界界".into(),
+                    ..CharacterProfile::default()
+                },
+            )]);
+            for width in [32, 80, 192] {
+                for latest_mode in [false, true] {
+                    let area = Rect::new(0, 0, width, 12);
+                    let mut terminal = Terminal::new(TestBackend::new(width, 12)).unwrap();
+                    let mut hits = Vec::new();
+                    terminal
+                        .draw(|frame| {
+                            let ctx = Context {
+                                area,
+                                world: &world,
+                                offices: &offices,
+                                selected_floor: 0,
+                                selected_worker: Some(&selected),
+                                team: None,
+                                now: 61_000,
+                                tower: false,
+                                motion: false,
+                                name_plates: true,
+                                light: false,
+                                palette: 0,
+                                wardrobe: &BTreeMap::new(),
+                                profiles: &profiles,
+                                designs: &BTreeMap::new(),
+                            };
+                            hits = if latest_mode {
+                                latest(frame, &ctx, area)
+                            } else {
+                                draw(frame, &ctx, area).hits
+                            };
+                        })
+                        .unwrap();
+                    let hit = hits
+                        .iter()
+                        .find(|hit| hit.action == Action::Inspect(selected.clone()))
+                        .unwrap();
+                    assert_eq!(hit.area.height, if latest_mode { 2 } else { 3 });
+                    let line = |y| {
+                        (hit.area.x..hit.area.right())
+                            .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                            .collect::<String>()
+                    };
+                    let header = line(hit.area.y);
+                    assert!(header.starts_with(">! Avery"), "{header}");
+                    assert!(
+                        header.contains(if width == 32 {
+                            "Approval"
+                        } else {
+                            "Approval needed"
+                        }),
+                        "{header}"
+                    );
+                    assert!(
+                        header.ends_with(if observed_at == 0 {
+                            "unknown"
+                        } else {
+                            "1m ago"
+                        }),
+                        "{header}"
+                    );
+                    assert!(!header.contains("0s ago"), "{header}");
+                    assert!(line(hit.area.y + 1).contains("Implement real task"));
+                    assert!(hit.area.right() <= width && hit.area.bottom() <= 12);
+                }
+            }
+        }
     }
 
     #[test]

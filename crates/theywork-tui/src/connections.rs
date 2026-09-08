@@ -7,19 +7,14 @@ use anyhow::{anyhow, Context, Result};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use ratatui::style::{Modifier, Style};
+use ratatui::text::Line;
+use ratatui::widgets::{Block, Paragraph, Wrap};
 use ratatui::{Frame, Terminal};
 use serde::{Deserialize, Serialize};
 use theywork_collect::Config;
 
 use crate::{Args, TerminalModeGuard, FRAME};
-
-const INK: Color = Color::Indexed(255);
-const MUTED: Color = Color::Indexed(145);
-const ACCENT: Color = Color::Indexed(116);
-const BG: Color = Color::Indexed(234);
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct Connections {
@@ -222,6 +217,17 @@ pub(crate) fn prepare(args: &mut Args) -> Result<bool> {
             args.remember.unwrap_or(true),
             !args.no_save,
             args.mouse.unwrap_or(true),
+            !args.dark
+                && (args.light
+                    || args
+                        .config_dir
+                        .as_deref()
+                        .and_then(|dir| std::fs::read(dir.join("appearance.json")).ok())
+                        .and_then(|bytes| {
+                            serde_json::from_slice::<theywork_render::RendererPreferences>(&bytes)
+                                .ok()
+                        })
+                        .is_some_and(|preferences| preferences.light)),
         );
         drop(terminal);
         guard.restore()?;
@@ -372,12 +378,13 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
     remember: bool,
     allow_remember: bool,
     mouse_enabled: bool,
+    light: bool,
 ) -> Result<Action> {
     let mut mouse = crate::MouseCaptureGuard { enabled: false };
     mouse.sync(mouse_enabled)?;
     let allow_remember = allow_remember && config_dir.is_some();
     let mut remember = remember && allow_remember;
-    let mut selected = 0;
+    let mut selected = 5;
     let mut editing: Option<PathEditor> = None;
     let mut error = String::new();
     loop {
@@ -389,6 +396,9 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
         terminal.draw(|frame| {
             presented_size = frame.area();
             presented = source_hits(frame.area(), editing.is_some());
+            if !allow_remember {
+                presented.retain(|(_, target, _)| *target != Some(4));
+            }
             draw(
                 frame,
                 &value,
@@ -398,14 +408,15 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
                 remember,
                 allow_remember,
             );
-            if std::env::var_os("NO_COLOR").is_some()
+            let monochrome = std::env::var_os("NO_COLOR").is_some()
                 || std::env::var("THEYWORK_COLOR")
-                    .is_ok_and(|value| matches!(value.as_str(), "none" | "mono" | "monochrome"))
+                    .is_ok_and(|value| matches!(value.as_str(), "none" | "mono" | "monochrome"));
+            theywork_render::components::theme_buffer(frame.buffer_mut(), light, monochrome);
+            if !monochrome
+                && theywork_render::canvas::Canvas::new(0, 0).color_depth()
+                    == theywork_render::ColorDepth::Palette256
             {
-                for cell in &mut frame.buffer_mut().content {
-                    cell.set_fg(Color::Reset);
-                    cell.set_bg(Color::Reset);
-                }
+                theywork_render::canvas::Canvas::quantize_colors(frame.buffer_mut());
             }
         })?;
         if !event::poll(FRAME)? {
@@ -458,7 +469,7 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
             return Ok(Action::Cancel);
         }
         let size = terminal.size()?;
-        if size.width < 40 || size.height < 16 {
+        if size.width < 32 || size.height < 14 {
             match key.code {
                 KeyCode::Esc | KeyCode::Char('q') => return Ok(Action::Cancel),
                 KeyCode::Char('d') => return Ok(Action::Demo),
@@ -478,7 +489,7 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
                     } else {
                         match crate::resolve_filesystem_path(Path::new(text.trim())) {
                             Ok(path) => {
-                                if selected == 0 {
+                                if selected < 2 {
                                     value.claude_home = path;
                                 } else {
                                     value.codex_home = path;
@@ -500,15 +511,32 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
             }
             continue;
         }
-        match key.code {
+        let code = if key.code == KeyCode::Enter {
+            match selected {
+                0 | 2 | 4 => KeyCode::Char(' '),
+                1 | 3 => KeyCode::Char('e'),
+                6 => KeyCode::Char('d'),
+                7 => KeyCode::Esc,
+                _ => KeyCode::F(5),
+            }
+        } else {
+            key.code
+        };
+        match code {
             KeyCode::Esc | KeyCode::Char('q') => return Ok(Action::Cancel),
             KeyCode::Char('d') => return Ok(Action::Demo),
             KeyCode::Down | KeyCode::Tab | KeyCode::Char('j') => {
-                selected = (selected + 1) % 3;
+                selected = (selected + 1) % 8;
+                if selected == 4 && !allow_remember {
+                    selected = 5;
+                }
                 error.clear();
             }
             KeyCode::Up | KeyCode::BackTab | KeyCode::Char('k') => {
-                selected = (selected + 2) % 3;
+                selected = (selected + 7) % 8;
+                if selected == 4 && !allow_remember {
+                    selected = 3;
+                }
                 error.clear();
             }
             KeyCode::Char('m') if allow_remember => {
@@ -517,16 +545,16 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
             }
             KeyCode::Char(' ') => {
                 match selected {
-                    0 => value.claude = !value.claude,
-                    1 => value.codex = !value.codex,
-                    _ if allow_remember => remember = !remember,
+                    0 | 1 => value.claude = !value.claude,
+                    2 | 3 => value.codex = !value.codex,
+                    4 if allow_remember => remember = !remember,
                     _ => {}
                 }
                 error.clear();
             }
-            KeyCode::Char('e') if selected < 2 => {
+            KeyCode::Char('e') if selected < 4 => {
                 editing = Some(PathEditor::new(
-                    &if selected == 0 {
+                    &if selected < 2 {
                         &value.claude_home
                     } else {
                         &value.codex_home
@@ -535,9 +563,9 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
                 ));
                 error.clear();
             }
-            KeyCode::Enter => {
+            KeyCode::F(5) => {
                 if let Some(index) = invalid_source(&value) {
-                    selected = index;
+                    selected = index * 2;
                     error = format!(
                         "{}: e to fix folder, Space to turn off.",
                         if index == 0 { "Claude Code" } else { "Codex" }
@@ -545,8 +573,9 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
                 } else {
                     if let Some(directory) = config_dir.filter(|_| remember) {
                         if save(directory, &value).is_err() {
-                            selected = 2;
-                            error = "Cannot save settings here.\nSpace: temporary, then Enter to connect.".into();
+                            selected = 4;
+                            error =
+                                "Cannot save here. Turn Remember off, then F5 to connect.".into();
                             continue;
                         }
                     }
@@ -559,7 +588,7 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
 }
 
 fn source_layout(area: Rect) -> Option<Vec<Rect>> {
-    if area.width < 40 || area.height < 16 {
+    if area.width < 32 || area.height < 14 {
         return None;
     }
     let width = area.width.min(88);
@@ -573,21 +602,44 @@ fn source_layout(area: Rect) -> Option<Vec<Rect>> {
     let compact = height < 22 || width < 64;
     Some(
         Layout::vertical([
+            Constraint::Length(1),
             Constraint::Length(if compact { 1 } else { 3 }),
-            Constraint::Length(if compact { 1 } else { 3 }),
-            Constraint::Length(4),
-            Constraint::Length(4),
-            Constraint::Length(2),
+            Constraint::Length(if compact { 3 } else { 4 }),
+            Constraint::Length(if compact { 3 } else { 4 }),
+            Constraint::Length(if compact { 1 } else { 2 }),
             Constraint::Min(2),
-            Constraint::Length(2),
+            Constraint::Length(3),
         ])
         .split(body)
         .to_vec(),
     )
 }
+
+fn source_buttons(area: Rect, editing: bool) -> Vec<(Rect, &'static str, usize, KeyCode)> {
+    let labels = if editing {
+        vec![("Apply", 5, KeyCode::Enter), ("Cancel", 7, KeyCode::Esc)]
+    } else {
+        vec![
+            ("Connect", 5, KeyCode::F(5)),
+            ("Demo", 6, KeyCode::Char('d')),
+            ("Back", 7, KeyCode::Esc),
+        ]
+    };
+    let mut x = area.x;
+    labels
+        .into_iter()
+        .map(|(label, focus, code)| {
+            let rect = Rect::new(x, area.y + 1, label.len() as u16 + 4, 1);
+            x = rect.right() + 1;
+            (rect, label, focus, code)
+        })
+        .filter(|(rect, _, _, _)| rect.right() <= area.right())
+        .collect()
+}
+
 fn source_hits(area: Rect, editing: bool) -> Vec<(Rect, Option<usize>, KeyCode)> {
     let Some(chunks) = source_layout(area) else {
-        return Vec::new();
+        return vec![];
     };
     let mut hits = Vec::new();
     if !editing {
@@ -595,39 +647,26 @@ fn source_hits(area: Rect, editing: bool) -> Vec<(Rect, Option<usize>, KeyCode)>
             let card = chunks[index + 2];
             hits.push((
                 Rect::new(card.x, card.y, card.width, 1),
-                Some(index),
+                Some(index * 2),
                 KeyCode::Char(' '),
             ));
             hits.push((
-                Rect::new(card.x + 1, card.y + 1, card.width.saturating_sub(2), 1),
-                Some(index),
+                Rect::new(card.x, card.y + 1, card.width, 1),
+                Some(index * 2 + 1),
                 KeyCode::Char('e'),
             ));
         }
-        hits.push((chunks[4], Some(2), KeyCode::Char('m')));
-    }
-    let footer = chunks[6];
-    hits.push((
-        Rect::new(footer.x, footer.y + 1, 15, 1),
-        None,
-        KeyCode::Enter,
-    ));
-    hits.push((
-        Rect::new(footer.x + 16, footer.y + 1, 12, 1),
-        None,
-        if editing {
-            KeyCode::Esc
-        } else {
-            KeyCode::Char('d')
-        },
-    ));
-    if !editing {
         hits.push((
-            Rect::new(footer.x + 29, footer.y + 1, 10, 1),
-            None,
-            KeyCode::Esc,
+            Rect::new(chunks[4].x, chunks[4].y, chunks[4].width, 1),
+            Some(4),
+            KeyCode::Char('m'),
         ));
     }
+    hits.extend(
+        source_buttons(chunks[6], editing)
+            .into_iter()
+            .map(|(rect, _, focus, code)| (rect, (!editing).then_some(focus), code)),
+    );
     hits
 }
 
@@ -640,130 +679,183 @@ fn draw(
     remember: bool,
     allow_remember: bool,
 ) {
+    let colors = theywork_render::components::palette();
+    let base = Style::default().bg(colors.background).fg(colors.ink);
     let area = frame.area();
-    frame.render_widget(
-        Block::default().style(Style::default().bg(BG).fg(INK)),
-        area,
-    );
-    if area.width < 40 || area.height < 16 {
-        frame.render_widget(Paragraph::new("CONNECT YOUR TEAM\nEnlarge to 40 x 16 to choose sources.\nq: back / quit   d: demo").wrap(Wrap { trim: false }), area);
+    frame.render_widget(Block::default().style(base), area);
+    let Some(chunks) = source_layout(area) else {
+        frame.render_widget(
+            Paragraph::new(
+                "Connections / Sources\nUse 32 × 14 to choose folders.\nEsc: back   d: demo",
+            )
+            .wrap(Wrap { trim: false }),
+            area,
+        );
         return;
-    }
-    let chunks = source_layout(area).expect("readable source layout");
-    let compact = area.height.min(26) < 22 || area.width.min(88) < 64;
-    let heading = if compact {
-        "CONNECT YOUR TEAM"
-    } else {
-        "THEY WORK  /  YOUR SOFTWARE TOWER\nConnect your team\nOne project per floor. One conversation per worker."
     };
+    let compact = chunks[2].height == 3;
     frame.render_widget(
-        Paragraph::new(heading).style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)),
+        Paragraph::new("Connections / Sources")
+            .style(Style::default().fg(colors.ink).add_modifier(Modifier::BOLD)),
         chunks[0],
     );
     let intro = if compact {
-        "Local messages & activity; no sign-in."
+        "Local observation · no account"
     } else {
-        "Choose whose local conversations appear here. No sign-in or API key needed.\nReads titles, messages and tool activity from app data folders.\nEverything stays on this computer. Controls need a verified provider connection."
+        "Choose the conversations visible in your tower.\nReads titles, messages and activity from local app data folders.\nNo they-work account. Provider controls require a verified connection."
     };
     frame.render_widget(
         Paragraph::new(intro)
-            .style(Style::default().fg(MUTED))
+            .style(Style::default().fg(colors.muted))
             .wrap(Wrap { trim: false }),
         chunks[1],
     );
     for (index, (title, enabled, path)) in [
-        ("CLAUDE CODE", value.claude, &value.claude_home),
-        ("CODEX", value.codex, &value.codex_home),
+        ("Claude Code", value.claude, &value.claude_home),
+        ("Codex", value.codex, &value.codex_home),
     ]
     .into_iter()
     .enumerate()
     {
-        let active = selected == index;
-        let rect = chunks[index + 2];
-        let (path_text, cursor) = if let Some(editor) = editing.filter(|_| active) {
-            editor.viewport(rect.width.saturating_sub(2) as usize)
+        let card = chunks[index + 2];
+        let active = selected / 2 == index && selected < 4;
+        let name = Rect::new(card.x, card.y, card.width, 1);
+        frame.render_widget(
+            Paragraph::new(format!(
+                "{} [{}] {title}",
+                if selected == index * 2 { ">" } else { " " },
+                if enabled { "x" } else { " " }
+            ))
+            .style(Style::default().fg(if selected == index * 2 {
+                colors.accent
+            } else {
+                colors.ink
+            })),
+            name,
+        );
+        let (text, cursor) = if let Some(editor) = editing.filter(|_| active) {
+            editor.viewport(card.width.saturating_sub(3) as usize)
         } else {
-            (path_label(path, rect.width.saturating_sub(2) as usize), 0)
+            (path_label(path, card.width.saturating_sub(3) as usize), 0)
         };
+        frame.render_widget(
+            Paragraph::new(format!(
+                "{} {text}",
+                if selected == index * 2 + 1 { ">" } else { "·" }
+            ))
+            .style(Style::default().fg(if active {
+                colors.accent
+            } else {
+                colors.muted
+            })),
+            Rect::new(card.x, card.y + 1, card.width, 1),
+        );
+        if active && editing.is_some() {
+            frame.set_cursor_position((card.x + 2 + cursor, card.y + 1));
+        }
         let status = if active && editing.is_some() {
-            "Editing folder · Enter applies; Esc cancels"
+            "Editing folder"
         } else if !enabled {
-            "Off · no conversations will be read"
+            "Off · no conversations read"
         } else if path.is_dir() {
-            "Ready · reads after you press Enter"
+            "Ready · reads after Connect"
         } else {
             folder_status(path)
         };
         frame.render_widget(
-            Paragraph::new(vec![
-                Line::from(path_text),
-                Line::from(Span::styled(status, Style::default().fg(MUTED))),
-            ])
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(format!(
-                        " {} {} {} ",
-                        if active { ">" } else { " " },
-                        if enabled { "[x]" } else { "[ ]" },
-                        title
-                    ))
-                    .border_style(Style::default().fg(if active { ACCENT } else { MUTED })),
-            ),
-            rect,
+            Paragraph::new(format!("  {status}")).style(Style::default().fg(
+                if enabled && !path.is_dir() {
+                    colors.warning
+                } else {
+                    colors.muted
+                },
+            )),
+            Rect::new(card.x, card.y + 2, card.width, 1),
         );
-        if active && editing.is_some() {
-            frame.set_cursor_position((rect.x + 1 + cursor, rect.y + 1));
-        }
     }
-    let save_note = if !allow_remember {
-        "Saving is disabled for this session."
-    } else if remember {
-        "Save sources, appearance and floor."
+    let remember_text = if !allow_remember {
+        "Temporary session · saving off".into()
     } else {
-        "This run only. Saved choices stay as-is."
+        format!(
+            "{} [{}] Remember on this computer",
+            if selected == 4 { ">" } else { " " },
+            if remember { "x" } else { " " }
+        )
     };
     frame.render_widget(
-        Paragraph::new(vec![
-            Line::from(format!(
-                "{} [{}] Remember on this computer",
-                if selected == 2 { ">" } else { " " },
-                if remember { "x" } else { " " }
-            )),
-            Line::from(Span::styled(save_note, Style::default().fg(MUTED))),
-        ])
-        .style(Style::default().fg(if selected == 2 { ACCENT } else { INK })),
-        chunks[4],
+        Paragraph::new(remember_text).style(Style::default().fg(if selected == 4 {
+            colors.accent
+        } else {
+            colors.ink
+        })),
+        Rect::new(chunks[4].x, chunks[4].y, chunks[4].width, 1),
     );
+    if chunks[4].height > 1 {
+        frame.render_widget(
+            Paragraph::new(if remember {
+                "Save sources and local appearance."
+            } else {
+                "Saved choices stay unchanged."
+            })
+            .style(Style::default().fg(colors.muted)),
+            Rect::new(chunks[4].x, chunks[4].y + 1, chunks[4].width, 1),
+        );
+    }
     let notice = if !error.is_empty() {
         error
     } else if editing.is_some() {
-        "App data folder (.codex / .claude)."
+        "App data folder: .codex / .claude"
     } else if !value.claude && !value.codex {
-        "Enter opens an empty tower. Connect later with c, or explore the demo with d."
+        "Connect opens an empty tower.\nYou can add sources later."
     } else {
-        "Use app data folders (.codex / .claude).\nChoose a source; e edits its folder."
+        "Space: toggle · e: edit folder"
     };
     frame.render_widget(
         Paragraph::new(notice)
+            .wrap(Wrap { trim: false })
             .style(Style::default().fg(if error.is_empty() {
-                MUTED
+                colors.muted
             } else {
-                Color::LightRed
-            }))
-            .wrap(Wrap { trim: false }),
+                colors.warning
+            })),
         chunks[5],
     );
-    let footer = if editing.is_some() {
-        "←→ move  Home/End  Ctrl+U clear\n[Enter apply]   [Esc cancel]"
-    } else if !value.claude && !value.codex {
-        "↑↓ choose  Space on/off  e edit folder\n[Enter tower]   [d demo]     [Esc back]"
-    } else {
-        "↑↓ choose  Space on/off  e edit folder\n[Enter connect] [d demo]     [Esc back]"
-    };
+    let footer = chunks[6];
     frame.render_widget(
-        Paragraph::new(footer).style(Style::default().fg(ACCENT)),
-        chunks[6],
+        Paragraph::new(if editing.is_some() {
+            "←→ move · Ctrl+U clear"
+        } else {
+            "Tab/↑↓ choose · Enter activate"
+        })
+        .style(Style::default().fg(colors.muted)),
+        Rect::new(footer.x, footer.y, footer.width, 1),
+    );
+    for (rect, label, focus, _) in source_buttons(footer, editing.is_some()) {
+        frame.render_widget(
+            Paragraph::new(format!("[ {label} ]")).style(
+                Style::default()
+                    .fg(if selected == focus {
+                        colors.accent
+                    } else {
+                        colors.ink
+                    })
+                    .add_modifier(if selected == focus {
+                        Modifier::BOLD
+                    } else {
+                        Modifier::empty()
+                    }),
+            ),
+            rect,
+        );
+    }
+    frame.render_widget(
+        Paragraph::new(if editing.is_some() {
+            "Enter applies · Esc cancels"
+        } else {
+            "F5 connect · d demo · Esc back"
+        })
+        .style(Style::default().fg(colors.muted)),
+        Rect::new(footer.x, footer.bottom() - 1, footer.width, 1),
     );
 }
 
@@ -784,7 +876,14 @@ mod tests {
 
     #[test]
     fn source_click_targets_only_visible_explicit_controls() {
-        for size in [(40, 16), (80, 24), (120, 36)] {
+        for size in [
+            (32, 14),
+            (80, 24),
+            (120, 36),
+            (192, 58),
+            (110, 80),
+            (240, 70),
+        ] {
             let area = Rect::new(0, 0, size.0, size.1);
             let mut terminal = Terminal::new(TestBackend::new(size.0, size.1)).unwrap();
             terminal
@@ -797,18 +896,18 @@ mod tests {
             }
             let connect = hits
                 .iter()
-                .find(|(_, target, code)| target.is_none() && *code == KeyCode::Enter)
+                .find(|(_, _, code)| *code == KeyCode::F(5))
                 .unwrap()
                 .0;
             let row = (connect.x..connect.right())
                 .map(|x| terminal.backend().buffer()[(x, connect.y)].symbol())
                 .collect::<String>();
-            assert!(row.contains("connect"));
+            assert!(row.contains("Connect"));
             assert!(!source_hits(area, true)
                 .iter()
                 .any(|(_, target, _)| target.is_some()));
         }
-        assert!(source_hits(Rect::new(0, 0, 39, 15), false).is_empty());
+        assert!(source_hits(Rect::new(0, 0, 31, 13), false).is_empty());
     }
 
     #[test]
@@ -892,11 +991,11 @@ mod tests {
                     .map(|c| c.symbol())
                     .collect();
                 for expected in [
-                    "Enter connect",
-                    "CLAUDE CODE",
-                    "CODEX",
+                    "F5 connect",
+                    "Claude Code",
+                    "Codex",
                     "Remember on this computer",
-                    "e edit folder",
+                    "e: edit folder",
                 ] {
                     assert!(
                         text.contains(expected),

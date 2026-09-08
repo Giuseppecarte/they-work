@@ -129,7 +129,7 @@ fn resize_hides_and_disables_approval_actions_until_the_request_is_visible() {
     ui.set_control_status(ControlStatus {
         requests: vec![Request {
             id: "request-a".into(),
-            worker,
+            worker: worker.clone(),
             origin: "Project / exact task A".into(),
             title: "Review command".into(),
             detail: "echo fixture".into(),
@@ -141,7 +141,7 @@ fn resize_hides_and_disables_approval_actions_until_the_request_is_visible() {
         }],
         ..Default::default()
     });
-    ui.handle_key(key(KeyCode::F(4)));
+    ui.activate(interaction::Action::Review(worker));
     normal.draw(|frame| ui.draw(frame, &world)).unwrap();
     let mut tiny = Terminal::new(TestBackend::new(20, 8)).unwrap();
     tiny.draw(|frame| ui.draw(frame, &world)).unwrap();
@@ -290,15 +290,16 @@ fn inspector_switches_to_fullscreen_without_clicking_through_opaque_panels() {
         let team = ui
             .hit_regions()
             .iter()
-            .find(|h| matches!(h.action, Action::Team(_)))
+            .find(|h| matches!(h.action, Action::WorkTab(crate::work_brief::WorkTab::Team)))
             .unwrap();
-        assert_eq!(team.area.x >= width - 40, lateral);
+        let panel_width = (width / 3).clamp(40, 64);
+        assert_eq!(team.area.x >= width - panel_width, lateral);
         for hit in ui
             .hit_regions()
             .iter()
             .filter(|h| matches!(h.action, Action::Inspect(_)))
         {
-            assert!(lateral && hit.area.right() <= width - 41);
+            assert!(lateral && hit.area.right() < width - panel_width);
         }
         let selected = ui.selected_worker_id.clone();
         ui.handle_key(key(KeyCode::Esc));
@@ -317,12 +318,14 @@ fn tab_traverses_controls_without_changing_floor_and_enter_matches_click() {
     terminal.draw(|f| ui.draw(f, &world)).unwrap();
     let selected = ui.selected_office_id.clone();
     let target = ui
-        .frame_hits
+        .focus_targets
         .iter()
         .position(|h| h.action == interaction::Action::Connections)
         .unwrap();
     for _ in 0..=target {
         ui.handle_key(key(KeyCode::Tab));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        ui.frame_presented();
     }
     assert_eq!(ui.selected_office_id, selected);
     assert!(ui.handle_key(key(KeyCode::Enter)).is_none());
@@ -348,7 +351,7 @@ fn local_character_and_zone_changes_survive_restart_without_changing_tasks() {
     ui.handle_paste("Álex 東京");
     ui.handle_key(key(KeyCode::Left));
     ui.handle_key(key(KeyCode::Backspace));
-    ui.handle_key(key(KeyCode::Esc));
+    ui.activate(interaction::Action::ApplyAppearance);
     assert_eq!(
         profile_for(&worker.0, &ui.preferences().character_profiles).name,
         "Álex 京"
@@ -358,7 +361,7 @@ fn local_character_and_zone_changes_survive_restart_without_changing_tasks() {
     ui.handle_key(key(KeyCode::Right));
     ui.handle_key(key(KeyCode::Tab));
     ui.handle_key(key(KeyCode::Right));
-    ui.handle_key(key(KeyCode::Esc));
+    ui.activate(interaction::Action::ApplyAppearance);
     let saved: RendererPreferences =
         serde_json::from_slice(&serde_json::to_vec(&ui.preferences()).unwrap()).unwrap();
     assert_eq!(saved.office_designs[&office.0].entrance, 1);
@@ -388,4 +391,91 @@ fn old_appearance_defaults_enable_mouse_and_preserve_explicit_wardrobe_and_palet
     assert_eq!(ui.preferences().wardrobe["task"], 4);
     assert_eq!(ui.preferences().office_palettes["project"], 2);
     assert!(!ui.preferences().motion);
+}
+
+#[test]
+fn semantic_focus_completes_both_cycles_with_every_frame_redrawn() {
+    let world = fixture(3, 3);
+    let mut ui = Ui::new();
+    ui.set_image_cell_size(Some((8, 16)));
+    ui.motion = false;
+    ui.open_tower();
+    let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    ui.frame_presented();
+    let expected: Vec<_> = ui.focus_targets.iter().map(|h| h.action.clone()).collect();
+    assert!(
+        ui.frame_hits.len() > expected.len(),
+        "fixture contains multiple click targets per person"
+    );
+    for i in 0..expected.len() * 2 {
+        ui.handle_key(key(KeyCode::Tab));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        ui.frame_presented();
+        let action = &ui.focus_targets[ui.focus.unwrap()].action;
+        assert_eq!(action, &expected[i % expected.len()]);
+    }
+    for step in 1..=expected.len() {
+        ui.handle_key(key(KeyCode::BackTab));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        ui.frame_presented();
+        let index = (expected.len() * 2 - 1 - step) % expected.len();
+        assert_eq!(
+            &ui.focus_targets[ui.focus.unwrap()].action,
+            &expected[index]
+        );
+    }
+}
+
+#[test]
+fn appearance_preview_is_reversible_and_mouse_choices_require_apply() {
+    let world = fixture(1, 3);
+    let office = world.offices().next().unwrap().id.clone();
+    let mut ui = Ui::new();
+    ui.set_image_cell_size(Some((8, 16)));
+    let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    let before = ui.preferences();
+    ui.activate(interaction::Action::Decorate(office.clone()));
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    ui.frame_presented();
+    click_action(&mut ui, |action| {
+        *action == interaction::Action::CustomizeField(0)
+    });
+    assert_eq!(ui.preferences(), before, "preview must not persist");
+    ui.activate(interaction::Action::CancelAppearance);
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    assert_eq!(ui.preferences(), before);
+    ui.activate(interaction::Action::Decorate(office.clone()));
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    ui.activate(interaction::Action::CustomizeField(0));
+    ui.activate(interaction::Action::ApplyAppearance);
+    assert_ne!(ui.preferences().office_designs, before.office_designs);
+}
+
+#[test]
+fn compact_compatibility_cameras_keep_identity_and_saved_camera() {
+    let world = fixture(1, 3);
+    for projection in [
+        views::office::Projection::Iso,
+        views::office::Projection::TopDown,
+    ] {
+        let mut ui = Ui::new();
+        ui.projection = projection;
+        ui.set_image_cell_size(Some((8, 16)));
+        let mut terminal = Terminal::new(TestBackend::new(32, 14)).unwrap();
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        ui.open_office(&world.offices().next().unwrap().id);
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        ui.frame_presented();
+        let selected = ui.selected_worker_id.clone();
+        assert!(ui
+            .hit_regions()
+            .iter()
+            .any(|hit| matches!(hit.action, interaction::Action::Inspect(_))));
+        assert_eq!(ui.projection, projection);
+        ui.handle_key(key(KeyCode::Enter));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        assert_eq!(ui.selected_worker_id, selected);
+    }
 }

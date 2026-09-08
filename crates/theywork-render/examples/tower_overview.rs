@@ -90,7 +90,16 @@ fn color(color: Color, foreground: bool) -> String {
     let (r, g, b) = rgb(color);
     format!("#{r:02x}{g:02x}{b:02x}")
 }
-fn save(ui: &Ui, terminal: &Terminal<TestBackend>, out: &Path, name: &str) {
+pub(crate) fn save(ui: &Ui, terminal: &Terminal<TestBackend>, out: &Path, name: &str) {
+    save_with_cells(ui, terminal, out, name, (8, 16));
+}
+pub(crate) fn save_with_cells(
+    ui: &Ui,
+    terminal: &Terminal<TestBackend>,
+    out: &Path,
+    name: &str,
+    cells: (u16, u16),
+) {
     let buffer = terminal.backend().buffer();
     let pixels = ui.pixel_frame().with_text_backgrounds();
     let area = pixels.cell_area();
@@ -104,8 +113,8 @@ fn save(ui: &Ui, terminal: &Terminal<TestBackend>, out: &Path, name: &str) {
     let image=area.map_or("null".into(),|r|format!("{{\"x\":{},\"y\":{},\"width\":{},\"height\":{},\"pixel_width\":{},\"pixel_height\":{}}}",r.x,r.y,r.width,r.height,pixels.width(),pixels.height()));
     write!(
         file,
-        "{{\"columns\":{},\"rows\":{},\"cell_width\":8,\"cell_height\":16,\"image\":{},\"cells\":[",
-        buffer.area.width, buffer.area.height, image
+        "{{\"columns\":{},\"rows\":{},\"cell_width\":{},\"cell_height\":{},\"image\":{},\"cells\":[",
+        buffer.area.width, buffer.area.height, cells.0, cells.1, image
     )
     .unwrap();
     for y in 0..buffer.area.height {
@@ -163,7 +172,7 @@ fn emit(world: &mut World, floor: usize, person: usize, kind: EventKind) {
         kind,
     });
 }
-fn fixture(floors: usize) -> World {
+pub(crate) fn fixture(floors: usize) -> World {
     let mut world = World::new();
     for floor in 0..floors {
         let count = match floor {

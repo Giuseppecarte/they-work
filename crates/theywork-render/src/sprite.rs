@@ -13,6 +13,7 @@ use theywork_core::{Activity, Agent, Millis, Office, Worker, WorkerStatus};
 
 const WORKER_WIDTH: usize = 24;
 const WORKER_HEIGHT: usize = 34;
+#[cfg(test)]
 pub(crate) const WORKER_HEAD_HEIGHT: usize = 17;
 
 /// The six stable wardrobe slots used by every surface that draws a worker.
@@ -364,7 +365,9 @@ pub(crate) struct SpriteSet {
     pub(crate) monitor: Sprite,
     pub(crate) plant: Sprite,
     pub(crate) water_cooler: Sprite,
+    #[cfg(test)]
     pub(crate) floor_tile: Sprite,
+    #[cfg(test)]
     pub(crate) wall_tile: Sprite,
 }
 
@@ -379,7 +382,9 @@ impl SpriteSet {
             monitor: monitor(),
             plant: plant(),
             water_cooler: water_cooler(),
+            #[cfg(test)]
             floor_tile: floor_tile(),
+            #[cfg(test)]
             wall_tile: wall_tile(),
         }
     }
@@ -434,6 +439,7 @@ impl SpriteSet {
             % 4
     }
 
+    #[cfg(test)]
     pub(crate) fn office_palette_label(&self, office: &Office) -> &'static str {
         match self
             .office_palettes
@@ -489,6 +495,7 @@ impl SpriteSet {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn worker_frame(&self, worker: &Worker, look: WorkerLook, now: Millis) -> Sprite {
         let activity = ActivityKind::for_worker(worker, now);
         let look = self.dressed_look(worker, look);
@@ -542,6 +549,7 @@ impl SpriteSet {
         )
     }
 
+    #[cfg(test)]
     pub(crate) fn worker_head_fitting(
         &self,
         worker: &Worker,

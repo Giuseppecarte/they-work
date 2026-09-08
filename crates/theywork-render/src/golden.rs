@@ -139,7 +139,6 @@ fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme, encoding: Pixe
             ui.view = View::Cameras;
             ui.phone_open = true;
             ui.phone_channel = crate::views::phone::PhoneChannel::Standup;
-            ui.phone_transition_at = 0;
         }
         SnapshotView::Help => {
             ui.view = View::Office;

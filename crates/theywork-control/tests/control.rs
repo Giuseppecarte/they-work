@@ -264,6 +264,145 @@ fn uncertain_send_is_durable_and_restart_never_replays_or_reconnects() {
 }
 
 #[test]
+fn approval_resolution_snapshots_release_waiting_and_a_new_request_blocks_again() {
+    use std::collections::BTreeMap;
+    use theywork_control::{Capabilities, ControlEvent, ManagedThread, PendingRequest};
+    use theywork_core::{
+        Activity, Agent, CollaborationKind, SourceId, ThreadIdentity, WaitReason, WorkerLifecycle,
+        WorkerRole, WorkerStatus, World,
+    };
+
+    let identity = ThreadIdentity::new(Agent::Codex, SourceId("/fixture/source".into()), "thread");
+    let worker_id = identity.worker_id();
+    let pending = |native: &str, item: &str, at| PendingRequest {
+        id: format!("generation:{native}"),
+        native_id: json!(native),
+        thread_id: "thread".into(),
+        turn_id: Some("turn".into()),
+        method: "item/commandExecution/requestApproval".into(),
+        params: json!({"itemId":item,"command":format!("Command {item}")}),
+        received_at: at,
+        reply_sent: false,
+        supported: true,
+    };
+    let mut snapshot = ControlSnapshot {
+        connected: true,
+        observed_at: 110,
+        threads: BTreeMap::from([(
+            "thread".into(),
+            ManagedThread {
+                identity,
+                role: WorkerRole::Main,
+                managed: true,
+                project: "/fixture/project".into(),
+                title: "Approval fixture".into(),
+                active_turn_id: Some("turn".into()),
+                status: "inProgress".into(),
+                latest_text: String::new(),
+                capabilities: Capabilities::default(),
+                updated_at: 100,
+            },
+        )]),
+        events: vec![ControlEvent {
+            sequence: 1,
+            at: 100,
+            method: "turn/started".into(),
+            thread_id: Some("thread".into()),
+            turn_id: Some("turn".into()),
+            item_id: None,
+            params: json!({"turn":{"id":"turn"}}),
+        }],
+        pending_requests: vec![pending("approval-1", "command-1", 110)],
+        ..ControlSnapshot::default()
+    };
+    let fold = |world: &mut World, snapshot: &ControlSnapshot, after| {
+        for event in theywork_control::snapshot_events(snapshot, after) {
+            world.apply(event);
+        }
+    };
+    let mut world = World::new();
+    fold(&mut world, &snapshot, 0);
+    let awaiting_first = world.clone();
+    assert_eq!(
+        world.worker(&worker_id).unwrap().status_at(110),
+        WorkerStatus::Blocked
+    );
+    assert_eq!(
+        world.worker(&worker_id).unwrap().wait_reason,
+        Some(WaitReason::HumanApproval)
+    );
+
+    // Writing a response is not the provider's confirmation that it resolved.
+    snapshot.pending_requests[0].reply_sent = true;
+    fold(&mut world, &snapshot, 1);
+    assert_eq!(
+        world.worker(&worker_id).unwrap().status_at(115),
+        WorkerStatus::Blocked
+    );
+    snapshot.pending_requests.clear();
+    snapshot.observed_at = 120;
+    snapshot.events.push(ControlEvent {
+        sequence: 2,
+        at: 120,
+        method: "serverRequest/resolved".into(),
+        thread_id: Some("thread".into()),
+        turn_id: Some("turn".into()),
+        item_id: None,
+        params: json!({"requestId":"approval-1"}),
+    });
+    fold(&mut world, &snapshot, 1);
+    let worker = world.worker(&worker_id).unwrap();
+    assert_eq!(worker.wait_reason, None);
+    assert_eq!(worker.activity, Activity::Idle);
+    assert_eq!(worker.status_at(120), WorkerStatus::Running);
+    assert!(worker.turn_in_flight);
+    assert_eq!(worker.lifecycle, WorkerLifecycle::Active);
+    assert!(worker.history.is_empty());
+    assert!(!world
+        .collaboration()
+        .any(|event| event.kind == CollaborationKind::Result));
+    fold(&mut world, &snapshot, 2);
+    assert_eq!(
+        world.worker(&worker_id).unwrap().status_at(121),
+        WorkerStatus::Running
+    );
+
+    snapshot.observed_at = 130;
+    snapshot
+        .pending_requests
+        .push(pending("approval-2", "command-2", 130));
+    fold(&mut world, &snapshot, 2);
+    assert_eq!(
+        world.worker(&worker_id).unwrap().status_at(130),
+        WorkerStatus::Blocked
+    );
+    assert_eq!(
+        world.worker(&worker_id).unwrap().activity.detail(),
+        Some("Command command-2")
+    );
+    assert_eq!(
+        world
+            .collaboration()
+            .filter(|event| event.kind == CollaborationKind::HumanRequest)
+            .count(),
+        2
+    );
+
+    // A poll may contain both the old resolution and a new pending request.
+    // Pending requests are applied last, so the new request must still win.
+    let mut coalesced = awaiting_first;
+    fold(&mut coalesced, &snapshot, 1);
+    assert_eq!(
+        coalesced.worker(&worker_id).unwrap().status_at(130),
+        WorkerStatus::Blocked
+    );
+    assert_eq!(
+        coalesced.worker(&worker_id).unwrap().activity.detail(),
+        Some("Command command-2")
+    );
+}
+
+#[test]
 fn approvals_require_current_request_and_single_action_decision() {
     let mut fixture = Fixture::new();
     let client = fixture.start();

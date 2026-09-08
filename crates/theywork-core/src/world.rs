@@ -344,9 +344,19 @@ impl World {
                 ) {
                     worker.turn_in_flight = false;
                     worker.wait_reason = None;
+                    if matches!(worker.activity, Activity::Waiting { .. }) {
+                        worker.activity = Activity::Idle;
+                    }
                 }
             }
-            EventKind::Wait(reason) => worker.wait_reason = reason,
+            EventKind::Wait(reason) => {
+                worker.wait_reason = reason;
+                if reason.is_none() && matches!(worker.activity, Activity::Waiting { .. }) {
+                    // The source explicitly cleared the request. Keep the turn
+                    // and lifecycle unchanged; no new work has been observed.
+                    worker.activity = Activity::Idle;
+                }
+            }
             EventKind::Relationship(_)
             | EventKind::Collaboration(_)
             | EventKind::Coverage(_)
@@ -436,6 +446,133 @@ mod tests {
             EventKind::Turn { in_flight: false },
         ));
         assert_eq!(status(&world, crate::IDLE_AFTER_MS + 4), WorkerStatus::Idle);
+    }
+
+    #[test]
+    fn clearing_a_wait_releases_only_the_waiting_pose_without_finishing_the_turn() {
+        use crate::{WaitReason, WorkerStatus};
+        for (in_flight, status) in [(true, WorkerStatus::Running), (false, WorkerStatus::Idle)] {
+            let mut world = World::new();
+            world.apply(ev(1, "worker", EventKind::Turn { in_flight }));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Approve command one".into(),
+                }),
+            ));
+            assert_eq!(
+                world
+                    .worker(&WorkerId("worker".into()))
+                    .unwrap()
+                    .status_at(2),
+                WorkerStatus::Blocked
+            );
+            let lifecycle = world.worker(&WorkerId("worker".into())).unwrap().lifecycle;
+            world.apply(ev(3, "worker", EventKind::Wait(None)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.wait_reason, None);
+            assert_eq!(worker.activity, Activity::Idle);
+            assert_eq!(worker.status_at(3), status);
+            assert_eq!(worker.turn_in_flight, in_flight);
+            assert_eq!(worker.lifecycle, lifecycle);
+            assert!(
+                worker.history.is_empty(),
+                "Clearing a request cannot invent an activity beat"
+            );
+            assert_eq!(
+                world.collaboration().count(),
+                0,
+                "Clearing a request is not a delivery"
+            );
+            world.apply(ev(
+                4,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanInput)),
+            ));
+            world.apply(ev(
+                4,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Choose command two".into(),
+                }),
+            ));
+            assert_eq!(
+                world
+                    .worker(&WorkerId("worker".into()))
+                    .unwrap()
+                    .status_at(4),
+                WorkerStatus::Blocked
+            );
+        }
+    }
+
+    #[test]
+    fn clearing_a_wait_preserves_an_observed_action_or_error() {
+        for activity in [
+            Activity::Typing {
+                detail: "Command resumed".into(),
+            },
+            Activity::Thinking,
+            Activity::Error {
+                detail: "Command failed".into(),
+            },
+        ] {
+            let mut world = World::new();
+            world.apply(ev(
+                1,
+                "worker",
+                EventKind::Wait(Some(crate::WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(2, "worker", EventKind::Acted(activity.clone())));
+            world.apply(ev(3, "worker", EventKind::Wait(None)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.wait_reason, None);
+            assert_eq!(worker.activity, activity);
+        }
+    }
+
+    #[test]
+    fn terminal_lifecycle_clears_a_request_while_failure_remains_a_failure() {
+        use crate::{WaitReason, WorkerStatus};
+        for (lifecycle, status) in [
+            (WorkerLifecycle::Completed, WorkerStatus::Idle),
+            (WorkerLifecycle::Cancelled, WorkerStatus::Idle),
+            (WorkerLifecycle::Failed, WorkerStatus::Failed),
+        ] {
+            let mut world = World::new();
+            world.apply(ev(1, "worker", EventKind::Turn { in_flight: true }));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Pending approval".into(),
+                }),
+            ));
+            world.apply(ev(3, "worker", EventKind::Lifecycle(lifecycle)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.lifecycle, lifecycle);
+            assert_eq!(worker.activity, Activity::Idle);
+            assert_eq!(worker.wait_reason, None);
+            assert!(!worker.turn_in_flight);
+            assert_eq!(worker.status_at(3), status);
+            assert!(worker.history.is_empty());
+            assert_eq!(
+                world.collaboration().count(),
+                0,
+                "A terminal status does not invent a delivery"
+            );
+        }
     }
 
     #[test]

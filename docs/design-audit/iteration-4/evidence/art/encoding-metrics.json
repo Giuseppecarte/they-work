@@ -1,0 +1,5 @@
+{"width":960,"height":512,"raw_base64_bytes":2621440,"kitty_lossless_roundtrip":true,"encoding_only":[
+{"protocol":"kitty","bytes_per_frame":115933,"microseconds_per_frame":393}
+,{"protocol":"iterm2","bytes_per_frame":115727,"microseconds_per_frame":376}
+,{"protocol":"sixel","bytes_per_frame":33590,"microseconds_per_frame":5763}
+]}

@@ -5,7 +5,7 @@
 //! walks the already-parsed colour buffer.
 
 use std::cell::{Cell, RefCell};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, OnceLock};
 
 use ratatui::style::Color;
@@ -30,6 +30,7 @@ pub(crate) struct WorkerLook {
 }
 
 impl WorkerLook {
+    #[cfg(test)]
     pub(crate) fn silhouette(self) -> (u8, u8, u8, bool) {
         (self.head, self.hair, self.top, self.contractor)
     }
@@ -78,29 +79,10 @@ pub(crate) fn worker_look(worker: &Worker) -> WorkerLook {
         contractor: is_contractor(worker),
     }
 }
-/// Resolve looks in office order, making silhouettes unique for the ten
-/// desks that fit on a floor while preserving the id-derived base choice.
+/// A conversation keeps its appearance when its neighbours arrive or leave.
+/// Repeated combinations are preferable to silently changing someone's face.
 pub(crate) fn worker_looks(workers: &[Worker]) -> Vec<WorkerLook> {
-    let mut used = BTreeSet::new();
-    workers
-        .iter()
-        .map(|worker| {
-            let base = worker_look(worker);
-            let mut look = base;
-            let mut attempt = 0u16;
-            while used.contains(&look.silhouette()) {
-                attempt = attempt.saturating_add(1);
-                look.head = (base.head + attempt as u8) % 6;
-                look.hair = (base.hair + attempt as u8 / 6) % 6;
-                look.top = (base.top + attempt as u8 / 36) % 6;
-                if attempt >= 216 {
-                    break;
-                }
-            }
-            used.insert(look.silhouette());
-            look
-        })
-        .collect()
+    workers.iter().map(worker_look).collect()
 }
 
 /// A compact sprite made from rows of palette keys.
@@ -153,6 +135,21 @@ impl Sprite {
     /// An entirely transparent sprite, useful as a safe empty animation frame.
     pub fn empty() -> Self {
         Self::from_owned_rows(Vec::new(), &[])
+    }
+
+    /// An authored raster, already decoded. This avoids converting generated
+    /// artwork into character rows and parsing it back for each animation pose.
+    pub(crate) fn from_pixels(width: usize, height: usize, pixels: Vec<Option<Color>>) -> Self {
+        assert_eq!(width.checked_mul(height), Some(pixels.len()));
+        Self {
+            rows: Arc::from(Vec::<String>::new()),
+            palette: Arc::from(Vec::<(char, Color)>::new()),
+            parsed: Arc::new(OnceLock::from(ParsedSprite {
+                width,
+                height,
+                pixels,
+            })),
+        }
     }
 
     /// Width in pixels after parsing the source rows.
@@ -310,9 +307,27 @@ pub(crate) enum ActivityKind {
 
 impl ActivityKind {
     fn for_worker(worker: &Worker, now: Millis) -> Self {
+        let human_wait = matches!(worker.activity, Activity::Waiting { .. })
+            && matches!(
+                worker.wait_reason,
+                None | Some(
+                    theywork_core::WaitReason::HumanApproval
+                        | theywork_core::WaitReason::HumanInput
+                        | theywork_core::WaitReason::Unknown
+                )
+            );
+        if matches!(worker.activity, Activity::Waiting { .. }) && !human_wait {
+            return Self::Thinking;
+        }
         match worker.status_at(now) {
             WorkerStatus::Idle => Self::Idle,
-            WorkerStatus::Blocked => Self::Waiting,
+            WorkerStatus::Blocked => {
+                if human_wait {
+                    Self::Waiting
+                } else {
+                    Self::Thinking
+                }
+            }
             WorkerStatus::Failed => Self::Error,
             WorkerStatus::Running => match Self::from_activity(&worker.activity) {
                 // A quiet open turn is still running. A contemplative pose is
@@ -435,13 +450,19 @@ impl SpriteSet {
     }
 
     pub(crate) fn persona_label(&self, worker: &Worker) -> (&'static str, &'static str) {
-        const PERSONAS: [(&str, &str); 6] = [
-            ("The Explorer", "Collects tiny maps"),
-            ("The Maker", "Keeps a lucky pencil"),
-            ("The Gardener", "Names every desk plant"),
-            ("The Dreamer", "Sketches clouds at lunch"),
-            ("The Bookworm", "Organizes books by colour"),
-            ("The Stargazer", "Counts imaginary satellites"),
+        const PERSONAS: [(&str, &str); 12] = [
+            ("Headphones", "Makes imaginary mixtapes"),
+            ("Chef", "Collects tiny recipes"),
+            ("Explorer", "Keeps a lucky compass"),
+            ("Gardener", "Names every desk plant"),
+            ("Astronaut", "Counts imaginary satellites"),
+            ("Artist", "Sketches clouds at lunch"),
+            ("Wizard", "Collects dramatic hats"),
+            ("Rocker", "Plays air guitar"),
+            ("Bookworm", "Organizes books by colour"),
+            ("Runner", "Races the imaginary elevator"),
+            ("Hard hat", "Builds miniature bridges"),
+            ("Dinosaur", "Tells prehistoric puns"),
         ];
         self.wardrobe
             .borrow()
@@ -1779,7 +1800,7 @@ mod tests {
     }
 
     #[test]
-    fn wardrobe_is_stable_by_id_and_unique_at_guard_scale() {
+    fn wardrobe_is_stable_by_id_when_neighbours_arrive_and_leave() {
         let mut worker = test_worker(Agent::Claude);
         let initial = worker_look(&worker);
         worker.name = "Renamed worker".into();
@@ -1800,7 +1821,13 @@ mod tests {
             .iter()
             .map(|look| look.silhouette())
             .collect::<std::collections::HashSet<_>>();
-        assert_eq!(silhouettes.len(), looks.len());
+        assert!(silhouettes.len() >= 6);
+        for (index, worker) in workers.iter().enumerate() {
+            assert_eq!(worker_looks(std::slice::from_ref(worker))[0], looks[index]);
+            let mut reordered = workers.clone();
+            reordered.reverse();
+            assert_eq!(look_for_worker(&reordered, worker), looks[index]);
+        }
         assert!(looks.iter().all(|look| look.head < 6
             && look.face < 5
             && look.top < 6

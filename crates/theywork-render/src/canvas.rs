@@ -448,6 +448,14 @@ impl Canvas {
     }
 
     pub(crate) fn set_cell_pixel_size(&mut self, size: Option<(usize, usize)>) {
+        self.set_image_cell_size(size);
+    }
+
+    /// Select negotiated physical pixel geometry independently of the text
+    /// fallback encoding. `None` returns to the compact character canvas.
+    /// Zero-sized terminal replies are invalid and select the fallback.
+    pub fn set_image_cell_size(&mut self, size: Option<(usize, usize)>) {
+        let size = size.filter(|&(width, height)| width > 0 && height > 0);
         if self.cell_pixel_size != size {
             self.last_rendered_area.set(None);
         }
@@ -461,7 +469,7 @@ impl Canvas {
         ))
     }
 
-    pub(crate) fn has_image_density(&self) -> bool {
+    pub fn has_image_density(&self) -> bool {
         self.cell_pixel_size.is_some()
     }
 
@@ -660,6 +668,25 @@ impl Canvas {
         }
     }
 
+    /// Composite an already-themed physical image into a larger scene. This is
+    /// used to join contiguous floors before the single image is presented.
+    /// No frame history, text mask or image destination is copied.
+    pub fn blit_canvas(&mut self, source: &Canvas, x: usize, y: usize) {
+        if x >= self.width || y >= self.height {
+            return;
+        }
+        let width = source.width.min(self.width - x);
+        let height = source.height.min(self.height - y);
+        let rgba = Arc::make_mut(&mut self.rgba);
+        for row in 0..height {
+            let dst = (y + row) * self.width + x;
+            let src = row * source.width;
+            self.pixels[dst..dst + width].copy_from_slice(&source.pixels[src..src + width]);
+            rgba[dst * 4..(dst + width) * 4]
+                .copy_from_slice(&source.rgba[src * 4..(src + width) * 4]);
+        }
+    }
+
     /// Draw a sprite with nearest-neighbour scaling and transparent pixels.
     pub fn blit_scaled(
         &mut self,
@@ -670,6 +697,52 @@ impl Canvas {
         height: usize,
     ) {
         if width == 0 || height == 0 || sprite.width() == 0 || sprite.height() == 0 {
+            return;
+        }
+        // Authored graphic assets use integer enlargement. Decode/convert each
+        // source color once and borrow the RGBA buffer once, instead of doing
+        // Arc::make_mut and terminal palette searches for every physical pixel.
+        if width.is_multiple_of(sprite.width()) && height.is_multiple_of(sprite.height()) {
+            let scale_x = width / sprite.width();
+            let scale_y = height / sprite.height();
+            let mut colors = HashMap::new();
+            for color in sprite.pixels().iter().flatten() {
+                colors.entry(*color).or_insert_with(|| {
+                    let image_color = self.themed_color(*color);
+                    let cell_color = self.convert_color(image_color);
+                    let (r, g, b) = rgb_of_color(image_color);
+                    (cell_color, [r, g, b, 255])
+                });
+            }
+            let rgba = Arc::make_mut(&mut self.rgba);
+            for sy in 0..sprite.height() {
+                let Some(top) = y.checked_add(sy.saturating_mul(scale_y)) else {
+                    continue;
+                };
+                if top >= self.height {
+                    break;
+                }
+                for sx in 0..sprite.width() {
+                    let Some(color) = sprite.pixel(sx, sy) else {
+                        continue;
+                    };
+                    let Some(left) = x.checked_add(sx.saturating_mul(scale_x)) else {
+                        continue;
+                    };
+                    if left >= self.width {
+                        break;
+                    }
+                    let (cell_color, bytes) = colors[&color];
+                    for py in top..top.saturating_add(scale_y).min(self.height) {
+                        let start = py * self.width + left;
+                        let end = py * self.width + left.saturating_add(scale_x).min(self.width);
+                        self.pixels[start..end].fill(Some(cell_color));
+                        for pixel in rgba[start * 4..end * 4].chunks_exact_mut(4) {
+                            pixel.copy_from_slice(&bytes);
+                        }
+                    }
+                }
+            }
             return;
         }
         for dy in 0..height {
@@ -1151,6 +1224,35 @@ fn color_distance(a: (u8, u8, u8), b: (u8, u8, u8)) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn integer_blits_match_scalar_sampling_with_transparency_and_clipping() {
+        let sprite = Sprite::from_rows(
+            &["ab.", ".ba"],
+            &[
+                ('a', Color::Rgb(73, 111, 148)),
+                ('b', Color::Rgb(218, 161, 106)),
+            ],
+        );
+        for depth in [ColorDepth::TrueColor, ColorDepth::Palette256] {
+            for scale in 1..=4 {
+                let mut actual = Canvas::with_color_depth(11, 9, depth);
+                let mut expected = actual.clone();
+                actual.fill(Color::Rgb(20, 30, 40));
+                expected.fill(Color::Rgb(20, 30, 40));
+                actual.blit_scaled(&sprite, 2, 3, 3 * scale, 2 * scale);
+                for y in 3..9 {
+                    for x in 2..11 {
+                        if let Some(color) = sprite.pixel((x - 2) / scale, (y - 3) / scale) {
+                            expected.set(x, y, color);
+                        }
+                    }
+                }
+                assert_eq!(actual.pixel_frame().rgba(), expected.pixel_frame().rgba());
+                assert_eq!(actual.pixels, expected.pixels);
+            }
+        }
+    }
     use ratatui::buffer::Buffer;
     use ratatui::layout::Rect;
 

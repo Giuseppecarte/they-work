@@ -957,6 +957,7 @@ fn decode_kitty(transmission: &[u8]) -> Result<RgbaImage, ImageError> {
     let mut cursor = 0;
     let mut width = None;
     let mut height = None;
+    let mut format = 32;
     let mut encoded = Vec::new();
     while let Some(start) = find_bytes(&transmission[cursor..], b"\x1b_G") {
         let start = cursor + start + 3;
@@ -972,13 +973,29 @@ fn decode_kitty(transmission: &[u8]) -> Result<RgbaImage, ImageError> {
         if width.is_none() {
             width = kitty_parameter(control, b's');
             height = kitty_parameter(control, b'v');
+            format = kitty_parameter(control, b'f').unwrap_or(32);
         }
         encoded.extend_from_slice(&chunk[separator + 1..]);
         cursor = end + 2;
     }
     let width = width.ok_or(ImageError::InvalidTransmission("missing Kitty width"))?;
     let height = height.ok_or(ImageError::InvalidTransmission("missing Kitty height"))?;
-    RgbaImage::new(width, height, decode_base64(&encoded)?)
+    let decoded = decode_base64(&encoded)?;
+    if format == 100 {
+        let image = decode_png(&decoded)?;
+        if image.width() != width || image.height() != height {
+            return Err(ImageError::InvalidTransmission(
+                "Kitty PNG geometry mismatch",
+            ));
+        }
+        Ok(image)
+    } else if format == 32 {
+        RgbaImage::new(width, height, decoded)
+    } else {
+        Err(ImageError::InvalidTransmission(
+            "unsupported Kitty pixel format",
+        ))
+    }
 }
 
 fn kitty_parameter(control: &[u8], name: u8) -> Option<u32> {
@@ -1335,7 +1352,13 @@ pub fn measure_encoding(
 }
 
 fn kitty_encode(image: &RgbaImage, rectangle: CellRect, image_id: u32) -> Vec<u8> {
-    let encoded = base64(image.pixels());
+    // The artwork contains large repeated materials. Lossless PNG dramatically
+    // reduces synchronous PTY traffic; noisy frames retain the smaller raw path.
+    // PNG is part of the graphics protocol, not a terminal-specific extension.
+    let png = encode_png(image)
+        .ok()
+        .filter(|bytes| bytes.len() < image.pixels().len());
+    let encoded = base64(png.as_deref().unwrap_or_else(|| image.pixels()));
     let mut output = Vec::with_capacity(encoded.len() + 160);
     output.extend_from_slice(b"\x1b[");
     append_decimal(&mut output, u32::from(rectangle.y) + 1);
@@ -1348,7 +1371,11 @@ fn kitty_encode(image: &RgbaImage, rectangle: CellRect, image_id: u32) -> Vec<u8
         let more = index + 1 < chunks.len();
         output.extend_from_slice(b"\x1b_G");
         if index == 0 {
-            output.extend_from_slice(b"a=T,f=32,z=-1");
+            output.extend_from_slice(if png.is_some() {
+                b"a=T,f=100,z=-1"
+            } else {
+                b"a=T,f=32,z=-1"
+            });
             output.extend_from_slice(b",s=");
             append_decimal(&mut output, image.width());
             output.extend_from_slice(b",v=");
@@ -1734,12 +1761,31 @@ mod tests {
 
     #[test]
     fn kitty_bytes_are_chunked_and_placed() {
-        let image = RgbaImage::solid(64, 64, [20, 40, 60, 255]).unwrap();
+        let mut seed = 31_u32;
+        let pixels = (0..64 * 64 * 4)
+            .map(|_| {
+                seed ^= seed << 13;
+                seed ^= seed >> 17;
+                seed ^= seed << 5;
+                seed as u8
+            })
+            .collect();
+        let image = RgbaImage::new(64, 64, pixels).unwrap();
         let bytes = encode_kitty(&image, CellRect::new(2, 3, 10, 8), 7);
         assert!(bytes.starts_with(b"\x1b[4;3H\x1b_Ga=T,f=32,z=-1,s=64,v=64,i=7,c=10,r=8,m=1;"));
         assert!(bytes.ends_with(b"\x1b\\"));
         assert!(bytes.windows(4).any(|window| window == b"m=1;"));
         assert!(bytes.windows(4).any(|window| window == b"m=0;"));
+    }
+
+    #[test]
+    fn kitty_compresses_flat_art_losslessly_without_changing_placement() {
+        let image = RgbaImage::solid(960, 512, [81, 83, 91, 255]).unwrap();
+        let bytes = encode_kitty(&image, CellRect::new(2, 3, 120, 32), 7);
+        assert!(bytes.starts_with(b"\x1b[4;3H\x1b_Ga=T,f=100,z=-1,s=960,v=512,i=7,c=120,r=32,"));
+        assert!(bytes.len() < image.pixels().len() / 10);
+        let decoded = decode_kitty(&bytes).unwrap();
+        assert_eq!(decoded, image);
     }
 
     #[test]

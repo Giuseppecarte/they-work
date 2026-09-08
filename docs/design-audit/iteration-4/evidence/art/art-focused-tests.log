@@ -1,0 +1,25 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.61s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 15 tests
+test living_office::art::tests::identity_depends_only_on_id_and_explicit_choice ... ok
+test living_office::tests::automatic_waits_do_not_raise_a_hand ... ok
+test living_office::art::tests::gestures_change_pose_without_changing_costume ... ok
+test living_office::simulation::tests::skipped_frames_and_reordering_do_not_change_simulation ... ok
+test living_office::tests::meeting_keeps_parent_and_paginates_every_member ... ok
+test living_office::art::tests::twelve_costumes_have_twelve_authored_outlines ... ok
+test living_office::simulation::tests::two_gags_max_and_reduced_motion_has_none ... ok
+test living_office::tests::compact_graphics_use_double_size_and_follow_last_child_with_pinned_lead ... ok
+test living_office::tests::image_geometry_and_fallback_are_explicit ... ok
+test living_office::tests::artwork_cache_is_bounded ... ok
+test living_office::tests::observed_human_request_has_priority_over_a_delivery_cue ... ok
+test living_office::tests::selecting_a_member_follows_its_page_but_parent_keeps_the_requested_page ... ok
+test living_office::tests::adjoining_room_door_keeps_seat_geometry_and_its_own_cached_background ... ok
+test living_office::tests::contiguous_regions_keep_one_image_and_translated_hitboxes ... ok
+test living_office::tests::reduced_motion_is_identical_but_real_requests_are_not_frozen ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.33s

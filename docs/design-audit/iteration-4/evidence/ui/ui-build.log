@@ -1,6 +1,4 @@
-    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on package cache
-    Blocking waiting for file lock on build directory
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
    Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
-    Finished `release` profile [optimized] target(s) in 9.45s
+    Finished `release` profile [optimized] target(s) in 10.12s
      Running `target/native-macos/release/examples/living_ui docs/design-audit/tmp/iteration-4-ui`

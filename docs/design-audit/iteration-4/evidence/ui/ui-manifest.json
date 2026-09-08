@@ -5,61 +5,61 @@
       "path": "deliveries-120x36.png",
       "width": 960,
       "height": 576,
-      "sha256": "90d8a6c219cbf38ce8d981b87708589c350580dd0fa322fe66c2df66128427dc"
+      "sha256": "118ef589359d905c9e08fc5e99f9581dacb9c16879beb482c2a232d14ac55f4f"
     },
     {
       "path": "deliveries-80x24.png",
       "width": 640,
       "height": 384,
-      "sha256": "1d2b7afab25f7939ddcc771b088dafc29040de4768c64ded75117727b896ddb3"
+      "sha256": "8f9362d424e98da7a72d8639eb791e7906f71f005809f64adb31a1ff9386c5bd"
     },
     {
       "path": "office-120x36.png",
       "width": 960,
       "height": 576,
-      "sha256": "f02e9f1a9ce38cc8f64fac680560cb7f711d1e21546e90baac0b9981174f9a2a"
+      "sha256": "21a2dff513bd9cd8962367d1b3d906f8e5b3fc799d6ae431432a0b91358426c9"
     },
     {
       "path": "office-192x58.png",
       "width": 1536,
       "height": 928,
-      "sha256": "0acebd8fffc5abcc5c454afe3a5bc712da6eb582e4fca049b613fe26afcc5d0e"
+      "sha256": "f64a835f02dbb71a92ca8dab22c6a3c2b29e4dd36ada7ed19e19b4befc619a8f"
     },
     {
       "path": "office-80x24.png",
       "width": 640,
       "height": 384,
-      "sha256": "a52204499bb0f20dc26b7d0b108d557af9d2c22b190219aa831a07591028140f"
+      "sha256": "b5f58a70421cf2e81fc59b164c51efbcda6c62887af1879b2e93c8869f48ad49"
     },
     {
       "path": "team-120x36.png",
       "width": 960,
       "height": 576,
-      "sha256": "a5cecf57262f4fc197c5cdbc1007613d9268bf0e07e2b5b43013ec7a225460db"
+      "sha256": "d55a3e3c00c78d7cd4af7af2853c60dfee6ef6b9f26daf29cdeda803f4386fc3"
     },
     {
       "path": "team-80x24.png",
       "width": 640,
       "height": 384,
-      "sha256": "12079e01ebc2c1de860014f813edb49bd4177304ce2c6d0b70c2f20da823d0c0"
+      "sha256": "273c4fb395e2f2f2e80c5bd91e73afe92184d54907e2c195fa49513347a5982f"
     },
     {
       "path": "tower-120x36.png",
       "width": 960,
       "height": 576,
-      "sha256": "2c3c08a4a9fa6784523c6fadb4419d4760c567ee66ae2f91b56b6962a0be3e6a"
+      "sha256": "10fbbb2c87e24e9c5bcbe978b98a67bbf81ce1d28a0af8d00999df67e8284e5a"
     },
     {
       "path": "tower-192x58.png",
       "width": 1536,
       "height": 928,
-      "sha256": "ad545b5631c11537fb11d7a0508b0d5186254ac2b0cd77c861f6e3b577f814bb"
+      "sha256": "b0a87368f083a00a88d6d4d6de11e0db4e59558707379d5613842864dfba7963"
     },
     {
       "path": "tower-80x24.png",
       "width": 640,
       "height": 384,
-      "sha256": "90b5fe0d43d3fcd0adff618d82e70b5345bd741a0aaff9726a5513d4d79d52a3"
+      "sha256": "3e0857fb766de18c6533ce850ab605c5ee7375edf46203af03edac67b724139c"
     }
   ]
 }

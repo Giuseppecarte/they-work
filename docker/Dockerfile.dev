@@ -1,8 +1,10 @@
 # Toolchain image for `make test`, `make lint`, and `make fmt`.
 # Kept separate from the runtime image so contributors never need Rust locally.
 FROM rust:1.90.0-slim-bookworm
+# Python drives offline fake-provider and installer fixtures; it is not shipped
+# in the runtime image.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends gcc libc6-dev \
+ && apt-get install -y --no-install-recommends gcc libc6-dev python3 \
  && rm -rf /var/lib/apt/lists/* \
  && rustup component add clippy rustfmt
 WORKDIR /src

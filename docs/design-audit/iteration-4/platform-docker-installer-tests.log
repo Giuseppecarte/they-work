@@ -1,0 +1,66 @@
+test_complete_release_reaches_pull_and_propagates_failure (__main__.InstallFailures.test_complete_release_reaches_pull_and_propagates_failure) ... ok
+test_demo_never_mounts_existing_homes (__main__.InstallFailures.test_demo_never_mounts_existing_homes) ... ok
+test_doctor_and_once_work_without_a_terminal (__main__.InstallFailures.test_doctor_and_once_work_without_a_terminal) ... ok
+test_download_failure_never_executes (__main__.InstallFailures.test_download_failure_never_executes) ... ok
+test_local_installer_does_not_guess_from_denied (__main__.InstallFailures.test_local_installer_does_not_guess_from_denied) ... ok
+test_local_installer_names_missing_image (__main__.InstallFailures.test_local_installer_names_missing_image) ... ok
+test_local_installer_names_other_pull_error (__main__.InstallFailures.test_local_installer_names_other_pull_error) ... ok
+test_local_launcher_quotes_paths_and_skips_missing_homes (__main__.InstallFailures.test_local_launcher_quotes_paths_and_skips_missing_homes) ... ok
+test_unreadable_data_stops_before_interactive_office (__main__.InstallFailures.test_unreadable_data_stops_before_interactive_office) ... ok
+test_valid_shell_truncation_never_executes (__main__.InstallFailures.test_valid_shell_truncation_never_executes) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 2.139s
+
+OK
+
+__main__.InstallFailures.test_complete_release_reaches_pull_and_propagates_failure: exit=17
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-rdxrvlx0/tmp.JygbifCtlh: OK
+Pulling example.invalid/test:missing ...
+denied
+
+__main__.InstallFailures.test_demo_never_mounts_existing_homes: exit=0
+Pulling example.invalid/test:missing ...
+
+
+__main__.InstallFailures.test_doctor_and_once_work_without_a_terminal --doctor: exit=0
+Pulling example.invalid/test:missing ...
+
+diagnostic completed
+
+__main__.InstallFailures.test_doctor_and_once_work_without_a_terminal --once: exit=0
+Pulling example.invalid/test:missing ...
+
+diagnostic completed
+
+__main__.InstallFailures.test_download_failure_never_executes: exit=1
+curl: (22) HTTP 404 (deliberate test)
+Installer download failed; nothing was executed.
+
+__main__.InstallFailures.test_local_installer_does_not_guess_from_denied: exit=17
+Pulling example.invalid/test:missing ...
+denied
+Image pull failed: registry access denied for example.invalid/test:missing. A denied response alone cannot distinguish an unpublished package from a restricted one; check the release run and package visibility.
+
+__main__.InstallFailures.test_local_installer_names_missing_image: exit=17
+Pulling example.invalid/test:missing ...
+manifest unknown
+Image pull failed: image or tag not found: example.invalid/test:missing
+
+__main__.InstallFailures.test_local_installer_names_other_pull_error: exit=17
+Pulling example.invalid/test:missing ...
+network unreachable
+Image pull failed for example.invalid/test:missing (Docker exit 17); see the Docker error above.
+
+__main__.InstallFailures.test_local_launcher_quotes_paths_and_skips_missing_homes: exit=0
+Codex home not found; continuing with Claude data only.
+
+__main__.InstallFailures.test_unreadable_data_stops_before_interactive_office: exit=1
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-wccp1pji/tmp.9NlHry4mfs: OK
+Pulling example.invalid/test:missing ...
+claude_store=unavailable status=unreadable reason=Permission denied
+
+__main__.InstallFailures.test_valid_shell_truncation_never_executes: exit=1
+sha256sum: WARNING: 1 computed checksum did NOT match
+/Users/gc/Documents/Programming/they-work/target/installer-tests/they-work-install-test-b0llv99s/tmp.tl7Kb2yiex: FAILED
+Installer verification failed: truncated or modified download; nothing was executed.

@@ -467,6 +467,21 @@ fn complete_and_disconnected_turns_do_not_stay_controllable_as_working() {
         !state.threads["managed-1"].capabilities.send,
         "other threads were not resumed"
     );
+    let coverage: std::collections::BTreeMap<_, _> = theywork_control::snapshot_events(&state, 0)
+        .into_iter()
+        .filter_map(|event| match event.kind {
+            theywork_core::EventKind::Coverage(coverage) => {
+                Some((event.worker, coverage.available))
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(!coverage[&state.threads["managed-1"].identity.worker_id()]);
+    assert!(
+        coverage[&state.threads[resumed.thread_id.as_ref().unwrap()]
+            .identity
+            .worker_id()]
+    );
     assert_eq!(
         fixture
             .requests()

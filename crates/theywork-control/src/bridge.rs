@@ -12,6 +12,7 @@ use theywork_core::{
 pub fn snapshot_events(snapshot: &ControlSnapshot, after_sequence: u64) -> Vec<Event> {
     let mut events = Vec::new();
     for thread in snapshot.threads.values() {
+        let available = snapshot.connected && thread.status != "disconnected";
         events.push(make(
             thread,
             thread.updated_at,
@@ -34,14 +35,14 @@ pub fn snapshot_events(snapshot: &ControlSnapshot, after_sequence: u64) -> Vec<E
             EventKind::Coverage(SourceCoverage {
                 relationships: CoverageLevel::Partial,
                 messages: CoverageLevel::Partial,
-                lifecycle: if snapshot.connected {
+                lifecycle: if available {
                     CoverageLevel::Supported
                 } else {
                     CoverageLevel::Unavailable
                 },
-                available: snapshot.connected,
+                available,
                 observed_at: snapshot.observed_at,
-                detail: if snapshot.connected {
+                detail: if available {
                     "Live managed connection; relationship coverage depends on provider events"
                 } else {
                     "Control connection unavailable; no instruction was restarted"

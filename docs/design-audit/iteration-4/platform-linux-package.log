@@ -1,0 +1,47 @@
+they-work — a terminal office for local agents and their teams
+
+USAGE:
+  they-work [OPTIONS]
+
+OPTIONS:
+  --project <path>         Read conversations from one project only
+  --all                    Start at the tower overview
+  --demo                   Show the imaginary company; reads nothing
+  --once                   Print one plain-text standup and exit
+  --headless               Run the polling loop without a terminal
+  --exit-after <duration>  Stop headless mode after e.g. 30s, 5m, or 1h
+  --doctor                 Check selected sources and explain problems
+  --view <iso|top|side>    Choose the starting camera
+  --light                  Start with the light appearance
+  --dark                   Start with the dark appearance
+  --color <auto|true|256|none>
+                           Choose terminal color handling
+  --setup                  Choose local sources and their folders
+  --sources <all|codex|claude|none>
+                           Choose which conversations may be read
+  --codex-home <path>      Use this Codex data folder
+  --claude-home <path>     Use this Claude Code data folder
+  --config-dir <path>      Override the default settings folder
+  --no-save                Keep this session temporary; save no preferences
+  -h, --help               Show this help
+they-work --once
+timestamp_ms=1788825836272
+projects=3 workers=6
+office=/home/dev/checkout workers=3
+  worker name="Timeout tests" agent=codex status=blocked waiting_on="Choose the public timeout: 30 or 60 seconds (demo)." idle_age=0s tokens=21125
+  worker name="Checkout lead" agent=codex status=running detail="src/render/canvas.rs" activity=editing idle_age=0s tokens=12625
+  worker name="Retry endpoint" agent=codex status=idle activity=idle idle_age=0s tokens=16875
+office=/home/dev/website workers=2
+  worker name="Preview review" agent=claude status=blocked waiting_on="Approve publishing the preview to staging (fictional demo request)." idle_age=0s tokens=29625
+  worker name="Landing page" agent=claude status=running detail="src/world.rs" activity=reading idle_age=0s tokens=25375
+office=/home/dev/infra workers=1
+  worker name="Integration checks" agent=claude status=failed detail="Integration checks failed: the demo database is unavailable." activity=error idle_age=0s tokens=33875
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+they-work --headless
+target_fps=10 effective_fps=19.24 frame_ms=100 poll_interval_ms=1000 exit_after_ms=100 elapsed_ms=103 frames=2 polls=0 events=0 poll_errors=0
+roster initial_offices=3 final_offices=3 office_min=3 office_max=3 initial_workers=6 final_workers=6 worker_min=6 worker_max=6 changes=0 joined=0 left=0 unique_workers=6
+rss_before_bytes=2535424
+rss_after_initial_scan_bytes=3047424
+rss_after_bytes=3543040
+cpu_seconds=0.000 cpu_average_percent=0.000
+Packaged they-work-aarch64-unknown-linux-gnu.tar.gz: 2579046 bytes; SHA256 f97a3700787dd4a3cee02c92b5bbace0ed35428fab68363856257fb0c4d00a9f

@@ -1,0 +1,22 @@
+{
+  "finished_at_utc": "2026-09-08T19:53:02.638742+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "binary": "target/native-macos/release/examples/measure_tower",
+  "binary_sha256": "aa0f66a552a3f9e339b78c5fe6aff83d94c938306431dc3d08ef4c9f211c47f4",
+  "source": "crates/theywork-render/examples/measure_tower.rs",
+  "source_sha256": "01b70da3d1a6a0313ceea62fac0d2d1b818237f48486c6cd4151c22b3fa7085c",
+  "command": "env -u NO_COLOR -u THEYWORK_COLOR -u THEYWORK_PIXELS COLORTERM=truecolor target/native-macos/release/examples/measure_tower > docs/design-audit/iteration-6/evidence/composition.csv",
+  "cell_pixels": [
+    8,
+    16
+  ],
+  "samples_per_case": 60,
+  "warmup_frames_per_case": 10,
+  "cases": 27,
+  "recorded_samples": 1620,
+  "concurrency": "Root confirmed workspace tests, builds and geometry captures finished; no concurrent CPU-heavy task during measurement.",
+  "scope": "Synthetic 50-task worlds, 1/6/20 projects, Tower/Office/Inspector, input handling through local compositor only. Terminal encoding, IPC, image transport, OS paint and actual user latency excluded.",
+  "largest_case_p95_ms": 8.899,
+  "largest_sample_ms": 10.361
+}

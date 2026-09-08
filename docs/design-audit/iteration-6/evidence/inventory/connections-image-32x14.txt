@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+Software tower · 20 projects    
+                                
+ CONNECTIONS                    
+                                
+ Choose which local             
+ conversations appear in your   
+ office with Local sources.     
+                                
+ [ Local sources ]              
+ [ Codex login ]                
+ [ Claude login ] [ Back ]      
+ Tab controls · Enter · Esc     
+                                

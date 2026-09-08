@@ -1,0 +1,35 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 0 projects
+
+ NEW TASK
+
+   Provider: codex  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-control-pty/run-dp8sdbyk/vertical-project
+ > Task instructions
+ approval▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ [ Start task ] [ Back ]
+
+
+ Tab fields/buttons · Enter choose · Esc back

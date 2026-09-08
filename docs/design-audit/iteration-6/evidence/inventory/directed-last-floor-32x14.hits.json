@@ -1,0 +1,79 @@
+[
+  {
+    "action": "SelectFloor(OfficeId(\"/projects/19-documentation\"))",
+    "height": 11,
+    "width": 32,
+    "x": 0,
+    "y": 2
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/19-documentation\"))",
+    "height": 1,
+    "width": 9,
+    "x": 23,
+    "y": 2
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-19-person-0\"))",
+    "height": 3,
+    "width": 30,
+    "x": 1,
+    "y": 3
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-19-person-1\"))",
+    "height": 3,
+    "width": 30,
+    "x": 1,
+    "y": 6
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-19-person-2\"))",
+    "height": 3,
+    "width": 30,
+    "x": 1,
+    "y": 9
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "More",
+    "height": 1,
+    "width": 8,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 13
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 12,
+    "x": 9,
+    "y": 13
+  },
+  {
+    "action": "Decorate(OfficeId(\"/projects/19-documentation\"))",
+    "height": 1,
+    "width": 10,
+    "x": 22,
+    "y": 13
+  }
+]

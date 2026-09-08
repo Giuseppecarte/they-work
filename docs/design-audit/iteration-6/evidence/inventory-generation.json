@@ -1,0 +1,22 @@
+{
+  "kind": "offline actual-Ui audit; no real terminal or provider invoked",
+  "binary": "target/native-macos/release/examples/ui_inventory",
+  "binary_sha256": "70e382fa69631e54e33bee0bba82921e4397e173958d8da0c7ce92ddacccd41c",
+  "built_they_work_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "finished_at_utc": "2026-09-08T19:59:14.863147+00:00",
+  "cell_pixels": [
+    8,
+    16
+  ],
+  "command": "env -u NO_COLOR -u THEYWORK_COLOR -u THEYWORK_PIXELS target/native-macos/release/examples/ui_inventory docs/design-audit/tmp/iteration-6-inventory-final",
+  "rendering": "Exact physical RGBA plus native-cell reconstruction using Menlo/Pillow; not a window screenshot.",
+  "source_commit": "5ea7f77",
+  "summary": {
+    "pass": 360,
+    "defect": 0,
+    "not-tested": 15
+  },
+  "scheduled_cases": 375,
+  "rendered_cases": 366,
+  "all_rendered_routes_and_hit_bounds_passed": true
+}

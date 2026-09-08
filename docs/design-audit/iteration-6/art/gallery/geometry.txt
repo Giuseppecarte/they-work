@@ -1,0 +1,26 @@
+cast-individual-detail batch0: 3 seats @2x
+cast-individual-detail batch1: 3 seats @2x
+cast-individual-detail batch2: 3 seats @2x
+cast-individual-detail batch3: 3 seats @2x
+cast-shared-detail batch0: 3 seats @2x
+cast-shared-detail batch1: 3 seats @2x
+cast-shared-detail batch2: 3 seats @2x
+cast-shared-detail batch3: 3 seats @2x
+cast-individual-overview batch0: 3 seats @2x
+cast-individual-overview batch1: 3 seats @2x
+cast-individual-overview batch2: 3 seats @2x
+cast-individual-overview batch3: 3 seats @2x
+cast-shared-overview batch0: 3 seats @2x
+cast-shared-overview batch1: 3 seats @2x
+cast-shared-overview batch2: 3 seats @2x
+cast-shared-overview batch3: 3 seats @2x
+motif0: Editing
+motif1: Command
+motif2: Reading
+motif3: Searching
+motif4: Thinking
+motif5: Automatic wait
+motif6: Human input
+motif7: Error
+motif8: Quiet
+motif9: Unavailable

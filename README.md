@@ -16,12 +16,11 @@ project files and use the network, under that provider’s permissions. Collecto
 keep their read-only boundary; SQLite may update an existing `-shm` coordination
 sidecar, and a cold WAL store without existing sidecars is refused.
 
-![A software tower with independent project floors and a delegated team](docs/design-audit/iteration-4/evidence/ui/tower-120x36.png)
+![A software tower with independent project floors and a delegated team](docs/design-audit/iteration-6/evidence/inventory/tower-image-120x36.png)
 
-The new tower and notebook previews reconstruct the actual UI image layer and
+The tower and work-panel previews reconstruct the actual UI image layer and
 native text mask with Menlo. They are compositor exports, not screenshots of a
-terminal emulator. Earlier desk/finder previews below reconstruct macOS PTY
-output. The [current audit](docs/design-audit/iteration-4/REVIEW.md) records tested
+terminal emulator. The [current audit](docs/design-audit/iteration-6/REVIEW.md) records tested
 workflows and the remaining terminal/platform acceptance checks.
 
 ## Start here
@@ -73,15 +72,15 @@ For Docker, use `make run ARGS="--sources all --doctor"` or
 | --- | --- | --- |
 | **The tower** | `0` | all projects and attention counts; the starting view when no floor is selected |
 | **The floor** | `Enter` from the tower | one project's office, with a desk per conversation |
-| **A desk** | `Enter` | one worker up close, with their timeline |
+| **Work panel** | `Enter` | current work brief, Activity, Team and Details |
 | **The phone** | `p` | Now, Attention, Edits and Messages from recorded conversations |
 | **Find your team** | `/` or `Ctrl+K` | find a project or conversation by name, path, provider or state |
 | **Notebook** | `b` | attention, deliveries and changes since your last visit; local reviewed markers |
 | **Team** | `g` | recorded delegation, session membership and forks, with a collapsible tree |
-| **Task controls** | `m` | compose, interrupt or answer live Codex requests; open a verified Claude console |
+| **Instruction** | `m` | compose inside the work panel with a fixed recipient |
 | **New task** | `n` | select provider, project folder and instruction |
 | **Connections** | `c` / `C` | sources, available controls and official provider login |
-| **Settings** | `s` | camera, light, theme, colour depth, motion and mouse |
+| **Settings** | `s` | theme, colour, motion, nameplates and mouse; older cameras in Advanced |
 | **Help** | `?` | every key |
 | **Appearance** | `d` / `a` | office design; character name, outfit and animation in the inspector |
 
@@ -89,28 +88,35 @@ For Docker, use `make run ARGS="--sources all --doctor"` or
 opens or activates them. With the scene focused, `PageUp` / `PageDown` change
 floors; `1`–`9` jump directly to one. `Esc` returns without losing the selected
 worker. The tower shows multiple floors; enter one to see its detailed office.
-Use `/` to search fictional names, real task titles, providers and states.
+Use `/` to search fictional names, real task titles, providers, states, observed
+activity and recorded results. Matches open the relevant retained record.
 In the inspector, arrows and `PageUp` / `PageDown` scroll the recorded context;
-`Home` / `End` reach its beginning and end. `!` finds a worker needing attention.
+`Home` reaches the beginning; `End` returns to latest. New activity does not
+move you away from an older record. Expand/Collapse, `e`, or `F7` changes panel
+size without changing its recipient or draft. `!` finds a worker needing attention.
+The panel keeps current requests separate from historical requests. Use Review
+request for exact decisions and Task actions for interruption or reconnection.
 
-Mouse clicks are enabled by default. Click a character or nameplate to inspect,
+Mouse clicks are enabled by default. Click a character, computer or nameplate to inspect,
 then choose an explicitly available action. Opening a character never approves
 its request. Disable capture in Settings or with `--mouse=off` for normal terminal
 text selection. Capture is released in an official provider console and on exit.
 
 Use `d` for the selected office's preset and four decoration zones. In the
 inspector, `a` edits the fictional name, outfit and animation style. These are
-local appearance choices and never change agent instructions. `v`, `w`/`W` and
-`o`/`O` retain the compatible camera, wardrobe and palette controls.
+local appearance choices and never change agent instructions. Changes preview
+immediately; Apply saves them and Cancel restores the previous appearance.
+`v` opens Advanced cameras. `w`/`W` and `o`/`O` retain compatible wardrobe and
+legacy palette shortcuts; legacy palettes affect the older cameras.
 Keep **Remember on this computer** enabled when connecting to save these choices
 and the selected floor. `--no-save` keeps changes temporary. Git worktrees of the
 same repository share one floor.
 
-![Contextual inspector beside a furnished office](docs/design-audit/iteration-5/ui/inspector-120x36.png)
+![Contextual inspector beside a furnished office](docs/design-audit/iteration-6/evidence/inventory/inspector-now-image-120x36.png)
 
 The side-cut graphics use original 24×32 overview and 48×64 office characters,
-integer scaling,
-contact shadows and furnished rooms. Clothes are decorative; the provider is
+integer scaling, complete computers, seated hands, chairs, contact shadows and
+furnished rooms. Independent desks use monitors; team tables use laptops. Clothes are decorative; the provider is
 shown in the task inspector. An amber `!` remains at a worker’s label while an
 alert is active. Questions, approvals, automatic review and missing recent
 information have distinct notebook categories. A local “seen” mark never answers

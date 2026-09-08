@@ -1,11 +1,14 @@
 # Design and usability findings
 
-The newest pass is [iteration 5](iteration-5/REVIEW.md). It fixes the observed
-scale/proportion, invisible header, stale pointer, pagination, source chooser
-and narrow-inspector defects found during the interactive tower implementation.
-Its critical review distinguishes compositor/PTY evidence from real-terminal,
-authenticated-provider and new-user validation still needed before publishing.
+The newest pass is [iteration 6](iteration-6/REVIEW.md). Its critical review
+corrected hidden current work, duplicate focus stops, stale-looking-live activity,
+unfurnished teams, unrelated request receipts, narrow action clipping, inherited
+styles and light-theme nameplate contrast. Its [inventory](iteration-6/INVENTORY.md)
+records every surface and keeps unperformed checks explicit.
 
+The [validation record](iteration-6/VALIDATION.md) separates local compositor and
+executable PTY evidence from physical terminal, authenticated-provider and new-user
+acceptance still required before publication.
 
 ## Previous review: fourth iteration
 

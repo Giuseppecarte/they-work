@@ -20,22 +20,26 @@ bold=ImageFont.truetype("/System/Library/Fonts/Menlo.ttc",13,index=1)
 manifest={"kind":"Ui TestBackend + exact physical RGBA + native mask; Menlo/Pillow replay, not a terminal screenshot","files":[]}
 for source in sorted(args.input.glob("*.cells.json")):
     data=json.loads(source.read_text())
-    width,height=data["columns"]*8,data["rows"]*16
+    cell_width,cell_height=data.get("cell_width",8),data.get("cell_height",16)
+    font_size=max(1,round(13*cell_height/16))
+    regular=ImageFont.truetype("/System/Library/Fonts/Menlo.ttc",font_size,index=0)
+    bold=ImageFont.truetype("/System/Library/Fonts/Menlo.ttc",font_size,index=1)
+    width,height=data["columns"]*cell_width,data["rows"]*cell_height
     image=Image.new("RGB",(width,height),"#000000")
     draw=ImageDraw.Draw(image)
     for y,row in enumerate(data["cells"]):
-        for x,cell in enumerate(row):draw.rectangle((x*8,y*16,x*8+7,y*16+15),fill=cell["bg"])
+        for x,cell in enumerate(row):draw.rectangle((x*cell_width,y*cell_height,(x+1)*cell_width-1,(y+1)*cell_height-1),fill=cell["bg"])
     name=source.name.removesuffix(".cells.json")
     if data["image"]:
         box=data["image"]
         art=Image.frombytes("RGBA",(box["pixel_width"],box["pixel_height"]),(args.input/(name+".rgba")).read_bytes())
-        image.paste(art,(box["x"]*8,box["y"]*16),art)
+        image.paste(art,(box["x"]*cell_width,box["y"]*cell_height),art)
     draw=ImageDraw.Draw(image)
     for y,row in enumerate(data["cells"]):
         for x,cell in enumerate(row):
             if not cell["native"]:continue
-            draw.rectangle((x*8,y*16,x*8+7,y*16+15),fill=cell["bg"])
-            draw.text((x*8,y*16-1),cell["text"],font=bold if cell["bold"] else regular,fill=cell["fg"])
+            draw.rectangle((x*cell_width,y*cell_height,(x+1)*cell_width-1,(y+1)*cell_height-1),fill=cell["bg"])
+            draw.text((x*cell_width,y*cell_height-1),cell["text"],font=bold if cell["bold"] else regular,fill=cell["fg"])
     destination=args.output/(name+".png")
     image.save(destination)
     manifest["files"].append({"path":destination.name,"width":width,"height":height,"sha256":hashlib.sha256(destination.read_bytes()).hexdigest()})

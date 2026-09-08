@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+! Source issue · c Connections ·
+                                
+ SOURCE NEEDS ATTENTION         
+                                
+ A local source could not be    
+ read. Check its folder and     
+ connection; an empty tower     
+ does not mean there is no      
+ work.                          
+                                
+ [Check sources]                
+                                
+[ Back ] [ Settings ] Tab contro

@@ -1,0 +1,111 @@
+{
+  "kind": "Exact Rust compositor artwork; not a terminal screenshot",
+  "source_grids": [
+    [
+      48,
+      64
+    ],
+    [
+      24,
+      32
+    ]
+  ],
+  "files": [
+    {
+      "path": "individual-detail-0.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "bd62b9dce0b4ec311341bbc6226b146eb5fc3d2c1164d5237a772cc65e21abc0"
+    },
+    {
+      "path": "individual-detail-1.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "1a71de3617f8cb17335b585b1d238e843d50704b1508f0c893f8ace94991b2e9"
+    },
+    {
+      "path": "individual-detail-2.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "d5c8680393b48b440eb40db74c4e9f3bfdba107791641abaeaf1110fee3f7bb0"
+    },
+    {
+      "path": "individual-overview-0.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "4e8e4668f73f1ddc649594de6491fbdc7d70bf4ccfaa46faf1f66b9897a363b3"
+    },
+    {
+      "path": "individual-overview-1.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "43b265f3dd1e0e91e4171c6cedd558d317b8d00f9f0905dc965604b578d2afa3"
+    },
+    {
+      "path": "individual-overview-2.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "68c678b6e0fc4fc81865be68fccb0aec48180cd03f82a9056555ae186c3d8db6"
+    },
+    {
+      "path": "shared-detail-0.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "df07abf26c9f21defc6dbd3c86fc24c7172d78b8ff22077a264ab9133521b726"
+    },
+    {
+      "path": "shared-detail-1.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "a50609ad6b0200fe2b55b1cfdd3155a5c359623d011eaaff4c845de6ba7fff92"
+    },
+    {
+      "path": "shared-detail-2.png",
+      "size": [
+        640,
+        304
+      ],
+      "sha256": "9302c9349161a47e43c3cd5e4eaa1c7c3e5fabb7a14b1a5f42309b2429db6591"
+    },
+    {
+      "path": "shared-overview-0.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "d50fd477e4fed87468d2ef754a8d708ef993b97fac117968118c86fea0ed4b4d"
+    },
+    {
+      "path": "shared-overview-1.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "7f160adb1611b98a4fc0bda5891a4fb6c97681e7b30084d8c45b96bac2337e14"
+    },
+    {
+      "path": "shared-overview-2.png",
+      "size": [
+        640,
+        128
+      ],
+      "sha256": "e09f38d4ac67158a3b60994f1b6858cda4e2b68f462db3d6700129b4f205c31f"
+    }
+  ]
+}

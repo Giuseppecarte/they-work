@@ -1,0 +1,317 @@
+{
+  "task-controls-image-32x14": {
+    "sha256": "b7ba31e2ffa9f2ce4ed8b064485dd87fa7c9bd8ee326ed81300e28990a90c8f4",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft."
+  },
+  "task-controls-image-80x24": {
+    "sha256": "33b65fce626d40035822d6ad9e689530b7c735b20cc209f5f1a056e2fd2940aa",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Re-inspected corrected scroll footer: line count has an explicit unit and action wrapping remains inside the panel."
+  },
+  "task-controls-native-80x24": {
+    "sha256": "33b65fce626d40035822d6ad9e689530b7c735b20cc209f5f1a056e2fd2940aa",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Re-inspected corrected scroll footer: line count has an explicit unit and action wrapping remains inside the panel."
+  },
+  "task-controls-light-80x24": {
+    "sha256": "19ff37c06a1e7a15a61169f3045599ee899f1c8c22e577636ff496c9c357e446",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Re-inspected corrected scroll footer: line count has an explicit unit and action wrapping remains inside the panel."
+  },
+  "task-controls-no-color-80x24": {
+    "sha256": "b1415e37c45defe540e138710c30fa77cf2ae688e1267c165f37e1e2e9c5107b",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Re-inspected corrected scroll footer: line count has an explicit unit and action wrapping remains inside the panel."
+  },
+  "task-controls-image-120x36": {
+    "sha256": "b3477a1c975b65184373e95776ea8fc6c9d5fe3cb4848e440146a503fce8459e",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Re-inspected corrected scroll footer: line count has an explicit unit and action wrapping remains inside the panel."
+  },
+  "task-controls-image-192x58": {
+    "sha256": "b1c87c8e84c98f93d1295e303cdfd1fd70083dee882f09b298a419810588fd39",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Reopened the complete final frame after the native roster header correction: state and observation age remain visible beside long task titles; background selection is intact and the panel retains legible actions without overlap."
+  },
+  "task-controls-image-110x80": {
+    "sha256": "a10fa6e7160ff4ab06df1da7872d3ce6dd82890f948536675a884345dbe39099",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft."
+  },
+  "task-controls-image-240x70": {
+    "sha256": "576d92d36b509229fb41a3e47ba32e8e2971ef26f134e194587555e34f1b2472",
+    "status": "pass",
+    "note": "Inspected full frame and work-panel detail: fixed recipient, one empty-draft caret, explicit Back and expand hint. Exact approval remains in Review request; empty instructions do not expose a send action. At32 columns the office intentionally becomes a compact summary above the draft. Reopened the complete final frame after the native roster header correction: state and observation age remain visible beside long task titles; background selection is intact and the panel retains legible actions without overlap."
+  },
+  "request-image-32x14": {
+    "sha256": "532086785965137d67fd3628b68226acc87602a24e9e07d1cc44320ac60893d2",
+    "status": "pass",
+    "note": "Re-inspected corrected request frame: exact recipient, one set of explicit decisions, Back and a visible PgUp/Dn reading hint. At32 columns the command requires reading beyond the first body page; the compact footer now makes that action discoverable."
+  },
+  "request-image-80x24": {
+    "sha256": "b8e317678166cf157d90eb8a9cf181d0b40e8bff1b4e7e6c75fcf1238bccb770",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection."
+  },
+  "request-native-80x24": {
+    "sha256": "b8e317678166cf157d90eb8a9cf181d0b40e8bff1b4e7e6c75fcf1238bccb770",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection."
+  },
+  "request-light-80x24": {
+    "sha256": "aa34c3f90db6134ba69481802ea540b23011aa6f337d6a88a362ba358057f332",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection."
+  },
+  "request-no-color-80x24": {
+    "sha256": "86f5a935bb423441cdcacfd2ad586713e875eaebe98ed2749c0fe66e5aaded2f",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection."
+  },
+  "request-image-120x36": {
+    "sha256": "a1e5a59dd0625845686e175cf46028a0ea1138b04e50b57958711e9bcc82006c",
+    "status": "pass",
+    "note": "Re-inspected corrected request frame: exact recipient, one set of explicit decisions, Back and a visible PgUp/Dn reading hint. At32 columns the command requires reading beyond the first body page; the compact footer now makes that action discoverable."
+  },
+  "request-image-192x58": {
+    "sha256": "e2e3bf95935912a2ff077d6c0c5c867e2cd9a664a7a355f3b76d62b3d9bba8a5",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection. Reopened the complete final frame after the native roster header correction: state and observation age remain visible beside long task titles; background selection is intact and the panel retains legible actions without overlap."
+  },
+  "request-image-110x80": {
+    "sha256": "ec9ad40a0497cae0b6fbc8559c74d39f73ae4ed800fb9fe4d9dbb2bd60f04c78",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection."
+  },
+  "request-image-240x70": {
+    "sha256": "f35d07260885cce0dec1555c633aa48c7cb2886dc82f4a4bdadfc56c7cc7a9b0",
+    "status": "pass",
+    "note": "Inspected full frame and exact request panel: recipient and review heading precede original command/project detail, explicit Allow once/Decline/Back, with no duplicated or unrelated send receipt. Deep reading retains its own scroll area; decisions are visually separate from inspection. Reopened the complete final frame after the native roster header correction: state and observation age remain visible beside long task titles; background selection is intact and the panel retains legible actions without overlap."
+  },
+  "help-image-32x14": {
+    "sha256": "d6b094a38bf338651335dade71ddceab3193a50f050d88ec1c5072b481e50fb4",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-image-80x24": {
+    "sha256": "5008c60e8f0089b1c6836e952f14158f841749e682e3cdd0243bf71889b2ba75",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-native-80x24": {
+    "sha256": "ebfc194d05b3fc242146ad818ea3eefc655f349dae78a2d080ff84b348824500",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions. Reopened the complete final frame after the native roster header correction: state and observation age remain visible beside long task titles; background selection is intact and the panel retains legible actions without overlap."
+  },
+  "help-light-80x24": {
+    "sha256": "258df6459ad7bcc2108e920dcf6694bb55a68fd25cfec2f5cf119aebe3bc4455",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-no-color-80x24": {
+    "sha256": "b75ace38ca1e790e8aea1a7cbbeb34b976ce0a508fe4669cab1a20ac085d226b",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-image-120x36": {
+    "sha256": "277636d9fd1f970e8c952ce309f0516906082d21ac353fa558d4323d6c797d42",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-image-192x58": {
+    "sha256": "cc4c4315c2ef525f3f854d859e438c12756ec6af30cb550492a5c6f11e2b0df6",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-image-110x80": {
+    "sha256": "8e6705cef7e80a538bbed45a32f320a8e210c16dbb54fc1308a5be61b8cfeaad",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "help-image-240x70": {
+    "sha256": "1c8cc4bd2abe9a24b671916e32f3497bb8ab11367acb1732de8ff972eaaf38df",
+    "status": "pass",
+    "note": "Inspected full frame and original-density help panel: bounded opaque text, one contextual scroll/return footer, no image show-through, readable native palette and retained office context. Narrow help scrolls instead of clipping the underlying instructions."
+  },
+  "attention-image-32x14": {
+    "sha256": "1b892aa1918ba82a0b55968802deca2d293a63f311d9596203007861b2a1e08d",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-image-80x24": {
+    "sha256": "1127b927cf5f04ab62d1de32aa13aaf6fec180d615d898800f5d6648b6473afa",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-native-80x24": {
+    "sha256": "1127b927cf5f04ab62d1de32aa13aaf6fec180d615d898800f5d6648b6473afa",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-light-80x24": {
+    "sha256": "567d8cfbb03e02feebfe69aec8311d3b4d7480eee275a3e1dc11404c2f0680c7",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-no-color-80x24": {
+    "sha256": "a67bf9716e00ce8a111cfa34a4994c0d28839b0b3a5ddf52a59499eb2d9bd188",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-image-120x36": {
+    "sha256": "233d38f44a72e3f9034aabae55e46541682a9a0d6691faea5819c3fa44dfe869",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-image-192x58": {
+    "sha256": "239c5fbbfdd0fd89fcb80121ff62e7dc2721de7d33c2422f435618e2b4c0bb7e",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-image-110x80": {
+    "sha256": "32a5c388c8e26e5ce475303df35e1a3f8ea0c69c16d65c70924dd7fccfdbc4de",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "attention-image-240x70": {
+    "sha256": "d022691490f792742617227a222a5e782bfd0bc2e25aa0d56be85ee4c3b688db",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Observed request category and observation age stay reserved when titles truncate; Review request is distinct from the local Mark seen action. Current selection and source coverage remain visible. The32-column view retains its direct review route and compact scope."
+  },
+  "deliveries-image-32x14": {
+    "sha256": "d8b5f4143d6230525bb0cdcecb0a67f91c411ca5924c522df38b991786113096",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-image-80x24": {
+    "sha256": "8374ab6639e569b430c42171d07d4bdea06317c54636949a1749fa511d6b309a",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-native-80x24": {
+    "sha256": "8374ab6639e569b430c42171d07d4bdea06317c54636949a1749fa511d6b309a",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-light-80x24": {
+    "sha256": "ad0f67d16d082fd962d40f874146031b9935a4ceab016d524795e3583a5b78af",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-no-color-80x24": {
+    "sha256": "642c83acef7a5381fe9a0e8a8be26751ec6fea3a55516cca56f43eab65bc35be",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-image-120x36": {
+    "sha256": "a56003513fcfb63dacc011163723f76feb837d9647b7506cbdc86d7d89c10d93",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-image-192x58": {
+    "sha256": "c91f91d032a3f2bd79d97804f31fc9579db42afcc56eedc859c5e73c76fb2bbf",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-image-110x80": {
+    "sha256": "e2688222b9138cb267d597ac9229685af31a7c0962084c9b5eafaf9df6e949b9",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "deliveries-image-240x70": {
+    "sha256": "caf993a5b1498df5403340dc9257240c0a5236789bb59ebe2a9eff2e8b3bc7d7",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Result label and original event age remain visible beside the title. Recorded author/result precede provenance; Inspect task opens retained evidence and Mark seen remains a separate local action. Compact layout retains the inspection action."
+  },
+  "changes-image-32x14": {
+    "sha256": "2237e5a0488a6d3b71cf37fdd11c255f21da1e8891fc1ecc920feace5574f4b9",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-image-80x24": {
+    "sha256": "0cc9eea0829a9e8a215967ce9e3892b1d6d74f9af7a1d136d65c0f206f2fb74c",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-native-80x24": {
+    "sha256": "0cc9eea0829a9e8a215967ce9e3892b1d6d74f9af7a1d136d65c0f206f2fb74c",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-light-80x24": {
+    "sha256": "118bb7fe857f900c7ec73b6cacb10d0aa1b9cafa6f1c6530f8b58f419d37201d",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-no-color-80x24": {
+    "sha256": "ece6270ca108471cef0736af8e0c1ab19c1de459c5ac3710302a6c7d843ebe8f",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-image-120x36": {
+    "sha256": "ff60220dfca921fdd79e6d0c66af45c850fa74e927f32a4068ee6031f4fb10dd",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-image-192x58": {
+    "sha256": "a0c3a23c5bc15aab26f694f7cc31629b128cd9520f38304b60266eae2fcfb97d",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-image-110x80": {
+    "sha256": "fc40711f1f06954dacea197de78e76139c5c19ae4457cf580ce7584503cc3d3b",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "changes-image-240x70": {
+    "sha256": "cb9c1f36106e33c42b87c4e9bb0f8ec9e2e57ff0ff42849e96863a3da56086cc",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Chronological retained records keep an independent event-age column. Visible rows and selected record count are distinct; the coverage notice explains older changes can be missing. Long titles cannot replace age or category."
+  },
+  "team-image-32x14": {
+    "sha256": "e6ac19aa64fddf94159182557aa8c9006baf801753343fc8724797fd9abaa4ea",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-image-80x24": {
+    "sha256": "e86c44dfdcfe2f1279f8c99ed2720e249182c46dc4708fdf4236f1273c88e62b",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-native-80x24": {
+    "sha256": "e86c44dfdcfe2f1279f8c99ed2720e249182c46dc4708fdf4236f1273c88e62b",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-light-80x24": {
+    "sha256": "94f8b122e0f4785b5430aba0696520eb0a7a4a3dca6a3318d72776df13ef5a84",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-no-color-80x24": {
+    "sha256": "86f5d7816a03b04888489e2e5255f7ffa97e59f945441796012ad487fd0463ab",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-image-120x36": {
+    "sha256": "b7160a8381e1244da16d647257fe020b079dc1c14f5ecc603e519b2f6d16723f",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-image-192x58": {
+    "sha256": "a94a82dfa5e970d4171fa6deba9c5505677317377ec5491a39a5f1eac59420a1",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-image-110x80": {
+    "sha256": "491bcf561c3a7d36fdf46ee548d1180e83cfe01697467f8d1cc5a6ceb31a3f77",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  },
+  "team-image-240x70": {
+    "sha256": "ea3b13e3314936e94022889d0e94ae5c7f19c8a8771616b8e31adc9ee1b3ab82",
+    "status": "pass",
+    "note": "Inspected full screen, readable text detail and footer. Family indentation/fold markers, independent selection, status-first relationship labels and observed age remain readable. The selected detail preserves relationship and recorded result; compact behavior retains Inspect task and coverage."
+  }
+}

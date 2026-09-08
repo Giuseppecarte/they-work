@@ -1,0 +1,58 @@
+warning: methods `scale_width`, `scale_image_sprite_width`, and `scale_image_sprite_height` are never used
+   --> crates/theywork-render/src/canvas.rs:497:19
+    |
+368 | impl Canvas {
+    | ----------- methods in this implementation
+...
+497 |     pub(crate) fn scale_width(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^
+...
+513 |     pub(crate) fn scale_image_sprite_width(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+518 |     pub(crate) fn scale_image_sprite_height(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: function `office_dot_color` is never used
+   --> crates/theywork-render/src/views/mod.rs:155:15
+    |
+155 | pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
+    |               ^^^^^^^^^^^^^^^^
+
+warning: function `draw_tab_bar` is never used
+   --> crates/theywork-render/src/views/mod.rs:181:15
+    |
+181 | pub(crate) fn draw_tab_bar(
+    |               ^^^^^^^^^^^^
+
+warning: function `fill_office_background` is never used
+   --> crates/theywork-render/src/views/mod.rs:375:15
+    |
+375 | pub(crate) fn fill_office_background(canvas: &mut Canvas, sprites: &SpriteSet) -> usize {
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `theywork-render` (lib test) generated 4 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 15 tests
+test views::tower::compact::tests::native_fallback_has_real_clicks_and_keeps_the_selected_family_visible ... ok
+test views::tower::compact::tests::native_pagination_pins_the_parent_without_duplicating_people ... ok
+test views::tower::tests::active_families_have_independent_selectors_and_do_not_leak_into_desks ... ok
+test views::tower::tests::explicit_character_names_do_not_change_with_neighbors ... ok
+test views::tower::tests::incomplete_and_cyclic_relations_cannot_fabricate_a_team ... ok
+test views::tower::tests::keyboard_selection_overrides_a_previously_chosen_team ... ok
+test views::tower::tests::names_off_keeps_selection_and_requests_distinct_without_color ... ok
+test views::tower::tests::native_labels_round_downward_without_erasing_actor_pixels ... ok
+test views::tower::tests::room_splits_preserve_character_scale_including_cell_alignment ... ok
+test views::tower::tests::selected_last_worker_stays_reachable_on_a_crowded_floor ... ok
+test views::tower::tests::side_inspector_offset_never_moves_hits_outside_the_scene ... ok
+test views::tower::tests::source_health_excludes_old_activity_from_live_counts ... ok
+test views::tower::tests::stacked_floor_targets_cover_contiguous_complete_floors_after_resize ... ok
+test views::tower::tests::tall_office_uses_surplus_space_for_real_work_and_clipped_hits ... ok
+test views::tower::tests::zero_or_offscreen_geometry_never_becomes_a_phantom_click ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 214 filtered out; finished in 11.57s
+

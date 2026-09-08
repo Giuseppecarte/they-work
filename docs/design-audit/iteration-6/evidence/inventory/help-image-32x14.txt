@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+Software tower · 20 projects    
+▸ F01/20…  7 people ·…  [Visit] 
+●┌ ? HELP / YOUR TOWER ───────┐…
+ │Each floor is a project;    │ 
+ │each worker is a real task. │ 
+ │Select a worker, read its   │ 
+ │work brief, then choose an  │ 
+ │available action.           │ 
+ │0 Tower                     │ 
+ │b Attention                 │ 
+ └────────────────────────────┘ 
+ People 2/3 · page 1/2 · Enter… 
+[ Back ] ↑↓ scroll · Esc back   

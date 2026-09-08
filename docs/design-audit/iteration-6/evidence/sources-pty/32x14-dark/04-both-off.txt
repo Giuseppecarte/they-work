@@ -1,0 +1,14 @@
+Connections / Sources
+Local observation · no account
+  [ ] Claude Code
+· …4-dark-solyvpg7/home/.claude
+  Off · no conversations read
+> [ ] Codex
+· …14-dark-solyvpg7/home/.codex
+  Off · no conversations read
+  [x] Remember on this computer
+Connect opens an empty tower.
+You can add sources later.
+Tab/↑↓ choose · Enter activate
+[ Connect ] [ Demo ] [ Back ]
+F5 connect · d demo · Esc back

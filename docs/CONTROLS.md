@@ -6,8 +6,8 @@ its data mounts are read-only and networking is disabled.
 
 ## Connect and sign in
 
-`c` chooses the local providers and data folders that the office may observe.
-`C` shows control availability and opens the official provider login with `1`
+`c` and `C` open Connections with sources, control availability and official login.
+Sources chooses which local data folders the office may observe. Use `1`
 (Codex) or `2` (Claude). They-work never asks for a provider password or stores
 its own copy of a login token. Install the official native CLI on PATH; `--doctor`
 reports its version and whether background Claude attach is available.
@@ -22,18 +22,22 @@ this version's scope.
 
 - `n` opens a new task. Tab selects provider, project and instruction; arrows
   change provider. Type or paste the instruction, then press `F5` to send.
-- `m` opens the selected task's controls. The displayed recipient stays attached
+- `m` opens an instruction composer inside the work panel. The displayed recipient stays attached
   to the draft even when the roster changes. Enter inserts a newline; `F5`
   sends a Codex instruction. During an active managed turn this steers the
   selected turn, with its expected turn ID.
-- `F2` interrupts the selected active managed Codex turn. It does not stop
-  unrelated workers or the entire supervisor.
-- `F4` shows unresolved requests from that connection. Number keys choose a
-  displayed approval decision. Structured questions accept text, Tab moves to
-  the next question, and `F5` submits the answers to that request's ID.
-- `F6` reconnects a saved, previously managed Codex task after its host or
-  provider connection stops. Reconnection loads its history; it does not send
-  an instruction or restart the previous turn.
+- `F7` expands or collapses the work panel while retaining the draft. Enter
+  inserts a newline; it never sends the instruction.
+- **Task actions → Stop task** interrupts only the selected active managed
+  Codex turn. **Reconnect** reconnects a saved managed task without sending an
+  instruction or restarting its previous turn.
+- **Review request** opens an exact unresolved request. Number keys choose a
+  displayed decision. Structured questions accept text, Tab moves between
+  fields, and `F5` submits answers to that request's ID. Merely inspecting the
+  worker never decides a request.
+
+Secondary task shortcuts do not run while composing. Leave the draft with Esc
+and use the work panel's explicit actions; the recipient-bound draft is retained.
 
 A receipt distinguishes confirmed, rejected and uncertain outcomes. An uncertain
 send is never retried automatically. Keep the operation ID and inspect the task
@@ -43,7 +47,7 @@ when the terminal is too small to show their contents.
 
 Codex tasks created here belong to a local supervisor. Closing the office leaves
 accepted work running. Reopening the office connects to that supervisor. If the
-supervisor itself restarts, tasks remain disconnected until explicit `F6`, and a
+supervisor itself restarts, tasks remain disconnected until explicit Reconnect, and a
 new instruction is still required to start work. External Codex histories remain
 observable: reading or resuming them does not establish ownership of their
 currently running process.
@@ -57,8 +61,7 @@ explains the persistence requirement before creating a managed Codex task.
 
 New Claude tasks launch through the official client. A version advertising
 background mode uses its official supervisor; older versions open a foreground
-conversation. For an existing compatible background task, `F3` (or Enter in its
-control panel) verifies the native roster and attaches to that exact session.
+conversation. For an existing compatible background task, Open conversation (or `F3` while composing) verifies the native roster and attaches to that exact session.
 
 The office leaves raw mode and its alternate screen while the official console
 owns the terminal. Talk, interrupt and approve there. Exiting or detaching restores
@@ -86,6 +89,15 @@ immediate parent and conversation forks have their own labels. Missing parents
 and participants remain unknown instead of being invented. Messages and deliveries
 show recorded provenance; decorative coffee, walking and costumes have none.
 
+Task lists keep source observation age separate from the task title. “Age unknown”
+means no observation time was recorded; a recent UI refresh does not make old work
+current. Search and the tower use the same rule for current attention counts.
+
+Advanced retains older camera preferences. Without image support, or below their
+minimum usable size, those cameras show the native task roster. The saved camera
+returns when the terminal can display it. Text encoding choices remain available
+for compatibility surfaces that draw pixel characters.
+
 ## Local storage and compatibility
 
 Connection and appearance preferences remain in the existing settings directory.
@@ -99,7 +111,7 @@ It contains conversation-related events, ownership metadata and receipts, with
 bounded history. It is not an account credential store. Do not remove it while
 you still need to inspect or control its running tasks.
 
-The [implementation audit](design-audit/iteration-4/REVIEW.md) separates fixture
+The [implementation audit](design-audit/iteration-6/REVIEW.md) separates fixture
 and PTY evidence from actual provider and platform testing. Schema changes that
 are not understood remain unavailable; the office does not fabricate a working
 control for them.

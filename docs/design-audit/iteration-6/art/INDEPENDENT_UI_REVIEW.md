@@ -1,0 +1,49 @@
+# Independent UI review: inventory-review2
+
+This is a critique of the intermediate 80×24 inventory, not final release approval. The inspected PNGs reconstruct actual ratatui cells and image pixels using Menlo/Pillow; they are not physical terminal screenshots. Production changes belong to the UI lanes. Findings below were reported before the final matrix was frozen.
+
+## Actionable findings
+
+| Priority | Exact evidence | Observation and correction |
+|---|---|---|
+| High | [New task](../evidence/inventory-review2/new-task-image-80x24.png) | The large message input has no visible label or placeholder. Only Choose project and Back are shown; there is no visible Create action or reason for its absence. Add a clear instruction-field label and a disabled primary action with its enabling condition. |
+| High | [Finder](../evidence/inventory-review2/finder-image-80x24.png), [no matches](../evidence/inventory-review2/directed-finder-none-80x24.png) | Borders inherit bold styling from the underlying selected-floor header. The top border and some side cells therefore become missing-glyph boxes in this replay. Clear the complete cell style before painting an opaque overlay. Verify border modifiers after opening it over bold native content. |
+| Medium | [Task controls](../evidence/inventory-review2/task-controls-image-80x24.png), [request](../evidence/inventory-review2/request-image-80x24.png) | Both captured routes show the same long, clipped INSTRUCTION heading and Open conversation fallback although the originating action is Review request. Recheck the request fixture/path; ensure the displayed mode and next action describe the actual capability. The heading must wrap or show an ellipsis. |
+| Medium | [Project picker](../evidence/inventory-review2/project-picker-image-80x24.png) | Sixteen of twenty projects are visible without a range/total count. The bottom item can be mistaken for the last project. Add a visible range and paging guidance. |
+| Low | [Character](../evidence/inventory-review2/character-image-80x24.png), [office design](../evidence/inventory-review2/design-image-80x24.png) | Sidebar guidance ends midword at the right edge. Use a shorter complete sentence or explicit truncation; preserve Apply/Cancel. |
+| Low | [Inspector now](../evidence/inventory-review2/inspector-now-image-80x24.png) | “PgUp/Dn · 1/16” does not say whether 16 means pages, rows or events. Label the scroll range. The main request/activity/result ordering itself is clear. |
+| Low | [Deliveries](../evidence/inventory-review2/deliveries-image-80x24.png) | The selected title is repeated in the detail and again in the result heading, using several rows before the substantive result. Keep the identity once in the detail and reserve space for the result and next action. |
+
+The Finder issue was verified beyond the PNG. Its exported cell JSON marks the whole top border and the border cell at row 12 as bold, while adjacent side rows are regular. `paint_opaque` cleared symbols and updated colors but did not remove old modifiers. In this environment, Menlo's regular `─` mask differs from the missing-glyph mask; the bold face's `─`, `│`, `┌` and `┐` masks equal the U+FFFF missing glyph. This explains the replay artifact and reveals a real inherited-style defect. It does **not** establish how a live terminal's font fallback would draw those characters.
+
+## Positive checks and limits
+
+[Inspector now](../evidence/inventory-review2/inspector-now-image-80x24.png), [activity](../evidence/inventory-review2/inspector-activity-image-80x24.png), [team](../evidence/inventory-review2/inspector-team-image-80x24.png) and [details](../evidence/inventory-review2/inspector-details-image-80x24.png) were legible. The human request appears first, followed by observed activity and the result. [Light](../evidence/inventory-review2/inspector-now-light-80x24.png) and [monochrome](../evidence/inventory-review2/inspector-now-no-color-80x24.png) retain readable sections and selected-tab emphasis. No new text/image occlusion was found in these panels.
+
+[Settings](../evidence/inventory-review2/settings-image-80x24.png), [advanced settings](../evidence/inventory-review2/advanced-image-80x24.png), [navigation](../evidence/inventory-review2/more-image-80x24.png), [connections](../evidence/inventory-review2/connections-image-80x24.png), [attention](../evidence/inventory-review2/attention-image-80x24.png) and [empty messages](../evidence/inventory-review2/phone-messages-image-80x24.png) were also inspected. Their immediate action/empty-state text was understandable; connections still required its separately planned flow review.
+
+[Long names](../evidence/inventory-review2/directed-long-names-80x24.png) show CJK missing glyphs in the single-font replay. This alone is not an application or live-terminal defect. Font fallback must be evaluated separately from the renderer's text-width and clipping behavior.
+
+The room/tower workstation placement checks are recorded in [ART.md](ART.md). This review does not approve the complete inventory, narrow layouts, interaction behavior or provider control. Final corrected captures and integration tests must close the findings above.
+
+## Final inventory follow-up
+
+[Per-frame verdicts](../visual-reviews.json) cover 159 inventory PNGs: all nine form/navigation surfaces across six sizes and their light, monochrome and character-renderer variants, 26 additional small-screen states, and the 52 compatibility/empty-state cases below. Each verdict includes the SHA-256 of the actual PNG inspected. After an export changed 66 previously reviewed frames, every changed frame was opened again; the later compatibility corrections triggered another 26 actual image reviews. The final shared state/age-column correction changed 37 images within this set; all 37 were opened again and their hashes updated. Unchanged hashes retain their earlier verdict. Inspector, Phone and request-control final reviews are recorded separately in the combined inventory review.
+
+The final captures close the duplicated inactive-field caret, missing creation guidance, unreadable 32×14 compatibility cameras, truncated compact hints and distant action groups in tall forms. Settings and Advanced remain bounded; Character and Office design keep Apply/Cancel near their fields; native light-theme nameplates preserve contrast over the artwork. The compact view retains separate selection/state markers and explicit source-unavailable or last-known text.
+
+At this checkpoint, 158 frames pass and one CJK capture remains `not-tested` for glyph fidelity in this single-font replay. The [project picker at 120×36](../evidence/inventory/project-picker-image-120x36.png) now shows its complete range, Enter action and `F7 back`; all eight affected picker variants were re-opened. The per-frame hash verdict is the authority for any later correction and recapture.
+
+The final Finder keeps observation age in a reserved second-row field and preserves complete state labels at ordinary terminal sizes. At 32 columns, its emergency single-result layout shortens the request label to `Approval need`; the request category remains identifiable and opening the result exposes the full request. This compact limit is recorded explicitly rather than treated as full-detail parity with the larger inspector.
+
+These are compositor/font-replay reviews, not claims of physical-terminal execution. The independent [nine-case Sources PTY report](../SOURCES_PTY.md) records actual execution, terminal restoration and its own tested executable hash; it is not relabeled with a later build hash.
+
+## Compatibility and empty-state completion
+
+The remaining review adds 32 office projection variants and 20 larger empty, disconnected, scanning, source-error and filtered-empty states. Five Side images are byte-identical to already inspected Auto images; their verdicts explicitly name the inspected equivalent and retain the identical PNG hash. Every other added image was opened as a full screen. The larger empty states keep the actual explanation and next action together, distinguish unavailable sources from a quiet project, and leave the global navigation visible.
+
+This pass found three concrete compatibility defects. The [flat project title](../evidence/legacy-before/office-top-image-80x24.png) could share pixels with the native attention banner at 80 and 120 columns. Its actual rectangle now reserves the banner area; the native FLOOR header continues to identify the project when the artwork title is omitted. [Isometric native nameplates](../evidence/legacy-before/office-iso-light-80x24.png) also inherited a sampled dark art background in light mode; selected and ordinary plates now explicitly use semantic theme surfaces. Finally, [image-free legacy cameras](../evidence/legacy-before/office-iso-native-80x24.png) could render unreadable blocks or empty text rows, so the UI uses the compact roster while retaining the saved camera preference.
+
+The [39-test office verification](checks/legacy-title-tests.log) checks the title reservation across character encodings and image geometry, keeps a fitting title visible, and verifies selected and ordinary isometric label backgrounds in rendered cells. The isometric navigation test explicitly requests 8×16 image geometry and retains its complete navigation, resize and worker-identity assertions. UI coverage separately checks the image-free route, exact worker identity, clicks and return to the saved camera.
+
+The corrected [Top80](../evidence/inventory/office-top-image-80x24.png), [light Iso80](../evidence/inventory/office-iso-light-80x24.png) and [native Iso80](../evidence/inventory/office-iso-native-80x24.png) were opened again alongside every changed compatibility variant. They close the recorded lettering, contrast and missing-roster defects. These are visual conclusions tied to their recorded PNG hashes, not approval based only on source tests.

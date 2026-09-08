@@ -1,0 +1,158 @@
+{
+  "kind": "Exact Rust compositor artwork; not a terminal screenshot",
+  "source_grids": [
+    [
+      48,
+      64
+    ],
+    [
+      24,
+      32
+    ]
+  ],
+  "files": [
+    {
+      "path": "cast-individual-detail.png",
+      "size": [
+        640,
+        1216
+      ],
+      "sha256": "c18112becc9f2cc48ef50b8e49b8431e0f638d7ee26b6a7fc4744a51dae4294e"
+    },
+    {
+      "path": "cast-individual-overview.png",
+      "size": [
+        640,
+        512
+      ],
+      "sha256": "4df0a09f1580f30dbe236e801d72a33dc4eb95abb73fd4723233def980eb9aac"
+    },
+    {
+      "path": "cast-shared-detail.png",
+      "size": [
+        640,
+        1216
+      ],
+      "sha256": "b08053ac878c377978c6b11b9293e32e376f35ac53bf38c09944cab6bf9143f6"
+    },
+    {
+      "path": "cast-shared-overview.png",
+      "size": [
+        640,
+        512
+      ],
+      "sha256": "cf961f2adc177d6a27729952cd0fa2deb084a91572ac430e24908415cc84ae30"
+    },
+    {
+      "path": "materials-laboratory-dark.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "e538176951394e87c47ac2e47917372179f78ea177ad44f28af6f75c449d176f"
+    },
+    {
+      "path": "materials-laboratory-light.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "98a14247300c21e6da95038350351d165c81e08806fb23f1216694afacc6f3f7"
+    },
+    {
+      "path": "materials-studio-dark.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "6670f661575a0af2aa93012f108f1580c40974e0f216b88c4cc8719096b04de1"
+    },
+    {
+      "path": "materials-studio-light.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "96b42f6c6317f8e9bf493ba486ac2862ab8afa894517cecb77fd5a0c047a3a5e"
+    },
+    {
+      "path": "materials-workshop-dark.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "70f204889310bbe65fc1bdf1ea93bf1fc0d83ece5b1ebffd89f53b24a0c051da"
+    },
+    {
+      "path": "materials-workshop-light.png",
+      "size": [
+        640,
+        912
+      ],
+      "sha256": "557178d042e9cd97e86a859bbbb3e4a57903e70b2e1375bac56a0d01819bd8a2"
+    },
+    {
+      "path": "screen-categories.png",
+      "size": [
+        640,
+        640
+      ],
+      "sha256": "ea345635eef39acc9c02484e79c7a67fc07fecc5219e072e85907c661ba0889b"
+    },
+    {
+      "path": "outbound-action-return.gif",
+      "frames": 129,
+      "duration_ms": 16120,
+      "sha256": "5b03bab94ddd7c24280bcd0de1caf2435d432a04c736576284a3c7472af7b578",
+      "kind": "GIF palette preview; PNG evidence retains RGB"
+    },
+    {
+      "path": "route-000.png",
+      "size": [
+        800,
+        504
+      ],
+      "sha256": "4d81ba6aa8d1c959bb41a8c9fbfc4e456fd029c72bd600035ff527d9208f48dc"
+    },
+    {
+      "path": "route-012.png",
+      "size": [
+        800,
+        504
+      ],
+      "sha256": "fd3c6cba59dec81ecf8afe3077ac4046fa2c2ca8da90db97db4b56d8f2b76d54"
+    },
+    {
+      "path": "route-048.png",
+      "size": [
+        800,
+        504
+      ],
+      "sha256": "ec4897d4dfe4aba94dc2052f30c193100e88e30caa126d52cc2f5dc4235468f8"
+    },
+    {
+      "path": "route-116.png",
+      "size": [
+        800,
+        504
+      ],
+      "sha256": "0858000b5273f69e313443db295866c8f0f02c0745802db4015c7b0886f9d653"
+    },
+    {
+      "path": "route-128.png",
+      "size": [
+        800,
+        504
+      ],
+      "sha256": "1bdb62ec91226e1d351680d295625e85e20d9280475480b30349cfc42a8d1985"
+    }
+  ],
+  "sources": {
+    "crates/theywork-render/src/living_office.rs": "c3ee094d918b16f723a7e0c56ad9307e5cc13e2ebbd285745f64f69a2614ba1a",
+    "crates/theywork-render/src/living_office/art.rs": "2e5fe508dc51ac8c835295821c1c802ef5d8c10088757a1b89edc637da3ecd42",
+    "crates/theywork-render/src/living_office/overview.rs": "bd0d73df392a568096f5687c27877b386c92c81e5ebe66ffc758a63f813f91dd",
+    "crates/theywork-render/src/living_office/rooms.rs": "ba02b9f6e5511e6e318edcaa472b66f49d11a3c0fb90eb3d190b4c82a587da70",
+    "crates/theywork-render/src/living_office/simulation.rs": "2d2f5ccf7f77a5719049f47ed37a181b98e7b773f4bd32ebb85975446c9507f3",
+    "crates/theywork-render/src/living_office/workstation.rs": "551993dff48e6d6ffc4ff7eaab1396b436ddf2de4e37631eb9f736c0132dfeb7"
+  }
+}

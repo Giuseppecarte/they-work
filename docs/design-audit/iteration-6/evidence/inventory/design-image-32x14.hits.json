@@ -1,0 +1,79 @@
+[
+  {
+    "action": "CustomizeField(0)",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 5
+  },
+  {
+    "action": "CustomizeField(1)",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 6
+  },
+  {
+    "action": "CustomizeField(2)",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 7
+  },
+  {
+    "action": "CustomizeField(3)",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 8
+  },
+  {
+    "action": "CustomizeField(4)",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 9
+  },
+  {
+    "action": "ApplyAppearance",
+    "height": 1,
+    "width": 9,
+    "x": 1,
+    "y": 10
+  },
+  {
+    "action": "CancelAppearance",
+    "height": 1,
+    "width": 10,
+    "x": 12,
+    "y": 10
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "More",
+    "height": 1,
+    "width": 8,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 13
+  }
+]

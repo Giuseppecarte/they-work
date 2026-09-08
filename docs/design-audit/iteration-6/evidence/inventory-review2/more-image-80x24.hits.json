@@ -1,0 +1,65 @@
+[
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 3
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 4
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 5
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 6
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 7
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 8
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 9
+  },
+  {
+    "action": "Key(Char('?'))",
+    "height": 1,
+    "width": 46,
+    "x": 1,
+    "y": 10
+  },
+  {
+    "action": "More",
+    "height": 1,
+    "width": 48,
+    "x": 0,
+    "y": 12
+  }
+]

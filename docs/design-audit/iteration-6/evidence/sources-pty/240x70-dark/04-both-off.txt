@@ -1,0 +1,48 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                            Connections / Sources
+                                                                            Choose the conversations visible in your tower.
+                                                                            Reads titles, messages and activity from local app data folders.
+                                                                            No they-work account. Provider controls require a verified connection.
+                                                                              [ ] Claude Code
+                                                                            · …work/docs/design-audit/tmp/iteration-6-sources-pty/240x70-dark-0i1ggclf/home/.claude
+                                                                              Off · no conversations read
+
+                                                                            > [ ] Codex
+                                                                            · …-work/docs/design-audit/tmp/iteration-6-sources-pty/240x70-dark-0i1ggclf/home/.codex
+                                                                              Off · no conversations read
+
+                                                                              [x] Remember on this computer
+                                                                            Save sources and local appearance.
+                                                                            Connect opens an empty tower.
+                                                                            You can add sources later.
+
+
+
+
+
+
+
+                                                                            Tab/↑↓ choose · Enter activate
+                                                                            [ Connect ] [ Demo ] [ Back ]
+                                                                            F5 connect · d demo · Esc back

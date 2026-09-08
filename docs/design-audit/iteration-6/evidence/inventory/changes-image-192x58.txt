@@ -1,0 +1,58 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]                                                                                                                  
+Software tower · 20 projects                                                                                                                                                                    
+ PROJECT NOTEBOOK  /  All floors                                                                                                                                                                
+f All floors · i Show IDs                                                                                                                                                                       
+1 Attention 2 Deliveries 3 Since your visit 4 Team                                                                                                                                              
+                                                                                                                                                                                                
+ > Blair Y. · 00-checkout / Build the shared account interface — task 0 in project 00                                                            Result delivered                        0s ago 
+   Blair Y. · 00-checkout / Build the shared account interface — task 0 in project 00                                                            editing                                 0s ago 
+   Dani E. · 00-checkout / Build the shared account interface — task 1 in project 00                                                             idle                                    0s ago 
+   Noa M. · 00-checkout / Build the shared account interface — task 2 in project 00                                                              editing                                 0s ago 
+   Casey S. · 00-checkout / Build the shared account interface — task 3 in project 00                                                            idle                                    0s ago 
+   Quinn W. · 00-checkout / Build the shared account interface — task 4 in project 00                                                            editing                                 0s ago 
+   Alex C. · 00-checkout / Build the shared account interface — task 5 in project 00                                                             idle                                    0s ago 
+   Kai K. · 00-checkout / Build the shared account interface — task 6 in project 00                                                              editing                                 0s ago 
+   Casey C. · 01-design-system / Build the shared account interface — task 0 in project 01                                                       editing                                 0s ago 
+   Noa W. · 01-design-system / Build the shared account interface — task 1 in project 01                                                         idle                                    0s ago 
+   Taylor Z. · 02-billing-service / Build the shared account interface — task 0 in project 02                                                    editing                                 0s ago 
+   Rene F. · 02-billing-service / Build the shared account interface — task 1 in project 02                                                      idle                                    0s ago 
+                                                                                                                                                                               [ Inspect task ] 
+ Result delivered · 0s ago  ·  record 1/151                                                                                                                                                     
+                                                                                                                                                                                                
+ Blair Y. · Build the shared account interface — task 0 in project 00 delivered a result.                                                                                                       
+ Implemented the account form and checked the required fields. The next step is a local review.                                                                                                 
+                                                                                                                                                                                                
+ From: Build the shared account interface — task 0 in project 00                                                                                                                                
+ To: Not recorded                                                                                                                                                                               
+                                                                                                                                                                                                
+ Partial local history                                                                                                                                                                          
+ Synthetic local history; live provider compatibility is not exercised.                                                                                                                         
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+Local history · 50 partial · older changes may be missing                                                                                                                                       
+[ Back ] ↑↓ · Enter opens                                                                                                                                                                       

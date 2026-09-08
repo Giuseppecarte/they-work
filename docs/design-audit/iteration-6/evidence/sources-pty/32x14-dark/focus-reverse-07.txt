@@ -1,0 +1,14 @@
+Connections / Sources
+Local observation · no account
+  [x] Claude Code
+· …4-dark-solyvpg7/home/.claude
+  Ready · reads after Connect
+  [x] Codex
+· …14-dark-solyvpg7/home/.codex
+  Ready · reads after Connect
+  [x] Remember on this computer
+Space: toggle · e: edit folder
+
+Tab/↑↓ choose · Enter activate
+[ Connect ] [ Demo ] [ Back ]
+F5 connect · d demo · Esc back

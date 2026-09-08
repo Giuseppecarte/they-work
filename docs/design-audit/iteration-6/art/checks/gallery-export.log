@@ -1,0 +1,15 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: method `scale_half_height` is never used
+   --> crates/theywork-render/src/canvas.rs:497:19
+    |
+368 | impl Canvas {
+    | ----------- method in this implementation
+...
+497 |     pub(crate) fn scale_half_height(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.50s
+     Running `target/native-macos/debug/examples/workstation_gallery docs/design-audit/tmp/iteration-6/gallery`

@@ -1,0 +1,17 @@
+[
+  {
+    "case": "office-top-image-80x24",
+    "reason": "Artwork title overlaps the reserved native attention strip.",
+    "sha256": "607a0b28178f3d40a79a9397b6f9e4beb5da6faa6f9fb12c152634d025201bf7"
+  },
+  {
+    "case": "office-iso-light-80x24",
+    "reason": "Light native plates inherited sampled artwork backgrounds and lost contrast.",
+    "sha256": "d6438b51b8a0a7104a8499f65c5b423c23562a82e6dcad215a55bf94c31ec860"
+  },
+  {
+    "case": "office-iso-native-80x24",
+    "reason": "Image-free projection loses readable people and labels; replacement uses functional compact roster.",
+    "sha256": "0ff8430d5afb2b03e3067c0a6296ce1ccbf95b6a09cb51a28c5177da971d81c8"
+  }
+]

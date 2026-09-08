@@ -1,0 +1,80 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]                                
+Software tower · 20 projects                                                                                  
+       ┌ PHONE / ATTENTION · 2 ───────────────────────────────────────────────────────────────────────┐       
+       │All projects · 50 conversations                                                               │       
+       │[ Now ] [ Attention ] [ Edits ] [ Messages ]                                                  │       
+       │>Build the shared account interface — task 0 in project 00                                    │       
+       │ Approval needed · 0s ago · codex · 00-checkout                                               │       
+       │ Partial local history                                                                        │       
+       │ The source recorded an approval request. Review the current request before deciding.         │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │ Build the shared account interface — task 2 in project 00                                    │       
+       │ Question for you · 0s ago · codex · 00-checkout                                              │       
+       │ Partial local history                                                                        │       
+       │ The source recorded a question. Review its current form to answer.                           │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │                                                                                              │       
+       │1/2 · observed state · Enter inspect                                                          │       
+       └──────────────────────────────────────────────────────────────────────────────────────────────┘       
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+[ Back ] ↑↓ · Enter opens                                                                                     

@@ -3,10 +3,11 @@
 The working folder for the second audit of `they-work`. `GOAL.md` is the brief;
 everything the audit produces belongs here beside it.
 
-The user's native resize feedback reopened visual acceptance. Start with the
-[second-iteration review](iteration-2/REVIEW.md) for the repaired encoder,
-room layouts, motion and evidence limits. Earlier verification records describe
-the first implementation pass.
+Start with the [iteration 6 review](iteration-6/REVIEW.md): current-work panels,
+complete computer workstations, observation-aware presentation, reversible
+appearance previews and a complete UI inventory. Its [validation record](iteration-6/VALIDATION.md)
+separates compositor checks, executable PTYs and publication gates.
+Earlier iterations remain historical evidence.
 
 | File | |
 | --- | --- |

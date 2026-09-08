@@ -1,0 +1,23 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+vertical-project / Office
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-co
+ > Task instructions
+ ▏
+
+
+
+
+
+
+
+
+ Returned from official console. Background tasks remain with their provider.
+ [ Choose project ] [ Back ]
+
+
+ Tab fields/buttons · Enter choose · Esc back

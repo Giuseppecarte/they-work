@@ -1,0 +1,80 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]                                
+00-checkout / Work brief                                                                                      
+                                                                                                              
+ Blair Y.                                                                                                     
+ Build the shared account interface — task 0 in project 00                                                    
+ codex · Response requested · 0s                                                                              
+ Partial local history                                                                                        
+ [ Now ][ Activity ][ Team ][ Details ]                                                                       
+                                                                                                              
+ CONNECTION                                                                                                   
+ Synthetic managed task; no provider process runs.                                                            
+                                                                                                              
+ TASK DETAILS                                                                                                 
+ CONVERSATION                                                                                                 
+ Build the shared account interface — task 0 in project 00                                                    
+                                                                                                              
+ PROJECT                                                                                                      
+ /projects/00-checkout                                                                                        
+ Branch: not recorded                                                                                         
+                                                                                                              
+ SOURCE                                                                                                       
+ Partial local history                                                                                        
+ Synthetic local history; live provider compatibility is not exercised.                                       
+                                                                                                              
+ USAGE                                                                                                        
+ Token usage unavailable                                                                                      
+                                                                                                              
+ IDENTITY                                                                                                     
+ Native identity not recorded                                                                                 
+                                                                                                              
+ Retained observations are bounded; they are not a complete transcript.                                       
+                                                                                                              
+ LATEST RECORD PROVENANCE                                                                                     
+ Turn: turn-fixture                                                                                           
+ Item: item-result                                                                                            
+ Evidence: Demo                                                                                               
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+                                                                                                              
+ [ Review request ] [ Task actions ] [ Expand ]                                                               
+ All shown · Esc back                                                                                         
+                                                                                                              
+[ Back ] [ Settings ] [ Design ] Tab controls · ↑↓ read · e expand                                            

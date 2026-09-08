@@ -1,0 +1,58 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]                                                                                                                  
+! Source issue · c Connections · Fixture: selected folder is unavailable.                                                                                                                       
+                                                                                                                                                                                                
+ SOURCE NEEDS ATTENTION                                                                                                                                                                         
+                                                                                                                                                                                                
+ A local source could not be read. Check its folder and connection; an empty tower does not mean there is no work.                                                                              
+                                                                                                                                                                                                
+ Fixture: selected folder is unavailable.                                                                                                                                                       
+                                                                                                                                                                                                
+ [Check sources]                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+[ Back ] [ Settings ] Tab controls · Enter open · ? help                                                                                                                                        

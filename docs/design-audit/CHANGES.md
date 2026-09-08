@@ -1,5 +1,14 @@
 # Implemented changes
 
+## Iteration 6 — work briefs and complete workstations
+
+The [current review](iteration-6/REVIEW.md) records the Now/Activity/Team/Details
+panel, recipient-bound inline instructions, retained-record search and reading
+anchors, complete desks and team laptops, semantic keyboard focus, source health,
+responsive forms and reversible appearance previews. [Validation](iteration-6/VALIDATION.md)
+and the [component ledger](iteration-6/COMPONENTS.md) distinguish local evidence
+from remaining authenticated, platform and user-testing gates.
+
 ## Iteration 5 — interactive tower and local personalities
 
 The [iteration 5 review](iteration-5/REVIEW.md) records the two authored character

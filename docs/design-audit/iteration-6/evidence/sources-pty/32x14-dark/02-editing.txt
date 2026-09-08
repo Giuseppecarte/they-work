@@ -1,0 +1,14 @@
+Connections / Sources
+Local observation · no account
+  [x] Claude Code
+> /not-a-real-source
+  Editing folder
+  [x] Codex
+· …14-dark-solyvpg7/home/.codex
+  Ready · reads after Connect
+  [x] Remember on this computer
+App data folder: .codex /
+.claude
+←→ move · Ctrl+U clear
+[ Apply ] [ Cancel ]
+Enter applies · Esc cancels

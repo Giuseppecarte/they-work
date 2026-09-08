@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+Software tower · 20 projects                                                    
+▸ F01/20 00-checkout                        7 people · ! 2 · 2 working  [Visit] 
+○ D┌ ? HELP / YOUR TOWER ───────────────────────────────────────────────────┐   
+░░░│Each floor is a project; each worker is a real task.                    │  ░
+░░░│Select a worker, read its work brief, then choose an available action.  │░░░
+░░▒│0 Tower                                                                 │░░░
+░░▒│b Attention                                                             │░▒░
+░░▒│Deliveries                                                              │▒▒░
+░░▒│/ Search                                                                │▄▄░
+░░▓│n New task                                                              │▒▒░
+░░░│c Connections                                                           │▒▒▒
+  F│Tab / Shift+Tab focus controls. Arrows select or scroll; Enter          │t] 
+░░░│activates.                                                              │  ░
+░░░│Esc returns. Mouse clicks use the same available actions.               │░░░
+░░░│Scene: PgUp/PgDn changes floors. 1–9 jumps to a floor; ! finds          │░░░
+░░░│attention.                                                              │░░░
+░░▒│Work brief: Now, Activity, Team and Details. e / F7 expands the panel.  │░░░
+░░▒│Activity: read retained events; Back to latest resumes following        │░▒░
+░░▒│updates.                                                                │▒▒░
+░░▒│Thinking reports an observed state, not a progress estimate.            │▄▄░
+░░▓└────────────────────────────────────────────────────────────────────────┘▒▒░
+░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▸Casey C.▒ ·Noa W.  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+[ Back ] ↑↓ scroll · Esc back                                                   

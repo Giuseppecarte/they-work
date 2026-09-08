@@ -30,6 +30,63 @@ pub struct Character {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Facing {
+    Front,
+    Left,
+    Right,
+}
+
+pub(super) fn face(sprite: Sprite, facing: Facing) -> Sprite {
+    if facing != Facing::Left {
+        return sprite;
+    }
+    let (w, h) = (sprite.width(), sprite.height());
+    let pixels = (0..h)
+        .flat_map(|y| (0..w).map(move |x| (x, y)))
+        .map(|(x, y)| sprite.pixel(w - x - 1, y))
+        .collect();
+    Sprite::from_pixels(w, h, pixels)
+}
+
+/// Foreground hands/held objects cross the tabletop while the seated body
+/// remains behind it. This is an occlusion layer, not a second actor or cue.
+pub(super) fn gesture_layer(
+    sprite: &Sprite,
+    pose: Pose,
+    facing: Facing,
+    overview: bool,
+) -> Option<Sprite> {
+    let rect = if overview {
+        match pose {
+            Pose::Read => Some((7, 20, 19, 29)),
+            Pose::FolderIn => Some((2, 19, 11, 28)),
+            Pose::Coffee | Pose::WaterPlant => Some((18, 19, 24, 28)),
+            Pose::Work => Some((6, 22, 24, 28)),
+            _ => None,
+        }
+    } else {
+        match pose {
+            Pose::Read => Some((12, 41, 35, 56)),
+            Pose::FolderIn => Some((0, 29, 17, 47)),
+            Pose::Coffee | Pose::WaterPlant => Some((33, 39, 48, 53)),
+            Pose::Work => Some((8, 42, 41, 53)),
+            _ => None,
+        }
+    }?;
+    let (w, h) = (sprite.width(), sprite.height());
+    let pixels = (0..h)
+        .flat_map(|y| (0..w).map(move |x| (x, y)))
+        .map(|(x, y)| {
+            let sx = if facing == Facing::Left { w - x - 1 } else { x };
+            (sx >= rect.0 && sx < rect.2 && y >= rect.1 && y < rect.3)
+                .then(|| sprite.pixel(x, y))
+                .flatten()
+        })
+        .collect();
+    Some(Sprite::from_pixels(w, h, pixels))
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Pose {
     Rest,
     Work,
@@ -165,6 +222,17 @@ impl Raster {
 }
 
 pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
+    character_facing(character, pose, phase, Facing::Right)
+}
+
+pub fn character_facing(character: Character, pose: Pose, phase: u8, facing: Facing) -> Sprite {
+    face(
+        character_pose(character, pose, phase, facing == Facing::Front),
+        facing,
+    )
+}
+
+fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> Sprite {
     let mut art = Raster::new(WIDTH, HEIGHT);
     let costume = character.costume as usize % COSTUMES.len();
     let skins = [
@@ -276,17 +344,17 @@ pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
     art.rect(16 - step / 2, 51 + bob, 5, 7, rgb(76, 83, 99));
     art.rect(28 + step / 2, 51 + bob, 5, 7, rgb(62, 67, 84));
     art.rect(12 - step / 2, 59, 10, 4, ink);
-    art.rect(27 + step / 2, 59, 11, 4, ink);
+    art.rect(27 + step / 2, 57, 11, 4, ink);
     art.rect(13 - step / 2, 59, 8, 2, rgb(234, 226, 205));
-    art.rect(28 + step / 2, 59, 8, 2, rgb(196, 201, 196));
+    art.rect(28 + step / 2, 57, 8, 2, rgb(196, 201, 196));
     // Rounded shoulders, a shaped hem, and edge shadows give clothing volume.
     art.poly(
         &[
             (15, 34 + bob),
-            (31, 34 + bob),
-            (36, 39 + bob),
-            (34, 52 + bob),
-            (29, 55 + bob),
+            (29, 35 + bob),
+            (34, 40 + bob),
+            (32, 52 + bob),
+            (26, 55 + bob),
             (15, 54 + bob),
             (11, 48 + bob),
             (11, 40 + bob),
@@ -296,9 +364,9 @@ pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
     art.poly(
         &[
             (16, 35 + bob),
-            (30, 35 + bob),
-            (34, 40 + bob),
-            (32, 52 + bob),
+            (28, 36 + bob),
+            (32, 41 + bob),
+            (30, 52 + bob),
             (16, 52 + bob),
             (13, 47 + bob),
             (13, 40 + bob),
@@ -446,53 +514,114 @@ pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
         }
         _ => {}
     }
-    // Ears, neck and the stepped oval of the face; one light source upper-left.
-    art.rect(20, 31 + bob, 9, 7, skin_shadow);
-    art.ellipse(10, 20 + bob, 6, 9, skin_shadow);
-    art.ellipse(33, 20 + bob, 6, 9, skin_shadow);
-    art.poly(
-        &[
-            (16, 11 + bob),
-            (29, 11 + bob),
-            (35, 16 + bob),
-            (35, 29 + bob),
-            (30, 35 + bob),
-            (18, 35 + bob),
-            (12, 29 + bob),
-            (12, 17 + bob),
-        ],
-        skin_shadow,
-    );
-    art.poly(
-        &[
-            (16, 12 + bob),
-            (28, 12 + bob),
-            (32, 16 + bob),
-            (32, 30 + bob),
-            (28, 33 + bob),
-            (18, 32 + bob),
-            (14, 27 + bob),
-            (14, 17 + bob),
-        ],
-        skin,
-    );
-    art.rect(16, 16 + bob, 3, 6, lighten(skin, 15));
-    art.rect(23, 25 + bob, 3, 3, skin_shadow);
-    art.rect(23, 25 + bob, 2, 1, lighten(skin, 17));
-    art.rect(22, 30 + bob, 6, 1, darken(skin_shadow, 27));
-    let eye_h = if phase == 7 && !matches!(pose, Pose::Error | Pose::Waiting) {
-        1
+    if front {
+        // A separate frontal construction: level shoulders, equal eye sizes,
+        // centred nose/collar and a balanced face. Costume crowns remain shared.
+        art.rect(15, 36 + bob, 18, 5, shirt);
+        art.rect(15, 36 + bob, 3, 5, shine);
+        art.rect(29, 36 + bob, 4, 5, shade);
+        art.poly(
+            &[(19, 35 + bob), (24, 39 + bob), (29, 35 + bob)],
+            skin_shadow,
+        );
+        art.rect(20, 31 + bob, 8, 5, skin_shadow);
+        art.ellipse(10, 20 + bob, 6, 8, skin_shadow);
+        art.ellipse(32, 20 + bob, 6, 8, skin_shadow);
+        art.poly(
+            &[
+                (16, 11 + bob),
+                (31, 11 + bob),
+                (35, 17 + bob),
+                (35, 27 + bob),
+                (30, 33 + bob),
+                (24, 35 + bob),
+                (17, 33 + bob),
+                (12, 27 + bob),
+                (12, 17 + bob),
+            ],
+            skin_shadow,
+        );
+        art.poly(
+            &[
+                (17, 12 + bob),
+                (29, 12 + bob),
+                (33, 17 + bob),
+                (33, 27 + bob),
+                (29, 31 + bob),
+                (24, 33 + bob),
+                (18, 31 + bob),
+                (14, 26 + bob),
+                (14, 17 + bob),
+            ],
+            skin,
+        );
+        art.rect(15, 17 + bob, 2, 7, lighten(skin, 15));
+        let eye_h = if phase == 7 && !matches!(pose, Pose::Waiting | Pose::Error) {
+            1
+        } else {
+            3
+        };
+        for x in [18, 28] {
+            art.rect(x, 22 + bob, 3, eye_h, ink);
+            if eye_h > 1 {
+                art.rect(x, 22 + bob, 1, 1, rgb(255, 249, 229));
+            }
+            art.rect(x - 1, 19 + bob, 5, 1, darken(hair, 10));
+        }
+        art.rect(23, 25 + bob, 3, 3, skin_shadow);
+        art.rect(22, 30 + bob, 6, 1, darken(skin_shadow, 27));
     } else {
-        3
-    };
-    art.rect(18, 22 + bob, 3, eye_h, ink);
-    art.rect(28, 22 + bob, 3, eye_h, ink);
-    if eye_h > 1 {
-        art.rect(18, 22 + bob, 1, 1, rgb(255, 249, 229));
-        art.rect(28, 22 + bob, 1, 1, rgb(255, 249, 229));
+        // Ears, neck and the stepped oval of the face; one light source upper-left.
+        art.rect(20, 31 + bob, 9, 7, skin_shadow);
+        art.ellipse(10, 20 + bob, 6, 9, skin_shadow);
+        art.ellipse(33, 20 + bob, 4, 8, skin_shadow);
+        art.poly(
+            &[
+                (16, 11 + bob),
+                (29, 11 + bob),
+                (35, 16 + bob),
+                (35, 22 + bob),
+                (39, 25 + bob),
+                (35, 27 + bob),
+                (34, 31 + bob),
+                (29, 35 + bob),
+                (19, 34 + bob),
+                (12, 29 + bob),
+                (12, 17 + bob),
+            ],
+            skin_shadow,
+        );
+        art.poly(
+            &[
+                (16, 12 + bob),
+                (28, 12 + bob),
+                (32, 16 + bob),
+                (32, 30 + bob),
+                (28, 33 + bob),
+                (18, 32 + bob),
+                (14, 27 + bob),
+                (14, 17 + bob),
+            ],
+            skin,
+        );
+        art.rect(16, 16 + bob, 3, 6, lighten(skin, 15));
+        art.rect(33, 25 + bob, 4, 2, skin_shadow);
+        art.rect(33, 25 + bob, 3, 1, lighten(skin, 17));
+        art.rect(28, 30 + bob, 6, 1, darken(skin_shadow, 27));
+        let eye_h = if phase == 7 && !matches!(pose, Pose::Error | Pose::Waiting) {
+            1
+        } else {
+            3
+        };
+        art.rect(23, 22 + bob, 3, eye_h, ink);
+        art.rect(32, 22 + bob, 2, eye_h, ink);
+        if eye_h > 1 {
+            art.rect(23, 22 + bob, 1, 1, rgb(255, 249, 229));
+            art.rect(32, 22 + bob, 1, 1, rgb(255, 249, 229));
+        }
+        art.rect(22, 19 + bob, 5, 1, darken(hair, 10));
+        art.rect(31, 19 + bob, 4, 1, darken(hair, 10));
     }
-    art.rect(17, 19 + bob, 5, 1, darken(hair, 10));
-    art.rect(27, 19 + bob, 5, 1, darken(hair, 10));
     // Every crown is drawn independently at this resolution.
     match costume {
         0 => {
@@ -616,13 +745,22 @@ pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
         }
         8 => {
             hair_cap(&mut art, hair, bob);
-            art.rect(14, 20 + bob, 10, 7, rgb(76, 90, 99));
-            art.rect(26, 20 + bob, 10, 7, rgb(76, 90, 99));
-            art.rect(16, 21 + bob, 6, 4, rgb(195, 218, 207));
-            art.rect(28, 21 + bob, 6, 4, rgb(195, 218, 207));
-            art.rect(18, 22 + bob, 2, 3, ink);
-            art.rect(29, 22 + bob, 2, 3, ink);
-            art.rect(23, 22 + bob, 4, 1, ink);
+            if front {
+                for x in [15, 26] {
+                    art.rect(x, 20 + bob, 10, 7, rgb(76, 90, 99));
+                    art.rect(x + 2, 21 + bob, 6, 4, rgb(195, 218, 207));
+                    art.rect(x + 4, 22 + bob, 2, 3, ink);
+                }
+                art.rect(24, 22 + bob, 3, 1, ink);
+            } else {
+                art.rect(19, 20 + bob, 10, 7, rgb(76, 90, 99));
+                art.rect(31, 20 + bob, 6, 7, rgb(76, 90, 99));
+                art.rect(21, 21 + bob, 6, 4, rgb(195, 218, 207));
+                art.rect(32, 21 + bob, 3, 4, rgb(195, 218, 207));
+                art.rect(23, 22 + bob, 2, 3, ink);
+                art.rect(33, 22 + bob, 1, 3, ink);
+                art.rect(28, 22 + bob, 4, 1, ink);
+            }
         }
         9 => {
             hair_cap(&mut art, hair, bob);
@@ -666,6 +804,17 @@ pub fn character(character: Character, pose: Pose, phase: u8) -> Sprite {
     }
     // Props are foreground decorations, not labels or provider events.
     match pose {
+        Pose::Waiting => {
+            art.poly(
+                &[(32, 37), (40, 29), (41, 16), (45, 16), (45, 32), (36, 43)],
+                shade,
+            );
+            art.rect(41, 7, 5, 11, skin_shadow);
+            art.rect(41, 7, 3, 9, skin);
+            art.rect(40, 12, 2, 6, skin);
+            art.rect(42, 5, 1, 4, skin);
+            art.rect(44, 6, 1, 4, skin);
+        }
         Pose::FolderOut => {
             art.rect(32, 27, 15, 12, rgb(172, 126, 69));
             art.rect(32, 25, 7, 3, rgb(228, 190, 118));

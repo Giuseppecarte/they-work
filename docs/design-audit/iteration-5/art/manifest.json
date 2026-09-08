@@ -1,0 +1,101 @@
+{
+  "kind": "Exact Rust artwork at integer sizes, with labels; not terminal screenshots",
+  "source_grids": [
+    [
+      48,
+      64
+    ],
+    [
+      24,
+      32
+    ]
+  ],
+  "files": [
+    {
+      "path": "cast-twelve-authored-grids.png",
+      "width": 864,
+      "height": 600,
+      "sha256": "f200c13f10d098cfac0840b7a4d3f602c3d0fe539d2d5699d470011df3605d50"
+    },
+    {
+      "path": "front-and-three-quarter-pilot.png",
+      "width": 864,
+      "height": 288,
+      "sha256": "680e0e90be92d53971d905b4c40f4e547e3c684482c96fb43d865734c612934f"
+    },
+    {
+      "path": "gestures-at-double-size.png",
+      "width": 840,
+      "height": 290,
+      "sha256": "b3e8cd05a489fd9f968ced387c1017e3d6ac602662fe45d927e1d1a827ea082b"
+    },
+    {
+      "path": "room-laboratory-detail.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "d7fecbbb94b3162f588a521e76af61e81ab3307dccf6d2d6abbda60c7249e929"
+    },
+    {
+      "path": "room-laboratory-overview.png",
+      "width": 800,
+      "height": 160,
+      "sha256": "9a9023bc9d1258d05e0f7d0c18b9298cd986317eb6f9488113f31e1f9e9867b2"
+    },
+    {
+      "path": "room-studio-detail.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "69123116790f4f3e2a34d56a28f47ea3bd64871461db14f9bf518d8d466b546a"
+    },
+    {
+      "path": "room-studio-overview.png",
+      "width": 800,
+      "height": 160,
+      "sha256": "1479d089b0260cf91a55809bfaebbfb872b8bbe3acc2c86754f1c1e777e966ca"
+    },
+    {
+      "path": "room-workshop-detail.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "4c31e18576b14c49d2d05db9ab40d25f1047bd2d8b6f922ba56073da30c4b599"
+    },
+    {
+      "path": "room-workshop-overview.png",
+      "width": 800,
+      "height": 160,
+      "sha256": "6366194b55fc674f22227164a4a461bf2050a1c1cedbad6d7739fafcf5dc03a3"
+    },
+    {
+      "path": "zone-desks.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "8812fb0b5ef777883fd7f7c776422d2925f4f8931af7c8cf0ac1d8ab8d2e93be"
+    },
+    {
+      "path": "zone-entrance.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "5e4b5eb353928b5f01904890816422dceab34e44d40c4b2d1cce65af21edff4a"
+    },
+    {
+      "path": "zone-meeting.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "e60c35e4f28c98db7581396423c257fb6a07c8e42f0c5aafb8dfa8f405bda4df"
+    },
+    {
+      "path": "zone-rest.png",
+      "width": 800,
+      "height": 480,
+      "sha256": "b724f691a8e25073da54d5e58976070e5f76a6b836c60f3cb1c0bd0af8f8656f"
+    },
+    {
+      "path": "outbound-action-return.gif",
+      "frames": 129,
+      "duration_ms": 16120,
+      "source_cadence_ms": 125,
+      "gif": "palette approximation; PNGs retain full RGB",
+      "sha256": "b8ee68b74071003dc3799b3314206a5e0ea5d8552f4f16cbe21ec2246645f183"
+    }
+  ]
+}

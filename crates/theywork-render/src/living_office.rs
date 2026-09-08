@@ -3,14 +3,17 @@
 //! composition can therefore be inspected without pretending a PTY is a GPU.
 
 pub mod art;
+pub mod overview;
+mod rooms;
 pub mod simulation;
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
 
 use theywork_core::{Activity, Millis, Office, Worker, WorkerId, WorkerStatus};
 
+use crate::design::{CharacterProfile, OfficeDesign, OfficePreset};
 use crate::{canvas::Canvas, sprite::Sprite};
-use art::{darken, lighten, rgb, Character, Pose, Raster};
+use art::{rgb, Character, Facing, Pose, Raster};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct PixelRect {
@@ -71,6 +74,10 @@ pub struct SceneOptions<'a> {
     pub cues: Option<&'a BTreeMap<String, SceneCue>>,
     /// False for an adjoining room: draw an ordinary doorway, not another shaft.
     pub show_elevator: bool,
+    pub overview: bool,
+    pub design: Option<&'a OfficeDesign>,
+    pub profiles: Option<&'a BTreeMap<String, CharacterProfile>>,
+    pub decorations: Option<&'a BTreeMap<String, simulation::Decoration>>,
 }
 impl Default for SceneOptions<'_> {
     fn default() -> Self {
@@ -85,6 +92,10 @@ impl Default for SceneOptions<'_> {
             wardrobe: None,
             cues: None,
             show_elevator: true,
+            overview: false,
+            design: None,
+            profiles: None,
+            decorations: None,
         }
     }
 }
@@ -106,11 +117,21 @@ pub struct SceneLayout {
     pub elevator: PixelRect,
     pub page: usize,
     pub page_count: usize,
+    /// Physical seat capacity, independent of how full the last page is.
+    pub capacity: usize,
     pub total_workers: usize,
     pub active_gags: usize,
     pub scale: usize,
     /// False means the host should draw its compact native presentation.
     pub graphics: bool,
+    pub anchors: Vec<SceneAnchor>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SceneAnchor {
+    pub destination: simulation::Destination,
+    pub x: usize,
+    pub y: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -118,6 +139,8 @@ struct FrameKey {
     character: Character,
     pose: Pose,
     phase: u8,
+    overview: bool,
+    facing: Facing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -129,6 +152,79 @@ struct RoomKey {
     seats: usize,
     meeting: bool,
     elevator: bool,
+    overview: bool,
+    preset: OfficePreset,
+    zones: [u8; 4],
+    floor: usize,
+    shaft: usize,
+    slot: usize,
+    title: usize,
+    plate: usize,
+    first_x: usize,
+}
+
+/// Detail art is authored at 48×64. Extra terminal space adds usable room,
+/// never larger heads or higher windows. Shared with the host's split decision.
+pub fn detail_scale(width: usize, height: usize) -> usize {
+    (height / 140).clamp(1, 2).min((width / 280).max(1))
+}
+
+impl RoomKey {
+    fn plate_y(self) -> usize {
+        self.floor + 3
+    }
+
+    fn rest_floor(self) -> usize {
+        // A lower aisle is available only when a complete actor can stand below
+        // the native labels. Compact floors keep their route beside the desks.
+        if !self.overview && self.height >= self.floor + self.plate + 64 + 16 {
+            (self.floor + self.plate + 64 + 12).min(self.height - 7)
+        } else {
+            self.floor
+        }
+    }
+}
+
+/// Piecewise route through a side corridor. Vertical travel is outside every
+/// nameplate; crossing the lower aisle keeps the entire actor below the labels.
+fn route_position(
+    origin: (usize, usize),
+    target: (usize, usize),
+    corridor_x: usize,
+    progress: u16,
+) -> (usize, usize) {
+    let points = if origin.1 == target.1 {
+        [origin, origin, target, target]
+    } else {
+        [
+            origin,
+            (corridor_x, origin.1),
+            (corridor_x, target.1),
+            target,
+        ]
+    };
+    let distance = |a: (usize, usize), b: (usize, usize)| a.0.abs_diff(b.0) + a.1.abs_diff(b.1);
+    let lengths = [
+        distance(points[0], points[1]),
+        distance(points[1], points[2]),
+        distance(points[2], points[3]),
+    ];
+    let total: usize = lengths.iter().sum();
+    let mut travel = total * usize::from(progress.min(1000)) / 1000;
+    for i in 0..3 {
+        if travel <= lengths[i] && lengths[i] > 0 {
+            let mix = |a: usize, b: usize| {
+                ((a as i64 * (lengths[i] - travel) as i64 + b as i64 * travel as i64)
+                    / lengths[i] as i64) as usize
+            };
+            return (
+                mix(points[i].0, points[i + 1].0),
+                mix(points[i].1, points[i + 1].1),
+            );
+        }
+        travel = travel.saturating_sub(lengths[i]);
+    }
+    target
 }
 
 /// Bounded reusable art. There is no animation history or queued output frame.
@@ -174,7 +270,7 @@ impl Studio {
             .take()
             .unwrap_or_else(|| Canvas::with_color_depth(0, 0, canvas.color_depth()));
         surface.set_color_depth(canvas.color_depth());
-        surface.set_image_cell_size(Some((1, 1)));
+        surface.set_image_cell_size(Some(canvas.pixels_per_cell()));
         surface.resize(width, height);
         let mut layout = self.paint(&mut surface, office, options);
         if layout.graphics {
@@ -190,15 +286,32 @@ impl Studio {
             translate(&mut seat.bounds);
             translate(&mut seat.nameplate);
         }
+        for anchor in &mut layout.anchors {
+            anchor.x += region.x;
+            anchor.y += region.y;
+        }
         self.region_canvas = Some(surface);
         layout
     }
 
     pub fn character_frame(&mut self, character: Character, pose: Pose, phase: u8) -> Sprite {
+        self.frame(character, pose, phase, false, Facing::Right)
+    }
+
+    fn frame(
+        &mut self,
+        character: Character,
+        pose: Pose,
+        phase: u8,
+        overview: bool,
+        facing: Facing,
+    ) -> Sprite {
         let key = FrameKey {
             character,
             pose,
             phase: phase % 8,
+            overview,
+            facing,
         };
         if let Some(sprite) = self.frames.get(&key) {
             return sprite.clone();
@@ -208,7 +321,11 @@ impl Studio {
                 self.frames.remove(&old);
             }
         }
-        let sprite = art::character(character, pose, key.phase);
+        let sprite = if overview {
+            overview::character_facing(character, pose, key.phase, facing)
+        } else {
+            art::character_facing(character, pose, key.phase, facing)
+        };
         self.frames.insert(key, sprite.clone());
         self.insertion_order.push_back(key);
         sprite
@@ -223,20 +340,38 @@ impl Studio {
         office: &Office,
         options: &SceneOptions<'_>,
     ) -> SceneLayout {
-        if !canvas.has_image_density() || canvas.width() < 280 || canvas.height() < 156 {
+        if !canvas.has_image_density()
+            || canvas.width() < if options.overview { 160 } else { 280 }
+            || canvas.height() < if options.overview { 96 } else { 156 }
+        {
             return SceneLayout {
                 total_workers: office.workers.len(),
                 ..SceneLayout::default()
             };
         }
-        // Height sets the character's readable size. Narrow windows paginate
-        // seats instead of reducing the entire cast to tiny figures.
-        let scale = (canvas.height() / 150)
-            .clamp(1, 4)
-            .min((canvas.width() / 280).max(1));
+        // Overview and inspection have separate authored grids and geometry.
+        let scale = if options.overview {
+            (canvas.height() / 64)
+                .clamp(1, 2)
+                .min((canvas.width() / 160).max(1))
+        } else {
+            detail_scale(canvas.width(), canvas.height())
+        };
         let width = canvas.width() / scale;
         let height = canvas.height() / scale;
-        let capacity = ((width.saturating_sub(108)) / 92).clamp(1, 8);
+        let (cast_w, cast_h, shaft, slot) = if options.overview {
+            (24, 32, 36, 40)
+        } else {
+            (48, 64, 52, 76)
+        };
+        let native_height = canvas.pixels_per_cell().1.max(12);
+        let title = native_height.div_ceil(scale);
+        let plate = (native_height * if options.overview { 1 } else { 2 }).div_ceil(scale);
+        let floor = height
+            .saturating_sub(plate + 4)
+            .min(if options.overview { 76 } else { 112 });
+        let rest = if width >= 430 { 48 } else { 0 };
+        let capacity = ((width.saturating_sub(shaft + 16 + rest)) / slot).clamp(1, 8);
         let all = ordered_workers(office, options.meeting);
         let total = all.len();
         let meeting = options.meeting.is_some();
@@ -252,6 +387,9 @@ impl Studio {
                 (index - usize::from(pinned)) / (capacity - usize::from(pinned))
             });
         let (page, page_count, visible) = page_workers(&all, capacity, requested, has_parent);
+        let first_x =
+            shaft + 8 + (width.saturating_sub(shaft + 16 + rest + visible.len() * slot)) / 2;
+        let design = options.design.cloned().unwrap_or_default();
         let key = RoomKey {
             width,
             height,
@@ -260,6 +398,15 @@ impl Studio {
             seats: visible.len(),
             meeting,
             elevator: options.show_elevator,
+            overview: options.overview,
+            preset: design.preset,
+            zones: [design.entrance, design.desks, design.meeting, design.rest],
+            floor,
+            shaft,
+            slot,
+            title,
+            plate,
+            first_x,
         };
         let background = if let Some((_, background)) =
             self.rooms.iter().find(|(previous, _)| *previous == key)
@@ -275,50 +422,92 @@ impl Studio {
         };
         canvas.fill(rgb(26, 32, 43));
         canvas.blit_scaled(&background, 0, 0, width * scale, height * scale);
-        let floor = height as i32 - 42;
-        let seat_width = 92;
-        let region_width = width as i32 - 104;
-        let first_x = 88 + (region_width - visible.len() as i32 * seat_width).max(0) / 2;
-        let decorations = simulation::decorations(&all, options.now, options.motion);
+        let empty_profiles = BTreeMap::new();
+        let generated = if options.decorations.is_none() {
+            simulation::plan(
+                &all,
+                options.now,
+                options.motion,
+                options.profiles.unwrap_or(&empty_profiles),
+            )
+        } else {
+            BTreeMap::new()
+        };
+        let decorations = options.decorations.unwrap_or(&generated);
+        let destinations = [
+            simulation::Destination::Coffee,
+            simulation::Destination::Reading,
+            simulation::Destination::Plant,
+            simulation::Destination::PaperTray,
+            simulation::Destination::StretchSpot,
+        ];
+        let anchors = destinations
+            .into_iter()
+            .map(|destination| SceneAnchor {
+                destination,
+                x: match destination {
+                    simulation::Destination::Coffee => {
+                        width.saturating_sub(if options.overview { 28 } else { 44 } + cast_w / 2)
+                    }
+                    simulation::Destination::Plant => width
+                        .saturating_sub(if key.zones[3] % 3 == 2 { 34 } else { 11 } + cast_w / 2),
+                    simulation::Destination::Reading | simulation::Destination::PaperTray => {
+                        shaft + if options.overview { 27 } else { 38 } + cast_w / 2
+                    }
+                    simulation::Destination::StretchSpot => width / 2,
+                },
+                y: key.rest_floor(),
+            })
+            .collect::<Vec<_>>();
         let mut layout = SceneLayout {
             sign: PixelRect {
-                x: 96,
-                y: 18,
-                width: width.saturating_sub(125),
-                height: 24,
+                x: shaft + 7,
+                y: 4,
+                width: width.saturating_sub(shaft + 14),
+                height: title,
             }
             .scaled(scale),
             elevator: PixelRect {
-                x: 12,
-                y: (floor - 102).max(0) as usize,
-                width: 58,
-                height: 103,
+                x: 6,
+                y: floor.saturating_sub(if options.overview { 37 } else { 65 }),
+                width: shaft - 12,
+                height: if options.overview { 38 } else { 66 },
             }
             .scaled(scale),
             page,
             page_count,
+            capacity,
             total_workers: total,
             scale,
             graphics: true,
+            anchors: anchors
+                .iter()
+                .map(|a| SceneAnchor {
+                    destination: a.destination,
+                    x: a.x * scale,
+                    y: a.y * scale,
+                })
+                .collect(),
             ..SceneLayout::default()
         };
         // Back chairs go behind bodies. Desks, keyboards and monitors go in front.
         let mut foreground = Raster::new(width, height);
         let mut aisle_actors = Vec::new();
+        let mut tabletop_gestures = Vec::new();
         for (slot, worker) in visible.iter().enumerate() {
-            let seat_x = first_x + slot as i32 * seat_width;
+            let seat_x = first_x + slot * key.slot;
             let selected = options.selected_worker == Some(&worker.id);
             let preset = options
                 .wardrobe
                 .and_then(|map| map.get(&worker.id.0))
                 .copied();
             let character = art::identity(&worker.id.0, preset);
-            let decoration = decorations.iter().find(|(id, _)| id == &worker.id);
+            let decoration = decorations.get(&worker.id.0);
             let needs_attention = matches!(
                 worker.status_at(options.now),
                 WorkerStatus::Blocked | WorkerStatus::Failed
             );
-            let decoration = decoration.filter(|_| !needs_attention && !meeting);
+            let decoration = decoration.filter(|_| !needs_attention && options.motion);
             let cue = options
                 .cues
                 .and_then(|cues| cues.get(&worker.id.0))
@@ -327,11 +516,11 @@ impl Studio {
                     observed_pose(worker, options.now) != Pose::Waiting
                         && worker.status_at(options.now) != WorkerStatus::Failed
                 });
-            let (pose, offset, aisle) = if let Some(cue) = cue {
+            let (pose, _offset, aisle) = if let Some(cue) = cue {
                 (cue.pose(), 0, false)
             } else {
                 match decoration {
-                    Some((_, decoration)) => {
+                    Some(decoration) => {
                         layout.active_gags += 1;
                         (decoration.pose, decoration.x_offset, true)
                     }
@@ -343,49 +532,97 @@ impl Studio {
             } else {
                 0
             };
-            let sprite = self.character_frame(character, pose, phase);
-            let px = (seat_x + 18 + offset).max(0) as usize;
-            let py = (floor - 63 + if aisle { 19 } else { 0 }).max(0) as usize;
+            let origin_x = seat_x + (key.slot - cast_w) / 2;
+            let origin_y = floor.saturating_sub(cast_h - 1);
+            let (px, py, facing) = if aisle {
+                let d = decoration.expect("aisle requires a decoration");
+                let anchor = anchors
+                    .iter()
+                    .find(|anchor| anchor.destination == d.destination)
+                    .expect("known destination");
+                let target_x = anchor
+                    .x
+                    .saturating_sub(cast_w / 2)
+                    .clamp(shaft, width.saturating_sub(cast_w));
+                let target_y = anchor.y.saturating_sub(cast_h - 1);
+                // The shaft-side corridor is wider than the 48-pixel actor.
+                // Native nameplates start to its right and remain unobstructed.
+                let (x, y) =
+                    route_position((origin_x, origin_y), (target_x, target_y), 2, d.progress);
+                let (next_x, _) = route_position(
+                    (origin_x, origin_y),
+                    (target_x, target_y),
+                    2,
+                    d.progress.saturating_add(20).min(1000),
+                );
+                let right = if d.walking {
+                    (if next_x == x {
+                        target_x >= origin_x
+                    } else {
+                        next_x > x
+                    }) ^ d.returning
+                } else {
+                    matches!(
+                        d.destination,
+                        simulation::Destination::Coffee
+                            | simulation::Destination::Plant
+                            | simulation::Destination::StretchSpot
+                    )
+                };
+                (x, y, if right { Facing::Right } else { Facing::Left })
+            } else {
+                (
+                    origin_x,
+                    origin_y,
+                    if matches!(pose, Pose::Rest | Pose::Waiting | Pose::Error) {
+                        Facing::Front
+                    } else if meeting && slot > visible.len() / 2 {
+                        Facing::Left
+                    } else {
+                        Facing::Right
+                    },
+                )
+            };
+            let sprite = self.frame(character, pose, phase, options.overview, facing);
             // The sprite owns its cast shadow. It is deliberately not a motion/status color.
-            let mut shadow = Raster::new(48, 8);
-            shadow.ellipse(6, 0, 39, 6, rgb(42, 48, 49));
+            let mut shadow = Raster::new(cast_w, 4);
+            shadow.ellipse(2, 0, cast_w as i32 - 4, 3, rgb(42, 48, 49));
             let shadow = shadow.sprite();
             canvas.blit_scaled(
                 &shadow,
                 px * scale,
-                (py + 60) * scale,
-                48 * scale,
-                8 * scale,
+                (py + cast_h - 3) * scale,
+                cast_w * scale,
+                4 * scale,
             );
             if !aisle {
                 canvas.blit_scaled(
                     &sprite,
                     px * scale,
                     py * scale,
-                    art::WIDTH * scale,
-                    art::HEIGHT * scale,
+                    cast_w * scale,
+                    cast_h * scale,
                 );
+                if let Some(gesture) = art::gesture_layer(&sprite, pose, facing, options.overview) {
+                    tabletop_gestures.push((gesture, px, py));
+                }
             } else {
                 aisle_actors.push((sprite, px, py));
             }
-            if meeting {
-                meeting_front(&mut foreground, seat_x, floor, selected);
-            } else {
-                desk_front(&mut foreground, seat_x, floor, selected, character.costume);
-            }
+            rooms::furniture(&mut foreground, key, seat_x as i32, selected);
             let plate = PixelRect {
-                x: seat_x.max(0) as usize,
-                y: (floor + 25).max(0) as usize,
-                width: 86,
-                height: 15,
+                x: seat_x,
+                y: key.plate_y(),
+                width: key.slot - 4,
+                height: key.plate,
             };
             layout.seats.push(SeatLayout {
                 worker_id: worker.id.clone(),
                 bounds: PixelRect {
                     x: px,
                     y: py,
-                    width: 48,
-                    height: 64,
+                    width: cast_w,
+                    height: cast_h,
                 }
                 .scaled(scale),
                 nameplate: plate.scaled(scale),
@@ -395,8 +632,23 @@ impl Studio {
         }
         let foreground = foreground.sprite();
         canvas.blit_scaled(&foreground, 0, 0, width * scale, height * scale);
+        for (sprite, x, y) in tabletop_gestures {
+            canvas.blit_scaled(
+                &sprite,
+                x * scale,
+                y * scale,
+                cast_w * scale,
+                cast_h * scale,
+            );
+        }
         for (sprite, x, y) in aisle_actors {
-            canvas.blit_scaled(&sprite, x * scale, y * scale, 48 * scale, 64 * scale);
+            canvas.blit_scaled(
+                &sprite,
+                x * scale,
+                y * scale,
+                cast_w * scale,
+                cast_h * scale,
+            );
         }
         layout
     }
@@ -471,249 +723,7 @@ fn observed_pose(worker: &Worker, now: Millis) -> Pose {
 }
 
 fn room_art(key: RoomKey) -> Sprite {
-    let mut art = Raster::new(key.width, key.height);
-    let w = key.width as i32;
-    let h = key.height as i32;
-    let floor = h - 42;
-    let wall = if key.light {
-        [
-            rgb(222, 208, 185),
-            rgb(199, 217, 215),
-            rgb(216, 222, 189),
-            rgb(226, 205, 212),
-        ][key.palette]
-    } else {
-        [
-            rgb(81, 83, 91),
-            rgb(53, 78, 99),
-            rgb(65, 87, 77),
-            rgb(87, 69, 91),
-        ][key.palette]
-    };
-    let trim = if key.light {
-        rgb(132, 126, 118)
-    } else {
-        rgb(37, 42, 52)
-    };
-    art.rect(0, 0, w, h, rgb(40, 45, 55));
-    art.rect(79, 12, w - 83, floor - 10, wall);
-    art.rect(80, 14, w - 86, 3, lighten(wall, 24));
-    art.rect(79, floor, w - 80, 42, rgb(104, 86, 73));
-    for y in (floor..h).step_by(13) {
-        art.rect(80, y, w - 80, 1, rgb(137, 115, 91));
-        let stagger = if ((y - floor) / 13) % 2 == 0 { 0 } else { 43 };
-        for x in (80 + stagger..w).step_by(86) {
-            art.rect(x, y, 1, 13, rgb(81, 72, 67));
-            art.rect(x + 10, y + 5, 22, 1, rgb(115, 94, 77));
-            art.rect(x + 41, y + 8, 13, 1, rgb(94, 79, 70));
-        }
-    }
-    // Wall panels, skirting, and a continuous structural slab tie floors together.
-    for x in (84..w).step_by(112) {
-        art.rect(x, 48, 1, (floor - 48).max(0), darken(wall, 7));
-    }
-    art.rect(79, floor - 6, w - 79, 6, trim);
-    art.rect(80, floor - 6, w - 80, 1, lighten(trim, 21));
-    art.rect(79, floor, w - 79, 3, rgb(60, 60, 59));
-    art.rect(0, 0, w, 10, rgb(30, 35, 44));
-    art.rect(0, 10, w, 3, rgb(114, 105, 99));
-    art.rect(0, h - 3, w, 3, rgb(27, 33, 41));
-    // Fixed light direction, restrained windows, deep reveals and city silhouettes.
-    let window_y = 53;
-    let window_h = (floor - 124).clamp(38, 74);
-    let count = ((w - 110) / 150).max(1);
-    for n in 0..count {
-        let x = 100 + n * 150;
-        window(&mut art, x, window_y, 106, window_h, key.light);
-        art.poly(
-            &[
-                (x + 2, window_y + window_h + 3),
-                (x + 102, window_y + window_h + 3),
-                (x + 143, floor - 7),
-                (x + 53, floor - 7),
-            ],
-            lighten(wall, 6),
-        );
-    }
-    // Physically mounted project fascia, native title fitted by the host.
-    art.rect(92, 20, w - 118, 26, darken(wall, 29));
-    art.rect(94, 18, w - 118, 26, trim);
-    art.rect(95, 19, w - 120, 1, lighten(trim, 30));
-    for x in [98, w - 30] {
-        art.rect(x, 22, 2, 2, rgb(160, 157, 142));
-    }
-    // A stable shaft is architectural, not a claim that a conversation moved.
-    // Adjacent project rooms share the tower shaft and have ordinary doors.
-    art.rect(0, 12, 78, h - 15, rgb(43, 49, 62));
-    art.rect(3, 12, 4, h - 15, rgb(74, 81, 94));
-    art.rect(73, 12, 5, h - 15, rgb(24, 31, 43));
-    let door_y = (floor - 92).max(50);
-    art.rect(12, door_y - 10, 56, floor - door_y + 11, rgb(25, 32, 43));
-    if key.elevator {
-        art.rect(14, door_y, 52, floor - door_y, rgb(103, 117, 128));
-        art.rect(15, door_y + 1, 23, floor - door_y - 1, rgb(133, 145, 151));
-        art.rect(41, door_y + 1, 23, floor - door_y - 1, rgb(113, 128, 140));
-        art.rect(18, door_y + 3, 3, floor - door_y - 5, rgb(155, 165, 166));
-        art.rect(38, door_y, 3, floor - door_y, rgb(52, 65, 80));
-        art.rect(24, door_y - 8, 29, 6, rgb(26, 35, 46));
-        art.rect(29, door_y - 6, 5, 2, rgb(144, 206, 183));
-        art.rect(61, door_y + 25, 5, 13, rgb(46, 59, 72));
-        art.rect(62, door_y + 28, 2, 2, rgb(220, 197, 144));
-    } else {
-        art.rect(14, door_y, 52, floor - door_y, rgb(114, 82, 59));
-        art.rect(16, door_y + 2, 48, floor - door_y - 3, rgb(151, 113, 79));
-        art.rect(19, door_y + 6, 40, 37, rgb(95, 120, 126));
-        art.rect(21, door_y + 8, 36, 32, rgb(145, 166, 164));
-        art.rect(23, door_y + 9, 4, 29, rgb(177, 191, 176));
-        art.rect(
-            19,
-            door_y + 51,
-            40,
-            (floor - door_y - 59).max(3),
-            rgb(129, 91, 62),
-        );
-        art.rect(
-            20,
-            door_y + 52,
-            2,
-            (floor - door_y - 61).max(1),
-            rgb(166, 126, 86),
-        );
-        art.rect(56, door_y + 45, 5, 3, rgb(221, 185, 111));
-    }
-    art.rect(11, floor, 58, 3, rgb(151, 151, 143));
-    // Lobby notice board and fire-safe visual gaps around the doorway.
-    art.rect(17, 22, 45, 23, rgb(34, 39, 51));
-    art.rect(19, 24, 41, 19, rgb(112, 128, 127));
-    art.rect(23, 27, 17, 2, rgb(206, 216, 196));
-    art.rect(23, 32, 30, 2, rgb(181, 193, 178));
-    art.rect(23, 37, 22, 2, rgb(157, 177, 167));
-    let first_x = 88 + ((w - 104 - key.seats as i32 * 92).max(0)) / 2;
-    for slot in 0..key.seats {
-        let x = first_x + slot as i32 * 92;
-        art.ellipse(x + 11, floor - 5, 68, 10, rgb(58, 57, 54));
-        art.rect(x + 23, floor - 37, 35, 27, rgb(31, 42, 56));
-        art.rect(x + 25, floor - 36, 29, 21, rgb(72, 98, 113));
-        art.rect(x + 27, floor - 34, 25, 3, rgb(96, 124, 135));
-        art.rect(x + 38, floor - 12, 5, 10, rgb(60, 69, 76));
-        art.rect(x + 25, floor - 3, 29, 3, rgb(38, 45, 54));
-        art.rect(x + 23, floor, 5, 3, rgb(29, 34, 43));
-        art.rect(x + 52, floor, 5, 3, rgb(29, 34, 43));
-    }
-    if key.seats == 0 {
-        plant(&mut art, (w + 70) / 2, floor, 2);
-    }
-    plant(&mut art, w - 23, floor, 1);
-    art.sprite()
-}
-
-fn window(art: &mut Raster, x: i32, y: i32, w: i32, h: i32, light: bool) {
-    art.rect(x - 3, y - 3, w + 6, h + 7, rgb(40, 48, 58));
-    art.rect(x - 2, y - 2, w + 3, h + 3, rgb(107, 126, 132));
-    art.rect(
-        x,
-        y,
-        w,
-        h,
-        if light {
-            rgb(151, 193, 204)
-        } else {
-            rgb(93, 131, 156)
-        },
-    );
-    art.rect(
-        x,
-        y,
-        w,
-        h / 2,
-        if light {
-            rgb(177, 211, 215)
-        } else {
-            rgb(118, 156, 174)
-        },
-    );
-    for n in 0..8 {
-        let bw = 9 + n % 3 * 3;
-        let bh = 7 + (n * 7) % 19;
-        let bx = x + n * 14;
-        art.rect(bx, y + h - bh, bw, bh, rgb(80, 111, 130));
-        art.rect(bx + 2, y + h - bh + 3, 2, 2, rgb(160, 179, 167));
-        art.rect(bx + 6, y + h - bh + 7, 2, 2, rgb(159, 176, 164));
-    }
-    art.poly(
-        &[
-            (x + 6, y + 1),
-            (x + 20, y + 1),
-            (x + 8, y + h - 1),
-            (x + 1, y + h - 1),
-        ],
-        rgb(161, 193, 197),
-    );
-    art.rect(x + w / 2, y, 3, h, rgb(66, 83, 97));
-    art.rect(x, y + h / 2, w, 2, rgb(73, 90, 100));
-    art.rect(x - 4, y + h + 2, w + 8, 4, rgb(149, 154, 144));
-    art.rect(x - 4, y + h + 6, w + 8, 2, rgb(50, 57, 65));
-}
-
-fn desk_front(art: &mut Raster, x: i32, floor: i32, selected: bool, costume: u8) {
-    let y = floor - 25;
-    art.rect(x + 3, y + 5, 5, 23, rgb(52, 56, 62));
-    art.rect(x + 72, y + 5, 5, 23, rgb(43, 48, 56));
-    art.rect(x + 4, y + 6, 2, 19, rgb(119, 126, 128));
-    art.rect(x + 72, y + 6, 2, 19, rgb(93, 106, 114));
-    art.rect(x, y, 82, 6, rgb(102, 71, 51));
-    art.rect(x, y, 82, 2, rgb(217, 174, 118));
-    art.rect(x + 1, y + 2, 80, 2, rgb(169, 120, 79));
-    art.rect(x + 4, y + 6, 25, 15, rgb(124, 88, 66));
-    art.rect(x + 6, y + 8, 21, 5, rgb(146, 102, 72));
-    art.rect(x + 15, y + 10, 5, 1, rgb(211, 177, 124));
-    art.rect(x + 15, y + 17, 5, 1, rgb(199, 166, 120));
-    art.rect(x + 60, y - 4, 20, 3, rgb(36, 43, 55));
-    art.rect(x + 67, y - 14, 4, 11, rgb(55, 66, 79));
-    art.rect(x + 59, y - 29, 23, 18, rgb(30, 39, 54));
-    art.rect(x + 61, y - 27, 19, 13, rgb(54, 90, 106));
-    art.rect(x + 62, y - 26, 17, 2, rgb(91, 155, 162));
-    for (offset, length) in [(0, 10), (3, 15), (6, 8)] {
-        art.rect(x + 63, y - 22 + offset, length, 1, rgb(143, 185, 171));
-    }
-    art.rect(x + 24, y - 3, 25, 3, rgb(35, 45, 56));
-    for key in 0..7 {
-        art.rect(x + 25 + key * 3, y - 3, 2, 1, rgb(135, 152, 154));
-    }
-    art.rect(x + 6, y - 7, 6, 7, rgb(223, 213, 180));
-    art.rect(x + 6, y - 7, 6, 2, rgb(82, 58, 43));
-    if costume.is_multiple_of(3) {
-        plant(art, x + 17, y, 0);
-    } else if costume % 3 == 1 {
-        art.rect(x + 13, y - 4, 8, 3, rgb(139, 94, 115));
-        art.rect(x + 14, y - 7, 7, 3, rgb(197, 178, 128));
-    } else {
-        art.rect(x + 15, y - 7, 6, 6, rgb(213, 160, 81));
-        art.rect(x + 16, y - 6, 4, 2, rgb(239, 215, 152));
-    }
-    // Native status lives on the nameplate; selection has a separate cool border.
-    art.rect(x, floor + 24, 85, 16, rgb(30, 38, 49));
-    if selected {
-        art.rect(x, floor + 24, 85, 1, rgb(160, 207, 200));
-        art.rect(x, floor + 24, 2, 16, rgb(160, 207, 200));
-    }
-}
-
-fn meeting_front(art: &mut Raster, x: i32, floor: i32, selected: bool) {
-    let y = floor - 26;
-    art.rect(x - 2, y + 4, 96, 9, rgb(103, 79, 65));
-    art.rect(x - 2, y, 96, 5, rgb(186, 145, 98));
-    art.rect(x - 2, y, 96, 1, rgb(234, 199, 137));
-    art.rect(x + 11, y + 13, 5, 16, rgb(64, 62, 60));
-    art.rect(x + 29, y - 2, 26, 2, rgb(218, 206, 174));
-    art.rect(x + 31, y - 4, 23, 2, rgb(246, 232, 191));
-    art.rect(x + 67, y - 6, 5, 6, rgb(119, 163, 163));
-    art.rect(x + 67, y - 6, 5, 1, rgb(223, 228, 205));
-    art.rect(x, floor + 24, 85, 16, rgb(30, 38, 49));
-    if selected {
-        art.rect(x, floor + 24, 85, 1, rgb(160, 207, 200));
-        art.rect(x, floor + 24, 2, 16, rgb(160, 207, 200));
-    }
+    rooms::background(key)
 }
 
 fn plant(art: &mut Raster, x: i32, floor: i32, size: i32) {
@@ -782,6 +792,45 @@ mod tests {
         office
     }
     #[test]
+    fn frontal_and_three_quarter_poses_are_authored_at_both_grids() {
+        for costume in 0..12 {
+            let person = Character {
+                costume,
+                skin: 0,
+                hair: 0,
+            };
+            for small in [false, true] {
+                let make = |facing| {
+                    if small {
+                        overview::character_facing(person, Pose::Waiting, 0, facing)
+                    } else {
+                        art::character_facing(person, Pose::Waiting, 0, facing)
+                    }
+                };
+                let front = make(Facing::Front);
+                let right = make(Facing::Right);
+                let left = make(Facing::Left);
+                let pixels = |s: &Sprite| {
+                    (0..s.height())
+                        .flat_map(|y| (0..s.width()).map(move |x| s.pixel(x, y)))
+                        .collect::<Vec<_>>()
+                };
+                assert_ne!(
+                    pixels(&front),
+                    pixels(&right),
+                    "frontal pose differs for costume {costume}, overview {small}"
+                );
+                assert_ne!(pixels(&front), pixels(&left));
+                let (hand_x, hand_y) = if small { (20, 5) } else { (41, 7) };
+                assert!(
+                    front.pixel(hand_x, hand_y).is_some(),
+                    "raised human-help hand remains visible"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn image_geometry_and_fallback_are_explicit() {
         let mut studio = Studio::new();
         let mut canvas = Canvas::new(0, 0);
@@ -796,14 +845,76 @@ mod tests {
         let layout = studio.paint(&mut canvas, &office(3), &SceneOptions::default());
         assert!(layout.graphics);
         assert_eq!((canvas.width(), canvas.height()), (960, 512));
-        assert_eq!(layout.scale, 3);
-        assert_eq!(layout.seats.len(), 2);
-        assert_eq!(layout.page_count, 2);
+        assert_eq!(layout.scale, 2);
+        assert_eq!(layout.seats.len(), 3);
+        assert_eq!(layout.page_count, 1);
         for seat in layout.seats {
             assert!(seat.bounds.x + seat.bounds.width <= canvas.width());
             assert!(seat.bounds.y + seat.bounds.height <= canvas.height());
         }
     }
+    #[test]
+    fn detail_geometry_preserves_scale_and_keeps_labels_next_to_people_when_resized() {
+        for (width, height, expected) in
+            [(528, 592, 1), (560, 280, 2), (960, 512, 2), (1536, 848, 2)]
+        {
+            assert_eq!(detail_scale(width, height), expected);
+            let mut canvas = Canvas::new(0, 0);
+            canvas.set_image_cell_size(Some((8, 16)));
+            canvas.resize(width, height);
+            let layout = Studio::new().paint(
+                &mut canvas,
+                &office(3),
+                &SceneOptions {
+                    motion: false,
+                    ..SceneOptions::default()
+                },
+            );
+            assert_eq!(layout.scale, expected);
+            for seat in layout.seats {
+                assert_eq!(seat.bounds.height, 64 * expected);
+                assert_eq!(
+                    seat.nameplate.y - (seat.bounds.y + seat.bounds.height),
+                    2 * expected
+                );
+                assert!(seat.nameplate.y + seat.nameplate.height <= height);
+            }
+        }
+    }
+
+    #[test]
+    fn lower_aisle_routes_never_cross_native_seat_labels() {
+        let office = office(3);
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(960, 832);
+        let mut studio = Studio::new();
+        for now in (8_000..24_000).step_by(125) {
+            let layout = studio.paint(
+                &mut canvas,
+                &office,
+                &SceneOptions {
+                    now,
+                    ..SceneOptions::default()
+                },
+            );
+            for actor in &layout.seats {
+                for label in &layout.seats {
+                    let a = actor.bounds;
+                    let b = label.nameplate;
+                    assert!(
+                        a.x + a.width <= b.x
+                            || b.x + b.width <= a.x
+                            || a.y + a.height <= b.y
+                            || b.y + b.height <= a.y,
+                        "actor {} crosses a native label at {now}",
+                        actor.worker_id.0
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn meeting_keeps_parent_and_paginates_every_member() {
         let office = office(20);
@@ -972,7 +1083,7 @@ mod tests {
         canvas.set_image_cell_size(Some((8, 16)));
         // 80×24 terminal after native navigation and footer rows.
         canvas.resize_for_cells(80, 19);
-        let office = office(3);
+        let office = office(4);
         let group = MeetingGroup {
             parent: office.workers[0].id.clone(),
             members: office
@@ -988,7 +1099,7 @@ mod tests {
             &SceneOptions {
                 motion: false,
                 meeting: Some(&group),
-                selected_worker: Some(&office.workers[2].id),
+                selected_worker: Some(&office.workers[3].id),
                 ..SceneOptions::default()
             },
         );
@@ -1000,7 +1111,7 @@ mod tests {
                 .iter()
                 .map(|seat| &seat.worker_id)
                 .collect::<Vec<_>>(),
-            vec![&office.workers[0].id, &office.workers[2].id]
+            vec![&office.workers[0].id, &office.workers[3].id]
         );
         assert!(layout.seats.iter().all(|seat| seat.bounds.height == 128));
     }
@@ -1038,5 +1149,177 @@ mod tests {
         assert_eq!(top.elevator.x, bottom.elevator.x);
         assert_eq!(top.seats[0].bounds.y + 196, bottom.seats[0].bounds.y);
         assert_eq!(canvas.pixel(0, 400), Some(rgb(1, 2, 3)));
+    }
+
+    #[test]
+    fn overview_has_authored_double_size_people_and_native_label_space_at_128_pixels() {
+        let mut studio = Studio::new();
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(640, 128);
+        let layout = studio.paint(
+            &mut canvas,
+            &office(3),
+            &SceneOptions {
+                overview: true,
+                motion: false,
+                ..SceneOptions::default()
+            },
+        );
+        assert!(layout.graphics);
+        assert_eq!(layout.scale, 2);
+        assert_eq!(layout.sign.height, 16);
+        for seat in &layout.seats {
+            assert_eq!((seat.bounds.width, seat.bounds.height), (48, 64));
+            assert!(seat.bounds.y >= layout.sign.y + layout.sign.height);
+            assert!(seat.bounds.y + seat.bounds.height <= seat.nameplate.y);
+            assert_eq!(seat.nameplate.height, 16);
+            assert!(seat.nameplate.y + seat.nameplate.height <= 128);
+        }
+    }
+
+    #[test]
+    fn shared_office_plan_keeps_two_gags_across_rooms_and_returns_to_the_desk() {
+        let mut studio = Studio::new();
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(640, 304);
+        let office = office(4);
+        let workers = office.workers.iter().collect::<Vec<_>>();
+        let profiles = BTreeMap::new();
+        let planned = simulation::plan(&workers, 14_000, true, &profiles);
+        assert_eq!(planned.len(), 2);
+        let mut total = 0;
+        for parity in 0..2 {
+            let mut room = office.clone();
+            room.workers = office
+                .workers
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| i % 2 == parity)
+                .map(|(_, w)| w.clone())
+                .collect();
+            total += studio
+                .paint(
+                    &mut canvas,
+                    &room,
+                    &SceneOptions {
+                        now: 14_000,
+                        decorations: Some(&planned),
+                        ..SceneOptions::default()
+                    },
+                )
+                .active_gags;
+        }
+        assert_eq!(total, 2);
+        let before = studio.paint(
+            &mut canvas,
+            &office,
+            &SceneOptions {
+                now: 8_000,
+                ..SceneOptions::default()
+            },
+        );
+        let away = studio.paint(
+            &mut canvas,
+            &office,
+            &SceneOptions {
+                now: 14_000,
+                ..SceneOptions::default()
+            },
+        );
+        let returned = studio.paint(
+            &mut canvas,
+            &office,
+            &SceneOptions {
+                now: 23_999,
+                ..SceneOptions::default()
+            },
+        );
+        assert!(before
+            .seats
+            .iter()
+            .zip(&away.seats)
+            .any(|(a, b)| a.bounds != b.bounds));
+        assert_eq!(
+            before.seats.iter().map(|s| s.bounds).collect::<Vec<_>>(),
+            returned.seats.iter().map(|s| s.bounds).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn all_presets_and_zones_change_visible_art_without_changing_worker_identity() {
+        let mut studio = Studio::new();
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(640, 304);
+        let office = office(3);
+        let mut hashes = std::collections::HashSet::new();
+        for preset in [
+            OfficePreset::Studio,
+            OfficePreset::Workshop,
+            OfficePreset::Laboratory,
+        ] {
+            let design = OfficeDesign {
+                preset,
+                ..OfficeDesign::default()
+            };
+            let layout = studio.paint(
+                &mut canvas,
+                &office,
+                &SceneOptions {
+                    motion: false,
+                    design: Some(&design),
+                    ..SceneOptions::default()
+                },
+            );
+            assert_eq!(
+                layout
+                    .seats
+                    .iter()
+                    .map(|s| s.worker_id.clone())
+                    .collect::<Vec<_>>(),
+                office
+                    .workers
+                    .iter()
+                    .map(|w| w.id.clone())
+                    .collect::<Vec<_>>()
+            );
+            hashes.insert(canvas.pixel_frame().rgba().to_vec());
+        }
+        assert_eq!(hashes.len(), 3);
+        for zone in 0..4 {
+            let mut variants = std::collections::HashSet::new();
+            for choice in 0..3 {
+                let mut design = OfficeDesign::default();
+                match zone {
+                    0 => design.entrance = choice,
+                    1 => design.desks = choice,
+                    2 => design.meeting = choice,
+                    _ => design.rest = choice,
+                };
+                let group = MeetingGroup {
+                    parent: office.workers[0].id.clone(),
+                    members: office
+                        .workers
+                        .iter()
+                        .skip(1)
+                        .map(|w| w.id.clone())
+                        .collect(),
+                };
+                studio.paint(
+                    &mut canvas,
+                    &office,
+                    &SceneOptions {
+                        motion: false,
+                        design: Some(&design),
+                        meeting: (zone == 2).then_some(&group),
+                        ..SceneOptions::default()
+                    },
+                );
+                variants.insert(canvas.pixel_frame().rgba().to_vec());
+            }
+            assert_eq!(variants.len(), 3, "zone {zone}");
+        }
     }
 }

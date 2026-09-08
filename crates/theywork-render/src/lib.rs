@@ -10,6 +10,7 @@ use ratatui::Frame;
 use theywork_core::{Millis, OfficeId, World};
 
 pub mod canvas;
+pub mod design;
 pub mod living_office;
 pub mod sprite;
 pub mod views;

@@ -93,6 +93,7 @@ pub(crate) fn draw(
         wardrobe: Some(ctx.wardrobe),
         cues: Some(&cues),
         show_elevator: true,
+        ..SceneOptions::default()
     };
     let mut desks = office.clone();
     if let Some(group) = &group {

@@ -7,10 +7,13 @@ from displacing another project's retained delivery evidence. The
 [top-three implementation briefs](BRIEFS.md) explain the evidence and chosen
 behavior.
 
-**Status:** independent investigation is documented; the real two-hour headless
-workload is still running. Five-person validation is prepared but **not tested**:
-zero participants were supplied or recruited in this environment. No production
-feature, API, persistence schema, provider permission or artwork was changed.
+**Status: discovery complete with documented limitations.** The real two-hour
+headless run finished with 50 workers/20 projects throughout, zero polling errors,
+and exit zero. Its memory growth exposed an additional unmatched-tool
+correlation risk, now ranked seventh. Five-person validation is prepared but
+**not tested**: zero participants were supplied or recruited in this environment.
+No production feature, API, persistence schema, provider permission or artwork
+was changed.
 
 The production baseline is commit `748d371`, following iteration 6's UI/art
 changes. Start with [iteration 6 validation](../iteration-6/VALIDATION.md) for

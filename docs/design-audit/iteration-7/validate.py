@@ -75,8 +75,9 @@ def main():
     findings = register["findings"]
     require(register["schema_version"] == 1, "Unknown findings schema")
     require(register["baseline_commit"] == BASELINE, "Findings baseline mismatch")
-    require(0 < len(findings) <= 10, "Roadmap must have one to ten ranked findings")
-    require([item["rank"] for item in findings] == list(range(1, len(findings) + 1)), "Ranks must be ordered and unique")
+    ranked = [item for item in findings if item["rank"] is not None]
+    require(0 < len(ranked) <= 10, "Roadmap must have one to ten ranked findings")
+    require([item["rank"] for item in ranked] == list(range(1, len(ranked) + 1)), "Ranks must be ordered and unique")
     require(len({item["id"] for item in findings}) == len(findings), "Finding IDs must be unique")
     for item in findings:
         require(REQUIRED <= item.keys(), f"Incomplete finding: {item.get('id')}")

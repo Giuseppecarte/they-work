@@ -27,7 +27,8 @@ as an authenticated-provider session.
 ## Findings register interface
 
 `findings.json` is the shared audit record, with schema version 1 and at most ten
-prioritized items. Each item has `id`, `rank`, `area`, `classification`, `title`,
+prioritized items. Additional hypotheses may remain in the register with
+`rank: null`; they do not become extra roadmap commitments. Each item has `id`, `rank`, `area`, `classification`, `title`,
 `workflow`, `expected`, `observed`, `reproduction`, `evidence`, `severity`,
 `frequency`, `confidence`, `effort`, `smallest_change`, `acceptance`, and
 `limitations`. Evidence paths are relative to this directory or explicit public

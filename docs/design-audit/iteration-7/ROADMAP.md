@@ -21,10 +21,10 @@ has been implemented by iteration 7.
 | 4 | **REL-01: repair the never-sent but Sending receipt** | Reproduced twice | Transactional pre-send admission and explicit recovery, preserving uncertain-send handling | S |
 | 5 | **RELEASE-01: verify before promoting public image tags** | Source-confirmed ordering; consequence untested | Candidate digest verification and an isolated failed-release rehearsal | S |
 | 6 | **WIN-01: preserve recoverable Windows state during replacement** | Source-confirmed gap; runtime untested | Windows replacement/recovery contract with injected interruption tests | M |
-| 7 | **DOC-01: make current instructions match current behavior** | Actual PTY routes and source contracts | Correct modal shortcuts, source persistence, and polling documentation | S |
-| 8 | **REPRO-01: make evidence reproducible from a clean checkout** | Checked dependency and storage boundaries | Portable audit bootstrap, dependency/font manifest, and bounded capture policy | S |
-| 9 | **UX-01: validate return-context needs** | Product hypothesis | Test interruption/return tasks and diary; prototype only the demonstrated missing context | S prototype + scheduling |
-| 10 | **UX-02: validate character attribution and decision vocabulary** | Product hypothesis with concrete captures | Counterbalanced view comparison and exact-request prediction; prototype a narrow correction if needed | S prototype + scheduling |
+| 7 | **PERF-01: bound unmatched tool correlation** | Source-confirmed unbounded map; RSS correlation in an unpaired fixture | Entry/byte budgets and truthful late-result/coverage behavior for incomplete histories | M |
+| 8 | **DOC-01: make current instructions match current behavior** | Actual PTY routes and source contracts | Correct modal shortcuts, source persistence, and polling documentation | S |
+| 9 | **REPRO-01: make evidence reproducible from a clean checkout** | Checked dependency and storage boundaries | Portable audit bootstrap, dependency/font manifest, and bounded capture policy | S |
+| 10 | **UX-01: validate return-context needs** | Product hypothesis | Test interruption/return tasks and diary; prototype only the demonstrated missing context | S prototype + scheduling |
 
 S = roughly 1–3 engineering days, M = 4–8, L = 9–15. These are scope estimates
 for an engineer familiar with the repository, not promised dates. They exclude
@@ -52,6 +52,18 @@ Documentation and reproducibility work are useful small parallel deliveries.
 The successful 418-test clean-checkout run argues against a broad build-system
 rewrite. Measured storage concentration argues for a policy for new evidence,
 not an unapproved rewrite of Git history.
+
+The late [memory review](performance/MEMORY-REVIEW.md) adds PERF-01 without changing
+the top three: missing tool results leave an unbounded correlation map. The
+synthetic workload contains no matching results, and RSS steps correlate with
+that map's expected allocation thresholds. Normal paired traffic and heap-level
+attribution remain untested. This finding warrants a bounded-state correction,
+not a claim that ordinary completed conversations have the same growth curve.
+
+UX-02, character attribution and decision vocabulary, remains an **unranked
+hypothesis** in the shared register. Its probes stay in the already planned
+five-person study; no extra feature implementation is committed beyond the ten
+roadmap actions.
 
 ## Design experiments before implementation
 

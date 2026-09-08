@@ -20,7 +20,8 @@ were not all repeated or upgraded to human/physical-terminal passes here.
 | [19 full captures](workflows/evidence/visual-inspection.json) | **Expert reviewed** | Reconstructed native cells and actual Kitty payloads; no novice timing or physical-terminal verdict |
 | [PTY response series](performance/pty/results.json) | **25 input + 25 source samples per mode; no failed samples** | 120×36, 8×16 cells, compact and simulated Kitty, reduced motion, three projects/six tasks |
 | [Large-history series](performance/large-history/results.json) | **Pass for counts/exits; timings measured** | 20 projects/50 active plus 1,000 older tasks; 10/100/1,000 MiB transcript cases; source probe and CLI have separate hashes/profiles |
-| [Two-hour workload](performance/two-hour/result.json) | **Running — not yet a pass** | Real headless collector/World loop, 50 active tasks/20 projects, synthetic source growth; no graphical rendering |
+| [Two-hour workload](performance/two-hour/result.json) | **Lifecycle pass:** 7,200.109 seconds, exit zero, zero poll errors, worker/project counts unchanged | 174,200 appended unmatched-tool observations; 50 workers/20 projects throughout; headless collection/World only, no graphical rendering or memory-plateau claim |
+| [Late memory review](performance/MEMORY-REVIEW.md) | **Code-confirmed unbounded pending map; correlated RSS steps** | The workload supplies unmatched tool starts; no heap profile or paired-tool run. PERF-01 remains open even if lifecycle counts pass. |
 | [Audit package checker](evidence/package-checks.json) | See recorded status | JSON/JSONL and Python syntax, local links, declared source/evidence/image hashes, blank participant outcomes, production scope; final mode also requires the completed two-hour result |
 
 The reliability and data defect checks are deliberate independent counterexamples.
@@ -43,6 +44,13 @@ Startup, source ingestion, terminal feedback and graphical completion are
 different boundaries. The large-history startup is not mislabeled an interactive
 target failure. The [performance report](performance/PERFORMANCE.md) preserves
 resource units, warm/uncontrolled OS cache and concurrent-work limitations.
+
+The completed soak recorded 240 usable external `ps` samples: peak sampled RSS
+31.14 MiB, first/final ten-minute medians 14.63/30.95 MiB, and mean cumulative
+CPU utilization of 1.71% of one core. The pending-tool map has no declared bound
+for the fixture's unmatched calls; PERF-01 remains a risk despite the lifecycle
+pass. Monotonic duration and UTC wrapper timestamps have different measured
+spans, preserved with their uncalibrated boundary in the performance report.
 
 ## Failures of setup or method, not application defects
 
@@ -82,7 +90,7 @@ sh docs/design-audit/native-cargo.sh fmt --manifest-path docs/design-audit/itera
 sh docs/design-audit/native-cargo.sh fmt --manifest-path docs/design-audit/iteration-7/performance/Cargo.toml --check
 ```
 
-After the real workload finishes and the reports are finalized, run
+With the completed workload and finalized reports, run
 `python3 docs/design-audit/iteration-7/validate.py --final --manifest` to check
 completion and regenerate the evidence manifest. This is an audit consistency
 check, not a replacement for the lane-specific executable recipes. The final

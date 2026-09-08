@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "baseline_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
-  "status": "provisional-until-soak-completes",
-  "scope": "Authoritative cross-area discovery register. Lane reports retain detailed cases and counterevidence. Proposed changes are not implemented in production.",
+  "status": "complete-with-documented-limitations",
+  "scope": "Authoritative cross-area discovery register: ten ranked actions and one unranked hypothesis. Lane reports retain detailed cases and counterevidence. Proposed changes are not implemented in production.",
   "ranking_method": "Reproduced loss and control failures first; then source-confirmed release/state risks, documentation/reproduction friction, and human-validation hypotheses. Within a tier: consequence, measured recurrence, confidence, and estimated effort. No participant frequency is inferred from fixtures.",
   "effort_basis": "Rough engineering scope, not a delivery commitment: S=1-3 engineering days, M=4-8, L=9-15; excludes recruitment, authenticated-provider access and cross-platform validation.",
   "findings": [
@@ -192,8 +192,41 @@
       ]
     },
     {
-      "id": "DOC-01",
+      "id": "PERF-01",
       "rank": 7,
+      "area": "long-running-behavior",
+      "classification": "code-confirmed-risk",
+      "title": "Unmatched tool correlation grows without a count or byte bound",
+      "workflow": "Observe long-lived or incomplete Claude histories with missing tool results",
+      "expected": "An incomplete source cannot accumulate unlimited correlation state; eviction or lost pairing is disclosed without inventing tool results.",
+      "observed": "FileCursor.pending_tools retains each unique Bash/Edit/Task start until a matching tool_result or cursor reset/drop. There is no count, byte or age bound. The two-hour fixture emits starts without results; sampled RSS steps correlate with derived per-cursor pending counts crossing HashMap growth thresholds, including about 17.7 to 30.0 MiB near 93 minutes. This is not a heap attribution or a normal paired-tool workload measurement.",
+      "reproduction": "Read performance/MEMORY-REVIEW.md against the retained soak generator and raw resources.csv. Derive outstanding Edit/Bash IDs independently from writer ticks; compare expected HashMap capacity boundaries with sample intervals. A paired-use/result run remains a separate test.",
+      "evidence": [
+        "performance/MEMORY-REVIEW.md",
+        "performance/soak.py",
+        "performance/two-hour/resources.csv",
+        "performance/PERFORMANCE.md"
+      ],
+      "severity": "medium: unbounded retained correlation is possible when source results are missing",
+      "frequency": "The growth path is exercised by this unpaired fixture. Missing-result frequency and resource use in normal authenticated histories are unknown.",
+      "confidence": "high for the unbounded map and fixture shape; medium for attribution of the observed RSS steps without heap profiling",
+      "effort": "M",
+      "smallest_change": "Bound pending tool correlation by both entries and retained metadata bytes per cursor, with an aggregate budget across cursors. Retire deterministically, report lost correlation as source coverage, and preserve accurate late-result handling. Choose constants from measured representative records before implementation.",
+      "acceptance": [
+        "Long unpaired streams stay within declared entry, byte and aggregate bounds; all eviction is counted and inspectable as incomplete correlation.",
+        "A matching tool result inside the retained window preserves existing behavior and releases its pending entry.",
+        "A result arriving after eviction or cursor reset is retained only as supported by its own source facts; it cannot inherit another tool's command, path or success state.",
+        "Compare equal-volume paired and unpaired fixtures, recording pending allocation and RSS separately; preserve no-source-mutation behavior and active request semantics."
+      ],
+      "limitations": [
+        "The measured fixture never emits tool_result; it must not be represented as typical completed tool traffic.",
+        "RSS is sampled and can reflect allocator/OS behavior; no allocation profiler was used.",
+        "No production bound or telemetry was implemented in this discovery phase."
+      ]
+    },
+    {
+      "id": "DOC-01",
+      "rank": 8,
       "area": "daily-workflows",
       "classification": "confirmed-defect",
       "title": "Current instructions describe older navigation and source contracts",
@@ -223,7 +256,7 @@
     },
     {
       "id": "REPRO-01",
-      "rank": 8,
+      "rank": 9,
       "area": "maintainability",
       "classification": "confirmed-defect",
       "title": "Exact audit reproduction depends on ignored local setup",
@@ -253,7 +286,7 @@
     },
     {
       "id": "UX-01",
-      "rank": 9,
+      "rank": 10,
       "area": "daily-continuity",
       "classification": "product-hypothesis",
       "title": "Return context may not match users' reading expectations",
@@ -285,7 +318,7 @@
     },
     {
       "id": "UX-02",
-      "rank": 10,
+      "rank": null,
       "area": "design-and-comprehension",
       "classification": "product-hypothesis",
       "title": "Character motion and request vocabulary need task-based comprehension evidence",

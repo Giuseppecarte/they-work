@@ -42,12 +42,41 @@ Rust formatting afterward; no measured binary or numerical result was replaced.
 
 ## Two-hour workload
 
-The real two-hour run is in progress. Its result must be read from
-[two-hour/result.json](two-hour/result.json); a `running` state is not a pass.
-The final review will replace this paragraph only after the process exits and
-the final source probe completes. [Resource samples](two-hour/resources.csv)
-are written every approximately 30 seconds; [progress](two-hour/progress.json)
-is a periodic snapshot, not final completion evidence.
+The real process completed **7,200.109 monotonic seconds**, exited zero, and
+retained exactly 50 workers and 20 projects throughout its reported min/max
+counts. It performed 7,039 polls with zero polling errors. A fresh final
+`--once` probe also returned 20 projects/50 workers and exit zero. The generator
+appended 174,200 observations over 3,484 writer ticks; the final synthetic store
+contained 89,548,320 bytes. See [the final result](two-hour/result.json) and
+[headless counters](two-hour/headless.txt).
+
+| Resource observation | Measured value |
+| --- | ---: |
+| Usable `ps` samples, approximately 30 seconds apart | 240; zero missing |
+| Highest sampled RSS | 31,888 KiB / 31.14 MiB |
+| Median RSS in the first ten steady minutes (after minute 1) | 14,984 KiB / 14.63 MiB |
+| Median RSS in the final ten sampled minutes | 31,688 KiB / 30.95 MiB |
+| Mean one-core utilization from cumulative CPU delta | 1.71% |
+| Sampled `ps` percent-CPU p95 | 5.1% |
+
+The CPU delta was 122.9 seconds over 7,194.686 sampled monotonic seconds.
+**RSS did not plateau over this entire fixture**; the late increase motivated
+PERF-01 below. These are sampled resident pages, not an allocation profile.
+The headless executable's own RSS/CPU fields were unavailable on this host;
+the table comes from the separately recorded `ps` samples, not those fields.
+
+The application reported 7,200.019 elapsed seconds and the wrapper observed exit
+at 7,200.109 seconds. This measures automatic deadline completion, not
+keyboard-to-cleanup shutdown latency. UTC wrapper timestamps span approximately
+7,294.580 seconds including outer probes. The clocks/boundaries were not
+calibrated against each other, so that difference is retained as measurement
+uncertainty without attributing it to a specific cause. Both the application's
+counter and the wrapper's monotonic measurement meet the two-hour duration.
+
+[Resource samples](two-hour/resources.csv) and the generated
+[summary](two-hour/summary.json) preserve the calculations.
+[progress.json](two-hour/progress.json) remains the last periodic running
+checkpoint; the final result and summary above are authoritative for completion.
 
 The fixture appends one synthetic Read/Edit/Bash observation to each of the 50
 active conversations about every two seconds. The displayed Bash text is never
@@ -55,6 +84,14 @@ executed. The actual application runs with explicit synthetic Claude/config
 paths, `--no-save --headless --exit-after 7200s`. The headless loop exercises
 collection and World folding, not graphics, terminal encoding or image queues.
 Its reported frame count is a loop count, not displayed animation throughput.
+
+The generator supplies tool starts without matching `tool_result` records.
+This is an incomplete-result stress stream, not normal paired tool traffic.
+A [late memory review](MEMORY-REVIEW.md) found an unbounded per-file pending-tool
+correlation map; its derived allocation thresholds correlate with the sampled
+RSS steps. This is now PERF-01 in the roadmap. The lifecycle oracle can pass
+while that bounded-state concern remains open. No heap profile or paired-tool
+measurement was performed, and resource stability is not claimed.
 
 The oracle requires process exit zero after at least 7,200 seconds, zero polling
 errors, 50 initial/final workers, and a final independent `--once` probe reporting

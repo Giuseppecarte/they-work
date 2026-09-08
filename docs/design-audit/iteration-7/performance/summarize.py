@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Summarize measured soak samples without upgrading a running job to a pass."""
 import csv
+from datetime import datetime
 import json
 import math
 from pathlib import Path
@@ -53,6 +54,9 @@ def main():
     for key in ["appended_events", "fixture_bytes", "writer_ticks", "exit_code", "counters"]:
         if key in result:
             summary[key] = result[key]
+    if "finished_at" in result:
+        summary["utc_wrapper_span_seconds"] = (datetime.fromisoformat(result["finished_at"]) - datetime.fromisoformat(result["started_at"])).total_seconds()
+        summary["clock_boundary_note"] = "Process duration and resource intervals use monotonic time. UTC metadata spans the wrapper including initial/final probes; the observed difference between these clocks/boundaries was not calibrated or attributed."
     (run / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
 

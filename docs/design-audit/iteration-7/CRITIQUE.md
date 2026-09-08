@@ -36,6 +36,13 @@ were unavailable here.
    baseline advances on a return, but the unread result remains in Deliveries.
    This is a comprehension question until a participant demonstrates a missed
    next step. It stays outside the reproduced data-loss findings.
+6. **Early memory stability did not describe the full run.** A late RSS increase
+   prompted a bounded source review. The fixture supplies tool starts without
+   results, and the collector retains unmatched tool IDs in an unbounded map.
+   Its predicted capacity steps correlate with the measured RSS changes. The
+   new PERF-01 risk enters the roadmap at rank 7; the top three stay unchanged.
+   The report does not attribute every resident page to that map or generalize
+   this unpaired fixture to normal completed tool traffic.
 
 ## Utility and visual fidelity
 
@@ -88,9 +95,9 @@ post-action state before adding another confirmation or status label.
 
 ## Stop rule
 
-Once the real two-hour process has exited and its counters/resources have been
-reviewed, every investigation lane has evidence or a concrete documented
-limitation. The register has at most ten ranked actions and the top three have
+The real two-hour process has exited and its counters/resources have been
+reviewed. Every investigation lane has evidence or a concrete documented
+limitation. The register has ten ranked actions and one unranked hypothesis; the top three have
 chosen behavior, failure handling and executable fixture oracles. That is the
 discovery completion condition; it is not the application's publication gate.
 

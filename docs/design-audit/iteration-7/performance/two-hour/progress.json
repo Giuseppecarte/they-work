@@ -1,9 +1,9 @@
 {
-  "elapsed_seconds": 2100.42,
-  "ticks": 1019,
-  "appended_events": 50950,
-  "peak_rss_kib": 17728,
-  "sample_count": 70,
+  "elapsed_seconds": 6902.23,
+  "ticks": 3341,
+  "appended_events": 167050,
+  "peak_rss_kib": 31680,
+  "sample_count": 230,
   "pid": 31733,
   "status": "running"
 }

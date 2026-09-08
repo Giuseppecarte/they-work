@@ -9,11 +9,13 @@ The notebook separates attention, recorded deliveries, changes since entry, and 
 
 The Changes channel honors the entry baseline before the latest persisted visit timestamp. Refreshing the panel does not move that baseline. Retired history is included, and ordinary talking beats do not duplicate native collaboration output. Source coverage distinguishes unknown, partial, stale, and unavailable observations in the footer and details. Narrow layouts preserve four channel shortcuts and Escape; detail scrolling clamps to wrapped content and resets only when the selected record changes.
 
+An independent inspection of the exported 80×24 and 120×36 notebook buffers found unnecessary blank list space above a single delivery, ambiguous repeated worker names across projects, and a mark-seen shortcut advertised in channels where it was unavailable. The list now uses only the rows it needs, All floors titles include the project, and help matches the selected channel. Terminals below the readable minimum show an enlargement notice and cannot open or mark an invisible item; resizing restores those actions.
+
 ## Verification
 
-Eleven focused notebook tests pass on macOS aarch64. They exercise local marking through `Ui::handle_key`, request identity stability versus other observations, absent/retired senders, unknown recipients, entry/restored baselines, nested delegation, missing parents, session membership, forks, folding, coverage, selection preservation, and bounded review memory. The rendering test checks actual Ratatui TestBackend buffers at 28×12, 40×16, 80×24, and 120×36, reaches the last line with PageDown, and verifies control-sequence sanitization and visible channel/Escape controls. These are buffer checks, not physical terminal screenshots.
+Fourteen focused notebook tests pass on macOS aarch64. They exercise local marking through `Ui::handle_key`, request identity stability versus other observations, absent/retired senders, unknown recipients, entry/restored baselines, nested delegation, missing parents, session membership, forks, folding, coverage, selection preservation, and bounded review memory. Rendering tests check actual Ratatui TestBackend buffers at 28×12, 40×16, 80×24, and 120×36, reach the last line with PageDown, and verify control-sequence sanitization, visible channel/Escape controls, a fully visible short delivery, and channel-specific help. The undersized 20×8 case checks that hidden actions remain blocked until a readable redraw. These are buffer checks, not physical terminal screenshots.
 
-- [Focused tests](evidence/workboard-tests.log): 11 passed.
+- [Focused tests](evidence/workboard-tests.log): 14 passed.
 - [Renderer strict Clippy](evidence/workboard-clippy.log): all targets passed with warnings denied.
 
 Reproduce using an installed Cargo or the repository-local toolchain described in [DATA.md](DATA.md):

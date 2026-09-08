@@ -95,6 +95,7 @@ pub struct Workboard {
     pub folded: BTreeSet<String>,
     selected: usize,
     scroll: u16,
+    blocked_by_size: bool,
 }
 
 pub enum Action {
@@ -456,6 +457,21 @@ impl Workboard {
                 self.coverage.push_str(" · ← collapse / → expand");
             }
         }
+        if office.is_none() && self.channel != Channel::Attention {
+            for row in &mut rows {
+                let project = world
+                    .office(&row.office)
+                    .map(|office| office.name.as_str())
+                    .unwrap_or_else(|| {
+                        row.office
+                            .0
+                            .rsplit(['/', '\\'])
+                            .find(|part| !part.is_empty())
+                            .unwrap_or("project")
+                    });
+                row.title = format!("{project} / {}", row.title);
+            }
+        }
         self.replace(rows);
     }
     pub fn show(&mut self, channel: Channel) {
@@ -482,6 +498,9 @@ impl Workboard {
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) -> Option<Action> {
+        if self.blocked_by_size && matches!(key.code, KeyCode::Enter | KeyCode::Char('r')) {
+            return None;
+        }
         match key.code {
             KeyCode::Esc | KeyCode::Char('b') | KeyCode::Char('q') => self.open = false,
             KeyCode::Char(digit @ '1'..='4') => {
@@ -540,7 +559,8 @@ impl Workboard {
         let screen = super::below_tab_bar(frame.area());
         let area = Rect::new(screen.x, screen.y, screen.width, screen.height);
         paint_opaque(frame, area, Style::default().bg(BACKGROUND).fg(INK));
-        if area.width < 28 || area.height < 10 {
+        self.blocked_by_size = area.width < 28 || area.height < 10;
+        if self.blocked_by_size {
             Paragraph::new("Notebook · enlarge terminal\nEsc return")
                 .render(area, frame.buffer_mut());
             return;
@@ -577,10 +597,19 @@ impl Workboard {
             frame.buffer_mut(),
         );
         let footer = Rect::new(area.x, area.bottom() - 2, area.width, 2);
-        let controls = if area.width < 72 {
-            "Esc back · ↑↓ · Enter · r seen"
-        } else {
-            "Esc return · ↑↓ select · Enter inspect · r seen locally · PgUp/PgDn detail"
+        let controls = match (area.width < 72, self.channel) {
+            (true, Channel::Attention | Channel::Deliveries) => "Esc back · Enter · r seen",
+            (true, Channel::Team) => "Esc · Enter · ←/→ fold",
+            (true, Channel::Changes) => "Esc back · Enter · PgUp/Dn",
+            (false, Channel::Attention | Channel::Deliveries) => {
+                "Esc return · ↑↓ select · Enter inspect · r seen locally · PgUp/PgDn detail"
+            }
+            (false, Channel::Team) => {
+                "Esc return · ↑↓ select · Enter inspect · ←/→ fold · PgUp/PgDn detail"
+            }
+            (false, Channel::Changes) => {
+                "Esc return · ↑↓ select · Enter inspect · PgUp/PgDn detail"
+            }
         };
         Paragraph::new(format!("{}\n{controls}", safe_display(&self.coverage)))
             .style(Style::default().fg(MUTED))
@@ -602,7 +631,9 @@ impl Workboard {
             .render(body, frame.buffer_mut());
             return;
         }
-        let list_height = (body.height / 2).clamp(2, 12);
+        let list_height = (body.height / 2)
+            .clamp(1, 12)
+            .min(self.rows.len().min(u16::MAX as usize) as u16);
         let capacity = usize::from(list_height);
         let start = self.selected / capacity * capacity;
         for (offset, row) in self.rows.iter().skip(start).take(capacity).enumerate() {
@@ -1110,7 +1141,7 @@ mod tests {
         let mut board = Workboard::default();
         board.show(Channel::Team);
         refresh(&mut board, &world, &ReviewMemory::default());
-        assert_eq!(board.rows[0].title, "z-session");
+        assert_eq!(board.rows[0].title, "project / z-session");
         assert!(board.rows[0].branch);
         assert_eq!(board.rows[1].depth, 1);
         board.handle_key(key(KeyCode::Left));
@@ -1228,6 +1259,114 @@ mod tests {
             board.handle_key(key(KeyCode::Home));
             assert_eq!(board.scroll, 0);
         }
+    }
+
+    #[test]
+    fn one_delivery_gives_unused_list_space_to_its_body() {
+        let mut world = World::new();
+        hire(&mut world, "worker");
+        record(
+            &mut world,
+            "worker",
+            None,
+            "result",
+            CollaborationKind::Result,
+            100,
+        );
+        let mut board = Workboard::default();
+        board.show(Channel::Deliveries);
+        refresh(&mut board, &world, &ReviewMemory::default());
+        board.rows[0].detail = (0..10)
+            .map(|n| format!("Delivery line {n:02}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| board.draw(frame)).unwrap();
+        let text = buffer_text(&terminal);
+        assert!(
+            text.contains("Delivery line 09"),
+            "An empty list must not hide a short delivery body"
+        );
+        assert_eq!(board.scroll, 0);
+    }
+
+    #[test]
+    fn all_floor_titles_distinguish_projects_and_help_matches_the_channel() {
+        let mut world = World::new();
+        for path in ["/one", "/two"] {
+            world.apply(Event {
+                at: 10,
+                office: OfficeId(path.into()),
+                office_path: path.into(),
+                worker: id(path),
+                agent: Agent::Codex,
+                kind: EventKind::Seen {
+                    name: "Same title".into(),
+                    git_branch: None,
+                },
+            });
+        }
+        let mut board = Workboard::default();
+        board.show(Channel::Team);
+        refresh(&mut board, &world, &ReviewMemory::default());
+        let titles: BTreeSet<_> = board.rows.iter().map(|row| row.title.as_str()).collect();
+        assert_eq!(
+            titles,
+            BTreeSet::from(["one / Same title", "two / Same title"])
+        );
+        for channel in [Channel::Team, Channel::Changes] {
+            board.show(channel);
+            refresh(&mut board, &world, &ReviewMemory::default());
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            assert!(!buffer_text(&terminal).contains("r seen"));
+            assert!(board.handle_key(key(KeyCode::Char('r'))).is_none());
+        }
+        board.show(Channel::Team);
+        board.refresh(
+            &world,
+            world.office(&OfficeId("/one".into())),
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            1000,
+        );
+        assert_eq!(board.rows.len(), 1);
+        assert_eq!(board.rows[0].title, "Same title");
+    }
+
+    #[test]
+    fn undersized_notice_cannot_mark_or_open_hidden_rows_until_resized() {
+        let mut world = World::new();
+        hire(&mut world, "worker");
+        record(
+            &mut world,
+            "worker",
+            None,
+            "result",
+            CollaborationKind::Result,
+            100,
+        );
+        let mut board = Workboard::default();
+        board.show(Channel::Deliveries);
+        refresh(&mut board, &world, &ReviewMemory::default());
+        let mut tiny = Terminal::new(TestBackend::new(20, 8)).unwrap();
+        tiny.draw(|frame| board.draw(frame)).unwrap();
+        assert!(board.handle_key(key(KeyCode::Char('r'))).is_none());
+        assert!(board.handle_key(key(KeyCode::Enter)).is_none());
+        assert!(board.open);
+        let mut readable = Terminal::new(TestBackend::new(28, 12)).unwrap();
+        readable.draw(|frame| board.draw(frame)).unwrap();
+        assert!(buffer_text(&readable).contains("r seen"));
+        assert!(matches!(
+            board.handle_key(key(KeyCode::Char('r'))),
+            Some(Action::Mark(_))
+        ));
+        assert!(matches!(
+            board.handle_key(key(KeyCode::Enter)),
+            Some(Action::Open(_))
+        ));
+        board.handle_key(key(KeyCode::Esc));
+        assert!(!board.open);
     }
 
     #[test]

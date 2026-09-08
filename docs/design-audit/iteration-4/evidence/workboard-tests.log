@@ -1,18 +1,22 @@
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.43s
      Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
 
-running 11 tests
+running 14 tests
 test views::workboard::tests::selection_follows_delivery_identity_across_reordering ... ok
+test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
 test views::workboard::tests::retired_child_delivery_stays_readable_in_its_project ... ok
 test views::workboard::tests::recorded_deliveries_keep_unknown_recipients_and_absent_senders_honest ... ok
 test views::workboard::tests::changes_use_entry_baseline_and_include_retired_history_without_talking_duplicates ... ok
-test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
-test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
-test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
 test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
+test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
 test views::workboard::tests::team_preserves_nested_missing_member_and_fork_relationships_once ... ok
-test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
+test views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized ... ok
+test views::workboard::tests::one_delivery_gives_unused_list_space_to_its_body ... ok
+test views::workboard::tests::all_floor_titles_distinguish_projects_and_help_matches_the_channel ... ok
 test views::workboard::tests::local_markers_round_trip_and_have_a_bound ... ok
+test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
 
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 161 filtered out; finished in 0.01s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 166 filtered out; finished in 0.02s
 

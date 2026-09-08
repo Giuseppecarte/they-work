@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
+  "status": "provisional-until-soak-completes",
+  "scope": "Authoritative cross-area discovery register. Lane reports retain detailed cases and counterevidence. Proposed changes are not implemented in production.",
+  "ranking_method": "Reproduced loss and control failures first; then source-confirmed release/state risks, documentation/reproduction friction, and human-validation hypotheses. Within a tier: consequence, measured recurrence, confidence, and estimated effort. No participant frequency is inferred from fixtures.",
+  "effort_basis": "Rough engineering scope, not a delivery commitment: S=1-3 engineering days, M=4-8, L=9-15; excludes recruitment, authenticated-provider access and cross-platform validation.",
+  "findings": [
+    {
+      "id": "REL-02",
+      "rank": 1,
+      "area": "controls",
+      "classification": "confirmed-defect",
+      "title": "Operation-history capacity disables current Stop and Reply actions",
+      "workflow": "Control an owned active task after extensive prior use",
+      "expected": "Historical receipts do not silently consume the capacity needed to stop current work or answer its exact pending request; advertised capabilities match admission.",
+      "observed": "At 10,000 receipts, interrupt=true and reply=true remain advertised, but both Stop and Decline fail before reaching the provider. A positive control below the limit sends each once.",
+      "reproduction": "Run reliability/run_reliability.py with the ledger and control-actions cases; repeat ledger using the independent reproduction output.",
+      "evidence": [
+        "reliability/RELIABILITY.md",
+        "reliability/evidence/results.json",
+        "reliability/evidence/reproduction/results.json",
+        "reliability/IMPLEMENTATION-BRIEF.md"
+      ],
+      "severity": "high: current task control becomes unavailable",
+      "frequency": "Reproduced twice at the deterministic limit. Incidence in real daily use is unknown.",
+      "confidence": "high for this limit and native supervisor; authenticated-provider frequency untested",
+      "effort": "L",
+      "smallest_change": "Define bounded receipt generations and safe admission so terminal historical receipts can retire without replaying old operation IDs or abandoning task ownership. Preserve unresolved receipts and exact request controls; expose actual storage failures.",
+      "acceptance": [
+        "Migrate the 9,999/10,000 legacy-receipt fixtures without losing ownership; after explicit reconnect, Stop and exact Decline reach the provider once. Separately, live v2 count/byte rollover preserves exact current turn/request IDs and enables an explicit refreshed action without replay.",
+        "Duplicate IDs never execute twice across restart or history retirement; retired IDs receive an explicit non-executing result.",
+        "Storage failure and exhausted unresolved capacity fail closed before new work, without a false success or automatic resend.",
+        "Capabilities, request identity and UI recovery guidance match the executable admission path."
+      ],
+      "limitations": [
+        "Physical ENOSPC, Windows atomic replacement and authenticated control are not tested.",
+        "A finite local store cannot promise to return complete receipts forever; the proposed retirement contract is explicit in the implementation brief."
+      ]
+    },
+    {
+      "id": "DATA-01",
+      "rank": 2,
+      "area": "data-fidelity",
+      "classification": "confirmed-defect",
+      "title": "Known provider event gaps and unresolved actors lack specific coverage accounting",
+      "workflow": "Reconnect or reopen after a large burst and inspect past deliveries or delegation",
+      "expected": "Known provider event loss is disclosed separately from freshness and generic partial history; still-available actor-dependent observations can be reconciled later.",
+      "observed": "The isolated managed path misses 44/2,744 provider events after 300/3,000 bursts. Generic partial-history warnings remain, but no exact gap is reported. Integrated cold/reopen tests recover persisted parent edges; recent results recover, while results outside the per-thread 64-item tail do not. An unknown-actor adapter input is skipped unless explicitly replayed after roster arrival.",
+      "reproduction": "Run data/run.py (eight cases), then data/run_dual.py (three source-plus-snapshot cases). Compare native result IDs, persistent spawn edge and provider event sequence ranges against each independent fixture log.",
+      "evidence": [
+        "data/DATA.md",
+        "data/DUAL-FEED.md",
+        "data/evidence/results.json",
+        "data/evidence/dual-feed/results.json",
+        "data/BRIEFS.md"
+      ],
+      "severity": "high: known historical evidence can be unavailable without a specific loss explanation",
+      "frequency": "Two isolated gap cases and two integrated cold-tail cases reproduce loss; one integrated recent-record case recovers. Real provider persistence-shape frequency is unknown.",
+      "confidence": "high for fixtures and warning gap; medium for how commonly installed providers produce the tested shape",
+      "effort": "M",
+      "smallest_change": "Introduce explicit event-window lineage and structured provider event coverage, plus a bounded deferred-actor queue. Preserve valid recovered facts; do not equate a missing provider event count with lost results or replay user instructions.",
+      "acceptance": [
+        "300/3,000 isolated bursts report exact missing provider event ranges, preserving two workers and the pending request.",
+        "All three integrated cases retain existing recovered edges/results; a provider event gap does not erase valid facts.",
+        "A deferred result is applied exactly once when its actor appears; bounded eviction or stream reset produces a truthful loss notice.",
+        "Compact and expanded panels expose coverage without hiding current actions; reconciliation produces zero provider mutations."
+      ],
+      "limitations": [
+        "General partial-history warnings already exist.",
+        "Continuous collectors and persisted spawn metadata can recover facts; this is not universal family loss.",
+        "The first change provides truthful coverage and bounded reconciliation, not a full-history archive or guaranteed result backfill."
+      ]
+    },
+    {
+      "id": "DATA-02",
+      "rank": 3,
+      "area": "data-continuity",
+      "classification": "confirmed-defect",
+      "title": "One project's flood removes another project's unread delivery row",
+      "workflow": "Review a quiet project's delivery after working in a busy project",
+      "expected": "A bounded notebook shares retention across projects and explains local eviction instead of implying no delivery was recorded.",
+      "observed": "One result in B followed by 513 messages in A is removed from the global 512-record collaboration ring. B's worker and ordinary text remain, but the Result classification and Deliveries row disappear; Deliveries says no recorded deliveries yet.",
+      "reproduction": "Run data/run.py retention case. Inspect B before and after the independent A flood and compare the Workboard output with the input log.",
+      "evidence": [
+        "data/evidence/results.json",
+        "data/evidence/retention-b-before-deliveries.txt",
+        "data/evidence/retention-b-after-deliveries.txt",
+        "data/BRIEFS.md"
+      ],
+      "severity": "high: retained work evidence disappears from a daily review surface",
+      "frequency": "Deterministic at the reproduced global retention boundary. Real unread-delivery displacement frequency is unknown.",
+      "confidence": "high for live World retention and rendered empty state",
+      "effort": "M",
+      "smallest_change": "Keep the 512-record budget, evict deterministically from the largest project allocation, and expose bounded per-project loss metadata. Keep reading markers separate from retention.",
+      "acceptance": [
+        "B's one delivery survives 513 messages in A, with total retained records <=512 and a visible A eviction count.",
+        "For equal sustained histories from 20 projects, the retained allocations differ by at most one, using the documented deterministic tie-break.",
+        "Same-project overflow, more than 512 project windows, restart, late events and duplicates remain bounded and disclose unknown/evicted history.",
+        "An empty deliveries list distinguishes no retained results from no results ever observed; source control behavior is unchanged."
+      ],
+      "limitations": [
+        "The result's plain text survives in this fixture; this is not proof all copies of content are erased.",
+        "The chosen behavior does not retain every unread delivery forever or add persistent transcripts."
+      ]
+    },
+    {
+      "id": "REL-01",
+      "rank": 4,
+      "area": "controls",
+      "classification": "confirmed-defect",
+      "title": "A pre-send write failure leaves a never-sent instruction labeled Sending",
+      "workflow": "Submit a task when local intent persistence temporarily fails",
+      "expected": "If durable intent fails before any provider write, the receipt accurately indicates not sent and permits an explicit safe recovery.",
+      "observed": "Injected EACCES sends zero provider requests, but a same-ID retry after restoring permissions returns Sending/Awaiting provider acknowledgement until the host is restarted or a new ID is used.",
+      "reproduction": "Run reliability/run_reliability.py permission case and its independent reproduction. Compare actual provider calls with the receipt after restoring write access.",
+      "evidence": [
+        "reliability/RELIABILITY.md",
+        "reliability/evidence/permission-calls.json",
+        "reliability/evidence/reproduction/results.json",
+        "reliability/REL-01-BRIEF.md"
+      ],
+      "severity": "medium-high: misleading acknowledgement and blocked local recovery",
+      "frequency": "Reproduced twice with an injected permission failure; real frequency unknown.",
+      "confidence": "high; provider log proves no dispatch",
+      "effort": "S",
+      "smallest_change": "Make durable intent admission transactional with the in-memory receipt, separating proven pre-dispatch failure from uncertain post-dispatch outcome. Require explicit retry and keep existing no-auto-resend semantics.",
+      "acceptance": [
+        "An injected pre-intent EACCES produces zero provider calls and no receipt claiming to await the provider.",
+        "The same ID returns terminal Rejected/Not sent after permissions are restored; a new explicit submission ID dispatches once. No automatic retry is introduced.",
+        "Post-send persistence failure and dropped acknowledgements remain uncertain and never automatically replay."
+      ],
+      "limitations": [
+        "This fixture injects EACCES; quota testing used EFBIG, not actual disk exhaustion.",
+        "Restart is an existing workaround, so this ranks below the current-control and delivery-loss findings."
+      ]
+    },
+    {
+      "id": "RELEASE-01",
+      "rank": 5,
+      "area": "releases",
+      "classification": "code-confirmed-risk",
+      "title": "Public container tags advance before smoke verification",
+      "workflow": "Publish a release that later fails its smoke check",
+      "expected": "A failed candidate cannot advance supported public release pointers.",
+      "observed": "The release workflow pushes version/latest image tags before the published-image smoke check. Native release assets depend on that later check.",
+      "reproduction": "Run reliability/inspect_static.py. Before implementation, rehearse an injected smoke failure in a disposable local registry or workflow stub and inspect tags; do not publish public artifacts.",
+      "evidence": [
+        "reliability/evidence/static-boundaries.json",
+        "reliability/RELIABILITY.md"
+      ],
+      "severity": "high potential release failure; runtime consequence not reproduced",
+      "frequency": "Ordering always exists; frequency of post-push smoke failure unknown.",
+      "confidence": "high for workflow ordering; consequence untested",
+      "effort": "S",
+      "smallest_change": "Build/test an immutable candidate, then promote public tags and assets only after required checks. Define recovery for partially completed promotion.",
+      "acceptance": [
+        "A deliberately failed candidate leaves version/latest public pointers unchanged in the isolated rehearsal.",
+        "The promoted digest equals the tested digest.",
+        "Native artifacts and container promotion have an explicit partial-failure status and recovery path."
+      ],
+      "limitations": [
+        "No actual registry push, public release, HTTP distribution or signing validation was performed."
+      ]
+    },
+    {
+      "id": "WIN-01",
+      "rank": 6,
+      "area": "state-reliability",
+      "classification": "code-confirmed-risk",
+      "title": "Windows state replacement removes the old file before replacement",
+      "workflow": "Recover managed task ownership and operation receipts after a Windows write interruption",
+      "expected": "Interrupted replacement leaves either the prior valid state or the new valid state, preserving ownership and idempotency information.",
+      "observed": "The Windows branch explicitly removes the old state path and then renames the replacement; failure between those operations could leave no state file.",
+      "reproduction": "Use reliability/inspect_static.py for source ordering. On Windows, inject a stop/error between removal and rename using synthetic state; inspect restart behavior without real provider work.",
+      "evidence": [
+        "reliability/evidence/static-boundaries.json",
+        "reliability/RELIABILITY.md"
+      ],
+      "severity": "high potential ownership/receipt loss; Windows execution not tested",
+      "frequency": "Code path confirmed; interruption incidence unknown.",
+      "confidence": "high for the replacement gap; runtime impact untested",
+      "effort": "M",
+      "smallest_change": "Choose a Windows-native replace/recovery strategy, preserving the prior valid state and permissions until a replacement is durable; test the exact interruption points.",
+      "acceptance": [
+        "At each injected replacement interruption, restart loads a valid old/new state or fails explicitly while retaining recoverable state.",
+        "Ownership and duplicate-operation protection survive; no uncertain turn is replayed.",
+        "Permissions, antivirus/file-lock interference and running-process behavior are tested on a recorded Windows version."
+      ],
+      "limitations": [
+        "No Windows or WSL runtime was available. POSIX replacement passing is not evidence for this branch."
+      ]
+    },
+    {
+      "id": "DOC-01",
+      "rank": 7,
+      "area": "daily-workflows",
+      "classification": "confirmed-defect",
+      "title": "Current instructions describe older navigation and source contracts",
+      "workflow": "Connect sources, switch floors, configure the view, or implement a new collector",
+      "expected": "The documented route reaches the named surface, and authoritative contracts match current source persistence and polling.",
+      "observed": "PTY inputs confirm c/C open Connections, v opens Advanced, and Tab advances semantic focus. Installation copy describes more direct destinations and floor cycling. Contributor links and Source trait comments also retain old persistence/polling contracts.",
+      "reproduction": "Follow workflows/DOC_DRIFT.md routes from their stated context; compare source documentation with the current background Poller.",
+      "evidence": [
+        "workflows/DOC_DRIFT.md",
+        "workflows/evidence/reorientation.trace.json",
+        "maintenance/MAINTENANCE.md"
+      ],
+      "severity": "medium: learning and contribution instructions disagree with the product",
+      "frequency": "Multiple concrete routes/docs differ; participant confusion frequency unknown.",
+      "confidence": "high for the mismatches, not a novice success-rate claim",
+      "effort": "S",
+      "smallest_change": "Update current instructions and mark superseded design specifications historical; document modal context and observation/control boundaries.",
+      "acceptance": [
+        "A fresh reader follows every changed route at 80x24 using keyboard only and reaches the named surface without unintended actions.",
+        "Source persistence and polling ownership have one current referenced contract.",
+        "Legacy shortcuts that remain supported are tested before their documentation is removed."
+      ],
+      "limitations": [
+        "The first-launch d shortcut was not disproved by testing d in the office; context must remain explicit.",
+        "No new contributor or novice documentation session has occurred."
+      ]
+    },
+    {
+      "id": "REPRO-01",
+      "rank": 8,
+      "area": "maintainability",
+      "classification": "confirmed-defect",
+      "title": "Exact audit reproduction depends on ignored local setup",
+      "workflow": "A contributor reproduces a visual finding from a clean checkout",
+      "expected": "Evidence includes a complete dependency/bootstrap recipe, with portable alternatives and clear artifact scope.",
+      "observed": "The exact iteration-6 screenshot recipe references an ignored native toolchain and local Python/font resources. The normal native make check works after prerequisites. Audit evidence accounts for 69.9% of baseline tracked bytes, but network clone cost was not measured.",
+      "reproduction": "Follow maintenance/MAINTENANCE.md clean-checkout sequence; inspect the screenshot recipe and tracked-file metrics separately from the normal build.",
+      "evidence": [
+        "maintenance/MAINTENANCE.md",
+        "maintenance/repository-metrics.json",
+        "maintenance/network-native-make-check.json"
+      ],
+      "severity": "medium-low: reproducibility friction, not application runtime failure",
+      "frequency": "Exact recipe requires non-tracked resources; real contributor impact unmeasured.",
+      "confidence": "high for missing recipe prerequisites; low for perceived storage burden",
+      "effort": "S",
+      "smallest_change": "Add a portable audit bootstrap, dependency/font manifest and bounded evidence retention policy for new captures. Keep generated stores/builds ignored and avoid rewriting Git history.",
+      "acceptance": [
+        "A clean checkout can reproduce one full-screen capture and one fixture result with documented commands on a supported host.",
+        "Metadata records binary, source, renderer/font and capture method.",
+        "Tracked artifacts exclude generated history/toolchains and include only evidence justified by the manifest."
+      ],
+      "limitations": [
+        "The 1.81-second clone was local, not a public network measurement.",
+        "No broad refactor or Git history rewrite is justified by file size alone."
+      ]
+    },
+    {
+      "id": "UX-01",
+      "rank": 9,
+      "area": "daily-continuity",
+      "classification": "product-hypothesis",
+      "title": "Return context may not match users' reading expectations",
+      "workflow": "Return to a project after an interruption or on the next workday",
+      "expected": "Users can recover the prior task and explain which updates they have actually reviewed.",
+      "observed": "Merely revisiting a floor advances Since your visit even without a record action; the unread delivery remains in Deliveries. Finder reopens with an empty query. No human misunderstanding has been measured.",
+      "reproduction": "Use the expert Beta/Alpha route in workflows/REPORT.md, then run study task 5 and the three-workday diary with new users.",
+      "evidence": [
+        "workflows/REPORT.md",
+        "workflows/evidence/beta-since-second-return.png",
+        "workflows/evidence/beta-deliveries-unseen.png",
+        "study/PROTOCOL.md",
+        "study/DIARY.md"
+      ],
+      "severity": "potential medium; current behavior is not classified as data loss",
+      "frequency": "Mechanism reproduced; human friction frequency unknown, zero participants.",
+      "confidence": "high for behavior, low for unmet need",
+      "effort": "S prototype plus user scheduling; production scope depends on evidence",
+      "smallest_change": "Test one return-context prototype only if participants miss the next step: retained recent task/search or a clearer visit/unreviewed distinction. Choose the smallest supported change.",
+      "acceptance": [
+        "Record original-context recovery, mistaken reading assumptions and navigation actions before/after using counterbalanced cases.",
+        "Proceed on two independent similar breakdowns or one severe mechanism-backed failure; retain counterevidence.",
+        "Reject the added UI if the existing visit and delivery model is understood unaided."
+      ],
+      "limitations": [
+        "Expert inspection is not participant evidence; text may already have been visible on first return.",
+        "The five sessions and voluntary diary have not happened."
+      ]
+    },
+    {
+      "id": "UX-02",
+      "rank": 10,
+      "area": "design-and-comprehension",
+      "classification": "product-hypothesis",
+      "title": "Character motion and request vocabulary need task-based comprehension evidence",
+      "workflow": "Recognize a worker, identify attention, and predict the effect of a request action",
+      "expected": "Identity remains attributable during movement and users distinguish seen, reviewed, approved and acknowledged without assuming invented activity.",
+      "observed": "Identical-fact captures show moving characters can leave stationary nameplates; compact mode exposes titles/status directly. Seen and Review correctly do not approve. After an explicit reply, one screen pairs no-longer-pending text with a receipt still awaiting provider resolution. These are hypotheses about interpretation, not measured accidental approvals.",
+      "reproduction": "Use the three same-source presentation conditions and exact-request fixture in workflows/walkthrough.py; then study triage, identity and request-prediction tasks.",
+      "evidence": [
+        "workflows/REPORT.md",
+        "workflows/evidence/compare-tower.png",
+        "workflows/evidence/compare-reduced.png",
+        "workflows/evidence/compare-compact.png",
+        "workflows/evidence/approval-after-explicit-answer.png",
+        "study/README.md"
+      ],
+      "severity": "potential high if an action is misunderstood; no such participant failure observed",
+      "frequency": "Expert observations only; zero participant outcomes.",
+      "confidence": "high for captures and provider call separation, low for human effects",
+      "effort": "S prototypes plus user scheduling",
+      "smallest_change": "Compare existing tower/compact/reduced-motion views first. Prototype a persistent identity tether or clearer request/receipt wording only for a demonstrated misunderstanding; do not assume more art detail improves comprehension.",
+      "acceptance": [
+        "Measure attention identification within ten seconds and exact request opening within two actions.",
+        "Any accidental approval is a critical failure; count recipient/effect prediction errors separately.",
+        "Counterbalance view order and record learning effects; measure moving-worker attribution before asking visual preference.",
+        "No prototype changes factual states, creates fictional agent messages, or collapses local reading and provider decisions."
+      ],
+      "limitations": [
+        "Five participants provide qualitative direction, not certification or a reliable population rate.",
+        "Real-terminal painting, assistive technology and authenticated provider actions remain separate untested gates."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-09-08T21:15:35.460493+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "duration_requested_seconds": 7200,
+  "expected_active_workers": 50,
+  "expected_projects": 20,
+  "historical_conversations": 1000,
+  "command": [
+    "/Users/gc/Documents/Programming/they-work/target/native-macos/release/they-work",
+    "--sources",
+    "claude",
+    "--claude-home",
+    "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/two-hour/claude",
+    "--config-dir",
+    "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/two-hour/config",
+    "--no-save",
+    "--headless",
+    "--exit-after",
+    "7200s"
+  ],
+  "scope": "Real executable headless collection/world soak with synthetic Claude files; no renderer, real terminal or provider.",
+  "status": "running",
+  "initial_once_seconds": 0.07836725000015576,
+  "pid": 31733
+}

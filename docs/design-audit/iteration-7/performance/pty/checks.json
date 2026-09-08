@@ -1,0 +1,9 @@
+{
+  "latency_samples": "25 input + 25 source per mode; exactly one calibrated image match per graphical sample; no failures",
+  "matched_phase_schedule": "pass",
+  "binary_hash_matches": "pass",
+  "python_syntax": "pass",
+  "document_links": "pass",
+  "workflow_hashes": "pass",
+  "participant_sessions": 0
+}

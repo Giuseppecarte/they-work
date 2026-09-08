@@ -1,0 +1,53 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "cli_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "probe_sha256": "999a80de0d12e8d1ce257f4cf3e02aa1351fd4be2de6a67e2ec8b469cb55b58e",
+  "cases": [
+    {
+      "transcript_target_mib": 10,
+      "fixture_bytes": 27871857,
+      "cli_seconds": 0.09176641700105392,
+      "cli_exit": 0,
+      "cli_peak_rss_bytes": 34750464,
+      "collector_cold_ms": 94.64720899999999,
+      "world_fold_ms": 7.466375,
+      "quiet_poll_p95_ms": 8.115541,
+      "append_poll_p95_ms": 6.992917,
+      "final_workers": 50,
+      "final_projects": 20,
+      "probe_total_seconds": 1.2307372499999474
+    },
+    {
+      "transcript_target_mib": 100,
+      "fixture_bytes": 122257319,
+      "cli_seconds": 0.195648707998771,
+      "cli_exit": 0,
+      "cli_peak_rss_bytes": 41844736,
+      "collector_cold_ms": 179.498916,
+      "world_fold_ms": 10.552709,
+      "quiet_poll_p95_ms": 7.5745830000000005,
+      "append_poll_p95_ms": 7.028833,
+      "final_workers": 50,
+      "final_projects": 20,
+      "probe_total_seconds": 0.9427837919974991
+    },
+    {
+      "transcript_target_mib": 1000,
+      "fixture_bytes": 1066040903,
+      "cli_seconds": 1.403222957997059,
+      "cli_exit": 0,
+      "cli_peak_rss_bytes": 114278400,
+      "collector_cold_ms": 1168.0455000000002,
+      "world_fold_ms": 26.249374999999997,
+      "quiet_poll_p95_ms": 6.0205,
+      "append_poll_p95_ms": 6.119375,
+      "final_workers": 50,
+      "final_projects": 20,
+      "probe_total_seconds": 1.8964908749985625
+    }
+  ],
+  "scope": "Fresh collector state, OS page cache uncontrolled/warm; headless two-hour process concurrent. CLI startup includes initial scan and text output, not a first displayed frame.",
+  "probe_source_sha256_at_measurement": "13c490458c0e2d6ce8e00d2da6dbd551256e63ddae810ffbc9f7a185c0c2c609",
+  "probe_source_snapshot": "../source-used-for-measurement.txt",
+  "source_note": "The retained measurement source is byte-exact. The current src/main.rs subsequently received rustfmt whitespace-only formatting; the measured binary and numeric results are unchanged."
+}

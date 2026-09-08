@@ -1,0 +1,74 @@
+they-work --once
+timestamp_ms=1788902118122
+projects=20 workers=50
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-00 workers=3
+  worker name="Synthetic task 0000" agent=claude status=running detail="src/fixture_00.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0020" agent=claude status=running detail="src/fixture_20.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0040" agent=claude status=running detail="src/fixture_40.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-01 workers=3
+  worker name="Synthetic task 0001" agent=claude status=running detail="src/fixture_01.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0021" agent=claude status=running detail="src/fixture_21.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0041" agent=claude status=running detail="src/fixture_41.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-02 workers=3
+  worker name="Synthetic task 0002" agent=claude status=running detail="src/fixture_02.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0022" agent=claude status=running detail="src/fixture_22.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0042" agent=claude status=running detail="src/fixture_42.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-03 workers=3
+  worker name="Synthetic task 0003" agent=claude status=running detail="src/fixture_03.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0023" agent=claude status=running detail="src/fixture_23.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0043" agent=claude status=running detail="src/fixture_43.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-04 workers=3
+  worker name="Synthetic task 0004" agent=claude status=running detail="src/fixture_04.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0024" agent=claude status=running detail="src/fixture_24.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0044" agent=claude status=running detail="src/fixture_44.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-05 workers=3
+  worker name="Synthetic task 0005" agent=claude status=running detail="src/fixture_05.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0025" agent=claude status=running detail="src/fixture_25.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0045" agent=claude status=running detail="src/fixture_45.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-06 workers=3
+  worker name="Synthetic task 0006" agent=claude status=running detail="src/fixture_06.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0026" agent=claude status=running detail="src/fixture_26.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0046" agent=claude status=running detail="src/fixture_46.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-07 workers=3
+  worker name="Synthetic task 0007" agent=claude status=running detail="src/fixture_07.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0027" agent=claude status=running detail="src/fixture_27.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0047" agent=claude status=running detail="src/fixture_47.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-08 workers=3
+  worker name="Synthetic task 0008" agent=claude status=running detail="src/fixture_08.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0028" agent=claude status=running detail="src/fixture_28.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0048" agent=claude status=running detail="src/fixture_48.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-09 workers=3
+  worker name="Synthetic task 0009" agent=claude status=running detail="src/fixture_09.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0029" agent=claude status=running detail="src/fixture_29.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0049" agent=claude status=running detail="src/fixture_49.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-10 workers=2
+  worker name="Synthetic task 0010" agent=claude status=running detail="src/fixture_10.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0030" agent=claude status=running detail="src/fixture_30.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-11 workers=2
+  worker name="Synthetic task 0011" agent=claude status=running detail="src/fixture_11.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0031" agent=claude status=running detail="src/fixture_31.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-12 workers=2
+  worker name="Synthetic task 0012" agent=claude status=running detail="src/fixture_12.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0032" agent=claude status=running detail="src/fixture_32.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-13 workers=2
+  worker name="Synthetic task 0013" agent=claude status=running detail="src/fixture_13.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0033" agent=claude status=running detail="src/fixture_33.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-14 workers=2
+  worker name="Synthetic task 0014" agent=claude status=running detail="src/fixture_14.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0034" agent=claude status=running detail="src/fixture_34.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-15 workers=2
+  worker name="Synthetic task 0015" agent=claude status=running detail="src/fixture_15.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0035" agent=claude status=running detail="src/fixture_35.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-16 workers=2
+  worker name="Synthetic task 0016" agent=claude status=running detail="src/fixture_16.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0036" agent=claude status=running detail="src/fixture_36.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-17 workers=2
+  worker name="Synthetic task 0017" agent=claude status=running detail="src/fixture_17.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0037" agent=claude status=running detail="src/fixture_37.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-18 workers=2
+  worker name="Synthetic task 0018" agent=claude status=running detail="src/fixture_18.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0038" agent=claude status=running detail="src/fixture_38.rs" activity=reading idle_age=0s tokens=0
+office=/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-performance/final-smoke/projects/project-19 workers=2
+  worker name="Synthetic task 0019" agent=claude status=running detail="src/fixture_19.rs" activity=reading idle_age=0s tokens=0
+  worker name="Synthetic task 0039" agent=claude status=running detail="src/fixture_39.rs" activity=reading idle_age=0s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.

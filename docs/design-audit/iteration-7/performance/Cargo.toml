@@ -1,0 +1,12 @@
+[package]
+name = "theywork-source-performance-audit"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+serde_json = "1"
+theywork-core = { path = "../../../../crates/theywork-core" }
+theywork-collect = { path = "../../../../crates/theywork-collect" }

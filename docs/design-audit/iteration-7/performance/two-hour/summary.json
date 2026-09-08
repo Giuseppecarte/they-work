@@ -1,0 +1,18 @@
+{
+  "scope": "Sampled resources of the actual headless collector/world process; no graphics or authenticated provider.",
+  "status": "running",
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "requested_seconds": 7200,
+  "completed_seconds": null,
+  "usable_resource_samples": 37,
+  "missing_resource_samples": 0,
+  "measurement_uncertainty": "ps samples approximately every 30 seconds can miss peaks; cumulative CPU is rounded by ps; other audit processes share the host.",
+  "sampled_seconds": 1082.838,
+  "sampled_max_rss_kib": 17728,
+  "steady_rss_median_kib": 14976,
+  "first_ten_steady_minutes_median_rss_kib": 14984.0,
+  "last_ten_minutes_median_rss_kib": 15024.0,
+  "sampled_cpu_percent_p95": 3.1,
+  "sampled_cumulative_cpu_seconds": 15.06,
+  "mean_one_core_percent_from_cpu_delta": 1.3907897580247461
+}

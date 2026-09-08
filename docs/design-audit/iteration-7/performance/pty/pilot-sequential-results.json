@@ -1,0 +1,809 @@
+{
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "kind": "PTY read receipt, not physical visible response",
+  "fixture_root": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-workflows/latency-m4836ti6",
+  "samples_requested_each": 25,
+  "clock": "time.monotonic_ns",
+  "handshake": "Synthetic Kitty direct-image OK and 8x16 cell / 120x36 terminal reply",
+  "modes": [
+    {
+      "mode": "image-free-half-blocks",
+      "terminal_cells": [
+        120,
+        36
+      ],
+      "declared_cell_pixels": [
+        8,
+        16
+      ],
+      "motion": false,
+      "failures": [],
+      "input_samples": [
+        {
+          "sample": 1,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.471667
+        },
+        {
+          "sample": 2,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.321083
+        },
+        {
+          "sample": 3,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.712958
+        },
+        {
+          "sample": 4,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.228209
+        },
+        {
+          "sample": 5,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 4.85
+        },
+        {
+          "sample": 6,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.143791
+        },
+        {
+          "sample": 7,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.444375
+        },
+        {
+          "sample": 8,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.666084
+        },
+        {
+          "sample": 9,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.482625
+        },
+        {
+          "sample": 10,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.680792
+        },
+        {
+          "sample": 11,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.824333
+        },
+        {
+          "sample": 12,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 8.194541
+        },
+        {
+          "sample": 13,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.937291
+        },
+        {
+          "sample": 14,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.074292
+        },
+        {
+          "sample": 15,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.428792
+        },
+        {
+          "sample": 16,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.093459
+        },
+        {
+          "sample": 17,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.888334
+        },
+        {
+          "sample": 18,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.078458
+        },
+        {
+          "sample": 19,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.035708
+        },
+        {
+          "sample": 20,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.192083
+        },
+        {
+          "sample": 21,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.933667
+        },
+        {
+          "sample": 22,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 5.464542
+        },
+        {
+          "sample": 23,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.280875
+        },
+        {
+          "sample": 24,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.0605
+        },
+        {
+          "sample": 25,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 6.044458
+        }
+      ],
+      "source_samples": [
+        {
+          "sample": 1,
+          "token": "LATENCY-SOURCE-001-18185295255583",
+          "commit_ms": 0.905958,
+          "committed_source_to_brief_ms": 645.35575
+        },
+        {
+          "sample": 2,
+          "token": "LATENCY-SOURCE-002-18185969529250",
+          "commit_ms": 0.844292,
+          "committed_source_to_brief_ms": 993.480833
+        },
+        {
+          "sample": 3,
+          "token": "LATENCY-SOURCE-003-18186996586291",
+          "commit_ms": 1.207792,
+          "committed_source_to_brief_ms": 981.142791
+        },
+        {
+          "sample": 4,
+          "token": "LATENCY-SOURCE-004-18188010621958",
+          "commit_ms": 1.19175,
+          "committed_source_to_brief_ms": 989.751334
+        },
+        {
+          "sample": 5,
+          "token": "LATENCY-SOURCE-005-18189038619166",
+          "commit_ms": 0.967083,
+          "committed_source_to_brief_ms": 983.447542
+        },
+        {
+          "sample": 6,
+          "token": "LATENCY-SOURCE-006-18190058573166",
+          "commit_ms": 1.680959,
+          "committed_source_to_brief_ms": 878.751
+        },
+        {
+          "sample": 7,
+          "token": "LATENCY-SOURCE-007-18190976193500",
+          "commit_ms": 0.885,
+          "committed_source_to_brief_ms": 985.157666
+        },
+        {
+          "sample": 8,
+          "token": "LATENCY-SOURCE-008-18191998479041",
+          "commit_ms": 0.73125,
+          "committed_source_to_brief_ms": 985.588917
+        },
+        {
+          "sample": 9,
+          "token": "LATENCY-SOURCE-009-18193016573583",
+          "commit_ms": 0.84825,
+          "committed_source_to_brief_ms": 990.411083
+        },
+        {
+          "sample": 10,
+          "token": "LATENCY-SOURCE-010-18194042140666",
+          "commit_ms": 0.431917,
+          "committed_source_to_brief_ms": 989.871833
+        },
+        {
+          "sample": 11,
+          "token": "LATENCY-SOURCE-011-18195061087625",
+          "commit_ms": 0.407958,
+          "committed_source_to_brief_ms": 993.015
+        },
+        {
+          "sample": 12,
+          "token": "LATENCY-SOURCE-012-18196088531958",
+          "commit_ms": 0.98325,
+          "committed_source_to_brief_ms": 984.807125
+        },
+        {
+          "sample": 13,
+          "token": "LATENCY-SOURCE-013-18197108151375",
+          "commit_ms": 0.640625,
+          "committed_source_to_brief_ms": 990.539542
+        },
+        {
+          "sample": 14,
+          "token": "LATENCY-SOURCE-014-18198127774208",
+          "commit_ms": 1.096666,
+          "committed_source_to_brief_ms": 888.173875
+        },
+        {
+          "sample": 15,
+          "token": "LATENCY-SOURCE-015-18199045112875",
+          "commit_ms": 1.018375,
+          "committed_source_to_brief_ms": 995.579583
+        },
+        {
+          "sample": 16,
+          "token": "LATENCY-SOURCE-016-18200069322666",
+          "commit_ms": 1.36375,
+          "committed_source_to_brief_ms": 992.82375
+        },
+        {
+          "sample": 17,
+          "token": "LATENCY-SOURCE-017-18201095223625",
+          "commit_ms": 1.404166,
+          "committed_source_to_brief_ms": 992.37525
+        },
+        {
+          "sample": 18,
+          "token": "LATENCY-SOURCE-018-18202123082541",
+          "commit_ms": 0.677541,
+          "committed_source_to_brief_ms": 988.976
+        },
+        {
+          "sample": 19,
+          "token": "LATENCY-SOURCE-019-18203142563750",
+          "commit_ms": 1.967459,
+          "committed_source_to_brief_ms": 990.865166
+        },
+        {
+          "sample": 20,
+          "token": "LATENCY-SOURCE-020-18204169510541",
+          "commit_ms": 1.060375,
+          "committed_source_to_brief_ms": 986.838959
+        },
+        {
+          "sample": 21,
+          "token": "LATENCY-SOURCE-021-18205194400458",
+          "commit_ms": 0.896542,
+          "committed_source_to_brief_ms": 882.161625
+        },
+        {
+          "sample": 22,
+          "token": "LATENCY-SOURCE-022-18206111428875",
+          "commit_ms": 0.88975,
+          "committed_source_to_brief_ms": 989.150458
+        },
+        {
+          "sample": 23,
+          "token": "LATENCY-SOURCE-023-18207136070791",
+          "commit_ms": 1.081583,
+          "committed_source_to_brief_ms": 986.873625
+        },
+        {
+          "sample": 24,
+          "token": "LATENCY-SOURCE-024-18208155191916",
+          "commit_ms": 0.972833,
+          "committed_source_to_brief_ms": 988.511625
+        },
+        {
+          "sample": 25,
+          "token": "LATENCY-SOURCE-025-18209175585375",
+          "commit_ms": 0.904958,
+          "committed_source_to_brief_ms": 984.291292
+        }
+      ],
+      "graphical_calibration": {
+        "cycles": [
+          {
+            "tower_hash": null,
+            "office_hash": null,
+            "office_pixels": null
+          },
+          {
+            "tower_hash": null,
+            "office_hash": null,
+            "office_pixels": null
+          }
+        ],
+        "correlation_verified": false
+      },
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "bytes_received_total": 132878,
+      "input_native": {
+        "status": "measured-pty-receipt",
+        "count": 25,
+        "p50_ms": 5.933667,
+        "p95_ms": 6.428792,
+        "min_ms": 4.85,
+        "max_ms": 8.194541
+      },
+      "graphical_complete": {
+        "status": "not-tested",
+        "count": 0
+      },
+      "source_to_brief": {
+        "status": "measured-pty-receipt",
+        "count": 25,
+        "p50_ms": 988.511625,
+        "p95_ms": 993.480833,
+        "min_ms": 645.35575,
+        "max_ms": 995.579583
+      }
+    },
+    {
+      "mode": "kitty-simulated",
+      "terminal_cells": [
+        120,
+        36
+      ],
+      "declared_cell_pixels": [
+        8,
+        16
+      ],
+      "motion": false,
+      "failures": [],
+      "input_samples": [
+        {
+          "sample": 1,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 91.730875,
+          "graphical_ms": 91.730875,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 2,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.520541,
+          "graphical_ms": 73.520541,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 3,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.141542,
+          "graphical_ms": 73.141542,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 4,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.174834,
+          "graphical_ms": 73.174834,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 5,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 75.883958,
+          "graphical_ms": 75.883958,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 6,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 76.695666,
+          "graphical_ms": 76.695666,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 7,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.412125,
+          "graphical_ms": 72.412125,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 8,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.073,
+          "graphical_ms": 72.073,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 9,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 76.913709,
+          "graphical_ms": 76.913709,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 10,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 76.996917,
+          "graphical_ms": 76.996917,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 11,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 69.276125,
+          "graphical_ms": 69.276125,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 12,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.815667,
+          "graphical_ms": 72.815667,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 13,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.530041,
+          "graphical_ms": 73.530041,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 14,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 70.131917,
+          "graphical_ms": 70.131917,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 15,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.226542,
+          "graphical_ms": 72.226542,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 16,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 71.491083,
+          "graphical_ms": 71.491083,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 17,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.0535,
+          "graphical_ms": 73.0535,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 18,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.7635,
+          "graphical_ms": 72.7635,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 19,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.0875,
+          "graphical_ms": 73.0875,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 20,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 74.196625,
+          "graphical_ms": 74.196625,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 21,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.066334,
+          "graphical_ms": 73.066334,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 22,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 73.667833,
+          "graphical_ms": 73.667833,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 23,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 72.977375,
+          "graphical_ms": 72.977375,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 24,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 74.775333,
+          "graphical_ms": 74.775333,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        },
+        {
+          "sample": 25,
+          "key_hex": "31",
+          "correct_feedback": "alpha-shop / Office",
+          "native_ms": 74.996042,
+          "graphical_ms": 74.996042,
+          "expected_frame_sha256": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+          "matched_frames": 1
+        }
+      ],
+      "source_samples": [
+        {
+          "sample": 1,
+          "token": "LATENCY-SOURCE-001-18215760360166",
+          "commit_ms": 0.661083,
+          "committed_source_to_brief_ms": 814.373167
+        },
+        {
+          "sample": 2,
+          "token": "LATENCY-SOURCE-002-18216602027250",
+          "commit_ms": 0.604083,
+          "committed_source_to_brief_ms": 922.964959
+        },
+        {
+          "sample": 3,
+          "token": "LATENCY-SOURCE-003-18217551958833",
+          "commit_ms": 1.053875,
+          "committed_source_to_brief_ms": 926.279708
+        },
+        {
+          "sample": 4,
+          "token": "LATENCY-SOURCE-004-18218508942500",
+          "commit_ms": 1.360958,
+          "committed_source_to_brief_ms": 1016.358209
+        },
+        {
+          "sample": 5,
+          "token": "LATENCY-SOURCE-005-18219552597291",
+          "commit_ms": 0.84875,
+          "committed_source_to_brief_ms": 943.30275
+        },
+        {
+          "sample": 6,
+          "token": "LATENCY-SOURCE-006-18220525890833",
+          "commit_ms": 0.693417,
+          "committed_source_to_brief_ms": 1009.360083
+        },
+        {
+          "sample": 7,
+          "token": "LATENCY-SOURCE-007-18221560342833",
+          "commit_ms": 0.756333,
+          "committed_source_to_brief_ms": 931.308458
+        },
+        {
+          "sample": 8,
+          "token": "LATENCY-SOURCE-008-18222521129458",
+          "commit_ms": 0.824375,
+          "committed_source_to_brief_ms": 1050.80575
+        },
+        {
+          "sample": 9,
+          "token": "LATENCY-SOURCE-009-18223601951375",
+          "commit_ms": 0.656833,
+          "committed_source_to_brief_ms": 894.679292
+        },
+        {
+          "sample": 10,
+          "token": "LATENCY-SOURCE-010-18224525725666",
+          "commit_ms": 0.908041,
+          "committed_source_to_brief_ms": 1064.723667
+        },
+        {
+          "sample": 11,
+          "token": "LATENCY-SOURCE-011-18225616700541",
+          "commit_ms": 0.578167,
+          "committed_source_to_brief_ms": 906.240917
+        },
+        {
+          "sample": 12,
+          "token": "LATENCY-SOURCE-012-18226550670458",
+          "commit_ms": 0.857666,
+          "committed_source_to_brief_ms": 1020.168
+        },
+        {
+          "sample": 13,
+          "token": "LATENCY-SOURCE-013-18227600708291",
+          "commit_ms": 0.950208,
+          "committed_source_to_brief_ms": 909.447167
+        },
+        {
+          "sample": 14,
+          "token": "LATENCY-SOURCE-014-18228540642500",
+          "commit_ms": 0.748041,
+          "committed_source_to_brief_ms": 1038.620625
+        },
+        {
+          "sample": 15,
+          "token": "LATENCY-SOURCE-015-18229609767083",
+          "commit_ms": 0.741041,
+          "committed_source_to_brief_ms": 927.986792
+        },
+        {
+          "sample": 16,
+          "token": "LATENCY-SOURCE-016-18230567891416",
+          "commit_ms": 0.8985,
+          "committed_source_to_brief_ms": 1011.582709
+        },
+        {
+          "sample": 17,
+          "token": "LATENCY-SOURCE-017-18231610277083",
+          "commit_ms": 0.896583,
+          "committed_source_to_brief_ms": 917.512459
+        },
+        {
+          "sample": 18,
+          "token": "LATENCY-SOURCE-018-18232551943625",
+          "commit_ms": 0.817625,
+          "committed_source_to_brief_ms": 1033.692917
+        },
+        {
+          "sample": 19,
+          "token": "LATENCY-SOURCE-019-18233612846541",
+          "commit_ms": 0.775125,
+          "committed_source_to_brief_ms": 974.837792
+        },
+        {
+          "sample": 20,
+          "token": "LATENCY-SOURCE-020-18234616380875",
+          "commit_ms": 0.519292,
+          "committed_source_to_brief_ms": 1052.796416
+        },
+        {
+          "sample": 21,
+          "token": "LATENCY-SOURCE-021-18235699592916",
+          "commit_ms": 0.692084,
+          "committed_source_to_brief_ms": 939.197875
+        },
+        {
+          "sample": 22,
+          "token": "LATENCY-SOURCE-022-18236668606125",
+          "commit_ms": 1.122458,
+          "committed_source_to_brief_ms": 950.838458
+        },
+        {
+          "sample": 23,
+          "token": "LATENCY-SOURCE-023-18237651300916",
+          "commit_ms": 0.724417,
+          "committed_source_to_brief_ms": 932.47375
+        },
+        {
+          "sample": 24,
+          "token": "LATENCY-SOURCE-024-18238610195666",
+          "commit_ms": 0.97425,
+          "committed_source_to_brief_ms": 1073.753125
+        },
+        {
+          "sample": 25,
+          "token": "LATENCY-SOURCE-025-18239716064041",
+          "commit_ms": 1.105792,
+          "committed_source_to_brief_ms": 930.810291
+        }
+      ],
+      "graphical_calibration": {
+        "cycles": [
+          {
+            "tower_hash": "17f5e8327fe91c665274e6689d783ab732bc2ac7d46c4c8e9034e0fc8877239a",
+            "office_hash": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+            "office_pixels": [
+              960,
+              528
+            ]
+          },
+          {
+            "tower_hash": "17f5e8327fe91c665274e6689d783ab732bc2ac7d46c4c8e9034e0fc8877239a",
+            "office_hash": "574264a3d24b4c79d2b6b9d85453d33c93e8adf7a1eb2ff75a2dbafa2aac9e32",
+            "office_pixels": [
+              960,
+              528
+            ]
+          }
+        ],
+        "correlation_verified": true
+      },
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "bytes_received_total": 6873638,
+      "input_native": {
+        "status": "measured-pty-receipt",
+        "count": 25,
+        "p50_ms": 73.141542,
+        "p95_ms": 76.996917,
+        "min_ms": 69.276125,
+        "max_ms": 91.730875
+      },
+      "graphical_complete": {
+        "status": "measured-pty-receipt",
+        "count": 25,
+        "p50_ms": 73.141542,
+        "p95_ms": 76.996917,
+        "min_ms": 69.276125,
+        "max_ms": 91.730875
+      },
+      "source_to_brief": {
+        "status": "measured-pty-receipt",
+        "count": 25,
+        "p50_ms": 943.30275,
+        "p95_ms": 1064.723667,
+        "min_ms": 814.373167,
+        "max_ms": 1073.753125
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+they-work — a terminal office for local agents and their teams
+
+USAGE:
+  they-work [OPTIONS]
+
+OPTIONS:
+  --project <path>         Read conversations from one project only
+  --all                    Start at the tower overview
+  --demo                   Show the imaginary company; reads nothing
+  --once                   Print one plain-text standup and exit
+  --headless               Run the polling loop without a terminal
+  --exit-after <duration>  Stop headless mode after e.g. 30s, 5m, or 1h
+  --doctor                 Check selected sources and explain problems
+  --view <iso|top|side>    Choose the starting camera
+  --light                  Start with the light appearance
+  --dark                   Start with the dark appearance
+  --color <auto|true|256|none>
+                           Choose terminal color handling
+  --setup                  Choose local sources and their folders
+  --sources <all|codex|claude|none>
+                           Choose which conversations may be read
+  --codex-home <path>      Use this Codex data folder
+  --claude-home <path>     Use this Claude Code data folder
+  --config-dir <path>      Override the default settings folder
+  --no-save                Keep this session temporary; save no preferences
+  -h, --help               Show this help

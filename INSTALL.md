@@ -1,8 +1,9 @@
 # Installing they-work
 
 Run the office directly in your terminal on macOS, Linux, Windows, or WSL.
-Docker is optional. A native process reads only the local sources you select;
-Docker additionally enforces read-only data mounts and disables runtime networking.
+Docker is optional for observation. Use the native binary for task controls and
+provider console handoff. Docker enforces read-only data mounts and disables
+runtime networking, so its normal launch is an observation environment.
 
 ## Install this checkout now
 
@@ -78,8 +79,11 @@ Windows, its installer-added user PATH entry. Source records are never removed.
 
 Start with `they-work`. On first launch, **Connect your team** lets you choose
 Codex, Claude Code, both, or an empty tower. No account login, API key, browser
-authorization, or subscription is needed. It reads local conversation titles,
-messages, and tool activity. Approve requests in the original coding app.
+authorization, or subscription is needed **for observation**. It reads local
+conversation titles, messages and tool activity. Creating or controlling tasks
+uses the official provider CLI, its existing login and its normal account limits.
+Press `C` in the office for official login, `n` for a new task and `m` for the
+selected task’s available controls. See [task controls](docs/CONTROLS.md).
 Press `d` to explore the demo without reading conversations.
 
 Use `↑` / `↓` to choose a source, `Space` to turn it on or off, and `e` to edit
@@ -103,8 +107,11 @@ to change sources and repair folders. Settings live in:
 - Windows: `%APPDATA%\they-work`, falling back to the home `.config\they-work`.
 
 An absolute `--config-dir <folder>` overrides this location; relative paths and
-`~` are also normalized. The directory is created only when saving. No transcript
-content is copied into settings. To reset the saved connection, remove only
+`~` are also normalized. The directory is created only when saving. Appearance and notebook files store local preferences and reading markers.
+When you explicitly create a managed Codex task, the private `control/` directory
+also stores its ownership metadata, bounded provider events and operation
+receipts so closing the view does not lose the runtime. Protect this directory
+as conversation data. To reset the saved connection, remove only
 `connections.json` from this folder and launch again; source records remain intact.
 
 For an explicit launch, including nonstandard data folders:

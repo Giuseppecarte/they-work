@@ -8,18 +8,21 @@ typing, reading, editing, or waiting on you — drawn as pixel art in your
 terminal. Each project occupies an independent floor in a software tower, so
 you can see the whole company or inspect one worker's activity.
 
-It reads agent transcripts and main database contents. It cannot start or stop
-your agents, alter those records, or reach the network. On a writable native
-SQLite store, SQLite may update an already-existing `-shm` coordination sidecar;
-the container mounts stores read-only, and a cold WAL store without its existing
-sidecars is refused rather than created.
+Observation reads selected local transcripts and databases. You can also create
+tasks from the office: managed Codex tasks use an owning app-server connection;
+Claude uses its official console and existing login. Historical records alone
+never grant control over another running process. Provider actions can modify
+project files and use the network, under that provider’s permissions. Collectors
+keep their read-only boundary; SQLite may update an existing `-shm` coordination
+sidecar, and a cold WAL store without existing sidecars is refused.
 
-![A software tower with independent project floors and a furnished office](docs/design-audit/iteration-3/evidence/tower-final/tower-6-120x32.png)
+![A software tower with independent project floors and a delegated team](docs/design-audit/iteration-4/evidence/ui/tower-120x36.png)
 
-The previews reconstruct native macOS PTY output. The tower uses a cell replay;
-the desk and finder use the installed Menlo font through CoreText. They are
-not screenshots of Terminal.app. The [current audit](docs/design-audit/iteration-3/REVIEW.md)
-records the interaction checks, resize cases and evidence limits.
+The new tower and notebook previews reconstruct the actual UI image layer and
+native text mask with Menlo. They are compositor exports, not screenshots of a
+terminal emulator. Earlier desk/finder previews below reconstruct macOS PTY
+output. The [current audit](docs/design-audit/iteration-4/REVIEW.md) records tested
+workflows and the remaining terminal/platform acceptance checks.
 
 ## Start here
 
@@ -39,7 +42,8 @@ they-work --setup
 ~~~
 
 Select Codex, Claude Code, both, or no local sources. This connects local
-conversation folders; no account login or API key is required. Each project
+conversation folders; observation needs no account login or API key. Creating
+tasks uses your provider’s normal installation and login. Each project
 gets its own office floor and each conversation a worker you can inspect.
 
 The [installation guide](INSTALL.md) covers compiler setup, custom data paths,
@@ -72,6 +76,11 @@ For Docker, use `make run ARGS="--sources all --doctor"` or
 | **A desk** | `Enter` | one worker up close, with their timeline |
 | **The phone** | `p` | Now, Attention, Edits and Messages from recorded conversations |
 | **Find your team** | `/` or `Ctrl+K` | find a project or conversation by name, path, provider or state |
+| **Notebook** | `b` | attention, deliveries and changes since your last visit; local reviewed markers |
+| **Team** | `g` | recorded delegation, session membership and forks, with a collapsible tree |
+| **Task controls** | `m` | compose, interrupt or answer live Codex requests; open a verified Claude console |
+| **New task** | `n` | select provider, project folder and instruction |
+| **Provider login** | `C` | official login and connection capabilities |
 | **Settings** | `s` | camera, light, theme, colour depth, motion |
 | **Help** | `?` | every key |
 | **Sources** | `c` | choose local providers and folders |
@@ -95,12 +104,23 @@ same repository share one floor.
 
 ![Finding conversations across project floors in the light appearance](docs/design-audit/iteration-3/evidence/finder-final/finder-light-120x32-menlo.png)
 
-Colour means the same thing everywhere. **Shirt** is which agent — orange for
-Claude Code, blue for Codex. The **bar under a name** is status: green running,
-grey idle, amber needs attention, red failed. Explicit questions and approval
-requests appear immediately. Silence during an open turn also raises an
-attention hint; inspect the desk to distinguish it from a confirmed request.
-Approve requests in the original coding app.
+The new side-cut graphics use twelve original 48×64 characters, integer scaling,
+contact shadows and furnished rooms. Clothes are decorative; the provider is
+shown in the task inspector. An amber `!` remains at a worker’s label while an
+alert is active. Questions, approvals, automatic review and missing recent
+information have distinct notebook categories. A local “seen” mark never answers
+a request. A recorded result can be marked reviewed without claiming that the
+whole project is complete.
+
+Confirmed delegation families share a meeting room while subtasks are active.
+Nested relationships remain inspectable; groups paginate at a readable size.
+Coffee, stretching and other decorative actions are reproducible, limited to two
+per floor, and disabled with reduced motion. They do not generate transcript
+messages or change task state. Kitty, iTerm2 and Sixel carry the graphics; other
+terminals retain native text controls and the compatible compact views.
+
+See [task controls](docs/CONTROLS.md) for managed runtimes, official Claude console
+handoff, temporary mode and the exact limits of external-session control.
 
 ## What it reads, and what you are agreeing to
 
@@ -142,21 +162,23 @@ is separate from the running program, which has none.
 
 ## What is inside
 
-Five crates. `theywork-core` is the contract; the collectors and the renderer
+Six crates. `theywork-core` is the contract; the collectors and the renderer
 both depend on it and neither depends on the other.
 
 | Crate | Does |
 | --- | --- |
 | `theywork-core` | the domain model — offices, workers, activities, events, status |
 | `theywork-collect` | read-only readers for Claude Code and Codex |
+| `theywork-control` | local Codex supervisor and verified native Claude handoff |
 | `theywork-render` | the pixel canvas, sprites and views |
-| `theywork-terminal-image` | Kitty and Sixel transport for terminals that can show images |
+| `theywork-terminal-image` | Kitty, iTerm2 and Sixel transport for terminals that can show images |
 | `theywork-tui` | the binary: arguments, discovery, the frame loop |
 
-Data flows one way. A collector tails a transcript or reads a database and emits
+Observation data flows one way. A collector tails a transcript or reads a database and emits
 normalised events; `World` folds those into offices and workers; the renderer
-draws whatever `World` currently says. Nothing downstream parses an agent's
-format, and nothing upstream knows how anything is drawn.
+draws whatever `World` currently says. Explicit control commands travel through
+the separate owning runtime; their receipts and provider events feed back into
+the view. Collectors never write instructions into a history file.
 
 Without a graphics protocol, the picture is built from **half-block, quadrant
 or sextant characters**, whichever your terminal and font supports. Terminal

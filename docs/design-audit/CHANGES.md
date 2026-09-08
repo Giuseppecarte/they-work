@@ -1,6 +1,13 @@
 # Implemented changes
 
-The [third-iteration review](iteration-3/REVIEW.md) records the current result:
+The [fourth-iteration review](iteration-4/REVIEW.md) records the current result:
+source-scoped identities, observed subagent teams and meetings, managed Codex
+controls, official Claude handoff, attention/deliveries/changes, and twelve
+original 48×64 characters in the continuous tower. Its linked lane reports
+separate tested fixtures, PTYs, image reconstructions and remaining acceptance.
+The user-approved control plan supersedes older read-only-only product decisions.
+
+The [third-iteration review](iteration-3/REVIEW.md) records the previous result:
 a numbered floor directory, furnished selected office, global project/worker
 finder, task-first inspection, accurate Phone channels, editable source folders
 and optional default persistence. Review also corrected request truncation,

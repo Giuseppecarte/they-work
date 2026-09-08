@@ -1,6 +1,17 @@
 # Design and usability findings
 
-## Current review: third iteration
+## Current review: fourth iteration
+
+The [fourth-iteration implementation review](iteration-4/REVIEW.md) supersedes
+the earlier product boundary: the accepted plan adds explicit managed controls,
+real delegation teams, a living graphical tower and local review markers.
+Its priority findings are missing subagent identity/relationships, ambiguous
+control targets and requests, and undersized art with hidden native labels.
+The real-executable PTY also reproduced a resolved approval remaining blocked.
+Corrections and evidence are linked in that review. Actual-provider sessions,
+physical terminal recordings and five-user acceptance remain explicitly pending.
+
+## Previous review: third iteration
 
 The three priorities were locating work across many projects, explaining the
 actual reason for attention, and making source setup persist without a special

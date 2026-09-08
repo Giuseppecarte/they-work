@@ -1,0 +1,52 @@
+{
+  "recorded_at_utc": "2026-09-08T05:39:54.386236+00:00",
+  "branch": "audit/design-and-usability",
+  "platform": {
+    "os": "macOS",
+    "version": "26.6.2",
+    "build": "25G83",
+    "arch": "arm64",
+    "rust": "1.90"
+  },
+  "binary": {
+    "path": "target/native-macos/release/they-work",
+    "sha256": "b90c70cb5185fc2f6ba5209b0aad20ad2c5ac574c9d02b296205a8709bbd6591",
+    "release_build_exit": 0
+  },
+  "workspace_tests": {
+    "passed": 340,
+    "failed": 0,
+    "ignored": 2,
+    "test_threads": 1
+  },
+  "clippy": {
+    "workspace": true,
+    "all_targets": true,
+    "warnings_denied": true,
+    "exit": 0
+  },
+  "fmt_check_exit": 0,
+  "cli_smoke": {
+    "help": 0,
+    "demo_once_no_save": 0,
+    "doctor_sources_none_no_save": 0
+  },
+  "pty": [
+    "evidence/control-pty-final/results.json",
+    "evidence/control-pty-graphics/results.json"
+  ],
+  "composition_benchmark": {
+    "path": "input-composition.csv",
+    "largest_p95_ms": 15.502,
+    "includes_transport": false,
+    "includes_os_display": false
+  },
+  "external_acceptance_not_run": [
+    "authenticated provider sessions",
+    "Kitty/iTerm2/Sixel emulator-window recordings",
+    "Windows and WSL runtime",
+    "complete native release target matrix",
+    "end-to-end input-to-visible p95",
+    "five first-time users"
+  ]
+}

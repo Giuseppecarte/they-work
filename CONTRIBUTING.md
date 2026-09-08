@@ -2,8 +2,8 @@
 
 they-work is intentionally small. The binary polls local agent data, folds
 observations into a shared world model, and renders that model as a terminal
-office. Keep those responsibilities separate so the read-only promise remains
-easy to inspect.
+office. Keep observation separate from explicitly authorized provider controls.
+The collectors remain read-only, and the renderer performs no I/O.
 
 ## Crate layout
 
@@ -11,6 +11,8 @@ easy to inspect.
 | --- | --- |
 | theywork-core | Domain model for offices, workers, activities, events, and the deterministic demo world |
 | theywork-collect | Read-only Claude Code and Codex sources that turn local data into core events |
+| theywork-control | Private local supervisor, provider RPC authority and native-console handoff |
+| theywork-terminal-image | Negotiated graphics transport and bounded image encoding |
 | theywork-render | In-memory canvas, sprites, animations, overlays, and views; it performs no I/O |
 | theywork-tui | The binary: argument parsing, polling, terminal setup, and wiring |
 
@@ -27,11 +29,15 @@ The CLI exposes `--project`, `--config-dir`, and the non-rendering `--doctor`
 diagnostic; the collector owner supplies normalized project identities and
 first-scan counts. Keep the
 default path read-only and make every additional write require the explicit
-config-directory opt-in described there.
+config-directory opt-in described there. Managed tasks additionally follow
+[the control contract](docs/CONTROLS.md); reading a transcript never grants
+authority over an external execution.
 
 ## Build and test
 
-Use native Rust 1.90 with a C compiler, or Docker. `./scripts/cargo` prefers
+Use native Rust 1.90 with a C compiler and Python 3 for the offline process
+fixtures, or Docker. Python is a development dependency, not an end-user runtime
+requirement. `./scripts/cargo` prefers
 local Cargo and falls back to `docker/Dockerfile.dev`. Set
 `THEYWORK_TOOLCHAIN=native` or `THEYWORK_TOOLCHAIN=docker` to choose explicitly.
 The Docker image runs as the invoking user, mounts the checkout at `/src`, and
@@ -47,7 +53,11 @@ python3 scripts/test-native-install.py
 ~~~
 
 `make check` fetches locked dependencies, then checks formatting, strict Clippy,
-and workspace tests. Docker commands run without network access by default;
+and workspace tests. The canonical suite uses `--test-threads=1` because its
+wall-clock frame-budget checks must not compete with other expensive render
+scenarios. No timing thresholds are relaxed. Provider tests use offline fakes
+and need local loopback sockets and PTYs; they never start a real model turn.
+Docker commands run without network access by default;
 `make fetch` explicitly enables network access to populate the dependency cache.
 Native Cargo follows its normal network policy. To run individual Docker tests
 on a fresh checkout, first run `THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked`.
@@ -80,8 +90,9 @@ mounts.
 
 ## Adding a sprite
 
-1. Add the sprite data and its dimensions in
-   <code>crates/theywork-render/src/sprite.rs</code>.
+1. Add high-resolution character art in
+   <code>crates/theywork-render/src/living_office/art.rs</code>; keep compatible
+   compact sprites in <code>crates/theywork-render/src/sprite.rs</code>.
 2. Add it to <code>SpriteSet</code> and give it a descriptive name.
 3. Reuse the existing transparent-pixel and nearest-neighbor scaling helpers
    instead of drawing directly into the terminal buffer.

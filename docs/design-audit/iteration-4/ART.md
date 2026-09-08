@@ -130,6 +130,14 @@ real waiting semantics, physical geometry, member pagination, translated
 regions, bounded caches and lossless Kitty transfer. Golden character snapshots
 remain the fallback checks; they do not substitute for these image tests.
 
+The final executable PTY review found one more layout regression when a tall
+floor split into two narrow rooms. The host now divides a floor only if both
+cell-aligned rooms retain the intended character scale and space for a lead
+plus one participant. At 132×42 the selected room uses 3× people; at 152×24
+adjacent rooms use 2×. The test covers twelve geometries and preserves the
+selected child with its lead. Actual emitted Kitty images before and after
+this correction are recorded in [CONTROL-PTY.md](CONTROL-PTY.md).
+
 Validation at the artwork freeze: 15 scene tests, 15 terminal-image tests,
 179 renderer tests with the pending golden regeneration explicitly skipped,
 and strict Clippy for both crates across all targets passed. Logs are in

@@ -5,6 +5,8 @@
 pub mod art;
 pub mod overview;
 mod rooms;
+mod workstation;
+pub use workstation::WorkstationLayout;
 pub mod simulation;
 
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -56,7 +58,7 @@ impl SceneCue {
             Self::Delegating => Pose::FolderOut,
             Self::Message => Pose::Message,
             Self::Delivering => Pose::FolderIn,
-            Self::WaitingForTeam => Pose::Read,
+            Self::WaitingForTeam => Pose::ScreenRead,
         }
     }
 }
@@ -108,6 +110,8 @@ pub struct SeatLayout {
     /// Stable native name/status destination, never animated with the actor.
     pub nameplate: PixelRect,
     pub costume: &'static str,
+    /// Stable equipment and home position, independent of decorative travel.
+    pub workstation: WorkstationLayout,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -285,6 +289,7 @@ impl Studio {
         for seat in &mut layout.seats {
             translate(&mut seat.bounds);
             translate(&mut seat.nameplate);
+            seat.workstation.translate(region.x, region.y);
         }
         for anchor in &mut layout.anchors {
             anchor.x += region.x;
@@ -360,9 +365,9 @@ impl Studio {
         let width = canvas.width() / scale;
         let height = canvas.height() / scale;
         let (cast_w, cast_h, shaft, slot) = if options.overview {
-            (24, 32, 36, 40)
+            (24, 32, 36, 44)
         } else {
-            (48, 64, 52, 76)
+            (48, 64, 52, 84)
         };
         let native_height = canvas.pixels_per_cell().1.max(12);
         let title = native_height.div_ceil(scale);
@@ -507,16 +512,19 @@ impl Studio {
                 worker.status_at(options.now),
                 WorkerStatus::Blocked | WorkerStatus::Failed
             );
-            let decoration = decoration.filter(|_| !needs_attention && options.motion);
+            let unavailable = observation_unavailable(worker, options.now);
+            let decoration =
+                decoration.filter(|_| !needs_attention && options.motion && !unavailable);
             let cue = options
                 .cues
                 .and_then(|cues| cues.get(&worker.id.0))
                 .copied()
                 .filter(|_| {
-                    observed_pose(worker, options.now) != Pose::Waiting
+                    !unavailable
+                        && observed_pose(worker, options.now) != Pose::Waiting
                         && worker.status_at(options.now) != WorkerStatus::Failed
                 });
-            let (pose, _offset, aisle) = if let Some(cue) = cue {
+            let (mut pose, _offset, aisle) = if let Some(cue) = cue {
                 (cue.pose(), 0, false)
             } else {
                 match decoration {
@@ -527,13 +535,17 @@ impl Studio {
                     None => (observed_pose(worker, options.now), 0, false),
                 }
             };
-            let phase = if options.motion {
+            if pose == Pose::Rest && !aisle {
+                pose = Pose::SeatedRest;
+            }
+            let phase = if options.motion && !unavailable {
                 ((options.now.max(0) as u64 / 125 + art::stable_hash(&worker.id.0) % 8) % 8) as u8
             } else {
                 0
             };
-            let origin_x = seat_x + (key.slot - cast_w) / 2;
-            let origin_y = floor.saturating_sub(cast_h - 1);
+            let station = workstation::geometry(key, seat_x);
+            let origin_x = station.actor_home.x;
+            let origin_y = station.actor_home.y;
             let (px, py, facing) = if aisle {
                 let d = decoration.expect("aisle requires a decoration");
                 let anchor = anchors
@@ -574,9 +586,15 @@ impl Studio {
                 (
                     origin_x,
                     origin_y,
-                    if matches!(pose, Pose::Rest | Pose::Waiting | Pose::Error) {
+                    if matches!(
+                        pose,
+                        Pose::Rest | Pose::SeatedRest | Pose::Waiting | Pose::Error
+                    ) {
                         Facing::Front
-                    } else if meeting && slot > visible.len() / 2 {
+                    } else if meeting
+                        && slot > visible.len() / 2
+                        && !matches!(pose, Pose::Work | Pose::ScreenRead | Pose::Search)
+                    {
                         Facing::Left
                     } else {
                         Facing::Right
@@ -609,7 +627,14 @@ impl Studio {
             } else {
                 aisle_actors.push((sprite, px, py));
             }
-            rooms::furniture(&mut foreground, key, seat_x as i32, selected);
+            workstation::furniture(
+                &mut foreground,
+                key,
+                seat_x,
+                selected,
+                workstation::screen(worker, options.now),
+                phase,
+            );
             let plate = PixelRect {
                 x: seat_x,
                 y: key.plate_y(),
@@ -627,6 +652,7 @@ impl Studio {
                 .scaled(scale),
                 nameplate: plate.scaled(scale),
                 costume: art::COSTUMES[character.costume as usize],
+                workstation: station.scaled(scale),
             });
             // Actors in the clear aisle are composed later, in front of furniture.
         }
@@ -694,7 +720,15 @@ fn page_workers<'a>(
     (page, pages, visible)
 }
 
+fn observation_unavailable(worker: &Worker, now: Millis) -> bool {
+    worker.coverage.observed_at > 0
+        && (!worker.coverage.available || worker.coverage.is_stale_at(now))
+}
+
 fn observed_pose(worker: &Worker, now: Millis) -> Pose {
+    if observation_unavailable(worker, now) {
+        return Pose::Rest;
+    }
     if worker.status_at(now) == WorkerStatus::Failed {
         return Pose::Error;
     }
@@ -716,7 +750,7 @@ fn observed_pose(worker: &Worker, now: Millis) -> Pose {
         {
             Pose::Waiting
         }
-        Activity::Reading { .. } => Pose::Read,
+        Activity::Reading { .. } => Pose::ScreenRead,
         Activity::Searching { .. } => Pose::Search,
         Activity::Typing { .. } | Activity::Editing { .. }
             if worker.status_at(now) == WorkerStatus::Running =>
@@ -795,6 +829,110 @@ mod tests {
             })
             .collect();
         office
+    }
+    #[test]
+    fn workstation_anchors_fit_three_at_eighty_columns_and_translate_with_the_scene() {
+        let office = office(3);
+        let mut studio = Studio::new();
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(640, 304);
+        let options = SceneOptions {
+            motion: false,
+            ..Default::default()
+        };
+        let layout = studio.paint(&mut canvas, &office, &options);
+        assert_eq!(
+            (layout.seats.len(), layout.capacity, layout.scale),
+            (3, 3, 2)
+        );
+        let mut bigger = Canvas::new(0, 0);
+        bigger.set_image_cell_size(Some((8, 16)));
+        bigger.resize(800, 400);
+        let moved = studio.paint_region(
+            &mut bigger,
+            PixelRect {
+                x: 80,
+                y: 48,
+                width: 640,
+                height: 304,
+            },
+            &office,
+            &options,
+        );
+        for (original, moved) in layout.seats.iter().zip(&moved.seats) {
+            let mut expected = original.workstation;
+            expected.translate(80, 48);
+            assert_eq!(expected, moved.workstation);
+            for r in [
+                original.workstation.computer,
+                original.workstation.keyboard,
+                original.workstation.chair,
+                original.workstation.actor_home,
+            ] {
+                assert!(
+                    r.x >= original.workstation.selection.x
+                        && r.x + r.width
+                            <= original.workstation.selection.x
+                                + original.workstation.selection.width
+                );
+                assert!(r.y + r.height <= 304);
+            }
+        }
+    }
+    #[test]
+    fn unavailable_observations_do_not_animate_past_work_errors_or_requests() {
+        let mut office = office(1);
+        let id = office.workers[0].id.0.clone();
+        let cues = BTreeMap::from([(id, SceneCue::Delivering)]);
+        let mut studio = Studio::new();
+        let mut canvas = Canvas::new(0, 0);
+        canvas.set_image_cell_size(Some((8, 16)));
+        canvas.resize(640, 480);
+        for activity in [
+            Activity::Editing {
+                detail: "file.rs".into(),
+            },
+            Activity::Error {
+                detail: "old failure".into(),
+            },
+            Activity::Waiting {
+                detail: "recorded question".into(),
+            },
+        ] {
+            let worker = &mut office.workers[0];
+            worker.activity = activity;
+            worker.turn_in_flight = true;
+            worker.wait_reason = Some(theywork_core::WaitReason::HumanInput);
+            worker.coverage.observed_at = 1;
+            worker.coverage.available = false;
+            worker.coverage.available = true;
+            assert_eq!(observed_pose(worker, 200_001), Pose::Rest);
+            worker.coverage.available = false;
+            assert_eq!(observed_pose(worker, 1000), Pose::Rest);
+            assert_eq!(
+                workstation::screen(worker, 1000),
+                workstation::Screen::Unknown
+            );
+            let options = SceneOptions {
+                now: 1000,
+                motion: true,
+                cues: Some(&cues),
+                ..Default::default()
+            };
+            let frame = studio.paint(&mut canvas, &office, &options);
+            assert_eq!(frame.active_gags, 0);
+            let expected = canvas.pixel_frame();
+            studio.paint(
+                &mut canvas,
+                &office,
+                &SceneOptions {
+                    now: 1125,
+                    ..options
+                },
+            );
+            assert_eq!(expected.rgba(), canvas.pixel_frame().rgba());
+        }
     }
     #[test]
     fn frontal_and_three_quarter_poses_are_authored_at_both_grids() {

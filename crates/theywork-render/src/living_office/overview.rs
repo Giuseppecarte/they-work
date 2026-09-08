@@ -89,12 +89,29 @@ fn character_pose(person: Character, pose: Pose, phase: u8, front: bool) -> Spri
         }
         _ => {}
     }
-    a.rect(8 - step, 25, 4, 5, ink);
-    a.rect(14 + step, 24, 4, 5, ink);
-    a.rect(7 - step, 29, 6, 2, ink);
-    a.rect(14 + step, 28, 6, 2, ink);
-    a.rect(8 - step, 29, 4, 1, rgb(233, 223, 197));
-    a.rect(15 + step, 28, 4, 1, rgb(186, 194, 191));
+    let seated = matches!(
+        pose,
+        Pose::Work | Pose::ScreenRead | Pose::Search | Pose::SeatedRest
+    );
+    if seated {
+        a.poly(
+            &[(8, 25), (12, 26), (13, 28), (16, 29), (15, 31), (10, 30)],
+            ink,
+        );
+        a.poly(
+            &[(14, 25), (17, 25), (18, 28), (21, 29), (20, 31), (15, 30)],
+            ink,
+        );
+        a.rect(10, 29, 5, 1, rgb(233, 223, 197));
+        a.rect(16, 29, 4, 1, rgb(186, 194, 191));
+    } else {
+        a.rect(8 - step, 25, 4, 5, ink);
+        a.rect(14 + step, 24, 4, 5, ink);
+        a.rect(7 - step, 29, 6, 2, ink);
+        a.rect(14 + step, 28, 6, 2, ink);
+        a.rect(8 - step, 29, 4, 1, rgb(233, 223, 197));
+        a.rect(15 + step, 28, 4, 1, rgb(186, 194, 191));
+    }
     a.poly(
         &[
             (9, 17),
@@ -136,20 +153,31 @@ fn character_pose(person: Character, pose: Pose, phase: u8, front: bool) -> Spri
         Pose::Stretch => 8,
         _ => 23,
     };
-    a.poly(
-        &[
-            (16, 19),
-            (20, hand_y + 2),
-            (22, hand_y + 4),
-            (19, 24),
-            (16, 23),
-        ],
-        darken(shirt, 25),
-    );
-    a.rect(20, hand_y, 3, 4, shade);
-    a.rect(20, hand_y, 2, 3, skin);
-    a.rect(7, 23, 3, 3, shade);
-    a.rect(7, 23, 2, 2, skin);
+    if matches!(pose, Pose::Work | Pose::ScreenRead | Pose::Search) {
+        a.poly(
+            &[(8, 20), (6, 22), (10, 25), (17, 25), (18, 22), (11, 22)],
+            darken(shirt, 25),
+        );
+        a.poly(
+            &[(16, 20), (19, 21), (22, 23), (21, 26), (16, 24)],
+            darken(shirt, 25),
+        );
+    } else {
+        a.poly(
+            &[
+                (16, 19),
+                (20, hand_y + 2),
+                (22, hand_y + 4),
+                (19, 24),
+                (16, 23),
+            ],
+            darken(shirt, 25),
+        );
+        a.rect(20, hand_y, 3, 4, shade);
+        a.rect(20, hand_y, 2, 3, skin);
+        a.rect(7, 23, 3, 3, shade);
+        a.rect(7, 23, 2, 2, skin);
+    }
     match costume {
         0 => {
             a.line((10, 19), (12, 22), lighten(shirt, 42));
@@ -322,6 +350,7 @@ fn character_pose(person: Character, pose: Pose, phase: u8, front: bool) -> Spri
             );
             a.line((5, 8), (6, 3), ink);
             a.line((6, 3), (16, 3), ink);
+            a.line((16, 3), (19, 9), ink);
             a.rect(4, 9, 3, 7, rgb(172, 67, 69));
             a.rect(4, 10, 1, 5, rgb(234, 134, 113));
             a.rect(18, 9, 2, 5, rgb(146, 60, 60));
@@ -547,11 +576,6 @@ fn character_pose(person: Character, pose: Pose, phase: u8, front: bool) -> Spri
             a.rect(19, hand_y + 1, 4, 4, rgb(237, 228, 190));
             a.rect(20, hand_y + 1, 2, 1, rgb(90, 61, 47));
         }
-        Pose::Search => {
-            a.ellipse(16, 17, 6, 6, rgb(111, 157, 169));
-            a.ellipse(17, 18, 4, 4, rgb(199, 220, 203));
-            a.line((20, 22), (22, 25), rgb(102, 69, 50));
-        }
         Pose::WaterPlant => {
             a.rect(18, 22, 5, 4, rgb(79, 159, 145));
             a.line((21, 23), (23, 20), rgb(135, 195, 173));
@@ -561,6 +585,17 @@ fn character_pose(person: Character, pose: Pose, phase: u8, front: bool) -> Spri
             rgb(245, 235, 201),
         ),
         _ => {}
+    }
+    if matches!(pose, Pose::Work | Pose::ScreenRead | Pose::Search) {
+        let press = if pose == Pose::Work {
+            i32::from(phase % 2)
+        } else {
+            0
+        };
+        a.rect(15, 22 + press, 3, 3, shade);
+        a.rect(15, 22 + press, 2, 1, skin);
+        a.rect(20, 23 - press, 3, 3, shade);
+        a.rect(20, 23 - press, 2, 1, skin);
     }
     a.sprite()
 }

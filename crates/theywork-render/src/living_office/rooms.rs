@@ -44,12 +44,12 @@ pub(super) fn background(key: RoomKey) -> Sprite {
     a.rect(s, 2, w - s - 2, f, wall);
     a.rect(s, f, w - s, h - f, wood);
     // Floor joints remain subordinate to people and do not expand the wall.
-    let plank = if key.overview { 8 } else { 12 };
+    let plank = if key.overview { 10 } else { 16 };
     for y in (f..h).step_by(plank as usize) {
-        a.rect(s, y, w - s, 1, lighten(wood, 15));
+        a.rect(s, y, w - s, 1, lighten(wood, 7));
         let start = s + if ((y - f) / plank) % 2 == 0 { 0 } else { 27 };
         for x in (start..w).step_by(54) {
-            a.rect(x, y, 1, plank, darken(wood, 17));
+            a.rect(x, y, 1, plank, darken(wood, 8));
         }
     }
     a.rect(s, f - 3, w - s, 3, trim);
@@ -65,14 +65,18 @@ pub(super) fn background(key: RoomKey) -> Sprite {
     let window_h = if key.overview { 17 } else { 33 };
     match key.preset {
         OfficePreset::Studio => {
-            for x in (s + 9..w - 42).step_by(if key.overview { 78 } else { 116 }) {
+            for x in (s + 9..w - 42).step_by(((w - s - 25) as usize / 3).max(if key.overview {
+                78
+            } else {
+                116
+            })) {
                 glazing(
                     &mut a,
                     x,
                     top,
                     if key.overview { 47 } else { 70 },
                     window_h,
-                    accent,
+                    darken(accent, 18),
                 );
             }
             if !key.overview {
@@ -102,14 +106,18 @@ pub(super) fn background(key: RoomKey) -> Sprite {
             );
         }
         OfficePreset::Laboratory => {
-            for x in (s + 9..w - 24).step_by(if key.overview { 57 } else { 89 }) {
+            for x in (s + 9..w - 24).step_by(((w - s - 25) as usize / 3).max(if key.overview {
+                57
+            } else {
+                89
+            })) {
                 glazing(
                     &mut a,
                     x,
                     top,
                     if key.overview { 40 } else { 65 },
                     window_h,
-                    rgb(121, 177, 173),
+                    rgb(91, 135, 139),
                 );
                 a.rect(
                     x + 4,
@@ -162,20 +170,9 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         a.rect(8, 7, s - 18, 7, trim);
         a.rect(10, 9, s - 24, 1, rgb(192, 210, 178));
     }
-    // Seating backs and contact shadows are behind the actors.
-    let first = key.first_x as i32;
+    // Equipment and people share the chair's authored seat height.
     for seat in 0..key.seats {
-        let x = first + seat as i32 * key.slot as i32;
-        let small = key.overview;
-        let (cx, cw, ch) = if small {
-            (x + 11, 15, 14)
-        } else {
-            (x + 21, 27, 26)
-        };
-        a.ellipse(x + 6, f - 2, key.slot as i32 - 12, 5, darken(wood, 35));
-        a.rect(cx, f - ch - 4, cw, ch, trim);
-        a.rect(cx + 2, f - ch - 3, cw - 4, ch - 3, accent);
-        a.rect(cx + 2, f - ch - 3, cw - 4, 2, lighten(accent, 22));
+        super::workstation::chair(&mut a, key, key.first_x + seat * key.slot);
     }
     // A usable resting corner lives in the foreground aisle. Its anchor has a
     // real destination; the decorative actor does not walk to an arbitrary offset.
@@ -234,9 +231,9 @@ pub(super) fn background(key: RoomKey) -> Sprite {
 
 fn glazing(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, c: Color) {
     a.rect(x - 2, y - 2, w + 4, h + 5, rgb(38, 57, 68));
-    a.rect(x - 1, y - 1, w + 2, h + 2, rgb(140, 159, 156));
+    a.rect(x - 1, y - 1, w + 2, h + 2, rgb(106, 125, 128));
     a.rect(x, y, w, h, c);
-    a.rect(x, y, w, h / 2, lighten(c, 20));
+    a.rect(x, y, w, h / 2, lighten(c, 12));
     for n in 0..w / 10 {
         let bh = 4 + (n * 7) % 10;
         a.rect(x + n * 10, y + h - bh, 8, bh, darken(c, 30));
@@ -244,10 +241,10 @@ fn glazing(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, c: Color) {
     }
     a.poly(
         &[(x + 3, y), (x + 10, y), (x + 3, y + h), (x, y + h)],
-        lighten(c, 32),
+        lighten(c, 14),
     );
     a.rect(x + w / 2, y, 2, h, rgb(65, 93, 101));
-    a.rect(x - 3, y + h + 2, w + 6, 2, rgb(164, 165, 143));
+    a.rect(x - 3, y + h + 2, w + 6, 2, rgb(123, 138, 134));
 }
 fn books(a: &mut Raster, x: i32, y: i32, w: i32, h: i32) {
     for (i, c) in [
@@ -283,70 +280,4 @@ fn coffee_station(a: &mut Raster, x: i32, f: i32, small: bool, warm: bool) {
     a.rect(x - 5, f - h - 8, 6, 4, rgb(35, 54, 64));
     a.rect(x - 4, f - h - 3, 4, 3, rgb(237, 225, 179));
     a.rect(x + 7, f - h - 4, 4, 4, rgb(232, 216, 163));
-}
-
-pub(super) fn furniture(a: &mut Raster, key: RoomKey, x: i32, selected: bool) {
-    let f = key.floor as i32;
-    let small = key.overview;
-    let sw = key.slot as i32;
-    let edge = match key.preset {
-        OfficePreset::Studio => rgb(188, 148, 99),
-        OfficePreset::Workshop => rgb(145, 125, 85),
-        OfficePreset::Laboratory => rgb(173, 199, 188),
-    };
-    let y = f - if small { 6 } else { 16 };
-    let table_h = if small { 2 } else { 4 };
-    if key.meeting {
-        let rounded = key.zones[2].is_multiple_of(3);
-        let inset = if rounded && x == key.first_x as i32 {
-            2
-        } else {
-            0
-        };
-        let end = if rounded
-            && x == key.first_x as i32 + (key.seats.saturating_sub(1) * key.slot) as i32
-        {
-            2
-        } else {
-            0
-        };
-        a.rect(x + inset, y, sw - inset - end, table_h, edge);
-        a.rect(x + inset, y, sw - inset - end, 1, lighten(edge, 38));
-        a.rect(x + 6, y + table_h, 2, -y + f - table_h, rgb(54, 71, 75));
-        if key.zones[2] % 3 == 2 {
-            a.rect(x + sw - 8, y - 5, 4, 5, rgb(130, 184, 177));
-        }
-    } else {
-        a.rect(x, y, sw - 5, table_h, edge);
-        a.rect(x + 1, y, sw - 7, 1, lighten(edge, 37));
-        for leg in [4, sw - 11] {
-            a.rect(x + leg, y + table_h, 2, f - y - table_h, rgb(50, 67, 75));
-        }
-        let mx = x + sw - if small { 12 } else { 21 };
-        let mh = if small { 10 } else { 20 };
-        let mw = if small { 10 } else { 18 };
-        if key.zones[1] % 3 == 1 {
-            a.rect(
-                x + 2,
-                y + table_h,
-                if small { 8 } else { 15 },
-                f - y - table_h,
-                rgb(100, 109, 99),
-            );
-        }
-        if key.zones[1] % 3 == 2 {
-            a.rect(mx - 2, y - 7, mw, 6, rgb(69, 98, 116));
-            a.rect(mx - 2, y - 1, mw + 3, 1, rgb(149, 173, 166));
-        } else {
-            a.rect(mx + mw / 2 - 1, y - 5, 2, 5, rgb(75, 94, 103));
-            a.rect(mx, y - mh - 4, mw, mh, rgb(31, 48, 63));
-            a.rect(mx + 1, y - mh - 3, mw - 2, mh - 2, rgb(75, 124, 139));
-            a.rect(mx + 2, y - mh - 1, mw - 4, 1, rgb(174, 206, 172));
-        }
-    }
-    let py = key.plate_y() as i32;
-    a.rect(x, py, sw - 4, key.plate as i32, rgb(34, 48, 59));
-    if selected {
-        a.rect(x, py, 1, key.plate as i32, rgb(171, 215, 195));
-    }
 }

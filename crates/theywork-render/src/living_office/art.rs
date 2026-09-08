@@ -61,7 +61,7 @@ pub(super) fn gesture_layer(
             Pose::Read => Some((7, 20, 19, 29)),
             Pose::FolderIn => Some((2, 19, 11, 28)),
             Pose::Coffee | Pose::WaterPlant => Some((18, 19, 24, 28)),
-            Pose::Work => Some((6, 22, 24, 28)),
+            Pose::Work | Pose::ScreenRead | Pose::Search => Some((12, 20, 24, 28)),
             _ => None,
         }
     } else {
@@ -69,7 +69,7 @@ pub(super) fn gesture_layer(
             Pose::Read => Some((12, 41, 35, 56)),
             Pose::FolderIn => Some((0, 29, 17, 47)),
             Pose::Coffee | Pose::WaterPlant => Some((33, 39, 48, 53)),
-            Pose::Work => Some((8, 42, 41, 53)),
+            Pose::Work | Pose::ScreenRead | Pose::Search => Some((26, 42, 48, 52)),
             _ => None,
         }
     }?;
@@ -89,6 +89,8 @@ pub(super) fn gesture_layer(
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Pose {
     Rest,
+    SeatedRest,
+    ScreenRead,
     Work,
     Read,
     Search,
@@ -277,7 +279,17 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
     } else {
         0
     };
-    let bob = if walking && phase % 4 == 1 { -1 } else { 0 };
+    let seated = matches!(
+        pose,
+        Pose::Work | Pose::ScreenRead | Pose::Search | Pose::SeatedRest
+    );
+    let bob = if seated {
+        2
+    } else if walking && phase % 4 == 1 {
+        -1
+    } else {
+        0
+    };
     // Behind the body: long hair, backpack, cape, ponytail and dinosaur tail.
     match costume {
         2 => {
@@ -338,15 +350,41 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
         }
         _ => {}
     }
-    // Shoes and individually articulated legs. Neither is a scaled rectangle body.
-    art.rect(15 - step / 2, 51 + bob, 7, 10 - bob, ink);
-    art.rect(27 + step / 2, 51 + bob, 7, 10 - bob, ink);
-    art.rect(16 - step / 2, 51 + bob, 5, 7, rgb(76, 83, 99));
-    art.rect(28 + step / 2, 51 + bob, 5, 7, rgb(62, 67, 84));
-    art.rect(12 - step / 2, 59, 10, 4, ink);
-    art.rect(27 + step / 2, 57, 11, 4, ink);
-    art.rect(13 - step / 2, 59, 8, 2, rgb(234, 226, 205));
-    art.rect(28 + step / 2, 57, 8, 2, rgb(196, 201, 196));
+    if seated {
+        // Hips meet the chair; bent knees and level shoes make sitting distinct.
+        art.poly(
+            &[
+                (15, 52),
+                (23, 53),
+                (24, 57),
+                (29, 58),
+                (28, 62),
+                (19, 61),
+                (16, 57),
+            ],
+            ink,
+        );
+        art.poly(
+            &[(27, 52), (33, 52), (34, 56), (39, 57), (38, 61), (29, 60)],
+            ink,
+        );
+        art.rect(18, 54, 5, 4, rgb(83, 92, 108));
+        art.rect(29, 54, 4, 3, rgb(68, 78, 95));
+        art.rect(19, 60, 10, 3, ink);
+        art.rect(30, 59, 10, 3, ink);
+        art.rect(20, 60, 8, 1, rgb(234, 226, 205));
+        art.rect(31, 59, 8, 1, rgb(196, 201, 196));
+    } else {
+        // Shoes and individually articulated legs. Neither is a scaled rectangle body.
+        art.rect(15 - step / 2, 51 + bob, 7, 10 - bob, ink);
+        art.rect(27 + step / 2, 51 + bob, 7, 10 - bob, ink);
+        art.rect(16 - step / 2, 51 + bob, 5, 7, rgb(76, 83, 99));
+        art.rect(28 + step / 2, 51 + bob, 5, 7, rgb(62, 67, 84));
+        art.rect(12 - step / 2, 59, 10, 4, ink);
+        art.rect(27 + step / 2, 57, 11, 4, ink);
+        art.rect(13 - step / 2, 59, 8, 2, rgb(234, 226, 205));
+        art.rect(28 + step / 2, 57, 8, 2, rgb(196, 201, 196));
+    }
     // Rounded shoulders, a shaped hem, and edge shadows give clothing volume.
     art.poly(
         &[
@@ -395,30 +433,55 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
     } else {
         48
     } + bob;
-    art.poly(
-        &[
-            (13, 37 + bob),
-            (9, 39 + bob),
-            (8, wrist),
-            (13, wrist + 3),
-            (16, 41 + bob),
-        ],
-        shade,
-    );
-    art.rect(9, wrist, 5, 5, skin_shadow);
-    art.rect(9, wrist, 4, 3, skin);
-    art.poly(
-        &[
-            (31, 36 + bob),
-            (36, arm_y),
-            (39, arm_y + 8),
-            (34, arm_y + 10),
-            (30, 41 + bob),
-        ],
-        shade,
-    );
-    art.rect(35, arm_y + 7, 5, 5, skin_shadow);
-    art.rect(35, arm_y + 7, 4, 3, skin);
+    if matches!(pose, Pose::Work | Pose::ScreenRead | Pose::Search) {
+        art.poly(
+            &[
+                (13, 38 + bob),
+                (10, 42 + bob),
+                (17, 48),
+                (32, 48),
+                (33, 44),
+                (18, 43),
+            ],
+            shade,
+        );
+        art.poly(
+            &[
+                (31, 38 + bob),
+                (35, 42),
+                (44, 44),
+                (44, 48),
+                (34, 48),
+                (29, 43),
+            ],
+            shade,
+        );
+    } else {
+        art.poly(
+            &[
+                (13, 37 + bob),
+                (9, 39 + bob),
+                (8, wrist),
+                (13, wrist + 3),
+                (16, 41 + bob),
+            ],
+            shade,
+        );
+        art.rect(9, wrist, 5, 5, skin_shadow);
+        art.rect(9, wrist, 4, 3, skin);
+        art.poly(
+            &[
+                (31, 36 + bob),
+                (36, arm_y),
+                (39, arm_y + 8),
+                (34, arm_y + 10),
+                (30, 41 + bob),
+            ],
+            shade,
+        );
+        art.rect(35, arm_y + 7, 5, 5, skin_shadow);
+        art.rect(35, arm_y + 7, 4, 3, skin);
+    }
     // Costume cuts and identifying items remain visible beneath every face.
     match costume {
         0 => {
@@ -628,6 +691,7 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
             hair_cap(&mut art, hair, bob);
             art.line((9, 18 + bob), (9, 11 + bob), ink);
             art.rect(10, 9 + bob, 27, 3, ink);
+            art.line((36, 11 + bob), (38, 18 + bob), ink);
             art.rect(8, 18 + bob, 6, 12, rgb(178, 75, 77));
             art.rect(35, 18 + bob, 6, 12, rgb(146, 56, 68));
             art.rect(8, 19 + bob, 2, 8, rgb(233, 134, 110));
@@ -845,11 +909,16 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
             art.rect(15, 44, 7, 7, rgb(237, 221, 176));
             art.rect(24, 45, 7, 7, rgb(211, 200, 162));
         }
-        Pose::Search => {
-            art.ellipse(29, 31, 11, 11, rgb(114, 154, 166));
-            art.ellipse(31, 33, 7, 7, rgb(184, 216, 212));
-            art.line((37, 40), (42, 46), rgb(92, 66, 51));
-            art.line((38, 40), (43, 46), rgb(92, 66, 51));
+        Pose::Work | Pose::ScreenRead | Pose::Search => {
+            let press = if pose == Pose::Work {
+                i32::from(phase % 2)
+            } else {
+                0
+            };
+            art.rect(31, 44 + press, 5, 4, skin_shadow);
+            art.rect(31, 44 + press, 4, 2, skin);
+            art.rect(41, 45 - press, 5, 4, skin_shadow);
+            art.rect(41, 45 - press, 4, 2, skin);
         }
         Pose::Coffee => {
             let y = if phase % 8 >= 3 { 28 } else { 43 };

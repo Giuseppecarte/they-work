@@ -1,0 +1,41 @@
+ 0 TOWER >1 vertical-project●                                                                     1/1 · / find · c sources · ? help
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-ijhe22do/vertical-project▏
+
+
+ ▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Returned from official console. Background tasks remain with their provider.
+ F5 send · F2 stop · F3 console · F4 requests · F6 reconnect · Esc back

@@ -1,6 +1,7 @@
 //! The presentation screens rendered by this crate.
 
 pub mod cameras;
+pub mod control;
 pub mod desk;
 pub(crate) mod finder;
 mod guard_scene;
@@ -8,6 +9,8 @@ pub mod help;
 pub mod office;
 pub mod phone;
 pub mod settings;
+pub(crate) mod tower;
+pub mod workboard;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -114,6 +117,20 @@ pub(crate) fn below_tab_bar(area: Rect) -> Rect {
 }
 pub(crate) fn has_area(area: Rect) -> bool {
     area.width > 0 && area.height > 0
+}
+
+/// Preserve explicit lines while removing terminal control sequences from records.
+pub(crate) fn safe_multiline(text: &str) -> String {
+    text.split('\n')
+        .map(safe_display)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+pub(crate) fn wrap_text(text: &str, width: u16) -> Vec<String> {
+    text.split('\n')
+        .flat_map(|line| desk::wrapped_lines(line, usize::from(width).max(1)))
+        .collect()
 }
 
 /// Clear an area to spaces before painting a widget over a previous view.

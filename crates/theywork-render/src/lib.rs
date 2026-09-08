@@ -10,9 +10,12 @@ use ratatui::Frame;
 use theywork_core::{Millis, OfficeId, World};
 
 pub mod canvas;
+pub mod living_office;
 pub mod sprite;
 pub mod views;
 
+#[cfg(test)]
+mod acceptance_tests;
 #[cfg(test)]
 mod golden;
 use canvas::Canvas;
@@ -35,6 +38,8 @@ pub enum UiCommand {
     Quit,
     /// Choose which local conversation folders the host may read.
     Sources,
+    /// An explicit action from the task controls; executed by the host.
+    Control(views::control::Command),
 }
 
 /// Renderer-owned explanation of the terminal presentation policy.
@@ -92,6 +97,7 @@ pub struct Ui {
     known_worker_count: usize,
     now: Millis,
     canvas: Canvas,
+    studio: living_office::Studio,
     sprites: SpriteSet,
     phone_open: bool,
     phone_channel: views::phone::PhoneChannel,
@@ -125,6 +131,12 @@ pub struct Ui {
     selected_office_palette: usize,
     finder: views::finder::Finder,
     pending_find: Option<views::finder::Target>,
+    workboard: views::workboard::Workboard,
+    review_memory: views::workboard::ReviewMemory,
+    visit_baselines: BTreeMap<String, Millis>,
+    visit_office: Option<OfficeId>,
+    controls: views::control::ControlPanel,
+    pending_control: Option<bool>,
 }
 
 impl Ui {
@@ -144,6 +156,7 @@ impl Ui {
             known_worker_count: 0,
             now: 0,
             canvas: Canvas::with_color_depth_and_encoding(0, 0, color_depth, encoding),
+            studio: living_office::Studio::new(),
             sprites: SpriteSet::new(),
             phone_open: false,
             phone_channel: views::phone::PhoneChannel::Standup,
@@ -177,6 +190,12 @@ impl Ui {
             selected_office_palette: 0,
             finder: views::finder::Finder::default(),
             pending_find: None,
+            workboard: views::workboard::Workboard::default(),
+            review_memory: views::workboard::ReviewMemory::default(),
+            visit_baselines: BTreeMap::new(),
+            visit_office: None,
+            controls: views::control::ControlPanel::default(),
+            pending_control: None,
         }
     }
 
@@ -213,6 +232,30 @@ impl Ui {
     /// Selected worker index in the current office.
     pub fn selected_worker(&self) -> usize {
         self.selected_worker
+    }
+
+    pub fn restore_review_memory(&mut self, memory: views::workboard::ReviewMemory) {
+        self.review_memory = memory;
+        self.visit_baselines.clear();
+        self.visit_office = None;
+    }
+
+    pub fn review_memory(&self) -> views::workboard::ReviewMemory {
+        let mut memory = self.review_memory.clone();
+        memory.prune();
+        memory
+    }
+
+    pub fn set_control_status(&mut self, status: views::control::ControlStatus) {
+        self.controls.set_status(status);
+    }
+
+    pub fn complete_control(&mut self, notice: String, accepted: bool) {
+        self.controls.complete(notice, accepted);
+    }
+
+    pub fn control_modal(&self) -> bool {
+        self.controls.open
     }
 
     /// The active pixel packing used for the next frame.
@@ -267,7 +310,7 @@ impl Ui {
         self.wardrobe = preferences
             .wardrobe
             .iter()
-            .filter(|(_, preset)| **preset < 6)
+            .filter(|(_, preset)| **preset < 12)
             .map(|(worker, preset)| (worker.clone(), *preset))
             .collect();
         self.office_palettes = preferences
@@ -335,7 +378,9 @@ impl Ui {
 
     /// Insert pasted text in the finder without invoking keyboard shortcuts.
     pub fn handle_paste(&mut self, text: &str) {
-        if self.finder.open {
+        if self.controls.open {
+            self.controls.paste(text);
+        } else if self.finder.open {
             self.finder.paste(text);
         }
     }
@@ -345,6 +390,38 @@ impl Ui {
         use crossterm::event::KeyCode;
 
         if key.kind == crossterm::event::KeyEventKind::Release {
+            return None;
+        }
+
+        if self.controls.open {
+            return self.controls.handle_key(key).map(UiCommand::Control);
+        }
+        if self.workboard.open {
+            match self.workboard.handle_key(key) {
+                Some(views::workboard::Action::Open(id)) => {
+                    self.phone_pending_worker = Some(id);
+                    self.workboard.open = false;
+                    self.desk_scroll = 0;
+                }
+                Some(views::workboard::Action::Mark(key)) => {
+                    let markers = if self.workboard.channel == views::workboard::Channel::Deliveries
+                    {
+                        &mut self.review_memory.reviewed
+                    } else {
+                        &mut self.review_memory.acknowledged
+                    };
+                    match markers.entry(key) {
+                        std::collections::btree_map::Entry::Occupied(entry) => {
+                            entry.remove();
+                        }
+                        std::collections::btree_map::Entry::Vacant(entry) => {
+                            entry.insert(self.now);
+                        }
+                    }
+                    self.review_memory.prune();
+                }
+                None => {}
+            }
             return None;
         }
 
@@ -363,6 +440,10 @@ impl Ui {
         }
 
         if key.code == KeyCode::Char('c') {
+            if self.controls.busy() {
+                self.controls.open = true;
+                return None;
+            }
             self.settings_open = false;
             self.help_open = false;
             self.phone_open = false;
@@ -402,6 +483,24 @@ impl Ui {
             return None;
         }
         match key.code {
+            KeyCode::Char('b') | KeyCode::Char('g') => {
+                self.workboard.show(if key.code == KeyCode::Char('g') {
+                    views::workboard::Channel::Team
+                } else {
+                    views::workboard::Channel::Attention
+                });
+                self.phone_open = false;
+                None
+            }
+            KeyCode::Char('m') | KeyCode::Char('n') => {
+                self.pending_control = Some(key.code == KeyCode::Char('n'));
+                self.phone_open = false;
+                None
+            }
+            KeyCode::Char('C') => {
+                self.controls.show_connections();
+                None
+            }
             KeyCode::Char('q') => Some(UiCommand::Quit),
             KeyCode::Char('?') => {
                 self.help_open = true;
@@ -451,7 +550,7 @@ impl Ui {
                         let next = self
                             .wardrobe
                             .get(&worker.0)
-                            .map_or(0, |preset| (preset + 1) % 6);
+                            .map_or(0, |preset| (preset + 1) % 12);
                         self.wardrobe.insert(worker.0.clone(), next);
                     }
                 }
@@ -671,6 +770,24 @@ impl Ui {
                 .fg(views::INK)
                 .bg(views::BACKGROUND),
         );
+        // Migrate explicit pre-identity wardrobe choices only when their old
+        // native ID has one unambiguous owner in the currently visible sources.
+        let mut native_owners: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+        for worker in world.offices().flat_map(|office| &office.workers) {
+            if let Some(identity) = &worker.identity {
+                native_owners
+                    .entry(&identity.native_id)
+                    .or_default()
+                    .push(&worker.id.0);
+            }
+        }
+        for (native, owners) in native_owners {
+            if owners.len() == 1 {
+                if let Some(preset) = self.wardrobe.remove(native) {
+                    self.wardrobe.entry(owners[0].into()).or_insert(preset);
+                }
+            }
+        }
         self.sprites.set_wardrobe(&self.wardrobe);
         self.sprites.set_office_palettes(&self.office_palettes);
         self.canvas.set_color_depth(self.color_depth);
@@ -730,6 +847,26 @@ impl Ui {
             }
         }
         let office = offices.get(self.selected_office).copied();
+        if self.view != View::Cameras {
+            if let Some(current) = office {
+                if self.visit_office.as_ref() != Some(&current.id) {
+                    self.visit_baselines.insert(
+                        current.id.0.clone(),
+                        self.review_memory
+                            .last_visits
+                            .get(&current.id.0)
+                            .copied()
+                            .unwrap_or(0),
+                    );
+                    self.visit_office = Some(current.id.clone());
+                }
+                self.review_memory
+                    .last_visits
+                    .insert(current.id.0.clone(), self.now);
+            }
+        } else {
+            self.visit_office = None;
+        }
         self.selected_office_palette =
             office.map_or(0, |office| self.sprites.office_palette_index(office));
         self.known_worker_count = office.map_or(0, |value| value.workers.len());
@@ -749,8 +886,62 @@ impl Ui {
             .and_then(|office| office.workers.get(self.selected_worker))
             .map(|worker| worker.id.clone());
 
+        if let Some(new_task) = self.pending_control.take() {
+            if new_task {
+                self.controls
+                    .show_new(office.map_or_else(String::new, |o| o.path.clone()));
+            } else if let Some(worker) = office.and_then(|o| o.workers.get(self.selected_worker)) {
+                self.controls.show_task(
+                    worker.id.clone(),
+                    format!(
+                        "{} / {}",
+                        office.expect("selected worker has office").name,
+                        worker.name
+                    ),
+                    worker.agent,
+                );
+            } else {
+                self.controls
+                    .show_new(office.map_or_else(String::new, |o| o.path.clone()));
+            }
+        }
+
         views::draw_tab_bar(f, &offices, self.selected_office, self.guard_all, self.now);
+        let graphical = if self.view == View::Cameras
+            || (self.view == View::Office
+                && matches!(
+                    self.projection,
+                    views::office::Projection::Auto | views::office::Projection::Side
+                )) {
+            views::tower::draw(
+                f,
+                &mut self.canvas,
+                &mut self.studio,
+                views::tower::Context {
+                    world,
+                    offices: &offices,
+                    selected_floor: self.selected_office,
+                    selected_worker: self.selected_worker_id.as_ref(),
+                    now: self.now,
+                    tower: self.view == View::Cameras,
+                    motion: self.motion,
+                    light: self.theme == views::UiTheme::Light,
+                    palette: self.selected_office_palette,
+                    wardrobe: &self.wardrobe,
+                },
+            )
+        } else {
+            None
+        };
         match self.view {
+            View::Cameras if graphical.is_some() => {
+                self.camera_columns = 1;
+                self.camera_page_size = 3;
+            }
+            View::Office if graphical.is_some() => {
+                self.office_columns = 1;
+                self.office_page_size = graphical.unwrap_or(1);
+            }
             View::Cameras => {
                 let layout = views::cameras::draw(
                     f,
@@ -856,6 +1047,19 @@ impl Ui {
         if self.finder.open {
             self.finder.refresh(world, self.now);
             self.finder.draw(f);
+        }
+        if self.workboard.open {
+            self.workboard.refresh(
+                world,
+                if self.guard_all { None } else { office },
+                &self.review_memory,
+                &self.visit_baselines,
+                self.now,
+            );
+            self.workboard.draw(f);
+        }
+        if self.controls.open {
+            self.controls.draw(f);
         }
         views::remap_buffer_theme(f.buffer_mut(), self.theme);
         if self.canvas.color_depth() == ColorDepth::None {

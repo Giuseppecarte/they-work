@@ -1,9 +1,10 @@
-//! they-work: a read-only terminal office for local agent activity.
+//! they-work: observe local agent activity and explicitly control managed tasks.
 //!
 //! This binary owns command-line policy and the polling loop. Collectors own
 //! the data boundary; the renderer owns presentation state.
 
 mod connections;
+mod control_host;
 
 use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
@@ -49,7 +50,7 @@ const DOCTOR_PROBE_TIMEOUT: Duration = Duration::from_millis(150);
 static TERMINATION_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
 const HELP: &str = "\
-they-work — a read-only terminal office for local agent activity
+they-work — a terminal office for local agents and their teams
 
 USAGE:
   they-work [OPTIONS]
@@ -377,6 +378,9 @@ struct Runtime {
 }
 
 fn main() -> Result<()> {
+    if theywork_control::maybe_run_supervisor()? {
+        return Ok(());
+    }
     let mut args = match parse_args(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(error) => {
@@ -604,6 +608,32 @@ fn doctor(args: &Args) -> Result<i32> {
     }
     println!("read={READ_PARAGRAPH}");
     println!("discovery_overrides={}", discovery_overrides());
+    for (provider, home) in [
+        (Agent::Codex, config.codex_home.as_ref()),
+        (Agent::Claude, config.claude_home.as_ref()),
+    ] {
+        if let Some(home) = home {
+            match theywork_control::native::NativeProvider::detect(provider, home) {
+                Ok(client) => println!(
+                    "controls provider={} version={} console={} login=official-client",
+                    provider.label(),
+                    cli_quoted_value(&client.version),
+                    if provider == Agent::Codex {
+                        "managed-app-server"
+                    } else if client.background_supported {
+                        "background-attach"
+                    } else {
+                        "foreground-only"
+                    }
+                ),
+                Err(error) => println!(
+                    "controls provider={} available=false detail={}; observation remains available",
+                    provider.label(),
+                    cli_quoted_value(&error.to_string())
+                ),
+            }
+        }
+    }
 
     let found_home = reports.iter().any(|report| report.home_found);
     let broken_home = reports
@@ -802,7 +832,7 @@ fn render_first_run(
     writeln!(stdout, "THEY WORK — first run")?;
     writeln!(
         stdout,
-        "A read-only terminal office for the agents already running here."
+        "A terminal office for the agents and teams working here."
     )?;
     writeln!(stdout)?;
     writeln!(stdout, "WHAT WAS FOUND")?;
@@ -1600,12 +1630,30 @@ fn run(
         .and_then(|bytes| serde_json::from_slice(&bytes).ok())
         .unwrap_or_default();
     configure_ui(&mut ui, args, runtime.start_guard, preferences);
+    let review_memory = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| !runtime.demo)
+        .and_then(|directory| fs::read(directory.join("notebook.json")).ok())
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default();
+    ui.restore_review_memory(review_memory);
     if let Some(path) = &runtime.initial_project {
         if let Some(office) = runtime.world.offices().find(|office| office.path == *path) {
             ui.open_office(&office.id);
         }
     }
     let mut active_args = args.clone();
+    let mut control = control_host::Host::start(
+        connections::Connections::from_args(args)?,
+        runtime
+            .config_dir
+            .clone()
+            .filter(|_| runtime.save_preferences),
+        !runtime.demo,
+    );
+    let mut control_cursor = (String::new(), 0u64);
+    let mut notebook_save = Instant::now();
     let terminal_cells = terminal.size()?;
     let image_cell_size = capabilities
         .graphics
@@ -1640,6 +1688,104 @@ fn run(
                 }
             }
 
+            let mut latest = control.latest();
+            if !runtime.config.only_paths.is_empty() {
+                let allowed: HashSet<_> =
+                    latest
+                        .snapshot
+                        .iter()
+                        .flat_map(|snapshot| snapshot.threads.values())
+                        .filter(|thread| {
+                            let raw = thread.project.to_string_lossy();
+                            let path = latest
+                                .project_aliases
+                                .get(raw.as_ref())
+                                .map_or(raw.as_ref(), String::as_str);
+                            runtime
+                                .config
+                                .only_paths
+                                .iter()
+                                .any(|selected| selected == Path::new(path))
+                        })
+                        .map(|thread| thread.identity.worker_id())
+                        .chain(runtime.world.offices().flat_map(|office| {
+                            office.workers.iter().map(|worker| worker.id.clone())
+                        }))
+                        .collect();
+                latest
+                    .status
+                    .tasks
+                    .retain(|id, _| allowed.contains(&theywork_core::WorkerId(id.clone())));
+                latest
+                    .status
+                    .requests
+                    .retain(|request| allowed.contains(&request.worker));
+            }
+            ui.set_control_status(latest.status);
+            if let Some(snapshot) = latest.snapshot {
+                if control_cursor.0 != snapshot.generation {
+                    control_cursor = (snapshot.generation.clone(), 0);
+                }
+                for mut event in theywork_control::snapshot_events(&snapshot, control_cursor.1) {
+                    if let Some(project) = latest.project_aliases.get(&event.office_path) {
+                        event.office_path = project.clone();
+                        event.office = theywork_core::OfficeId(project.clone());
+                    }
+                    if !runtime.config.only_paths.is_empty()
+                        && !runtime
+                            .config
+                            .only_paths
+                            .iter()
+                            .any(|path| path == Path::new(&event.office_path))
+                    {
+                        continue;
+                    }
+                    runtime.world.apply(event);
+                }
+                if let Some(event) = snapshot.events.last() {
+                    control_cursor.1 = event.sequence;
+                }
+            }
+            for outcome in control.drain() {
+                match outcome {
+                    control_host::Outcome::Receipt {
+                        detail,
+                        clear_draft,
+                    } => ui.complete_control(detail, clear_draft),
+                    control_host::Outcome::Console {
+                        command,
+                        clear_draft,
+                    } => {
+                        let paused_sources = poller.stop();
+                        for result in poller.drain() {
+                            for event in result.events {
+                                runtime.world.apply(event);
+                            }
+                        }
+                        persist_notebook(runtime, &ui)?;
+                        image_presenter.present(terminal.backend_mut(), None)?;
+                        let status = handoff_console(terminal, &command);
+                        match status {
+                            Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
+                            Ok(false) => ui.complete_control("Official console exited without confirming success. Inspect its output before sending again.".into(), false),
+                            Err(error) => ui.complete_control(format!("Console could not open: {error}"), false),
+                        }
+                        poller = Poller::start(paused_sources);
+                        control = control_host::Host::start(
+                            connections::Connections::from_args(&active_args)?,
+                            runtime
+                                .config_dir
+                                .clone()
+                                .filter(|_| runtime.save_preferences),
+                            !runtime.demo,
+                        );
+                    }
+                }
+            }
+            if notebook_save.elapsed() >= Duration::from_secs(5) {
+                persist_notebook(runtime, &ui)?;
+                notebook_save = Instant::now();
+            }
             runtime.world.tick(now);
             ui.tick(now);
 
@@ -1684,6 +1830,41 @@ fn run(
                     let previous_view = ui.view();
                     match ui.handle_key(input) {
                         Some(UiCommand::Quit) => return Ok(()),
+                        Some(UiCommand::Control(mut command)) => {
+                            if let theywork_render::views::control::Command::Start {
+                                project, ..
+                            } = &mut command
+                            {
+                                let absolute = match resolve_filesystem_path(Path::new(project)) {
+                                    Ok(path) => path,
+                                    Err(error) => {
+                                        ui.complete_control(error.to_string(), false);
+                                        continue;
+                                    }
+                                };
+                                *project = absolute.to_string_lossy().into_owned();
+                                let project = match normalize_cli_path(&absolute) {
+                                    Ok(path) => path,
+                                    Err(error) => {
+                                        ui.complete_control(error.to_string(), false);
+                                        continue;
+                                    }
+                                };
+                                if !runtime.config.only_paths.is_empty()
+                                    && !runtime
+                                        .config
+                                        .only_paths
+                                        .iter()
+                                        .any(|path| path == Path::new(&project))
+                                {
+                                    ui.complete_control("This view is scoped with --project. Open the full tower to create a task in another project.".into(),false);
+                                    continue;
+                                }
+                            }
+                            if let Err(error) = control.submit(command, &runtime.world) {
+                                ui.complete_control(error.to_string(), false);
+                            }
+                        }
                         Some(UiCommand::Sources) => {
                             let paused_sources = poller.stop();
                             // Joining can finish an in-flight poll. Keep its events
@@ -1726,6 +1907,15 @@ fn run(
                                 connections::Action::Cancel => runtime.sources = paused_sources,
                             }
                             poller = Poller::start(std::mem::take(&mut runtime.sources));
+                            control = control_host::Host::start(
+                                connections::Connections::from_args(&active_args)?,
+                                runtime
+                                    .config_dir
+                                    .clone()
+                                    .filter(|_| runtime.save_preferences),
+                                !runtime.demo,
+                            );
+                            control_cursor = (String::new(), 0);
                             terminal.clear()?;
                         }
                         None => {}
@@ -1738,6 +1928,7 @@ fn run(
         }
     })();
     poller.stop();
+    persist_notebook(runtime, &ui)?;
     if let Some(directory) = runtime
         .config_dir
         .as_ref()
@@ -1750,6 +1941,50 @@ fn run(
         )?;
         persist_selected_office(runtime, ui.selected_office(), now_ms())?;
     }
+    result
+}
+
+fn persist_notebook(runtime: &Runtime, ui: &Ui) -> Result<()> {
+    if let Some(directory) = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| runtime.save_preferences)
+    {
+        fs::create_dir_all(directory)?;
+        let temporary = directory.join(format!(".notebook.{}.tmp", std::process::id()));
+        fs::write(&temporary, serde_json::to_vec_pretty(&ui.review_memory())?)?;
+        fs::rename(temporary, directory.join("notebook.json"))?;
+    }
+    Ok(())
+}
+
+/// A native child owns the real terminal until it exits or detaches. Restore
+/// the office even if spawning fails; never inject text into another console.
+fn handoff_console(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    command: &theywork_control::native::NativeCommand,
+) -> Result<bool> {
+    struct ReturnToOffice;
+    impl Drop for ReturnToOffice {
+        fn drop(&mut self) {
+            let _ = enable_raw_mode();
+            let _ = execute!(io::stdout(), EnterAlternateScreen, EnableBracketedPaste);
+            #[cfg(unix)]
+            TERMINATION_SIGNAL.store(0, Ordering::Relaxed);
+        }
+    }
+    disable_raw_mode()?;
+    let restore = ReturnToOffice;
+    execute!(
+        io::stdout(),
+        DisableBracketedPaste,
+        LeaveAlternateScreen,
+        Show
+    )?;
+    println!("they-work · official provider console. Exit or detach to return to the office.");
+    let result = command.run().map(|status| status.success());
+    drop(restore);
+    terminal.clear()?;
     result
 }
 

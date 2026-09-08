@@ -618,6 +618,12 @@ fn worker_message(
         historical,
         state_label: if historical {
             "recorded"
+        } else if worker.wait_reason == Some(theywork_core::WaitReason::AutomaticReview) {
+            "automatic review"
+        } else if worker.wait_reason == Some(theywork_core::WaitReason::Child) {
+            "waiting for team"
+        } else if worker.wait_reason == Some(theywork_core::WaitReason::Process) {
+            "waiting for process"
         } else {
             match worker_status(worker, now) {
                 WorkerStatus::Blocked if matches!(worker.activity, Activity::Waiting { .. }) => {

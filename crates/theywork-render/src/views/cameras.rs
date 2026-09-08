@@ -90,7 +90,7 @@ impl StatusCounts {
     fn compact(&self) -> String {
         let mut parts = Vec::new();
         if self.blocked > 0 {
-            parts.push(format!("!{} help", self.blocked));
+            parts.push(format!("!{} attention", self.blocked));
         }
         if self.failed > 0 {
             parts.push(format!("×{} failed", self.failed));
@@ -106,7 +106,7 @@ impl StatusCounts {
             ),
             Span::styled(format!(" · {} idle", self.idle), Style::default().fg(MUTED)),
             Span::styled(
-                format!(" · {} need help", self.blocked),
+                format!(" · {} attention", self.blocked),
                 Style::default().fg(if self.blocked > 0 { WARNING } else { MUTED }),
             ),
             Span::styled(
@@ -679,7 +679,7 @@ mod tests {
             .collect::<Vec<_>>();
         assert!(rows
             .iter()
-            .any(|row| row.contains("y-blocked") && row.contains("!1 help")));
+            .any(|row| row.contains("y-blocked") && row.contains("!1 attention")));
         assert!(rows
             .iter()
             .any(|row| row.contains("a-failed") && row.contains("×1 failed")));

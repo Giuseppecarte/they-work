@@ -42,7 +42,7 @@ fetch: ## Populate the locked Cargo cache (networked)
 	THEYWORK_CARGO_NETWORK=bridge $(CARGO) fetch --locked
 
 test: ## Run the test suite
-	$(CARGO) test --workspace
+	$(CARGO) test --workspace -- --test-threads=1
 
 fmt: ## Format the code
 	$(CARGO) fmt --all

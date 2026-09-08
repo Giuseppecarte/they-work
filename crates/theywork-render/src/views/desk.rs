@@ -136,6 +136,25 @@ pub(super) fn inspection_summary(worker: &Worker, now: Millis) -> InspectionSumm
         .activity
         .detail()
         .filter(|value| !value.trim().is_empty());
+    if worker.coverage.observed_at > 0
+        && (!worker.coverage.available || worker.coverage.is_stale_at(now))
+    {
+        return InspectionSummary {
+            label: "SOURCE UNAVAILABLE",
+            detail: safe_display(&worker.coverage.detail),
+            next_step: "Current state is unknown. Check Connections or the original client.",
+        };
+    }
+    if let Some(reason) = worker.wait_reason.filter(|reason| {
+        matches!(
+            reason,
+            theywork_core::WaitReason::AutomaticReview
+                | theywork_core::WaitReason::Child
+                | theywork_core::WaitReason::Process
+        )
+    }) {
+        return InspectionSummary { label:match reason { theywork_core::WaitReason::AutomaticReview=>"AUTOMATIC REVIEW",theywork_core::WaitReason::Child=>"WAITING FOR TEAM",_=>"WAITING FOR PROCESS" }, detail:safe_display(detail.unwrap_or("The provider recorded this wait.")),next_step:"No human response is requested by this event. g shows available team relationships." };
+    }
     match worker_status(worker, now) {
         WorkerStatus::Blocked if matches!(worker.activity, Activity::Waiting { .. }) => {
             InspectionSummary {
@@ -143,7 +162,7 @@ pub(super) fn inspection_summary(worker: &Worker, now: Millis) -> InspectionSumm
                 detail: safe_display(
                     detail.unwrap_or("The source recorded a request without details."),
                 ),
-                next_step: "Review this request in the original conversation.",
+                next_step: "m opens available task controls; external requests stay in their original client.",
             }
         }
         WorkerStatus::Blocked => InspectionSummary {
@@ -228,7 +247,7 @@ pub(crate) fn draw(
             short_path(&office.name, area.width.saturating_sub(10) as usize)
         ),
         &format!(
-            "{} conversation · observed {} ago · read-only",
+            "{} conversation · observed {} ago · recorded trail",
             worker.agent.label(),
             duration_label(elapsed_ms(now, worker.last_seen))
         ),

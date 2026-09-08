@@ -84,7 +84,7 @@ jobs:
         run: ./scripts/cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Run the full workspace test suite
-        run: ./scripts/cargo test --workspace
+        run: ./scripts/cargo test --workspace -- --test-threads=1
 
       - name: Run collector acceptance tests
         run: ./scripts/cargo test -p theywork-collect --test collectors -- --nocapture

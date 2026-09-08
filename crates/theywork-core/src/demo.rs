@@ -14,12 +14,12 @@ use crate::{
 /// world, which keeps snapshot tests honest.
 pub fn events(now: Millis) -> Vec<Event> {
     const STAFF: &[(&str, &str, Agent)] = &[
-        ("/home/dev/checkout", "Dev 1", Agent::Codex),
-        ("/home/dev/checkout", "Dev 2", Agent::Codex),
-        ("/home/dev/checkout", "orchestrator", Agent::Claude),
-        ("/home/dev/website", "Dev 1", Agent::Codex),
-        ("/home/dev/website", "reviewer", Agent::Claude),
-        ("/home/dev/infra", "Dev 1", Agent::Claude),
+        ("/home/dev/checkout", "Checkout lead", Agent::Codex),
+        ("/home/dev/checkout", "Retry endpoint", Agent::Codex),
+        ("/home/dev/checkout", "Timeout tests", Agent::Codex),
+        ("/home/dev/website", "Landing page", Agent::Claude),
+        ("/home/dev/website", "Preview review", Agent::Claude),
+        ("/home/dev/infra", "Integration checks", Agent::Claude),
     ];
 
     let mut events: Vec<Event> = STAFF
@@ -148,6 +148,12 @@ pub fn events(now: Millis) -> Vec<Event> {
         EventKind::Lifecycle(WorkerLifecycle::Completed),
     ));
     events.push(emit(1, now, EventKind::Acted(Activity::Idle)));
+    events.push(emit(1, now, EventKind::Turn { in_flight: false }));
+    events.push(emit(0, now, EventKind::Wait(Some(WaitReason::Child))));
+    events.push(emit(0, now, EventKind::Turn { in_flight: true }));
+    events.push(emit(0, now, EventKind::Lifecycle(WorkerLifecycle::Active)));
+    events.push(emit(2, now, EventKind::Turn { in_flight: true }));
+    events.push(emit(2, now, EventKind::Lifecycle(WorkerLifecycle::Active)));
     events.push(emit(2, now, EventKind::Wait(Some(WaitReason::HumanInput))));
     events.push(emit(
         2,

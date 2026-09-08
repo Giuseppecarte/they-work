@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 theywork-core = { workspace = true }
+theywork-control = { path = "../theywork-control" }
 theywork-collect = { workspace = true }
 theywork-terminal-image = { path = "../theywork-terminal-image" }
 theywork-render = { workspace = true }

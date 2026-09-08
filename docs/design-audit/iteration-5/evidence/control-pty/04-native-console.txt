@@ -1,0 +1,35 @@
+ 0 TOWER >1 vertical-project●                                                         1/1 · / find · c connect · ? help
+[Tower] [Attention] [Deliveries] [Find] [New task] [Connections]
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-gnm_dn97/vertical-project▏
+
+ native return; literal $(text)▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Sending to claude / /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-gnm_dn
+                                           they-work · official provider console. Exit or detach to return to the office
+.
+NATIVE_FIXTURE_READY: press Enter to return
+ Tab fields/buttons · Enter choose · Esc back

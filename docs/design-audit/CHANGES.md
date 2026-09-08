@@ -1,6 +1,15 @@
 # Implemented changes
 
-The [fourth-iteration review](iteration-4/REVIEW.md) records the current result:
+## Iteration 5 — interactive tower and local personalities
+
+The [iteration 5 review](iteration-5/REVIEW.md) records the two authored character
+scales, stacked floors, room presets and routes, contextual inspector, shared
+mouse/keyboard actions, global attention and exact request dispatch. See
+[validation](iteration-5/VALIDATION.md) for the compositor, PTY and test evidence
+and the publication gates that remain outside this local implementation.
+
+
+The [fourth-iteration review](iteration-4/REVIEW.md) records the previous result:
 source-scoped identities, observed subagent teams and meetings, managed Codex
 controls, official Claude handoff, attention/deliveries/changes, and twelve
 original 48×64 characters in the continuous tower. Its linked lane reports

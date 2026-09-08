@@ -1,0 +1,68 @@
+{
+  "binary_sha256": "5de1411f62fe09a81b78868a4e8193e421fdacb10ab6aba8864ca57392422c8b",
+  "fixture_root": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-yv56_rj0",
+  "real_provider_calls": 0,
+  "terminal_cells": [
+    80,
+    24
+  ],
+  "encoding": "half-block fallback",
+  "images": "ANSI-cell replay, not a terminal-window screenshot",
+  "ui-start-approval": {
+    "native_thread": "managed-1",
+    "native_turn": "turn-1",
+    "literal_project_and_prompt": true,
+    "visible_start_click": true
+  },
+  "explicit-scoped-approval": {
+    "command_visible": "test-only-command",
+    "reply": {
+      "id": "approve-1",
+      "result": {
+        "decision": "accept"
+      }
+    },
+    "reply_count": 1,
+    "click_coordinates": [
+      15,
+      20
+    ]
+  },
+  "known-project-picker": {
+    "selected_project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-yv56_rj0/vertical-project",
+    "literal_cwd_preserved": true
+  },
+  "native-console-mouse-roundtrip": {
+    "args": [
+      "--",
+      "native return; literal $(text)"
+    ],
+    "cwd": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-yv56_rj0/vertical-project",
+    "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-yv56_rj0/claude",
+    "tty": true,
+    "canonical": true,
+    "echo": true,
+    "mouse_released_before_child": true,
+    "mouse_restored_after_child": true
+  },
+  "connections-local-sources-cancel": {
+    "source_title_toggles": true,
+    "folder_click_edits": true,
+    "folder_cancel_preserves_path": true,
+    "back_preserves_saved_sources": true
+  },
+  "terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "mouse_off_terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "mouse-off-reopen-no-replay": {
+    "same_provider_process": true,
+    "turn_start_count": 2,
+    "no_mouse_capture": true,
+    "source_clicks_ignored": true
+  }
+}

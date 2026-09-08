@@ -1,0 +1,113 @@
+{
+  "kind": "Ui TestBackend + exact physical RGBA + native mask; Menlo/Pillow replay, not a terminal screenshot",
+  "files": [
+    {
+      "path": "inspect-team-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "1a6b8a8bf11ccc4290e6e657a82758ade374b8b43976a8aaa820a6d0e90e289d"
+    },
+    {
+      "path": "inspect-team-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "4cdf08c1fe535c43a22109a8341736637814bf3273107ac153646c081fdabc3e"
+    },
+    {
+      "path": "inspect-team-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "82a1a30230a818c7caa4733bc4639067b68fc6809b796b92a890075ca6879339"
+    },
+    {
+      "path": "office-team-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "da8d7f2f769291cc9a23232e07915b86a6aec78ef94dba1723d2489f316a2abb"
+    },
+    {
+      "path": "office-team-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "8b09340505b35d16795340a838d36cf6cd86d280894ce47151c23f567c706f02"
+    },
+    {
+      "path": "office-team-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "514a6361ab02f2e134975dac3ae79a777ae35af5ad49882e7b0bbe0f2d5d6d25"
+    },
+    {
+      "path": "tower-1-120x36-first.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "f08f5306083bb50f32b8a62130a63c1d3ffae8a443149dc26668dcbbb8f916c3"
+    },
+    {
+      "path": "tower-1-192x58-first.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "57c0d9b3461ee16c22671bb4e4b2680e9241119d6bd5e25b1093caba412f06f4"
+    },
+    {
+      "path": "tower-1-80x24-first.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "7cb3e85fe689f43f9912aa34aedd89998b6353483f0f330f3358b180e04b1791"
+    },
+    {
+      "path": "tower-20-120x36-first.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "bb49d07ab5f276856d0714aed1a6244203d9ecaafc94fde61963f48a7a2fa422"
+    },
+    {
+      "path": "tower-20-120x36-last.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "790205e22c4ee479c65862f7821791d0e1d540cd00ae884941a300c11b3b47ac"
+    },
+    {
+      "path": "tower-20-192x58-first.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "e515683f2e4189cbaa4f41447ab90f2458ee7ce87bd198c87c1a96ec60c1ff29"
+    },
+    {
+      "path": "tower-20-192x58-last.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "6cce26c1b40b1d86e11b4bbc49b01807a369d90eac43556e099e7ca4b9207cf3"
+    },
+    {
+      "path": "tower-20-80x24-first.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "95e91e8baada603391312b0ec0af5266949b267c7be26d94679bb13eedcc947c"
+    },
+    {
+      "path": "tower-20-80x24-last.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "68f127bfe7ad999182b05f8fd90add162df8419a82673d5da2c9fbc952360206"
+    },
+    {
+      "path": "tower-3-120x36-first.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "41146c965e07281f7f0f352467d5b124f80254c712a340a26ff58aca78ed3712"
+    },
+    {
+      "path": "tower-3-192x58-first.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "e42a5c563748d30fb3fff6719540c31615a52a6c7f5de68d1c679ba66707b904"
+    },
+    {
+      "path": "tower-3-80x24-first.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "02868cac4e3dd3da83c745e90ecc4401e146d8059788a77af882af947c8dfab7"
+    }
+  ]
+}

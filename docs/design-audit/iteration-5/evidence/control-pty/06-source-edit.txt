@@ -1,0 +1,31 @@
+
+
+
+
+
+                THEY WORK  /  YOUR SOFTWARE TOWER
+                Connect your team
+                One project per floor. One conversation per worker.
+                Choose whose local conversations appear here. No sign-in or API key needed.
+                Reads titles, messages and tool activity from app data folders.
+                Everything stays on this computer. Controls need a verified provider connection.
+                ┌ > [x] CLAUDE CODE ───────────────────────────────────────────────────────────────────┐
+                │‹hey-work/docs/design-audit/tmp/iteration-5-control-pty/run-gnm_dn97/unapplied-folder │
+                │Editing folder · Enter applies; Esc cancels                                           │
+                └──────────────────────────────────────────────────────────────────────────────────────┘
+                ┌   [ ] CODEX ─────────────────────────────────────────────────────────────────────────┐
+                │…rogramming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-gnm_dn97/codex│
+                │Off · no conversations will be read                                                   │
+                └──────────────────────────────────────────────────────────────────────────────────────┘
+                  [x] Remember on this computer
+                Save sources, appearance and floor.
+                App data folder (.codex / .claude).
+
+
+
+
+
+
+
+                ←→ move  Home/End  Ctrl+U clear
+                [Enter apply]   [Esc cancel]

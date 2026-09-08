@@ -80,31 +80,36 @@ For Docker, use `make run ARGS="--sources all --doctor"` or
 | **Team** | `g` | recorded delegation, session membership and forks, with a collapsible tree |
 | **Task controls** | `m` | compose, interrupt or answer live Codex requests; open a verified Claude console |
 | **New task** | `n` | select provider, project folder and instruction |
-| **Provider login** | `C` | official login and connection capabilities |
-| **Settings** | `s` | camera, light, theme, colour depth, motion |
+| **Connections** | `c` / `C` | sources, available controls and official provider login |
+| **Settings** | `s` | camera, light, theme, colour depth, motion and mouse |
 | **Help** | `?` | every key |
-| **Sources** | `c` | choose local providers and folders |
+| **Appearance** | `d` / `a` | office design; character name, outfit and animation in the inspector |
 
-`Tab` / `Shift+Tab` cycle floors; `1`–`9` jump straight to one. In the tower,
-`PageUp` / `PageDown` reach additional floors; `Enter` opens the selected floor.
-Use `/` to search across the tower and open the exact conversation directly.
-In a desk, `PageUp` / `PageDown` scroll history, `Home` shows its beginning and
-`End` returns to the latest state. Recorded history times are labelled UTC.
-Press `!` to jump to a worker needing attention, or `c` to change sources. A tab's dot
-turns amber the moment anyone in that project is blocked, even while you are
-looking somewhere else.
+`Tab` / `Shift+Tab` focus visible controls; arrows select items and `Enter`
+opens or activates them. With the scene focused, `PageUp` / `PageDown` change
+floors; `1`–`9` jump directly to one. `Esc` returns without losing the selected
+worker. The tower shows multiple floors; enter one to see its detailed office.
+Use `/` to search fictional names, real task titles, providers and states.
+In the inspector, arrows and `PageUp` / `PageDown` scroll the recorded context;
+`Home` / `End` reach its beginning and end. `!` finds a worker needing attention.
 
-Use `v` to change the camera, `w` at a desk to change that worker's character,
-and `o` to change the selected floor's palette. `W` and `O` restore defaults.
+Mouse clicks are enabled by default. Click a character or nameplate to inspect,
+then choose an explicitly available action. Opening a character never approves
+its request. Disable capture in Settings or with `--mouse=off` for normal terminal
+text selection. Capture is released in an official provider console and on exit.
+
+Use `d` for the selected office's preset and four decoration zones. In the
+inspector, `a` edits the fictional name, outfit and animation style. These are
+local appearance choices and never change agent instructions. `v`, `w`/`W` and
+`o`/`O` retain the compatible camera, wardrobe and palette controls.
 Keep **Remember on this computer** enabled when connecting to save these choices
 and the selected floor. `--no-save` keeps changes temporary. Git worktrees of the
 same repository share one floor.
 
-![A complete current request and recorded history at 80 columns, replayed with Menlo](docs/design-audit/iteration-3/evidence/inspection-final/desk-request-80x24-menlo.png)
+![Contextual inspector beside a furnished office](docs/design-audit/iteration-5/ui/inspector-120x36.png)
 
-![Finding conversations across project floors in the light appearance](docs/design-audit/iteration-3/evidence/finder-final/finder-light-120x32-menlo.png)
-
-The new side-cut graphics use twelve original 48×64 characters, integer scaling,
+The side-cut graphics use original 24×32 overview and 48×64 office characters,
+integer scaling,
 contact shadows and furnished rooms. Clothes are decorative; the provider is
 shown in the task inspector. An amber `!` remains at a worker’s label while an
 alert is active. Questions, approvals, automatic review and missing recent
@@ -214,6 +219,7 @@ board is what was meant.
 
 | Flag | |
 | --- | --- |
+| `--mouse=off` | disable mouse capture; keep terminal text selection |
 | `--setup` | choose local conversation sources |
 | `--sources all\|codex\|claude\|none` | choose providers explicitly |
 | `--codex-home <path>` / `--claude-home <path>` | set a local source root |

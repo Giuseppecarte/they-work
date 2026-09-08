@@ -1,6 +1,13 @@
 # Design and usability findings
 
-## Current review: fourth iteration
+The newest pass is [iteration 5](iteration-5/REVIEW.md). It fixes the observed
+scale/proportion, invisible header, stale pointer, pagination, source chooser
+and narrow-inspector defects found during the interactive tower implementation.
+Its critical review distinguishes compositor/PTY evidence from real-terminal,
+authenticated-provider and new-user validation still needed before publishing.
+
+
+## Previous review: fourth iteration
 
 The [fourth-iteration implementation review](iteration-4/REVIEW.md) supersedes
 the earlier product boundary: the accepted plan adds explicit managed controls,

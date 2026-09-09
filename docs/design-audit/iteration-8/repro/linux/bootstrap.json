@@ -1,0 +1,14 @@
+{
+  "python": {
+    "version": [
+      3,
+      12,
+      14
+    ],
+    "executable": "/repo/target/audit/venv/bin/python"
+  },
+  "cargo": "cargo 1.90.0 (840b83a10 2025-07-30)",
+  "cargo_executable": "/usr/local/cargo/bin/cargo",
+  "requirements_sha256": "575235c400eec5bac174aaa279be870723dd7e00236dd841a892a1efb012b5a2",
+  "cargo_lock_sha256": "8b6eb756c666034995506a5f7050420f4141e522a239fff0bebc68983463084f"
+}

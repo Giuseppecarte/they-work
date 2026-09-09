@@ -1,0 +1,28 @@
+$ ["/repo/target/audit/venv/bin/python", "/repo/scripts/audit_replay.py", "/repo/target/audit/smoke/integrated-final/raw/tower-image-80x24.cells.json", "/repo/target/audit/smoke/integrated-final/tower-image-80x24.png"]
+{
+  "width": 640,
+  "height": 384,
+  "sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+  "rgb_sha256": "265f19198c1ff114bdff3cfedb4fa9e2f15c65f8d13dbffff6c6cd04a616b90e",
+  "zlib": "1.2.13",
+  "pillow": "12.3.0",
+  "freetype": "2.14.3",
+  "layout_engine": "BASIC",
+  "font_size": 13,
+  "fonts": {
+    "family": "DejaVu Sans Mono",
+    "version": "2.37",
+    "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+    "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+    "license": "LICENSE.txt",
+    "unmodified": true,
+    "files": {
+      "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+      "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+      "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+    }
+  },
+  "native_cells": 668,
+  "visual_review": "not-tested",
+  "terminal_transport": "not-tested"
+}

@@ -1,0 +1,4 @@
+# Fixed-width captures preserve blank cells; pixel buffers are binary evidence.
+*.txt -whitespace -text
+*.ansi -text
+*.rgba binary

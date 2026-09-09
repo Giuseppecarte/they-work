@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "scope": "one complete 80x24 tower compositor replay and one existing collector fixture",
+  "production_changes": false,
+  "live_providers": false,
+  "platforms": {
+    "macos": {
+      "automatic": "pass",
+      "runner_tests": 13,
+      "collector_tests": 1,
+      "network_disabled_at_transport": false,
+      "png_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+      "rgb_sha256": "265f19198c1ff114bdff3cfedb4fa9e2f15c65f8d13dbffff6c6cd04a616b90e",
+      "repeat_png_identical": true,
+      "hit_regions": 48,
+      "native_cells": 668,
+      "metadata": "macos/metadata.json",
+      "visual_review": {
+        "status": "pass",
+        "reviewer": "bounded audit lane",
+        "inspected_full_frame_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+        "checks": [
+          "640x384 full viewport",
+          "native text and complete toolbar/footer",
+          "two populated floors",
+          "no missing-glyph boxes or image/native displacement"
+        ],
+        "terminal_transport": "not-tested"
+      },
+      "independent_review": {
+        "status": "pass",
+        "reviewer": "integration review",
+        "inspected_full_frame_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+        "note": "Full viewport reviewed after final receipt fix; same decoded image and exact PNG as earlier candidate within this platform. No physical-terminal claim."
+      },
+      "integrity": "macos/integrity.json",
+      "tracked_files_unchanged": true,
+      "previous_png_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+      "integrated_png_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+      "source_hashes_match_final_candidate": true
+    },
+    "linux": {
+      "automatic": "pass",
+      "runner_tests": 13,
+      "collector_tests": 1,
+      "network_disabled_at_transport": true,
+      "png_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+      "rgb_sha256": "265f19198c1ff114bdff3cfedb4fa9e2f15c65f8d13dbffff6c6cd04a616b90e",
+      "repeat_png_identical": true,
+      "hit_regions": 48,
+      "native_cells": 668,
+      "metadata": "linux/metadata.json",
+      "visual_review": {
+        "status": "pass",
+        "reviewer": "bounded audit lane",
+        "inspected_full_frame_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+        "checks": [
+          "640x384 full viewport",
+          "native text and complete toolbar/footer",
+          "two populated floors",
+          "no missing-glyph boxes or image/native displacement"
+        ],
+        "terminal_transport": "not-tested"
+      },
+      "integrity": "linux/integrity.json",
+      "tracked_files_unchanged": true,
+      "previous_png_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+      "integrated_png_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+      "source_hashes_match_final_candidate": true,
+      "independent_review": {
+        "status": "pass",
+        "reviewer": "integration review",
+        "inspected_full_frame_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+        "note": "Full viewport reviewed after final receipt fix; same decoded image and exact PNG as earlier candidate within this platform. No physical-terminal claim."
+      }
+    }
+  },
+  "limitations": [
+    "No real terminal transport is exercised.",
+    "Local clean candidate checkouts include the working candidate patch over recorded HEAD.",
+    "macOS receives an externally supplied existing Rust toolchain/cache; the runner does not discover ignored audit paths.",
+    "Linux was tested in a Linux arm64 Docker container, not a physical Linux terminal.",
+    "GitHub-hosted macOS/Linux audit jobs are wired but were not dispatched."
+  ],
+  "cross_platform_raw_identical": {
+    "inventory.json": true,
+    "tower-image-80x24.cells.json": true,
+    "tower-image-80x24.hits.json": true,
+    "tower-image-80x24.rgba": true,
+    "tower-image-80x24.txt": true
+  },
+  "cross_platform_rgb_identical": true,
+  "linux_image": {
+    "id": "sha256:8ae3f2e3f39a356975b296a8f80d5c17a338b0a9779465ac3cf38e11b7b2f252",
+    "os": "linux",
+    "architecture": "arm64"
+  },
+  "final_source_alignment": "Both isolated prepared candidate checkouts received the final receipt renderer and polling docstring before the retained incremental offline smoke; all captured source hashes match the integrated working candidate."
+}

@@ -85,6 +85,23 @@ pub struct ControlEvent {
     pub params: Value,
 }
 
+/// The retained window of one durable provider-event sequence lineage.
+/// Process/connection generations identify authority; this ID only identifies
+/// observations and never grants permission to control a conversation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct EventWindow {
+    pub version: u32,
+    pub stream_id: String,
+    pub first_retained_sequence: Option<u64>,
+    pub last_assigned_sequence: u64,
+    /// Legacy or repaired state cannot establish history before this lineage.
+    pub prior_lineage_unknown: bool,
+}
+
+impl EventWindow {
+    pub const VERSION: u32 = 1;
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PendingRequest {
     /// Host generation plus native JSON-RPC id; never reuse across connections.
@@ -126,13 +143,22 @@ pub struct ControlSnapshot {
     pub connection_generation: String,
     pub codex_home: PathBuf,
     pub connected: bool,
+    /// Live projection only: storage must be repaired before using controls.
+    /// Healthy persisted snapshots omit this additive compatibility field.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub storage_recovery_required: bool,
     pub observed_at: i64,
     pub provider_info: Value,
     pub threads: BTreeMap<String, ManagedThread>,
     pub pending_requests: Vec<PendingRequest>,
     pub events: Vec<ControlEvent>,
+    pub event_window: Option<EventWindow>,
     pub operations: BTreeMap<String, OperationReceipt>,
     pub last_error: Option<String>,
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

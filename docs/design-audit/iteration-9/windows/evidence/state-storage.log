@@ -1,0 +1,12 @@
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.29s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_control-cdcd7915fcdbd0f9)
+
+running 4 tests
+test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok
+test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok
+test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok
+test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.13s
+

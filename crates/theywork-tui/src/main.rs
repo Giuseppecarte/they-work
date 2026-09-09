@@ -1728,7 +1728,7 @@ fn run(
             .filter(|_| runtime.save_preferences),
         !runtime.demo,
     );
-    let mut control_cursor = (String::new(), 0u64);
+    let mut control_cursor = theywork_control::BridgeCursor::default();
     let mut notebook_save = Instant::now();
     let terminal_cells = terminal.size()?;
     let mut presented_size = (terminal_cells.width, terminal_cells.height);
@@ -1802,10 +1802,8 @@ fn run(
             }
             ui.set_control_status(latest.status);
             if let Some(snapshot) = latest.snapshot {
-                if control_cursor.0 != snapshot.generation {
-                    control_cursor = (snapshot.generation.clone(), 0);
-                }
-                for mut event in theywork_control::snapshot_events(&snapshot, control_cursor.1) {
+                let batch = theywork_control::reconcile_snapshot(&snapshot, &control_cursor);
+                for mut event in batch.events {
                     if let Some(project) = latest.project_aliases.get(&event.office_path) {
                         event.office_path = project.clone();
                         event.office = theywork_core::OfficeId(project.clone());
@@ -1821,9 +1819,7 @@ fn run(
                     }
                     runtime.world.apply(event);
                 }
-                if let Some(event) = snapshot.events.last() {
-                    control_cursor.1 = event.sequence;
-                }
+                control_cursor = batch.next_cursor;
             }
             for outcome in control.drain() {
                 match outcome {
@@ -2003,6 +1999,7 @@ fn run(
                                 ui.preferences().light,
                             )?;
                             mouse_capture.sync(ui.mouse_enabled())?;
+                            let replaced_world = !matches!(&action, connections::Action::Cancel);
                             match action {
                                 connections::Action::Connect { value, remember } => {
                                     active_args.remember = Some(remember);
@@ -2033,7 +2030,9 @@ fn run(
                                     .filter(|_| runtime.save_preferences),
                                 !runtime.demo,
                             );
-                            control_cursor = (String::new(), 0);
+                            if replaced_world {
+                                control_cursor = theywork_control::BridgeCursor::default();
+                            }
                             terminal.clear()?;
                         }
                         None => {}

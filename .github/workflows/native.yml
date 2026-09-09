@@ -73,6 +73,45 @@ jobs:
         run: cargo clippy --locked --workspace --all-targets --target ${{ matrix.target }} -- -D warnings
       - name: Run native tests
         run: cargo test --locked --workspace --target ${{ matrix.target }} -- --test-threads=1
+      - name: Verify Windows state replacement and recovery
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $evidence = "target/windows-storage-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force $evidence | Out-Null
+          $env:THEYWORK_STORAGE_REPORT = "$evidence/process-results.json"
+          $environment = @{
+            runner = "${{ matrix.runner }}"
+            target = "${{ matrix.target }}"
+            os = [System.Environment]::OSVersion.VersionString
+            architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+            filesystem = (Get-Volume -DriveLetter ([System.IO.Path]::GetPathRoot($PWD.Path).Substring(0,1))).FileSystem
+            source = (git rev-parse HEAD)
+          }
+          $environment | ConvertTo-Json | Set-Content "$evidence/environment.json"
+          cargo test --locked -p theywork-control --lib security::windows_tests --target ${{ matrix.target }} -- --test-threads=1 2>&1 | Tee-Object "$evidence/replacement.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/replacement.log" -Pattern 'test result: ok\. 6 passed')) { throw "Windows replacement tests were not executed" }
+          cargo test --locked -p theywork-control --lib state_storage::tests --target ${{ matrix.target }} -- --test-threads=1 2>&1 | Tee-Object "$evidence/recovery.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/recovery.log" -Pattern 'test result: ok\. 4 passed')) { throw "Storage recovery tests were not executed" }
+          cargo test --locked -p theywork-control --lib supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state --target ${{ matrix.target }} -- --exact 2>&1 | Tee-Object "$evidence/live-fault.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/live-fault.log" -Pattern 'test result: ok\. 1 passed')) { throw "Live host storage fault test was not executed" }
+          cargo test --locked -p theywork-control --test storage_process --target ${{ matrix.target }} 2>&1 | Tee-Object "$evidence/process.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $report = Get-Content "$evidence/process-results.json" -Raw | ConvertFrom-Json
+          $expectedArchitecture = if ("${{ matrix.target }}".StartsWith("aarch64")) { "aarch64" } else { "x86_64" }
+          if ($report.platform -ne "windows" -or $report.architecture -ne $expectedArchitecture -or $report.cases.Count -ne 4 -or @($report.cases | Where-Object status -ne "pass").Count -ne 0) {
+            throw "Expected exactly four passing native Windows process cases"
+          }
+      - name: Upload Windows storage evidence
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-storage-${{ matrix.target }}
+          path: target/windows-storage-${{ matrix.target }}/
+          if-no-files-found: warn
       - name: Build release binary
         run: cargo build --locked --release --bin they-work --target ${{ matrix.target }}
       - name: Test native installer failure boundaries

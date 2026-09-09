@@ -143,6 +143,7 @@ struct Backend {
     codex: Option<NativeProvider>,
     claude: Option<NativeProvider>,
     codex_error: String,
+    storage_error: Option<String>,
     claude_error: String,
     client: Option<ControlClient>,
     snapshot: Option<ControlSnapshot>,
@@ -171,6 +172,7 @@ impl Backend {
             codex: None,
             claude: None,
             codex_error: String::new(),
+            storage_error: None,
             claude_error: String::new(),
             client: None,
             snapshot: None,
@@ -218,16 +220,16 @@ impl Backend {
                 .config
                 .clone()
                 .and_then(|config| ControlClient::connect(config).ok());
-            if self.client.is_none() && self.snapshot.is_none() {
-                self.snapshot = self
-                    .config
-                    .clone()
-                    .and_then(|config| ControlClient::saved_snapshot(config).ok());
+            if self.client.is_none() {
+                self.refresh_saved_snapshot();
             }
         }
         if let Some(client) = &self.client {
             match client.snapshot() {
-                Ok(snapshot) => self.snapshot = Some(snapshot),
+                Ok(snapshot) => {
+                    self.snapshot = Some(snapshot);
+                    self.storage_error = None;
+                }
                 Err(error) => {
                     self.codex_error = format!("Control disconnected: {error}");
                     self.client = None;
@@ -275,13 +277,45 @@ impl Backend {
         }
     }
 
+    fn refresh_saved_snapshot(&mut self) {
+        let Some(config) = self.config.clone() else {
+            return;
+        };
+        match ControlClient::saved_snapshot_optional(config) {
+            Ok(snapshot) => {
+                self.snapshot = snapshot;
+                self.storage_error = None;
+            }
+            Err(error) => {
+                self.storage_error = Some(format!("{error:#}"));
+                // Cached observations remain inspectable, but disk recovery
+                // never supplies current requests or provider authority.
+                if let Some(snapshot) = &mut self.snapshot {
+                    snapshot.connected = false;
+                    snapshot.pending_requests.clear();
+                    for thread in snapshot.threads.values_mut() {
+                        thread.capabilities = Default::default();
+                        thread.active_turn_id = None;
+                    }
+                }
+            }
+        }
+    }
+
     fn latest(&self) -> Latest {
         let mut status = ControlStatus {
             tasks: self.native_tasks.clone(),
             ..Default::default()
         };
-        status.can_start_codex =
-            self.enabled && self.connections.codex && self.codex.is_some() && self.config.is_some();
+        status.can_start_codex = self.enabled
+            && self.connections.codex
+            && self.codex.is_some()
+            && self.config.is_some()
+            && self.storage_error.is_none()
+            && !self
+                .snapshot
+                .as_ref()
+                .is_some_and(|snapshot| snapshot.storage_recovery_required);
         status.can_start_claude = self.enabled && self.connections.claude && self.claude.is_some();
         status.codex = if !self.enabled {
             "Demo · controls disabled".into()
@@ -296,6 +330,15 @@ impl Backend {
                 self.connections.codex_home.display()
             )
         };
+        if let Some(error) = &self.storage_error {
+            status.codex.push_str(&format!(" · {error}"));
+        } else if let Some(error) = self
+            .snapshot
+            .as_ref()
+            .and_then(|snapshot| snapshot.last_error.as_ref())
+        {
+            status.codex.push_str(&format!(" · {error}"));
+        }
         status.claude = if !self.enabled {
             "Demo · controls disabled".into()
         } else if !self.connections.claude {
@@ -324,10 +367,15 @@ impl Backend {
                 status.tasks.insert(
                     thread.identity.worker_id().0,
                     TaskAccess {
-                        send: snapshot.connected && thread.capabilities.send,
-                        interrupt: snapshot.connected && thread.capabilities.interrupt,
+                        send: self.storage_error.is_none()
+                            && snapshot.connected
+                            && thread.capabilities.send,
+                        interrupt: self.storage_error.is_none()
+                            && snapshot.connected
+                            && thread.capabilities.interrupt,
                         native: false,
-                        reconnect: thread.managed
+                        reconnect: self.storage_error.is_none()
+                            && thread.managed
                             && (!snapshot.connected || !thread.capabilities.send)
                             && thread.active_turn_id.is_none(),
                         description: format!(
@@ -342,7 +390,7 @@ impl Backend {
                     },
                 );
             }
-            if snapshot.connected {
+            if snapshot.connected && self.storage_error.is_none() {
                 status.requests = snapshot
                     .pending_requests
                     .iter()
@@ -702,6 +750,58 @@ fn request_view(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn recovery_failure_is_visible_and_fresh_storage_is_not_an_error() {
+        let root = std::env::temp_dir().join(format!("theywork-storage-ui-{}", std::process::id()));
+        // Unique local test directory; no provider program is executed.
+        let root = root.with_extension(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+                .to_string(),
+        );
+        std::fs::create_dir_all(&root).unwrap();
+        let connections = Connections {
+            codex: true,
+            claude: false,
+            codex_home: root.clone(),
+            claude_home: root.clone(),
+        };
+        let mut backend = Backend::new(connections, Some(root.join("settings")), true);
+        backend.codex = Some(NativeProvider {
+            provider: Agent::Codex,
+            program: root.join("never-executed"),
+            home: root.clone(),
+            version: "Fixture provider".into(),
+            background_supported: false,
+        });
+        backend.refresh_saved_snapshot();
+        assert!(backend.storage_error.is_none());
+        assert!(backend.latest().status.can_start_codex);
+        backend.snapshot = Some(ControlSnapshot {
+            storage_recovery_required: true,
+            last_error: Some("Live control storage needs recovery".into()),
+            ..Default::default()
+        });
+        assert!(!backend.latest().status.can_start_codex);
+        assert!(backend
+            .latest()
+            .status
+            .codex
+            .contains("Live control storage needs recovery"));
+        backend.snapshot = None;
+        let state_dir = backend.config.as_ref().unwrap().state_dir.clone();
+        std::fs::create_dir_all(&state_dir).unwrap();
+        std::fs::write(state_dir.join("state.json"), "incomplete state").unwrap();
+        backend.refresh_saved_snapshot();
+        let status = backend.latest().status;
+        assert!(!status.can_start_codex);
+        assert!(status.codex.contains("recovery"));
+        assert!(status.codex.contains("Fixture provider"));
+        assert!(status.requests.is_empty());
+        std::fs::remove_dir_all(root).unwrap();
+    }
     #[test]
     fn request_controls_only_offer_native_single_request_decisions() {
         let pending = PendingRequest {

@@ -8,9 +8,14 @@ mod model;
 pub mod native;
 mod rpc;
 mod security;
+mod state_storage;
+mod stream;
 mod supervisor;
 
-pub use bridge::snapshot_events;
+pub use bridge::{
+    reconcile_snapshot, snapshot_events, BridgeBatch, BridgeCursor, DEFERRED_EVENT_BYTE_LIMIT,
+    DEFERRED_EVENT_LIMIT, MISSING_RANGE_LIMIT,
+};
 pub use client::ControlClient;
 pub use model::*;
 pub use supervisor::{maybe_run_supervisor, run_supervisor};

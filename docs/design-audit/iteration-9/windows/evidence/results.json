@@ -1,0 +1,133 @@
+{
+  "source_revision": "77a9b785dd25d27884b7fe2f81548d538f53a35a",
+  "dirty_candidate": true,
+  "environment": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+  "architecture": "arm64",
+  "commands": [
+    {
+      "name": "state-storage",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--lib",
+        "state_storage::tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.86
+    },
+    {
+      "name": "process",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--test",
+        "storage_process"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.243
+    },
+    {
+      "name": "live-fault",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--lib",
+        "supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state",
+        "--",
+        "--exact"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.626
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "clippy",
+        "-p",
+        "theywork-control",
+        "--lib",
+        "--test",
+        "storage_process",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.329
+    },
+    {
+      "name": "windows-cross-check",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "clippy",
+        "--offline",
+        "--manifest-path",
+        "target/windows-storage-check/Cargo.toml",
+        "--tests",
+        "--target",
+        "x86_64-pc-windows-gnu",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.18
+    },
+    {
+      "name": "canonical-disruption",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--test",
+        "control",
+        "canonical_disruption_requires_restart_before_explicit_new_submission",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.051
+    }
+  ],
+  "native_windows": "not tested; x64 and ARM64 CI gate must run",
+  "physical_power_loss": "not tested",
+  "cross_check_limit": "Production control source, Windows unit tests and native Rust process fixture type-checked with x86_64-pc-windows-gnu. An ignored isolated manifest excludes collector-only dev dependencies to avoid requiring a Windows SQLite C cross-toolchain. No Windows code was executed.",
+  "source_sha256": {
+    ".github/workflows/native.yml": "d0e19b3e30a76368747e64e59d55377d655d373892fba5d904fe0c8a2bfd3db0",
+    "crates/theywork-control/src/client.rs": "a3ea2fad7a591fc556f7f7c511bb8f62b3cadc07eae0d705b8254211533e3570",
+    "crates/theywork-control/src/model.rs": "91c9b3556b57f52a7191146a02b46f15b6e52bbba8ff46b63248f962e6a8767e",
+    "crates/theywork-control/src/security.rs": "ff603534afca7fb1ad236ca52e9f421f3dbb6ffbc68552ff7f3c482cdd158eac",
+    "crates/theywork-control/src/security_windows_tests.rs": "9989a15d453bc4b0925983f3a158dfcba0e246e5667ffb7fc5e967e27a10bfbc",
+    "crates/theywork-control/src/state_storage.rs": "f3b3da3443d776ec8f8698ddd9e56d5f47250db50bbdd1523c9aa5730189163f",
+    "crates/theywork-control/src/supervisor.rs": "9b006838d23bb7c054cecf021feb4dd623d7a80db997eec8fa277ac9979552cf",
+    "crates/theywork-control/src/supervisor_admission_tests.rs": "73aefd5fd4e0752a995abf213cde32527138a72d461a7da96f6c991494ad2249",
+    "crates/theywork-control/tests/control.rs": "60ba15111e5539215453ea9c9a95d1b56eb618a6372ea84ce3eea108126e7bca",
+    "crates/theywork-control/tests/storage_process.rs": "3874e757064aae4c6601634942dbe0c19c783703a3925bebf3ace17ba787cf9a"
+  },
+  "evidence_sha256": {
+    "canonical-disruption.log": "b4e2fddd8bee1b67d24bb5516dd8e4150b463590238e0982f68bfee774374f45",
+    "clippy.log": "0691abcf7ebc57203f9b44547fab23226fc507c701933d4967841061b7c4910d",
+    "live-fault.log": "a42b993d9cba5cb240ecc8ff60b38b9f9457b9e56056f4f83a5918de477137c4",
+    "process-results.json": "6ae62703c50a245c8f40aab8022ea03a29565cc7255c608878c6ef1bcc4c0a3c",
+    "process.log": "2c42468f8d65096a7651f3682d376a4b8c03cc5254486a9002139925b046b9b4",
+    "state-storage.log": "1447bb0066bd1b12d8ab621ca0fdce2bed9eaa170c008e11cfa070b7d5b190e3",
+    "windows-cross-check.log": "2095353bc3214cc8642336ddea7594b83fa29bb7361d264c1b40b44a9b60b3d8"
+  }
+}

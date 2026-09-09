@@ -61,6 +61,75 @@ fn assert_not_sent(receipt: &OperationReceipt) {
 }
 
 #[test]
+fn storage_fault_disables_live_authority_without_discarding_provider_state() {
+    let fixture = Fixture::new();
+    let host = fixture.host();
+    host.register_thread("thread", &fixture.root.join("project"), "Fixture", true);
+    {
+        let mut state = host.state.lock().unwrap();
+        state.connected = true;
+        let thread = state.threads.get_mut("thread").unwrap();
+        thread.capabilities = Capabilities {
+            send: true,
+            steer: true,
+            interrupt: true,
+            reply: true,
+            attach: false,
+        };
+        thread.active_turn_id = Some("turn".into());
+        state.pending_requests.push(PendingRequest {
+            id: "request".into(),
+            native_id: json!(1),
+            thread_id: "thread".into(),
+            turn_id: Some("turn".into()),
+            method: "item/commandExecution/requestApproval".into(),
+            params: json!({}),
+            received_at: 0,
+            reply_sent: false,
+            supported: true,
+        });
+    }
+    host.persist().unwrap();
+    let saved = fs::read(fixture.config.state_dir.join("state.json")).unwrap();
+    assert!(serde_json::from_slice::<Value>(&saved)
+        .unwrap()
+        .get("storage_recovery_required")
+        .is_none());
+    fs::remove_file(fixture.config.state_dir.join("state.json")).unwrap();
+    assert!(host
+        .provider()
+        .err()
+        .unwrap()
+        .to_string()
+        .contains("recovery"));
+    assert!(host.rpc.lock().unwrap().is_none());
+    let visible: ControlSnapshot =
+        serde_json::from_value(host.handle(Request::Snapshot).unwrap()).unwrap();
+    assert!(!visible.connected);
+    assert!(visible.storage_recovery_required);
+    assert!(visible.pending_requests.is_empty());
+    assert_eq!(
+        visible.threads["thread"].capabilities,
+        Capabilities::default()
+    );
+    assert!(visible.threads["thread"].active_turn_id.is_none());
+    assert!(visible.last_error.unwrap().contains("recovery"));
+    {
+        let state = host.state.lock().unwrap();
+        assert!(state.connected);
+        assert!(!state.storage_recovery_required);
+        assert_eq!(state.pending_requests.len(), 1);
+        assert!(state.threads["thread"].capabilities.send);
+    }
+    security::write_private(&fixture.config.state_dir.join("state.json"), &saved).unwrap();
+    assert!(host.provider().is_err());
+    drop(host);
+    let restarted = fixture.host();
+    restarted.storage.check_health().unwrap();
+    assert!(restarted.rpc.lock().unwrap().is_none());
+}
+
+#[test]
 fn permission_and_file_size_failures_reject_without_losing_fingerprint() {
     for errno in [libc::EACCES, libc::EFBIG] {
         let fixture = Fixture::new();

@@ -697,8 +697,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "libc",
+ "rusqlite",
  "serde",
  "serde_json",
+ "theywork-collect",
  "theywork-core",
  "windows-sys 0.59.0",
 ]

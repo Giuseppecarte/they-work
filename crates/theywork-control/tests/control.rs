@@ -264,7 +264,7 @@ fn uncertain_send_is_durable_and_restart_never_replays_or_reconnects() {
 }
 
 #[test]
-fn storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once() {
+fn canonical_disruption_requires_restart_before_explicit_new_submission() {
     let mut fixture = Fixture::new();
     let client = fixture.start();
     let state_path = fixture.config.state_dir.join("state.json");
@@ -319,6 +319,22 @@ fn storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends
         .is_err());
     assert!(fixture.requests().is_empty());
 
+    // Unlike a pre-write failure with the canonical file intact, replacing
+    // established state with a directory is a storage-loss boundary. Restoring
+    // the exact saved file requires a checked restart before another action.
+    assert!(client.snapshot().unwrap().storage_recovery_required);
+    fixture.stop();
+    let client = fixture.start();
+    assert!(!client.snapshot().unwrap().storage_recovery_required);
+    // The rejection never reached disk and was explicitly reported as only in
+    // the live host. Recovery cannot invent a durable receipt, and replays none.
+    assert!(!client
+        .snapshot()
+        .unwrap()
+        .operations
+        .contains_key("failed-intent"));
+    assert!(fixture.requests().is_empty());
+
     assert_eq!(
         client
             .start_codex(fixture.project(), "working", "explicit-new-intent")
@@ -343,13 +359,11 @@ fn storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends
     );
     fixture.stop();
     let client = fixture.start();
-    assert_eq!(
-        client
-            .start_codex(fixture.project(), "working", "failed-intent")
-            .unwrap()
-            .status,
-        OperationStatus::Rejected
-    );
+    assert!(!client
+        .snapshot()
+        .unwrap()
+        .operations
+        .contains_key("failed-intent"));
     assert_eq!(
         client
             .start_codex(fixture.project(), "working", "explicit-new-intent")
@@ -764,3 +778,6 @@ fn connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start() {
         1
     );
 }
+
+#[path = "support/data_stream_process.rs"]
+mod data_stream_process;

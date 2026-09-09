@@ -10,6 +10,7 @@ use serde_json::Value;
 
 use crate::model::*;
 use crate::security;
+use crate::state_storage::StateStorage;
 
 /// Cheap cloneable connection settings. RPC methods block; call them on the
 /// UI's I/O worker. snapshot uses a bounded 500ms timeout and no provider RPC.
@@ -22,10 +23,16 @@ impl ControlClient {
     /// Read durable ownership without starting a host or contacting a provider.
     /// Capabilities and pending prompts are invalid until explicit reconnect.
     pub fn saved_snapshot(config: ControlConfig) -> Result<ControlSnapshot> {
+        Self::saved_snapshot_optional(config)?.context("No saved control state exists")
+    }
+
+    /// A genuinely unused control directory returns None. Established state
+    /// loss, inaccessible storage and invalid data remain actionable errors.
+    pub fn saved_snapshot_optional(config: ControlConfig) -> Result<Option<ControlSnapshot>> {
         let config = config.normalize()?;
-        let mut snapshot: ControlSnapshot = serde_json::from_slice(&security::read_private(
-            &config.state_dir.join("state.json"),
-        )?)?;
+        let Some(mut snapshot) = StateStorage::read_snapshot(&config.state_dir)? else {
+            return Ok(None);
+        };
         anyhow::ensure!(
             snapshot.codex_home == config.codex_home,
             "Saved control source home mismatch"
@@ -37,7 +44,7 @@ impl ControlClient {
             thread.active_turn_id = None;
             thread.status = "disconnected".into();
         }
-        Ok(snapshot)
+        Ok(Some(snapshot))
     }
 
     pub fn connect(config: ControlConfig) -> Result<Self> {
@@ -63,10 +70,12 @@ impl ControlClient {
         if client.snapshot().is_ok() {
             return Ok(client);
         }
+        // Surface established-state loss before spawning a detached process
+        // whose startup error would otherwise be reduced to an exit code.
+        StateStorage::read_snapshot(&config.state_dir)?;
         let config_path = config.state_dir.join("config.json");
-        if config_path.exists() {
-            let prior: ControlConfig =
-                serde_json::from_slice(&security::read_private(&config_path)?)?;
+        if let Some(bytes) = security::read_private_optional(&config_path)? {
+            let prior: ControlConfig = serde_json::from_slice(&bytes)?;
             anyhow::ensure!(
                 prior.codex_home == config.codex_home,
                 "Control directory belongs to a different source home"

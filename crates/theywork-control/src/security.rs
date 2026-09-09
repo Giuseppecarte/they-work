@@ -4,8 +4,17 @@ use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 
+#[cfg(all(test, windows))]
+#[path = "security_windows_tests.rs"]
+mod windows_tests;
+
 pub(crate) fn private_dir(path: &Path) -> Result<()> {
-    if let Ok(meta) = fs::symlink_metadata(path) {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(meta) => Some(meta),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    if let Some(meta) = metadata {
         anyhow::ensure!(
             !meta.file_type().is_symlink() && meta.is_dir(),
             "Unsafe control directory"
@@ -33,13 +42,7 @@ pub(crate) fn private_dir(path: &Path) -> Result<()> {
 }
 
 pub(crate) fn private_open(path: &Path, create: bool) -> Result<File> {
-    if let Ok(meta) = fs::symlink_metadata(path) {
-        anyhow::ensure!(
-            !meta.file_type().is_symlink() && meta.is_file(),
-            "Unsafe control file"
-        );
-        check_owner(path, &meta)?;
-    }
+    private_file_exists(path)?;
     let mut options = OpenOptions::new();
     options.read(true).write(true).create(create);
     #[cfg(unix)]
@@ -50,6 +53,30 @@ pub(crate) fn private_open(path: &Path, create: bool) -> Result<File> {
     let file = options.open(path)?;
     restrict(path, false)?;
     Ok(file)
+}
+
+/// Only NotFound means absence; denied metadata and unsafe files are errors.
+pub(crate) fn private_file_exists(path: &Path) -> Result<bool> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) => {
+            anyhow::ensure!(
+                !meta.file_type().is_symlink() && meta.is_file(),
+                "Unsafe control file"
+            );
+            check_owner(path, &meta)?;
+            Ok(true)
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error.into()),
+    }
+}
+
+pub(crate) fn read_private_optional(path: &Path) -> Result<Option<Vec<u8>>> {
+    if private_file_exists(path)? {
+        Ok(Some(read_private(path)?))
+    } else {
+        Ok(None)
+    }
 }
 
 pub(crate) fn read_private(path: &Path) -> Result<Vec<u8>> {
@@ -66,7 +93,15 @@ pub(crate) fn read_private(path: &Path) -> Result<Vec<u8>> {
 }
 
 pub(crate) fn write_private(path: &Path, bytes: &[u8]) -> Result<()> {
-    write_private_impl(path, bytes, || Ok(()))
+    write_private_checked(path, bytes, |_| true)
+}
+
+pub(crate) fn write_private_checked(
+    path: &Path,
+    bytes: &[u8],
+    valid_destination: impl Fn(&[u8]) -> bool,
+) -> Result<()> {
+    write_private_impl(path, bytes, valid_destination, publish_private, || Ok(()))
 }
 
 #[cfg(test)]
@@ -75,36 +110,110 @@ pub(crate) fn write_private_before_sync(
     bytes: &[u8],
     before_sync: impl FnOnce() -> Result<()>,
 ) -> Result<()> {
-    write_private_impl(path, bytes, before_sync)
+    write_private_impl(path, bytes, |_| true, publish_private, before_sync)
+}
+
+#[cfg(test)]
+pub(crate) fn write_private_with_publisher(
+    path: &Path,
+    bytes: &[u8],
+    valid_destination: impl Fn(&[u8]) -> bool,
+    publisher: impl FnOnce(&Path, &Path) -> Result<()>,
+) -> Result<()> {
+    write_private_impl(path, bytes, valid_destination, publisher, || Ok(()))
 }
 
 fn write_private_impl(
     path: &Path,
     bytes: &[u8],
+    valid_destination: impl Fn(&[u8]) -> bool,
+    publisher: impl FnOnce(&Path, &Path) -> Result<()>,
     before_sync: impl FnOnce() -> Result<()>,
 ) -> Result<()> {
+    private_file_exists(path)?;
     let tmp = path.with_extension(format!("{}.tmp", random_token()?));
+    let mut publication_attempted = false;
     let result = (|| {
         let mut file = private_open(&tmp, true)?;
         file.write_all(bytes)?;
         file.sync_all()?;
-        // Windows rename cannot replace an existing destination. The directory
-        // lock and process state mutex serialize writers; no instructions are
-        // reconstructed from an absent state file.
-        #[cfg(windows)]
-        if path.exists() {
-            fs::remove_file(path)?;
-        }
-        fs::rename(&tmp, path)?;
+        drop(file);
+        publication_attempted = true;
+        publisher(&tmp, path)?;
         before_sync()?;
         #[cfg(unix)]
         File::open(path.parent().context("Control file has no parent")?)?.sync_all()?;
         Ok(())
     })();
-    if result.is_err() {
-        let _ = fs::remove_file(tmp);
+    if let Err(error) = result {
+        if !publication_attempted
+            || read_private(path)
+                .map(|bytes| valid_destination(&bytes))
+                .unwrap_or(false)
+        {
+            let _ = fs::remove_file(tmp);
+            return Err(error);
+        }
+        let candidate = match fs::symlink_metadata(&tmp) {
+            Ok(_) => format!("staged candidate retained at {}", tmp.display()),
+            Err(problem) if problem.kind() == std::io::ErrorKind::NotFound => {
+                "no staged candidate remains".into()
+            }
+            Err(_) => format!(
+                "staged candidate could not be inspected at {}; preserve it if present",
+                tmp.display()
+            ),
+        };
+        return Err(error.context(format!(
+            "Replacement could not be verified; {candidate}; storage recovery is required; nothing will be replayed"
+        )));
     }
-    result
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn publish_private(tmp: &Path, path: &Path) -> Result<()> {
+    fs::rename(tmp, path)?;
+    Ok(())
+}
+
+#[cfg(windows)]
+fn publish_private(tmp: &Path, path: &Path) -> Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::{
+        MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
+    };
+    let wide = |value: &Path| -> Result<Vec<u16>> {
+        let mut encoded: Vec<u16> = value.as_os_str().encode_wide().collect();
+        anyhow::ensure!(
+            !encoded.contains(&0),
+            "Control path contains a null character"
+        );
+        encoded.push(0);
+        Ok(encoded)
+    };
+    // std canonicalization supplies the extended Windows prefix when needed;
+    // derive the destination from that same parent without resolving its name.
+    let source_path = fs::canonicalize(tmp)?;
+    let destination_path = source_path
+        .parent()
+        .context("Control temporary file has no parent")?
+        .join(path.file_name().context("Control file has no name")?);
+    let source = wide(&source_path)?;
+    let destination = wide(&destination_path)?;
+    // SAFETY: both terminated buffers live for the call. The temporary file is
+    // a sibling on the same volume; no copy/delete or delayed move is enabled.
+    let moved = unsafe {
+        MoveFileExW(
+            source.as_ptr(),
+            destination.as_ptr(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+        )
+    };
+    if moved == 0 {
+        return Err(std::io::Error::last_os_error().into());
+    }
+    Ok(())
 }
 
 #[cfg(unix)]

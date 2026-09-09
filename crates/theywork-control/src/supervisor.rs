@@ -8,6 +8,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+use crate::stream::initialize_event_window;
 use anyhow::{bail, Context, Result};
 use serde_json::{json, Value};
 use theywork_core::{Agent, SourceId, ThreadIdentity, WorkerRole};
@@ -15,6 +16,7 @@ use theywork_core::{Agent, SourceId, ThreadIdentity, WorkerRole};
 use crate::model::*;
 use crate::rpc::{Rpc, RpcError};
 use crate::security;
+use crate::state_storage::StateStorage;
 
 #[cfg(test)]
 type StateWriter = Box<dyn Fn(&Path, &[u8]) -> Result<()> + Send + Sync>;
@@ -25,6 +27,7 @@ struct Host {
     rpc: Mutex<Option<Arc<Rpc>>>,
     /// Serializes explicit mutations; snapshots and provider events stay live.
     mutations: Mutex<()>,
+    storage: Arc<StateStorage>,
     #[cfg(test)]
     state_writer: Option<StateWriter>,
     _lock: File,
@@ -113,12 +116,12 @@ fn serve(mut stream: TcpStream, host: &Host, token: &str) -> Result<()> {
 
 impl Host {
     fn load(config: ControlConfig, lock: File) -> Result<Self> {
-        let path = config.state_dir.join("state.json");
-        let mut state: ControlSnapshot = if path.exists() {
-            serde_json::from_slice(&security::read_private(&path)?)?
-        } else {
-            ControlSnapshot::default()
-        };
+        let storage = Arc::new(StateStorage::new(config.state_dir.clone()));
+        let loaded = storage.load()?;
+        let loaded_existing_state = loaded.is_some();
+        let mut state = loaded.unwrap_or_default();
+        state.storage_recovery_required = false;
+        initialize_event_window(&mut state, loaded_existing_state)?;
         anyhow::ensure!(
             state.codex_home.as_os_str().is_empty() || state.codex_home == config.codex_home,
             "This control directory belongs to a different Codex home"
@@ -143,6 +146,7 @@ impl Host {
             state: Arc::new(Mutex::new(state)),
             rpc: Mutex::new(None),
             mutations: Mutex::new(()),
+            storage,
             #[cfg(test)]
             state_writer: None,
             _lock: lock,
@@ -162,10 +166,11 @@ impl Host {
         if let Some(writer) = &self.state_writer {
             return writer(&self.config.state_dir.join("state.json"), &bytes);
         }
-        security::write_private(&self.config.state_dir.join("state.json"), &bytes)
+        self.storage.write(&bytes)
     }
 
     fn provider(&self) -> Result<Arc<Rpc>> {
+        self.storage.check_health()?;
         let mut slot = self.rpc.lock().unwrap();
         if let Some(rpc) = &*slot {
             if self.state.lock().unwrap().connected {
@@ -187,7 +192,7 @@ impl Host {
         }
         *slot = Some(rpc.clone());
         let state = self.state.clone();
-        let path = self.config.state_dir.join("state.json");
+        let storage = self.storage.clone();
         std::thread::spawn(move || {
             let mut last_save = Instant::now();
             let mut dirty = false;
@@ -204,8 +209,7 @@ impl Host {
                 }
                 if dirty && (disconnected || last_save.elapsed() >= Duration::from_millis(250)) {
                     let mut snapshot = state.lock().unwrap();
-                    let result = bounded_state(&snapshot)
-                        .and_then(|bytes| security::write_private(&path, &bytes));
+                    let result = bounded_state(&snapshot).and_then(|bytes| storage.write(&bytes));
                     if let Err(error) = result {
                         snapshot.last_error =
                             Some(format!("Could not save control events: {error}"));
@@ -225,7 +229,25 @@ impl Host {
         if matches!(request, Request::Snapshot) {
             let mut state = self.state.lock().unwrap();
             state.observed_at = now();
-            let bytes = bounded_state(&state)?;
+            let bytes = if let Some(fault) = self.storage.fault() {
+                // A fault disables advertised authority, not the provider's
+                // internal pending requests or retained observation history.
+                let mut visible = state.clone();
+                visible.connected = false;
+                visible.storage_recovery_required = true;
+                visible.pending_requests.clear();
+                visible.last_error = Some(match &state.last_error {
+                    Some(original) => format!("{original}. {fault}"),
+                    None => fault,
+                });
+                for thread in visible.threads.values_mut() {
+                    thread.capabilities = Capabilities::default();
+                    thread.active_turn_id = None;
+                }
+                bounded_state(&visible)?
+            } else {
+                bounded_state(&state)?
+            };
             return Ok(serde_json::from_slice(&bytes)?);
         }
         let _mutation = self.mutations.lock().unwrap();
@@ -922,23 +944,27 @@ fn apply_event(state: &mut ControlSnapshot, message: Option<Value>) {
             }
         }
     }
-    let sequence = state.events.last().map_or(1, |event| event.sequence + 1);
     let event_params = if params.to_string().len() > 32_768 {
         json!({"truncated":true,"detail":"Large event; inspect native transcript"})
     } else {
         params
     };
-    state.events.push(ControlEvent {
-        sequence,
-        at: timestamp,
-        method: method.into(),
-        thread_id,
-        turn_id,
-        item_id,
-        params: event_params,
-    });
-    if state.events.len() > 256 {
-        state.events.remove(0);
+    let result = crate::stream::append_event(
+        state,
+        ControlEvent {
+            sequence: 0,
+            at: timestamp,
+            method: method.into(),
+            thread_id,
+            turn_id,
+            item_id,
+            params: event_params,
+        },
+    );
+    if let Err(error) = result {
+        state.last_error = Some(format!(
+            "Provider event lineage could not be retained: {error}"
+        ));
     }
 }
 

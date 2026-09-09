@@ -1,0 +1,309 @@
+#1 [internal] pushing localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 0.001 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 0.364 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-baseline-1788965621157686000
+#1 DONE 0.4s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.220 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.440 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.4s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.258 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-2
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-2
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-2
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-2
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-2
+#1 0.156 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-2
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.162 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.146 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-3
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-3
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-3
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-3
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-3
+#1 0.154 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-3
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.129 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 DONE 0.1s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.161 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-4
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-4
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-4
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-4
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-4
+#1 0.330 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-4
+#1 DONE 0.4s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.611 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 DONE 0.6s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.264 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-5
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-5
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-5
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-5
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-5
+#1 0.264 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-5
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.256 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.208 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-6
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-1788965621157686000-6
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-1788965621157686000-6
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-1788965621157686000-6
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-1788965621157686000-6
+#1 0.228 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:audit-1788965621157686000-6
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.178 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:audit-other-1788965621157686000
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-other-1788965621157686000
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-other-1788965621157686000
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-other-1788965621157686000
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-other-1788965621157686000
+#1 0.310 pushing sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:audit-other-1788965621157686000
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:latest
+#1 0.195 pushing sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 0.178 pushing sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8 to localhost:5058/they-work:latest
+#1 DONE 0.2s
+#1 [internal] pushing localhost:5058/they-work:audit-1788965621157686000-8
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-8
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-8
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-8
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-8
+#1 0.240 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:audit-1788965621157686000-8
+#1 DONE 0.3s
+#1 [internal] pushing localhost:5058/they-work:latest
+#1 0.000 copying sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1 from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.000 copying sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd from localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 0.275 pushing sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092 to localhost:5058/they-work:latest
+#1 DONE 0.3s
+{
+  "schema": 1,
+  "candidate": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "commit": "5fa7d55d89af9c407ea95327d8080322e2bef13e",
+  "verification_sha256": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+  "baseline_digest": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8",
+  "scope": "Actual local-registry index promotion; deterministic interruptions at write boundaries",
+  "native_scope": "Six checksum fixtures, not native executable validation",
+  "cases": [
+    {
+      "case": "failed-smoke",
+      "passed": true,
+      "expected_rejection": "Candidate verification is missing or failed",
+      "after": {
+        "version": null,
+        "latest": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8"
+      }
+    },
+    {
+      "case": "failed-checksum",
+      "passed": true,
+      "expected_rejection": "Native checksum failed: they-work-x86_64-pc-windows-msvc.zip",
+      "after": {
+        "version": null,
+        "latest": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8"
+      }
+    },
+    {
+      "case": "success",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:audit-1788965621157686000-2"
+        },
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "after": {
+        "version": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+        "latest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092"
+      }
+    },
+    {
+      "case": "between-tags",
+      "passed": true,
+      "expected_rejection": "latest promotion did not complete: Rehearsal: interrupted before registry write",
+      "retry_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "promotion_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:audit-1788965621157686000-3"
+        },
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "after": {
+        "version": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+        "latest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092"
+      }
+    },
+    {
+      "case": "lost-version-ack",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:audit-1788965621157686000-4"
+        },
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "after": {
+        "version": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+        "latest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092"
+      }
+    },
+    {
+      "case": "lost-latest-ack",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:audit-1788965621157686000-5"
+        },
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "after": {
+        "version": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+        "latest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092"
+      }
+    },
+    {
+      "case": "version-conflict",
+      "passed": true,
+      "expected_rejection": "Version conflict; no tags were changed",
+      "promotion_calls": [],
+      "after": {
+        "version": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8",
+        "latest": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8"
+      }
+    },
+    {
+      "case": "later-latest",
+      "passed": true,
+      "expected_rejection": "Latest changed; no tags were changed",
+      "promotion_calls": [],
+      "after": {
+        "version": null,
+        "latest": "sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea"
+      }
+    },
+    {
+      "case": "native-publication-failed",
+      "passed": true,
+      "native_failure_scope": "Injected workflow outcome; no GitHub service was called",
+      "promotion_calls": [
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:audit-1788965621157686000-8"
+        },
+        {
+          "source": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+          "destination": "localhost:5058/they-work:latest"
+        }
+      ],
+      "after": {
+        "version": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+        "latest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092"
+      }
+    }
+  ],
+  "passed": true
+}

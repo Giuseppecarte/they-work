@@ -1,4 +1,131 @@
-# Release image and no-clone install
+# Release verification and recovery
+
+The [release workflow](../.github/workflows/release.yml) runs for tags matching
+`v*.*.*`; that glob is not semantic-version validation. This guide describes the
+current workflow, not evidence that a new public release has run. Normal native
+installation is documented in [INSTALL.md](../INSTALL.md).
+
+## Candidate gate
+
+1. The existing native matrix builds, tests and archives all six native targets.
+2. Buildx builds one `linux/amd64` + `linux/arm64` index and pushes only a unique
+   `candidate-<run-id>-<attempt>` tag. Version and `latest` are not passed to the
+   build action. Candidate tags in a public package may be visible; they are
+   unpromoted artifacts, not private storage or supported release pointers.
+3. `test-published-image.py` resolves the registry index, pulls that immutable
+   digest for each explicit platform, and checks locale plus Kitty, iTerm2 and
+   no-reply fallback in a 160×48 PTY. Every process must exit normally after `q`.
+   A timeout, crash or forced cleanup fails verification. Reports distinguish
+   daemon-native architecture from emulation; these are simulated terminal
+   responses, not physical-terminal or provider-account validation.
+4. The final job downloads the native archives and requires exactly the six
+   expected files with matching SHA-256 sidecars. It rechecks the verified index
+   and writes an immutable intent naming commit, digest, destinations, native
+   checksums and the previous `latest` digest.
+5. Uploading that intent and verification as `release-intent-<run-id>` must succeed
+   **before** any public tag changes. An existing intent is never overwritten.
+6. Promote version, read back its exact index digest, then promote `latest` and
+   read it back. The source is a single `repository@digest`; there is no rebuild,
+   platform filter, manifest merge or annotation edit. Both platform manifests
+   and attestation descriptors remain part of the same index. Only then create
+   the GitHub Release with the verified native files.
+
+Docker documents the single-index copy behavior in
+[imagetools create](https://docs.docker.com/reference/cli/docker/buildx/imagetools/create/).
+The full destination digest, not merely the presence of two architecture names,
+is the promotion invariant. Do not substitute `docker pull/tag/push`, which can
+operate on only the locally selected platform.
+
+The final job uses a shared concurrency group across release tags and does not
+cancel an in-progress publication. This serializes this workflow's publication
+phase; it does not establish semantic version order or prevent writes by other
+publishers. Registry authentication/transport errors stop promotion rather than
+being treated as an absent tag. The helper uses Python 3.11+ and Docker Buildx.
+
+## Local checks and disposable-registry rehearsal
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-image.py
+```
+
+The deterministic suite uses an in-memory registry boundary and tests failed
+verification/checksums, conflicting tags, partial writes, lost acknowledgements,
+normal PTY exit requirements and idempotent retries. It performs no registry
+writes. CI runs it on pull requests and before candidate builds.
+
+For an actual local registry rehearsal, use an owned disposable registry bound
+only to loopback, build the current image to it with both platforms, and retain
+Buildx's metadata. Supply the exact resulting digest and actual source commit:
+
+```sh
+python3 scripts/test-published-image.py \
+  --image localhost:5058/they-work@sha256:<candidate-digest> \
+  --commit <full-source-commit> --report target/release-check/verification.json
+python3 scripts/rehearse-release-image.py \
+  --verification target/release-check/verification.json \
+  --output target/release-check/rehearsal
+```
+
+The rehearsal refuses non-loopback registries. It creates baseline and test tags
+only in that local repository, then injects interruption before a write or after
+an accepted write. It checks real registry digests. Its six native files are
+**checksum fixtures**, not native executables; the real native release matrix
+remains required. Its injected GitHub Release failure tests reporting only; it
+does not contact GitHub. Stop and remove only the registry/container created for
+that rehearsal afterwards. Do not prune unrelated Docker data.
+
+## Recover a partial publication
+
+There is no atomic transaction across two registry tags and GitHub Releases.
+Keep the candidate and the run's artifacts; do not delete a verified version or
+roll back `latest` automatically.
+
+| Observed boundary | Recovery |
+|---|---|
+| Candidate smoke or native checksum failed | Version and latest were not touched. Repair and create a new verified candidate. |
+| Version write succeeded; latest failed | Keep the verified version. Resume using the original intent and digest. |
+| Registry accepted a write but its response was lost | Read back the destination. The desired digest means success/no-op, including latest. |
+| Version points to another digest | Stop. Never overwrite it as part of retry. |
+| Latest differs from both the recorded previous digest and candidate | Stop automatic recovery; another publication may have advanced it. |
+| Images promoted; GitHub Release attempt failed | Report images as published and native publication as incomplete/unknown. Inspect the remote release and its assets before completing it. Do not roll back images. |
+
+Download the original `release-intent-<run-id>` and all `native-*` artifacts from
+that run into an isolated directory. Retain the verification and intent bytes
+unchanged. The workflow retains artifacts for 90 days; if they are unavailable,
+do not infer a verified intent from mutable tags or fabricate a replacement.
+Ensure no other publisher is active when recovering outside the serialized job.
+
+```sh
+python3 scripts/release_image.py promote \
+  --intent <downloaded>/intent.json \
+  --verification <downloaded>/verification.json \
+  --native-dir <downloaded-native-files> \
+  --record <recovery-output>/promotion.json
+```
+
+This is a real publication command: use it only for an authorized release. It
+rechecks verification and native hashes before writes. Existing matching tags
+are no-ops; a conflicting version or a later latest stops it. A failed read is
+unknown, not permission to overwrite. The completed-step log can be incomplete
+after runner death, so registry state is always read during recovery.
+
+Do not rerun the whole build expecting the digest to remain identical. Attestations
+and build metadata may change it. A fresh intent cannot replace an already
+published version, and the workflow refuses to overwrite an earlier run intent.
+For native publication, inspect `gh release view` and downloaded asset hashes:
+complete missing verified assets explicitly, or create the release if absent.
+Never clobber differing assets automatically. The outcome record reports the
+workflow result and asks for remote inspection after failure; it cannot prove
+that a failed API call left no release or assets behind.
+
+## Historical publication records
+
+The following checkpoints are retained as historical evidence. Their dated
+access results, installer examples and descriptions of then-current behavior
+were not revalidated by the candidate-promotion change above.
+
+<details>
+<summary>Earlier publication and installer probes</summary>
 
 ## v0.1.0 publication
 
@@ -45,43 +172,6 @@ export THEYWORK_CODEX_HOST=/mnt/c/Users/Example/.codex
 Use only paths that exist on the Docker daemon's host. Demo mode needs no data
 mounts. Live mode with no stores shows setup guidance rather than an office.
 
-## Future releases
-
-The [release workflow](../.github/workflows/release.yml) triggers on tags matching
-`v*.*.*`; this glob is not semantic-version validation. It builds the tagged
-source, pushes the version and `latest`, then pulls the just-published immutable
-digest into a 160×48 Kitty-capable PTY. That post-publish check requires the
-runtime's baked `LANG`, `LC_ALL`, and `LC_CTYPE` values to be `C.UTF-8`, an
-actual Kitty graphics transmission, and a no-reply fallback containing
-quadrant-specific rather than half-block-only art. (Upper/lower half-block
-glyphs are valid quadrant masks, so the verifier reports them instead of using
-their raw presence as an encoding test.) It does not accept the runner's
-locally built tag as release evidence. After that gate passes, re-shoot the
-README stills from the published image; do not substitute a locally built image
-for that capture. Use `scripts/capture-published-image.py --image
-ghcr.io/giuseppecarte/they-work@<digest> --output <still.png> --record
-<still.json>` to extract the released image's direct Kitty pixel transmission.
-Keep the record beside the review artifact until the still is accepted; it
-names the immutable digest and hashes both its RGBA source and PNG. The same
-gate also requires an iTerm2 inline-image packet from an iTerm2 capability
-reply, so a source-only implementation cannot quietly miss a release. The
-workflow runs with package-write permission. Add `--key enter` to capture the
-selected worker's desk after the initial office frame.
-No workflow changes were made to obtain the v0.1.0 success.
-
-After each release, verify both publication and anonymous access separately.
-A `denied` response alone cannot distinguish an unpublished package from a
-restricted one. Once a successful publish is established, denied anonymous
-access requires checking package visibility/permissions. A nonexistent tag
-in the now-public package was tested and returned `not found`, exit 1.
-The v0.1.0 package is neither missing nor restricted to authenticated clients.
-
-The running process uses the invoking UID/GID, no external network, a read-only
-root, dropped capabilities, no-new-privileges, and read-only agent mounts.
-The direct demo image defaults to non-root UID 10001.
-
-The following older probes are historical evidence, not current install commands.
-
 ## Clean-host probe
 
 On 2026-08-30, the documented no-clone command was run from `/tmp` with an
@@ -125,7 +215,7 @@ published on the default branch and the GHCR package is public, rerun that
 transcript's public step; the local replay now passes the invoking UID/GID to
 the image.
 
-## Current clean-host status — 2026-09-02
+## Historical clean-host status — 2026-09-02
 
 The earlier pipeline examples above have been replaced with temporary-file
 commands so a failed download keeps its curl exit status. A fresh UID 10001
@@ -141,3 +231,5 @@ documented GHCR image. The no-clone path is therefore not published end to end
 yet. The current full transcript, including the successful local private-data
 and interactive replays, is in
 [docs/installer-transcript.md](installer-transcript.md).
+
+</details>

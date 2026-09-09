@@ -1,0 +1,17 @@
+{
+  "candidate": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "commit": "5fa7d55d89af9c407ea95327d8080322e2bef13e",
+  "latest": "localhost:5058/they-work:latest",
+  "native_checksums": {
+    "they-work-aarch64-apple-darwin.tar.gz": "3415775478b185b43670cac8926142f2ecc9c5bbbb28a2150ea65c10b122541f",
+    "they-work-aarch64-pc-windows-msvc.zip": "26648a64368c932887907b31a2d09a15854e47e320819a5350c68948473fd6d8",
+    "they-work-aarch64-unknown-linux-musl.tar.gz": "eec0003ec2285e8346bc68fca9557e34c4f01b2e6a3388a4ee240a8aa8375b8f",
+    "they-work-x86_64-apple-darwin.tar.gz": "4e6146603f766b63f00dd8bb316975e1f056587bcfa39181e886463e21ffba1e",
+    "they-work-x86_64-pc-windows-msvc.zip": "d22eadcb3668e40d03e7fc4feb7588f11d6fdc86266b5940f1d5edecf97ebc47",
+    "they-work-x86_64-unknown-linux-musl.tar.gz": "2b5b958b4f91e2544ac8e3f1606ad7b8a8160dfa434e74633074d8237dd4c886"
+  },
+  "prior_latest": "sha256:65696f6ede347a07eb8e46d2fa85dc8bccef407d89b9a47db0edafed33336eb8",
+  "schema": 1,
+  "verification_sha256": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+  "version": "localhost:5058/they-work:audit-1788965621157686000-3"
+}

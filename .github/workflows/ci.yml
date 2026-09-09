@@ -23,6 +23,11 @@ jobs:
       - name: Test installer failure boundaries
         run: python3 scripts/test-install.py
 
+      - name: Test release verification and promotion boundaries
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 scripts/test-release-image.py
+
       - name: Render design references
         run: scripts/render-design.sh
 

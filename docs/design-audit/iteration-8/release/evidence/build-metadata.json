@@ -1,0 +1,10 @@
+{
+  "buildx.build.ref": "desktop-linux/desktop-linux/sg7luq0sjo23tesk4t1tgtmkg",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+    "size": 1607
+  },
+  "containerimage.digest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "image.name": "localhost:5058/they-work:candidate-audit8"
+}

@@ -5,17 +5,21 @@ use crate::event::Event;
 /// Anything that can produce [`Event`]s: a Claude transcript tailer, a Codex
 /// SQLite reader, or a fake source for tests and demos.
 ///
-/// Polling rather than async on purpose. The TUI already has a frame loop, and
-/// a poll-per-frame keeps the whole program single-threaded and easy to reason
-/// about.
+/// The host owns scheduling. The native host polls sources sequentially on a
+/// background thread, sends the resulting batch to the UI, then waits one second
+/// before the next traversal. Polling is independent of the render frame loop;
+/// time spent reading sources adds to that interval, so one-second freshness is
+/// not guaranteed. One-shot consumers may call a source directly.
 pub trait Source: Send {
     /// Stable name, shown in the status bar when a source is unhealthy.
     fn name(&self) -> &'static str;
 
     /// Return every event observed since the previous call.
     ///
-    /// Must not block for long; the frame loop calls this on a timer. Returning
-    /// an empty vec is the normal quiet case, not an error.
+    /// Keep each call bounded: a slow source delays the other sources in that
+    /// traversal and shutdown waits for an in-flight call to finish. Returning
+    /// an empty vec is the normal quiet case, not an error. A source reports
+    /// observations; it does not schedule UI frames or acquire control authority.
     fn poll(&mut self, now: crate::Millis) -> Result<Vec<Event>, SourceError>;
 }
 

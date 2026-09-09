@@ -1,4 +1,17 @@
-# Project selection and setup contract
+# Historical project-selection proposal
+
+This is an earlier implementation proposal, retained for design history. Its
+startup, keyboard and persistence rules are **not the current contract**. In
+particular, native settings now use the normal settings directory with visible
+Remember/temporary choices; an explicit `--config-dir` is not required to save.
+
+For current behavior use [installation and navigation](../INSTALL.md),
+[task controls and local storage](CONTROLS.md), and the
+[contributor boundaries](../CONTRIBUTING.md#observation-and-control-contracts).
+The proposal below is preserved rather than silently rewritten as current
+behavior.
+
+## Original proposal
 
 Each project is one office floor. The camera grid is the only multi-project
 view. A project is identified by the normalized repository root used by the

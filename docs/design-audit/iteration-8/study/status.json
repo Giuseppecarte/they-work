@@ -1,0 +1,42 @@
+{
+  "status": "prepared-not-conducted",
+  "target_sessions": 5,
+  "completed_participant_sessions": 0,
+  "participants_enrolled": 0,
+  "duration_minutes_each": 45,
+  "recruitment_slots": {
+    "codex": 2,
+    "claude_code": 2,
+    "both": 1
+  },
+  "participant_comprehension": "not-tested",
+  "physical_terminal_validation": "not-tested",
+  "assistive_technology_validation": "not-tested",
+  "authenticated_provider_workflows": "not-tested",
+  "diary_workdays_each": 3,
+  "diary_entries_collected": 0,
+  "expert_fixture_walkthroughs_are_participant_sessions": false,
+  "baseline_binary_sha256": null,
+  "baseline_status": "not-frozen",
+  "baseline_changes_during_sessions_and_diaries": false,
+  "optional_followup_minutes": 20,
+  "completed_followups": 0,
+  "UX_01": {
+    "gate": "not-met",
+    "participant_evidence": "not-tested",
+    "prototypes_implemented": 0,
+    "maximum_prototypes": 1
+  },
+  "UX_02": {
+    "gate": "not-met",
+    "participant_evidence": "not-tested",
+    "prototypes_implemented": 0,
+    "maximum_prototypes": 1
+  },
+  "distinct_participants_required": 2,
+  "severe_exception": "One severe reproducible failure involving an unintended decision, incorrect recipient or lost next step",
+  "study_launcher_preflight": "passed-macos-only",
+  "repro_smoke_does_not_validate_study": true,
+  "study_launcher_preflight_binary": "ca446efcfc928d3f3cfdb0ab6a98b97e7122765093d38e1315a5eda1781abe48",
+  "prototype_default_activation": "off until qualifying breakdown ceases for affected participants without new recipient/action errors"
+}

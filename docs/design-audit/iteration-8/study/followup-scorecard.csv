@@ -1,0 +1,11 @@
+participant_slot,provider_experience,session_date,condition,terminal_name,terminal_version,os,columns,rows,font,font_size,effective_graphics,color_mode,motion,task_id,first_exposure,start_time,end_time,completed_unaided,answer_correct,recipient_correct,scope_correct,confidence_1_to_5,meaningful_actions,backtracks,help_opened,hint_given,focus_breakdown,exact_quote,observed_behavior,interpretation,alternative_explanation,evidence_path,status,phase,binary_sha256,fixture_sha256,dataset,version_order
+P01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,old
+P01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,new
+P02,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,old
+P02,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,new
+P03,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,old
+P03,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,new
+P04,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,old
+P04,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,new
+P05,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,old
+P05,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,not-tested,optional-followup,,,,new

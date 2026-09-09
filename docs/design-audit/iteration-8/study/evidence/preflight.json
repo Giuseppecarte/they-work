@@ -1,0 +1,113 @@
+{
+  "status": "pass",
+  "host": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "binary_sha256": "ca446efcfc928d3f3cfdb0ab6a98b97e7122765093d38e1315a5eda1781abe48",
+  "participant_sessions": 0,
+  "baseline_frozen": false,
+  "physical_terminal": "not-tested",
+  "real_provider_calls": 0,
+  "capture": "Actual launcher + executable PTY; simulated Kitty handshake 8x16 when stated; Menlo ANSI replay",
+  "conditions": {
+    "tower": {
+      "cells_initial": [
+        120,
+        36
+      ],
+      "cells_return": [
+        80,
+        24
+      ],
+      "same_source_path": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-study/study-P01/codex",
+      "source_hashes_unchanged": true,
+      "motion": true,
+      "simulated_kitty": true,
+      "pixel_cell_geometry": [
+        8,
+        16
+      ],
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    },
+    "compact": {
+      "cells_initial": [
+        120,
+        36
+      ],
+      "cells_return": [
+        80,
+        24
+      ],
+      "same_source_path": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-study/study-P01/codex",
+      "source_hashes_unchanged": true,
+      "motion": true,
+      "simulated_kitty": false,
+      "pixel_cell_geometry": [
+        8,
+        16
+      ],
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    },
+    "reduced": {
+      "cells_initial": [
+        120,
+        36
+      ],
+      "cells_return": [
+        80,
+        24
+      ],
+      "same_source_path": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-study/study-P01/codex",
+      "source_hashes_unchanged": true,
+      "motion": false,
+      "simulated_kitty": true,
+      "pixel_cell_geometry": [
+        8,
+        16
+      ],
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    }
+  },
+  "checks": {
+    "baseline_lock": {
+      "unlocked_rejected": true,
+      "exact_hash_accepted": true,
+      "changed_binary_rejected": true,
+      "test_manifest_only": true
+    },
+    "fresh_variants": {
+      "A": {
+        "tasks": 6,
+        "injected_result_visible": true,
+        "title": "Draft API guide",
+        "exit": {
+          "exit": 0,
+          "terminal_restored": true
+        }
+      },
+      "B": {
+        "tasks": 6,
+        "injected_result_visible": true,
+        "title": "Draft SDK guide",
+        "exit": {
+          "exit": 0,
+          "terminal_restored": true
+        }
+      }
+    },
+    "variant_facts_manifest": {
+      "variant": "B",
+      "stable_ids_and_titles_match_sqlite": true,
+      "tasks": 6,
+      "note": "Bounded follow-up after correcting only the manifest transform; UI data and launcher output unchanged."
+    }
+  }
+}

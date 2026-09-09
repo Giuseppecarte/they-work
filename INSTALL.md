@@ -77,31 +77,38 @@ Windows, its installer-added user PATH entry. Source records are never removed.
 
 ## Choose your conversation sources
 
-Start with `they-work`. On first launch, **Connect your team** lets you choose
+Start with `they-work`. On first launch, **Connections / Sources** lets you choose
 Codex, Claude Code, both, or an empty tower. No account login, API key, browser
 authorization, or subscription is needed **for observation**. It reads local
 conversation titles, messages and tool activity. Creating or controlling tasks
 uses the official provider CLI, its existing login and its normal account limits.
-Press `C` in the office for official login, `n` for a new task and `m` for the
-selected task’s available controls. See [task controls](docs/CONTROLS.md).
-Press `d` to explore the demo without reading conversations.
+From the office, `c` or `C` opens **Connections**. Choose **Local sources** to
+change observed folders, or the named provider's login control to open its
+official login flow. Opening Connections alone does not log in. `n` opens a new
+task and `m` opens the selected task's instruction composer. See
+[task controls](docs/CONTROLS.md). In the source chooser, `d` starts the demo
+without reading conversations; in an office, `d` opens Office Design.
 
-Use `↑` / `↓` to choose a source, `Space` to turn it on or off, and `e` to edit
+Use `↑` / `↓` or Tab / Shift+Tab to focus a source, `Space` to turn it on or off,
+and `e` while that source or its folder is focused to edit
 its **app data folder** (`.codex` or `.claude`, not a project folder). While editing,
 use arrow keys, Home/End, Backspace/Delete, or `Ctrl+U` to clear the path. `Enter`
-applies the path; `Esc` cancels the edit. Press `Enter` again to connect. If a
-folder is missing, the screen selects the source that needs repair.
+applies the path; `Esc` cancels the edit. After editing, press `F5` to connect,
+or move focus to **Connect** and press Enter. Enter acts on the currently
+focused control; it is not a global Connect shortcut. If a folder is missing,
+the screen selects the source that needs repair.
 
 **Remember on this computer** is selected by default. Turn it off with `Space`
 on that row, or press `m`, for a temporary session. Saved choices are left
 unchanged. Launch with `--no-save` to disable preference writes for the whole
-session. Source switches and paths are saved when you confirm Connect; appearance,
-characters, room palettes, and the selected floor are saved during interactive use.
+session. Source switches and paths are saved when you confirm Connect. Appearance,
+character and room choices are written when you exit normally; floor selection
+and reading markers are also saved during use. Use `q` from the main view to exit.
 Demo mode, `--once`, `--doctor`, and `--headless` do not save preferences or create
 settings folders. Demo mode also skips reading saved preferences.
 
-Later, simply run `they-work` again. Use `c` inside the app or `they-work --setup`
-to change sources and repair folders. Settings live in:
+Later, simply run `they-work` again. Use `c` → **Local sources**, or launch
+`they-work --setup`, to change sources and repair folders. Settings live in:
 
 - macOS/Linux/WSL: `$XDG_CONFIG_HOME/they-work`, or `$HOME/.config/they-work`.
 - Windows: `%APPDATA%\they-work`, falling back to the home `.config\they-work`.
@@ -131,11 +138,37 @@ alone does not grant permission. Command-line choices apply to that run; use the
 connection screen to remember them. An unavailable source does not prevent the
 other source from working.
 
-In the office, `c` opens source selection, `v` changes camera, `w` / `W` changes
-or resets the selected worker's character, and `o` / `O` changes or resets the
-selected room palette. `0` opens the tower, `Tab` / `Shift+Tab` cycles floors,
-and `!` jumps to a worker needing attention. Each repository gets one floor;
-its Git worktrees remain together, including with `--project <path>`.
+## Navigate and customize
+
+Tab / Shift+Tab moves keyboard focus through the visible controls; Enter uses
+the focused control. Close a dialog with Esc before using a main-view shortcut.
+The dialog's own hints describe what its keys do.
+
+- `0` opens the tower. Outside a dialog, `1`–`9` opens the corresponding floor.
+  Use Search (`/`) to find any project or task, including floors beyond nine.
+- With the office scene active, PageUp / PageDown changes floors. In the tower,
+  those keys page through floors; in a work brief, they scroll the record instead.
+- In an office, arrows select a person and Enter opens their work brief when no
+  separate control has keyboard focus. `!` selects a task needing attention.
+- `s` opens Settings. `v` opens **Advanced** with Camera selected; left/right
+  changes the camera. Esc returns to Settings first; another Esc closes it.
+- `d` opens Office Design. In a work brief, `a` opens Character. These editors
+  have explicit Apply and Cancel controls.
+- Compatibility shortcuts remain available: `w` changes the selected worker's
+  costume and `W` clears that override from a work brief; `o` cycles the selected
+  office's legacy palette and `O` clears that override. They do not open the
+  Character or Office Design editors. The legacy palette is separate from the
+  authored office preset.
+
+Each repository gets one floor; its Git worktrees remain together. Merely
+switching floors does not change source access or hide other projects.
+`--project <path>` explicitly restricts which project's conversations are read.
+`--all` starts at the tower instead of restoring the selected floor.
+
+The view updates independently of source polling. Local sources are read in
+sequence on a background thread, with a one-second wait after each traversal;
+large reads can delay the next update. The displayed observation age and source
+warnings describe available evidence, not a guarantee of instant status.
 
 In WSL, install the Linux binary. Windows-side data can be selected explicitly:
 

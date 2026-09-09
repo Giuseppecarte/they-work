@@ -1,0 +1,50 @@
+{
+  "binary_sha256": "ca446efcfc928d3f3cfdb0ab6a98b97e7122765093d38e1315a5eda1781abe48",
+  "cells": [
+    80,
+    24
+  ],
+  "keyboard_only": true,
+  "fixture": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/not-sent-f98w1y0v",
+  "real_provider_calls": 0,
+  "participant_sessions": 0,
+  "method": "Executable PTY + ANSI replay; no physical terminal or account",
+  "status": "pass",
+  "exact_recipient": "managed-1",
+  "rejected_provider_calls": 0,
+  "automatic_resends": 0,
+  "explicit_resubmit_calls": 1,
+  "rejected_receipt": {
+    "id": "4bae6b1123414870c72f7655ac4f5249b9d5a033a425b4fd464a0995b4d96211",
+    "status": "Rejected",
+    "thread_id": "managed-1",
+    "turn_id": null,
+    "detail": "Not sent: local state could not be saved. Restore storage access and submit again.",
+    "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"Keep this draft; retry only after storage is restored.\",\"expected_turn_id\":\"turn-1\",\"operation_id\":\"4bae6b1123414870c72f7655ac4f5249b9d5a033a425b4fd464a0995b4d96211\"}}"
+  },
+  "confirmed_receipts": [
+    {
+      "id": "01cbb8a0a38cda0b1c88e0a6d7b53014cbe215c88ebf357823e71b164c21c07c",
+      "status": "Confirmed",
+      "thread_id": "managed-1",
+      "turn_id": "turn-1",
+      "detail": "Instruction accepted",
+      "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"Keep this draft; retry only after storage is restored.\",\"expected_turn_id\":\"turn-1\",\"operation_id\":\"01cbb8a0a38cda0b1c88e0a6d7b53014cbe215c88ebf357823e71b164c21c07c\"}}"
+    },
+    {
+      "id": "98187a23581706e42210d7193aee003652f52a7ef23b1de087fb2e11d481c6ad",
+      "status": "Confirmed",
+      "thread_id": "managed-1",
+      "turn_id": "turn-1",
+      "detail": "Instruction accepted",
+      "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/not-sent-f98w1y0v/vertical-project\",\"prompt\":\"working\",\"operation_id\":\"98187a23581706e42210d7193aee003652f52a7ef23b1de087fb2e11d481c6ad\"}}"
+    }
+  ],
+  "original_error": "Could not save instruction intent: Permission denied (os error 13). Rejection is recorded only in this running host: Permission denied (os error 13)",
+  "draft_preserved": true,
+  "rejection_visible": "[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  \nvertical-project / Work brief                                                   \n                                                                                \n Jules S.                                                                       \n working                                                                        \n codex \u00b7 Working \u00b7 1s                                                           \n Partial local history                                                          \n [ Now ][ Activity ][ Team ][ Details ]                                         \n                                                                                \n OBSERVED \u00b7 1s ago                                                              \n Text update: Fixture is working                                                \n                                                                                \n RECORDED UPDATES                                                               \n No retained activity or result from this source yet.                           \n [ Instruct ] [ Expand ]                                                        \n PgUp/Dn \u00b7 line 1/6 \u00b7 Esc                                                       \n                                                                                \n INSTRUCTION TO vertical-project / working                                      \n Keep this draft; retry only after storage is restored.\u258f                        \n                                                                                \n                                                                                \n Rejected: Not sent: local state could not be saved. Restore storage access and \n [ Send instruction ] [ Back ]                                                  \n Tab/Enter \u00b7 F7 expand \u00b7 Esc cancel                                             ",
+  "terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

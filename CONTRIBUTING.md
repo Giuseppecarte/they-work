@@ -21,17 +21,28 @@ The collectors remain read-only, and the renderer performs no I/O.
 should emit a core event when the model needs new information; a renderer
 should consume the existing world model rather than reaching into a source.
 
-## Project-selection contract
+## Observation and control contracts
 
-The user-facing startup, project-switching, persistence, and setup-check
-behavior is specified in [`docs/project-selection.md`](docs/project-selection.md).
-The CLI exposes `--project`, `--config-dir`, and the non-rendering `--doctor`
-diagnostic; the collector owner supplies normalized project identities and
-first-scan counts. Keep the
-default path read-only and make every additional write require the explicit
-config-directory opt-in described there. Managed tasks additionally follow
-[the control contract](docs/CONTROLS.md); reading a transcript never grants
-authority over an external execution.
+[INSTALL.md](INSTALL.md#choose-your-conversation-sources) is the current
+user-facing contract for source consent, navigation and persistence.
+Native interactive sessions offer **Remember on this computer** in the normal
+settings directory; `--config-dir` overrides that location, rather than granting
+permission by itself. Remember disabled or `--no-save` leaves the session
+temporary. The standard Docker runtime still needs an explicit writable settings
+mount to save. Keep source records read-only in every mode.
+
+`--project` restricts the input to one normalized repository; choosing a floor
+only changes the view. The collectors supply normalized project identities and
+first-scan counts. The [Source trait](crates/theywork-core/src/source.rs) documents
+the polling contract: the host traverses sources sequentially in a background
+thread, publishes a batch, then waits one second. This is independent of frame
+rendering; a slow read extends the traversal and delays the other sources.
+
+[The control contract](docs/CONTROLS.md) defines provider ownership, requests,
+receipts and private supervisor state. Reading a transcript never grants
+authority over an external execution. The earlier
+[project-selection proposal](docs/project-selection.md) is historical, not an
+alternative current contract.
 
 ## Build and test
 
@@ -65,9 +76,10 @@ CI forces Docker for that verification lane and separately builds, runs tests,
 and smoke-tests release binaries natively on Linux, macOS, and Windows (x64/ARM64).
 
 The release workflow packages each tested native binary with `LICENSE` and
-SHA256 checksums, builds Linux/amd64 and Linux/arm64 container images, verifies
-the published image, then attaches native installers and archives to the tagged
-GitHub Release. This workflow is a release gate, not evidence that an unrun
+SHA256 checksums, builds a Linux/amd64 and Linux/arm64 candidate index, verifies
+that immutable digest on both platforms and checks native archive hashes before
+promoting version/latest. It then attaches native installers and archives to the
+tagged GitHub Release. This workflow is a release gate, not evidence that an unrun
 platform has passed. No releases were published as part of the design audit.
 
 <code>cargo fmt --all</code> crosses crate boundaries. For a focused change,
@@ -126,18 +138,48 @@ suite, and the release image build on pushes and pull requests.
 
 ## Releasing the image
 
-Create and push a semantic version tag such as `v1.2.3`. The tag-only
-[`release workflow`](.github/workflows/release.yml) builds `docker/Dockerfile`
-and publishes both `ghcr.io/giuseppecarte/they-work:v1.2.3` and `latest`. It
-then pulls the published digest through a 160×48 Kitty-capable PTY, checking
-the baked UTF-8 locale, a graphics transmission, and quadrant-specific output
-when the terminal does not answer the graphics probe. It has `packages:write`
-only in that tag-triggered workflow; CI for branches and pull requests remains
-read-only. Re-shoot the README stills from that published digest after the
-check passes. The no-checkout install command and image pinning rules are in
-[`docs/release.md`](docs/release.md).
+Create and push an authorized version tag such as `v1.2.3`. The tag-only
+[`release workflow`](.github/workflows/release.yml) builds once to a unique
+candidate reference. It verifies that immutable multi-architecture digest with
+explicit platform runs and normal PTY exits, checks all six native archives and
+retains a publication intent before advancing version and `latest`. Candidate
+tags may be visible in the public package; they are unpromoted artifacts.
+
+Promotion reuses the verified index without rebuilding it. It is not atomic
+across two image tags and the GitHub Release. A failure can leave a verified
+version published while `latest` or native release publication is incomplete;
+follow the [recovery runbook](docs/release.md), not an automatic rollback. The
+workflow serializes promotion but does not prevent external publishers or impose
+semantic version order. Branch and pull-request CI does not publish packages.
+
+Run the deterministic release checks without registry writes:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-image.py
+```
+
+For the explicit-platform verifier, disposable-registry rehearsal, native
+checksum contract and authorized publication recovery commands, use
+[`docs/release.md`](docs/release.md). Simulated capability replies and emulation
+are recorded as such; neither is physical-terminal or native ARM certification.
 
 ## Reviewing art
+
+For a small reproducibility check from a clean checkout, follow
+[the audit guide](docs/AUDIT.md):
+
+~~~sh
+python3 scripts/audit.py bootstrap --python /path/to/python3.12
+python3 scripts/audit.py smoke
+~~~
+
+Omit `--python` when `python3` already uses Python 3.12. Bootstrap prepares the
+declared dependencies; smoke runs offline afterward and produces one complete
+screen plus one bounded collector-fixture result under ignored `target/audit/`.
+The manifest identifies the actual binary, dependencies, font and capture
+method. This is a compositor replay, not physical-terminal or user validation.
+The larger legacy review bundle below remains available for its existing
+compatibility targets; it is not a prerequisite for the small audit smoke.
 
 The renderer is a pixel canvas whose resolution is the terminal size. A design
 drawn at desktop resolution does not survive scaling down to 80 columns. The

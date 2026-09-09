@@ -20,7 +20,7 @@ sidecar, and a cold WAL store without existing sidecars is refused.
 
 The tower and work-panel previews reconstruct the actual UI image layer and
 native text mask with Menlo. They are compositor exports, not screenshots of a
-terminal emulator. The [current audit](docs/design-audit/iteration-6/REVIEW.md) records tested
+terminal emulator. The [current audit](docs/design-audit/iteration-8/README.md) records tested
 workflows and the remaining terminal/platform acceptance checks.
 
 ## Start here
@@ -105,7 +105,8 @@ text selection. Capture is released in an official provider console and on exit.
 Use `d` for the selected office's preset and four decoration zones. In the
 inspector, `a` edits the fictional name, outfit and animation style. These are
 local appearance choices and never change agent instructions. Changes preview
-immediately; Apply saves them and Cancel restores the previous appearance.
+immediately; Apply keeps the edit and Cancel restores the previous appearance.
+With Remember enabled, normal exit writes those appearance choices to disk.
 `v` opens Advanced cameras. `w`/`W` and `o`/`O` retain compatible wardrobe and
 legacy palette shortcuts; legacy palettes affect the older cameras.
 Keep **Remember on this computer** enabled when connecting to save these choices

@@ -7,8 +7,9 @@ its data mounts are read-only and networking is disabled.
 ## Connect and sign in
 
 `c` and `C` open Connections with sources, control availability and official login.
-Sources chooses which local data folders the office may observe. Use `1`
-(Codex) or `2` (Claude). They-work never asks for a provider password or stores
+Choose **Local sources** to select the folders the office may observe, or the
+named provider's login control to open its official flow. Merely opening this
+panel does neither. They-work never asks for a provider password or stores
 its own copy of a login token. Install the official native CLI on PATH; `--doctor`
 reports its version and whether background Claude attach is available.
 
@@ -44,6 +45,14 @@ send is never retried automatically. Keep the operation ID and inspect the task
 before intentionally sending anything again. A request that expires is disabled;
 an arriving replacement requires deliberate selection. Controls stay disabled
 when the terminal is too small to show their contents.
+
+**Not sent: local state could not be saved. Restore storage access and submit
+again.** means the live supervisor rejected the operation before contacting the
+provider. The recipient and draft stay available. Restore storage access and
+submit deliberately; refreshing the rejected receipt does not resend it.
+If a supervisor restart instead reports **Uncertain**, follow that receipt:
+an incomplete local save may have left a durable intent, so the application
+does not infer a safe automatic retry from the earlier storage error.
 
 Codex tasks created here belong to a local supervisor. Closing the office leaves
 accepted work running. Reopening the office connects to that supervisor. If the
@@ -84,6 +93,13 @@ or complete a task. Deliveries require recorded result evidence; finishing a
 turn is not project completion. The changes view states that historical coverage
 can be incomplete.
 
+**Since your visit** uses the previous visit to that project as its baseline.
+Entering a floor advances its visit time even without opening a record or
+marking it seen. **Deliveries** retains available result records and their
+separate local reading markers. Visiting, marking seen, reviewing a request and
+sending a provider decision are distinct actions; none proves that a person
+actually read or accepted a result.
+
 Meeting rooms represent confirmed delegation. Session membership with an unknown
 immediate parent and conversation forks have their own labels. Missing parents
 and participants remain unknown instead of being invented. Messages and deliveries
@@ -111,7 +127,7 @@ It contains conversation-related events, ownership metadata and receipts, with
 bounded history. It is not an account credential store. Do not remove it while
 you still need to inspect or control its running tasks.
 
-The [implementation audit](design-audit/iteration-6/REVIEW.md) separates fixture
+The [current acceptance record](design-audit/iteration-8/VALIDATION.md) separates fixture
 and PTY evidence from actual provider and platform testing. Schema changes that
 are not understood remain unavailable; the office does not fabricate a working
 control for them.

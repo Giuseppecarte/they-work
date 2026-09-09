@@ -225,6 +225,36 @@ impl Default for ControlPanel {
     }
 }
 
+/// Wrap the actual outcome before spending scarce rows on its operation ID.
+/// The receipt itself is untouched; a too-long notice ends with an explicit
+/// reading hint instead of silently implying that a clipped sentence is complete.
+fn notice_lines(text: &str, width: u16, height: u16) -> Vec<String> {
+    if text.is_empty() || width == 0 || height == 0 {
+        return Vec::new();
+    }
+    let clean = super::safe_multiline(text);
+    let mut lines = super::wrap_text(&clean, width);
+    if lines.len() > height as usize {
+        if let Some((outcome, id)) = clean.rsplit_once(" · operation ") {
+            if !id.is_empty()
+                && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+                && ["Confirmed:", "Rejected:", "Uncertain:", "Sending:"]
+                    .iter()
+                    .any(|prefix| outcome.starts_with(prefix))
+            {
+                lines = super::wrap_text(outcome, width);
+            }
+        }
+    }
+    if lines.len() > height as usize {
+        lines.truncate(height as usize);
+        if let Some(last) = lines.last_mut() {
+            *last = super::short_path("… Enlarge to read notice", width as usize);
+        }
+    }
+    lines
+}
+
 impl ControlPanel {
     fn notice_scope(&self) -> String {
         if self.requests_open {
@@ -1096,8 +1126,13 @@ impl ControlPanel {
         self.usable_geometry = area.width >= 28 && area.height >= 7;
         paint_opaque(frame, area, Style::default().fg(INK).bg(PANEL));
         if !self.usable_geometry || self.composer_worker().is_none() {
-            Paragraph::new("Enlarge to write an instruction · Esc back")
-                .render(area, frame.buffer_mut());
+            Paragraph::new(if self.status.notice.is_empty() {
+                "Enlarge to write an instruction · Esc back"
+            } else {
+                "Enlarge to read notice and write · Esc back"
+            })
+            .wrap(Wrap { trim: false })
+            .render(area, frame.buffer_mut());
             return;
         }
         let inner = Rect::new(area.x + 1, area.y, area.width - 2, area.height);
@@ -1110,11 +1145,18 @@ impl ControlPanel {
             .target
             .as_ref()
             .and_then(|id| self.status.tasks.get(&id.0));
+        let notice = notice_lines(
+            &self.status.notice,
+            inner.width,
+            inner.height.saturating_sub(4),
+        );
+        let notice_height = (notice.len() as u16).max(1);
+        let notice_y = inner.bottom() - 2 - notice_height;
         let body = Rect::new(
             inner.x,
             inner.y + 1,
             inner.width,
-            inner.height.saturating_sub(5),
+            notice_y.saturating_sub(inner.y + 1),
         );
         let value = if access.is_some_and(|a| a.native) {
             "Open the original conversation to write or respond.".into()
@@ -1135,8 +1177,8 @@ impl ControlPanel {
             .render(body, frame.buffer_mut());
         components::notice(
             frame,
-            Rect::new(inner.x, inner.bottom() - 3, inner.width, 1),
-            &self.status.notice,
+            Rect::new(inner.x, notice_y, inner.width, notice_height),
+            &notice.join("\n"),
             false,
         );
         self.build_buttons();
@@ -1185,8 +1227,13 @@ impl ControlPanel {
             ..area
         };
         if !self.usable_geometry {
-            Paragraph::new("Task controls · enlarge terminal\nEsc return")
-                .render(area, frame.buffer_mut());
+            Paragraph::new(if self.status.notice.is_empty() {
+                "Task controls · enlarge terminal\nEsc return"
+            } else {
+                "Task controls · enlarge terminal\nReceipt available; enlarge to read\nEsc return"
+            })
+            .wrap(Wrap { trim: false })
+            .render(area, frame.buffer_mut());
             return;
         }
         let inner = Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
@@ -1281,6 +1328,32 @@ impl ControlPanel {
             );
             return;
         }
+        let availability = if !self.status.notice.is_empty() {
+            self.status.notice.clone()
+        } else if self.target.is_none() && !self.requests_open {
+            if self.project.text.trim().is_empty() {
+                "Choose a project to create".into()
+            } else if self.message.text.trim().is_empty() {
+                "Add instructions to create".into()
+            } else if !match self.provider {
+                Agent::Codex => self.status.can_start_codex,
+                Agent::Claude => self.status.can_start_claude,
+            } {
+                "Open Connections to create".into()
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+        let body_y = inner.y + if self.requests_open { 2 } else { 6 };
+        let notice = notice_lines(
+            &availability,
+            inner.width,
+            inner.bottom().saturating_sub(body_y + 5),
+        );
+        let notice_height = (notice.len() as u16).max(1);
+        let notice_y = inner.bottom() - 4 - notice_height;
         let heading = if self.requests_open {
             "REVIEW REQUEST"
         } else if self.target.is_none() {
@@ -1373,9 +1446,9 @@ impl ControlPanel {
             };
             let body = Rect::new(
                 inner.x,
-                inner.y + 2,
+                body_y,
                 inner.width,
-                inner.height.saturating_sub(7),
+                notice_y.saturating_sub(body_y),
             );
             let lines = super::wrap_text(&text, body.width);
             self.scroll = self.scroll.min(
@@ -1432,9 +1505,9 @@ impl ControlPanel {
             );
             let body = Rect::new(
                 inner.x,
-                inner.y + 6,
+                body_y,
                 inner.width,
-                inner.height.saturating_sub(11),
+                notice_y.saturating_sub(body_y),
             );
             paint_opaque(frame, body, Style::default().bg(PANEL));
             let message = if access.is_some_and(|a| a.native) {
@@ -1454,28 +1527,10 @@ impl ControlPanel {
                 .scroll((scroll, 0))
                 .render(body, frame.buffer_mut());
         }
-        let availability = if !self.status.notice.is_empty() {
-            self.status.notice.clone()
-        } else if self.target.is_none() && !self.requests_open {
-            if self.project.text.trim().is_empty() {
-                "Choose a project to create".into()
-            } else if self.message.text.trim().is_empty() {
-                "Add instructions to create".into()
-            } else if !match self.provider {
-                Agent::Codex => self.status.can_start_codex,
-                Agent::Claude => self.status.can_start_claude,
-            } {
-                "Open Connections to create".into()
-            } else {
-                String::new()
-            }
-        } else {
-            String::new()
-        };
-        Paragraph::new(safe_display(&availability))
+        Paragraph::new(notice.join("\n"))
             .style(Style::default().fg(WARNING))
             .render(
-                Rect::new(inner.x, inner.bottom() - 5, inner.width, 1),
+                Rect::new(inner.x, notice_y, inner.width, notice_height),
                 frame.buffer_mut(),
             );
         self.draw_buttons(
@@ -1691,6 +1746,116 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect()
+    }
+
+    const NOT_SENT: &str = "Rejected: Not sent: local state could not be saved. Restore storage access and submit again.";
+
+    fn rejected_composer(new: bool) -> ControlPanel {
+        let mut panel = ready_panel();
+        if new {
+            panel.show_new("/alpha".into());
+            panel.status.can_start_codex = true;
+        } else {
+            panel.show_task(WorkerId("a".into()), "Alpha / Task A".into(), Agent::Codex);
+            panel.status.tasks.insert(
+                "a".into(),
+                TaskAccess {
+                    send: true,
+                    ..Default::default()
+                },
+            );
+        }
+        panel.paste("Keep this draft");
+        panel.status.requests.push(approval("pending"));
+        panel.status.notice = format!("{NOT_SENT} · operation {}", "f".repeat(64));
+        panel
+    }
+
+    fn render_receipt(panel: &mut ControlPanel, width: u16, height: u16, inline: bool) -> String {
+        let mut terminal =
+            ratatui::Terminal::new(ratatui::backend::TestBackend::new(width, height)).unwrap();
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, width, height);
+                if inline {
+                    panel.draw_composer_in(frame, area);
+                } else {
+                    panel.draw_in(frame, area);
+                }
+            })
+            .unwrap();
+        terminal
+            .backend()
+            .buffer()
+            .content
+            .chunks(width as usize)
+            .map(|row| row.iter().map(|cell| cell.symbol()).collect::<String>())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    #[test]
+    fn rejected_receipt_wraps_in_inline_full_and_new_composers_without_hiding_draft_or_action() {
+        for (width, height, inline, new) in [
+            (80, 7, true, false),
+            (40, 7, true, false),
+            (80, 24, false, false),
+            (40, 24, false, false),
+            (80, 24, false, true),
+            (40, 24, false, true),
+        ] {
+            let mut panel = rejected_composer(new);
+            let receipt = panel.status.notice.clone();
+            let target = panel.target.clone();
+            for _ in 0..2 {
+                let screen = render_receipt(&mut panel, width, height, inline);
+                let words = screen.split_whitespace().collect::<Vec<_>>().join(" ");
+                assert!(words.contains(NOT_SENT), "{width}x{height}: {screen}");
+                assert!(words.contains("Keep this draft"), "{screen}");
+                assert!(
+                    words.contains(if new { "/alpha" } else { "Alpha / Task A" }),
+                    "{screen}"
+                );
+                assert!(screen.contains("Esc"), "{screen}");
+                assert!(panel.hit_regions().iter().any(|hit| matches!(
+                    hit.action,
+                    Action::Control(Command::Send { .. } | Command::Start { .. })
+                )));
+                assert!(!panel
+                    .hit_regions()
+                    .iter()
+                    .any(|hit| matches!(hit.action, Action::Control(Command::Reply { .. }))));
+                assert_eq!(panel.message.text, "Keep this draft");
+                assert_eq!(panel.target, target);
+                assert_eq!(panel.status.notice, receipt);
+                assert_eq!(panel.status.requests[0].id, "pending");
+                assert!(
+                    !panel.busy(),
+                    "Rendering must not submit or change the receipt"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn insufficient_receipt_geometry_explains_how_to_read_and_never_sends() {
+        let mut panel = rejected_composer(false);
+        let screen = render_receipt(&mut panel, 32, 14, false);
+        assert!(screen.contains("enlarge"), "{screen}");
+        assert!(screen.contains("Receipt available"), "{screen}");
+        assert!(panel.hit_regions().is_empty());
+        assert!(panel
+            .handle_key(KeyEvent::new(KeyCode::F(5), KeyModifiers::NONE))
+            .is_none());
+        assert_eq!(panel.message.text, "Keep this draft");
+        assert!(!panel.busy());
+
+        panel.status.notice = format!("{NOT_SENT} {}", "long detail ".repeat(50));
+        let screen = render_receipt(&mut panel, 40, 7, true);
+        assert!(screen.contains("Enlarge to read notice"), "{screen}");
+        assert!(screen.contains("Keep this draft"), "{screen}");
+        assert!(screen.contains("Send instruction"), "{screen}");
+        assert!(!panel.busy());
     }
 
     #[test]

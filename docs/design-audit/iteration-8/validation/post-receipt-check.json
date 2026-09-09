@@ -1,0 +1,51 @@
+{
+  "scope": "Affected renderer/TUI suites after receipt wrapping; full workspace already passed before that UI fix",
+  "checks": [
+    {
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.809
+    },
+    {
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "-p",
+        "theywork-render",
+        "-p",
+        "theywork-tui",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit_code": 0,
+      "seconds": 110.5
+    },
+    {
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "clippy",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "seconds": 3.677
+    }
+  ],
+  "source_sha256": {
+    "crates/theywork-render/src/views/control.rs": "f8602539e3599226cccfa96313f966b5a54ae85771ec956aaaa9f37d68d15a36"
+  }
+}

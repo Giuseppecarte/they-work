@@ -264,6 +264,110 @@ fn uncertain_send_is_durable_and_restart_never_replays_or_reconnects() {
 }
 
 #[test]
+fn storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once() {
+    let mut fixture = Fixture::new();
+    let client = fixture.start();
+    let state_path = fixture.config.state_dir.join("state.json");
+    let saved_path = fixture.config.state_dir.join("saved-state.json");
+    fs::rename(&state_path, &saved_path).unwrap();
+    // A directory at the destination rejects replacement even for root users.
+    // Client authentication and snapshot reads still use the live host.
+    fs::create_dir(&state_path).unwrap();
+    let attempts = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..8)
+            .map(|_| {
+                let client = client.clone();
+                let project = fixture.project();
+                scope.spawn(move || client.start_codex(project, "working", "failed-intent"))
+            })
+            .collect();
+        handles
+            .into_iter()
+            .map(|handle| handle.join())
+            .collect::<Vec<_>>()
+    });
+    fs::remove_dir(&state_path).unwrap();
+    fs::rename(&saved_path, &state_path).unwrap();
+    for result in attempts {
+        let receipt = result.unwrap().unwrap();
+        assert_eq!(receipt.status, OperationStatus::Rejected);
+        assert_eq!(
+            receipt.detail,
+            "Not sent: local state could not be saved. Restore storage access and submit again."
+        );
+    }
+    assert!(fixture.requests().is_empty());
+    let snapshot = client.snapshot().unwrap();
+    assert_eq!(snapshot.operations.len(), 1);
+    assert_eq!(
+        snapshot.operations["failed-intent"].status,
+        OperationStatus::Rejected
+    );
+    assert!(snapshot
+        .last_error
+        .unwrap()
+        .contains("Could not save instruction intent"));
+    assert_eq!(
+        client
+            .start_codex(fixture.project(), "working", "failed-intent")
+            .unwrap()
+            .status,
+        OperationStatus::Rejected
+    );
+    assert!(client
+        .start_codex(fixture.project(), "different", "failed-intent")
+        .is_err());
+    assert!(fixture.requests().is_empty());
+
+    assert_eq!(
+        client
+            .start_codex(fixture.project(), "working", "explicit-new-intent")
+            .unwrap()
+            .status,
+        OperationStatus::Confirmed
+    );
+    assert_eq!(
+        client
+            .start_codex(fixture.project(), "working", "explicit-new-intent")
+            .unwrap()
+            .status,
+        OperationStatus::Confirmed
+    );
+    assert_eq!(
+        fixture
+            .requests()
+            .iter()
+            .filter(|request| request["method"] == "turn/start")
+            .count(),
+        1
+    );
+    fixture.stop();
+    let client = fixture.start();
+    assert_eq!(
+        client
+            .start_codex(fixture.project(), "working", "failed-intent")
+            .unwrap()
+            .status,
+        OperationStatus::Rejected
+    );
+    assert_eq!(
+        client
+            .start_codex(fixture.project(), "working", "explicit-new-intent")
+            .unwrap()
+            .status,
+        OperationStatus::Confirmed
+    );
+    assert_eq!(
+        fixture
+            .requests()
+            .iter()
+            .filter(|request| request["method"] == "turn/start")
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn approval_resolution_snapshots_release_waiting_and_a_new_request_blocks_again() {
     use std::collections::BTreeMap;
     use theywork_control::{Capabilities, ControlEvent, ManagedThread, PendingRequest};

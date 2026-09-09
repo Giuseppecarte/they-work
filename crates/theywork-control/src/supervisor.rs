@@ -16,12 +16,17 @@ use crate::model::*;
 use crate::rpc::{Rpc, RpcError};
 use crate::security;
 
+#[cfg(test)]
+type StateWriter = Box<dyn Fn(&Path, &[u8]) -> Result<()> + Send + Sync>;
+
 struct Host {
     config: ControlConfig,
     state: Arc<Mutex<ControlSnapshot>>,
     rpc: Mutex<Option<Arc<Rpc>>>,
     /// Serializes explicit mutations; snapshots and provider events stay live.
     mutations: Mutex<()>,
+    #[cfg(test)]
+    state_writer: Option<StateWriter>,
     _lock: File,
 }
 
@@ -138,6 +143,8 @@ impl Host {
             state: Arc::new(Mutex::new(state)),
             rpc: Mutex::new(None),
             mutations: Mutex::new(()),
+            #[cfg(test)]
+            state_writer: None,
             _lock: lock,
         };
         host.persist()?;
@@ -151,6 +158,10 @@ impl Host {
 
     fn persist_state(&self, state: &ControlSnapshot) -> Result<()> {
         let bytes = bounded_state(state)?;
+        #[cfg(test)]
+        if let Some(writer) = &self.state_writer {
+            return writer(&self.config.state_dir.join("state.json"), &bytes);
+        }
         security::write_private(&self.config.state_dir.join("state.json"), &bytes)
     }
 
@@ -268,7 +279,23 @@ impl Host {
             .insert(id.clone(), receipt);
         // Durable intent is written BEFORE any external command. Recovery will
         // mark it uncertain and never execute it again.
-        self.persist()?;
+        if let Err(error) = self.persist() {
+            // This handler has not called the provider. A failed save can still
+            // leave Sending on disk (for example after rename), so preserve its
+            // ID and the conservative restart path rather than deleting intent.
+            let mut state = self.state.lock().unwrap();
+            let receipt = state.operations.get_mut(id).unwrap();
+            receipt.status = OperationStatus::Rejected;
+            receipt.detail = "Not sent: local state could not be saved. Restore storage access and submit again.".into();
+            let result = serde_json::to_value(&*receipt)?;
+            state.last_error = Some(format!("Could not save instruction intent: {error:#}"));
+            if let Err(rejection_error) = self.persist_state(&state) {
+                state.last_error = Some(format!(
+                    "Could not save instruction intent: {error:#}. Rejection is recorded only in this running host: {rejection_error:#}"
+                ));
+            }
+            return Ok(result);
+        }
         let result = self.execute(&request);
         let mut state = self.state.lock().unwrap();
         let receipt = state.operations.get_mut(id).unwrap();
@@ -914,6 +941,10 @@ fn apply_event(state: &mut ControlSnapshot, message: Option<Value>) {
         state.events.remove(0);
     }
 }
+
+#[cfg(test)]
+#[path = "supervisor_admission_tests.rs"]
+mod admission_tests;
 
 #[cfg(test)]
 mod tests {

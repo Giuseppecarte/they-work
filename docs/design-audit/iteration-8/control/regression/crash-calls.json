@@ -1,0 +1,41 @@
+[
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/project with spaces",
+        "prompt": "uncertain",
+        "operation_id": "lost-ack"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+        "id": "lost-ack",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+        "status": "Uncertain",
+        "thread_id": "managed-1",
+        "turn_id": null
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Reconnect": {
+        "thread_id": "managed-1",
+        "operation_id": "recover"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Conversation connected; no turn started",
+        "id": "recover",
+        "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"recover\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": null
+      },
+      "error": null
+    }
+  }
+]

@@ -66,6 +66,23 @@ pub(crate) fn read_private(path: &Path) -> Result<Vec<u8>> {
 }
 
 pub(crate) fn write_private(path: &Path, bytes: &[u8]) -> Result<()> {
+    write_private_impl(path, bytes, || Ok(()))
+}
+
+#[cfg(test)]
+pub(crate) fn write_private_before_sync(
+    path: &Path,
+    bytes: &[u8],
+    before_sync: impl FnOnce() -> Result<()>,
+) -> Result<()> {
+    write_private_impl(path, bytes, before_sync)
+}
+
+fn write_private_impl(
+    path: &Path,
+    bytes: &[u8],
+    before_sync: impl FnOnce() -> Result<()>,
+) -> Result<()> {
     let tmp = path.with_extension(format!("{}.tmp", random_token()?));
     let result = (|| {
         let mut file = private_open(&tmp, true)?;
@@ -79,6 +96,7 @@ pub(crate) fn write_private(path: &Path, bytes: &[u8]) -> Result<()> {
             fs::remove_file(path)?;
         }
         fs::rename(&tmp, path)?;
+        before_sync()?;
         #[cfg(unix)]
         File::open(path.parent().context("Control file has no parent")?)?.sync_all()?;
         Ok(())

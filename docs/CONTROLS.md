@@ -116,6 +116,45 @@ for compatibility surfaces that draw pixel characters.
 
 ## Local storage and compatibility
 
+The work panel keeps a coverage notice visible in every section. **Details**
+explains separately any numbered provider-stream gaps, locally evicted
+collaboration records, and tool starts whose later results cannot be attributed.
+Those are different counts; none means a known number of missing deliveries or
+requests. Unavailable earlier history remains explicitly unknown.
+
+In Attention, Deliveries, Since your visit and Team, press **h** or click the
+coverage footer to read the scoped coverage report. Use arrows or PageUp/PageDown
+to read it and Esc to return to the same record. Opening coverage never marks a
+record seen or answers a request. An empty tray only describes its currently
+retained observations.
+
+Collaboration history shares a 512-record budget across projects. Overflow
+retires an oldest record from the largest project partition first, with stable
+ties. Project attribution stays with the recorded event when workers move or
+leave. Local eviction counts have their own bounded 512-project metadata window;
+older counts may be unknown. Reading or marking a delivery seen does not pin it.
+History is an observation window, not a durable transcript archive.
+
+Managed stream gaps use sequence numbers within a known host lineage. Reconnecting
+to that host preserves continuity. A restarted host starts a new lineage because
+events shown before its last disk save may not have survived. Recovered events
+remain historical and do not replace a current request. Missing actors are
+deferred within 256 events / 1 MiB and unresolved retirement is disclosed.
+
+Claude tool matching is bounded per transcript (256 pending entries / 256 KiB
+of owned strings) and per source (8,192 entries / 8 MiB). Oversized, conflicting
+or retired correlations leave a coverage notice. Later outputs are not given a
+guessed activity, successful result or child identity. These limits describe
+owned correlation strings, not total application memory.
+
+If control storage needs recovery, Connections shows the storage error. Preserve
+the canonical `state.json`, any named staged candidate and the endpoint file;
+restore storage access before restarting. The app never selects an orphan
+candidate or older backup automatically, and never resends an uncertain
+operation. Do not delete state files to clear this error: receipts prevent
+duplicate execution. A valid saved snapshot permits inspection but does not
+establish a live connection or permission to control its tasks.
+
 Connection and appearance preferences remain in the existing settings directory.
 `notebook.json` stores reading markers and visit times. Legacy explicit wardrobe
 choices migrate when their old native ID has one unambiguous owner. New choices
@@ -127,7 +166,7 @@ It contains conversation-related events, ownership metadata and receipts, with
 bounded history. It is not an account credential store. Do not remove it while
 you still need to inspect or control its running tasks.
 
-The [current acceptance record](design-audit/iteration-8/VALIDATION.md) separates fixture
+The [current acceptance record](design-audit/iteration-9/VALIDATION.md) separates fixture
 and PTY evidence from actual provider and platform testing. Schema changes that
 are not understood remain unavailable; the office does not fabricate a working
 control for them.

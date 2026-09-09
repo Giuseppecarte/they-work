@@ -170,6 +170,14 @@ sequence on a background thread, with a one-second wait after each traversal;
 large reads can delay the next update. The displayed observation age and source
 warnings describe available evidence, not a guarantee of instant status.
 
+The work panel's Details section explains history gaps and local retention.
+In the notebook (`b`), press `h` or click the coverage footer to read the same
+kind of report for the selected floor or all floors; Esc returns to the record.
+Missing stream events, locally evicted records and lost tool correlations have
+separate counts. An empty tray does not prove that no earlier delivery existed.
+See [Controls](docs/CONTROLS.md#local-storage-and-compatibility) for retention
+bounds and control-storage recovery.
+
 In WSL, install the Linux binary. Windows-side data can be selected explicitly:
 
 ~~~sh

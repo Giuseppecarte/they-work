@@ -1,0 +1,58 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]                                                                                                                  
+Software tower · 2 projects                                                                                                                                                                     
+ PROJECT NOTEBOOK  /  All floors                                                                                                                                                                
+f All floors · i Show IDs                                                                                                                                                                       
+1 Attention 2 Deliveries 3 Since your visit 4 Team                                                                                                                                              
+                                                                                                                                                                                                
+ COVERAGE · All floors                                                                                                                                                                          
+ Local history · 3 partial                                                                                                                                                                      
+ 300 numbered events missing across distinct source lineages.                                                                                                                                   
+ 2 local collaboration retention evictions in recorded project windows.                                                                                                                         
+ These units differ; neither counts unique missing results. Earlier provider history is unknown.                                                                                                
+ Stream counts cover each whole source; absent events cannot be attributed to a particular floor.                                                                                               
+                                                                                                                                                                                                
+ PROJECT /projects/accounts                                                                                                                                                                     
+ LOCAL PROJECT WINDOW                                                                                                                                                                           
+ 512 collaboration records retained; 2 local retention evictions.                                                                                                                               
+ Oldest retained source timestamp: 3                                                                                                                                                            
+ Last eviction observation: 514 (record source timestamp: 2).                                                                                                                                   
+ The shared limit is 512 records, retired from the largest project partition first. Evictions are retention actions, not unique missing deliveries.                                             
+ History before this observer's retained window is unknown.                                                                                                                                     
+                                                                                                                                                                                                
+ TASK Review the account permission changes                                                                                                                                                     
+ Partial local history                                                                                                                                                                          
+ Synthetic local observation fixture. No authenticated provider or real command is used.                                                                                                        
+ STREAM OBSERVATION                                                                                                                                                                             
+ Source: /fixture/codex                                                                                                                                                                         
+ Lineage: fixture-stream                                                                                                                                                                        
+ 300 numbered events missing in this lineage; 0 events awaiting an actor; 0 deferred events retired locally.                                                                                    
+ Missing sequence ranges: 2–301                                                                                                                                                                 
+ These are event counts, not counts of missing results or requests.                                                                                                                             
+                                                                                                                                                                                                
+ TASK Check the account migration outcomes                                                                                                                                                      
+ Partial local history                                                                                                                                                                          
+ Synthetic local observation fixture. No authenticated provider or real command is used.                                                                                                        
+ TOOL CORRELATION                                                                                                                                                                               
+ 2 pending entries evicted; 1 oversized starts; 0 conflicting IDs; 0 pending entries discarded on reset.                                                                                        
+ Counts cover observer epoch 1 and are not distinct lost results.                                                                                                                               
+                                                                                                                                                                                                
+ TASK Update the scheduled job handler                                                                                                                                                          
+ Partial local history                                                                                                                                                                          
+ Synthetic local observation fixture. No authenticated provider or real command is used.                                                                                                        
+ STREAM OBSERVATION                                                                                                                                                                             
+ Source: /fixture/codex                                                                                                                                                                         
+ Lineage: fixture-stream                                                                                                                                                                        
+ 300 numbered events missing in this lineage; 0 events awaiting an actor; 0 deferred events retired locally.                                                                                    
+ Missing sequence ranges: 2–301                                                                                                                                                                 
+ These are event counts, not counts of missing results or requests.                                                                                                                             
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+                                                                                                                                                                                                
+History · limits · h coverage · 300 missing stream events · 2 local evictions                                                                                                                   
+[ Back ] ↑↓ / PgUp/PgDn read · h back                                                                                                                                                           

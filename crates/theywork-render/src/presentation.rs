@@ -138,11 +138,7 @@ pub fn coverage_headline(coverage: &SourceCoverage, now: i64, local_loss: bool) 
 }
 
 pub fn coverage_text(coverage: &SourceCoverage, now: i64) -> String {
-    let mut text = format!(
-        "{}\n{}",
-        coverage_headline(coverage, now, false),
-        coverage.detail
-    );
+    let mut text = format!("{}\n{}", coverage_label(coverage, now), coverage.detail);
     if let Some(stream) = &coverage.stream {
         text.push_str(&format!("\nSTREAM OBSERVATION\nSource: {}\nLineage: {}\n{} numbered events missing in this lineage; {} events awaiting an actor; {} deferred events retired locally.",
             stream.source.0, stream.stream_id.as_deref().unwrap_or("unknown"), stream.missing_events, stream.deferred_events, stream.dropped_deferred_events));

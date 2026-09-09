@@ -337,12 +337,20 @@ fn main() {
                     let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
                     draw(&mut ui, &mut terminal, &world);
                     let reached = route(surface, &mut ui, &mut terminal, &world);
+                    let effective_color = format!("{:?}", ui.diagnostics().color_depth);
+                    assert_eq!(effective_color, if mode == "mono" { "None" } else { "TrueColor" },
+                        "Capture color override detected; run with NO_COLOR unset and COLORTERM=truecolor");
                     let artifacts = capture(&out, &name, &ui, &terminal, cells);
+                    let effective_encoding = format!("{:?}", ui.diagnostics().encoding);
                     cases.push(json!({"id":name,"surface":surface,"columns":width,"rows":height,"cell_pixels":cells,"mode":mode,"route_reached":reached,"compact_limitation":if surface.starts_with("inspector-") && (width<60 || height<18) {Some("Compact brief is the rendered fallback; Details was selected at80x24 before resizing and does not imply tabs are available at32x14.")}else{None},"artifacts":artifacts,"visual_review":"not-tested","terminal_transport":"not-tested"}));
+                    let case = cases.last_mut().expect("case just appended");
+                    case["effective_color"] = json!(effective_color);
+                    case["effective_encoding"] = json!(effective_encoding);
                 }
             }
         }
     }
+    assert!(!cases.is_empty(), "No capture cases matched the filter");
     let all_ok = cases
         .iter()
         .all(|case| case["route_reached"] == true && case["artifacts"]["hit_bounds"] == true);

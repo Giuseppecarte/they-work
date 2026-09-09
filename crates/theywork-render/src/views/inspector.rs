@@ -148,7 +148,7 @@ pub fn draw_with_state(
             .find(|request| request.worker == brief.worker);
         let coverage = if brief.coverage.ends_with("limits in Details") {
             match brief.coverage.split(" · ").next().unwrap_or("History") {
-                "History" => "History limited · enlarge to read",
+                "History" => "History limited · enlarge",
                 "Unavailable" => "Unavailable · history limited",
                 "Stale" => "Stale source · history limited",
                 _ => "Unchecked · history limited",

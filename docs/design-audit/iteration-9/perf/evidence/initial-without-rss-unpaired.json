@@ -1,0 +1,732 @@
+{
+  "activities": 128000,
+  "calls": 128000,
+  "elapsed_seconds": 24.371984625,
+  "mode": "unpaired",
+  "outcomes": 0,
+  "overlap_per_worker": 32,
+  "samples": [
+    {
+      "batch": 0,
+      "entries": 1600,
+      "lookup_capacity": 2800,
+      "owned_string_bytes": 61600,
+      "phase": 0,
+      "poll_ms": 52.671417,
+      "rss_kib": null
+    },
+    {
+      "batch": 1,
+      "entries": 3200,
+      "lookup_capacity": 5600,
+      "owned_string_bytes": 123200,
+      "phase": 0,
+      "poll_ms": 51.414334,
+      "rss_kib": null
+    },
+    {
+      "batch": 2,
+      "entries": 4800,
+      "lookup_capacity": 5600,
+      "owned_string_bytes": 184800,
+      "phase": 0,
+      "poll_ms": 50.164125,
+      "rss_kib": null
+    },
+    {
+      "batch": 3,
+      "entries": 6400,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 246400,
+      "phase": 0,
+      "poll_ms": 51.735208,
+      "rss_kib": null
+    },
+    {
+      "batch": 4,
+      "entries": 8000,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 308000,
+      "phase": 0,
+      "poll_ms": 53.872375,
+      "rss_kib": null
+    },
+    {
+      "batch": 5,
+      "entries": 9600,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 369600,
+      "phase": 0,
+      "poll_ms": 50.463875,
+      "rss_kib": null
+    },
+    {
+      "batch": 6,
+      "entries": 11200,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 431200,
+      "phase": 0,
+      "poll_ms": 50.457042,
+      "rss_kib": null
+    },
+    {
+      "batch": 7,
+      "entries": 12800,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 492800,
+      "phase": 0,
+      "poll_ms": 53.058125,
+      "rss_kib": null
+    },
+    {
+      "batch": 8,
+      "entries": 14400,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 554400,
+      "phase": 0,
+      "poll_ms": 53.168124999999996,
+      "rss_kib": null
+    },
+    {
+      "batch": 9,
+      "entries": 16000,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 616000,
+      "phase": 0,
+      "poll_ms": 50.604291,
+      "rss_kib": null
+    },
+    {
+      "batch": 10,
+      "entries": 17600,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 677600,
+      "phase": 0,
+      "poll_ms": 50.58225,
+      "rss_kib": null
+    },
+    {
+      "batch": 11,
+      "entries": 19200,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 739200,
+      "phase": 0,
+      "poll_ms": 51.451875,
+      "rss_kib": null
+    },
+    {
+      "batch": 12,
+      "entries": 20800,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 800800,
+      "phase": 0,
+      "poll_ms": 50.537625000000006,
+      "rss_kib": null
+    },
+    {
+      "batch": 13,
+      "entries": 22400,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 862400,
+      "phase": 0,
+      "poll_ms": 50.713291,
+      "rss_kib": null
+    },
+    {
+      "batch": 14,
+      "entries": 24000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 924000,
+      "phase": 0,
+      "poll_ms": 55.053,
+      "rss_kib": null
+    },
+    {
+      "batch": 15,
+      "entries": 25600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 985600,
+      "phase": 0,
+      "poll_ms": 50.721125,
+      "rss_kib": null
+    },
+    {
+      "batch": 16,
+      "entries": 27200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1047200,
+      "phase": 0,
+      "poll_ms": 50.287834,
+      "rss_kib": null
+    },
+    {
+      "batch": 17,
+      "entries": 28800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1108800,
+      "phase": 0,
+      "poll_ms": 50.630958,
+      "rss_kib": null
+    },
+    {
+      "batch": 18,
+      "entries": 30400,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1170400,
+      "phase": 0,
+      "poll_ms": 50.604459,
+      "rss_kib": null
+    },
+    {
+      "batch": 19,
+      "entries": 32000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1232000,
+      "phase": 0,
+      "poll_ms": 51.636042,
+      "rss_kib": null
+    },
+    {
+      "batch": 20,
+      "entries": 33600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1293600,
+      "phase": 0,
+      "poll_ms": 51.027417,
+      "rss_kib": null
+    },
+    {
+      "batch": 21,
+      "entries": 35200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1355200,
+      "phase": 0,
+      "poll_ms": 50.578375,
+      "rss_kib": null
+    },
+    {
+      "batch": 22,
+      "entries": 36800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1416800,
+      "phase": 0,
+      "poll_ms": 51.716959,
+      "rss_kib": null
+    },
+    {
+      "batch": 23,
+      "entries": 38400,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1478400,
+      "phase": 0,
+      "poll_ms": 50.830167,
+      "rss_kib": null
+    },
+    {
+      "batch": 24,
+      "entries": 40000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1540000,
+      "phase": 0,
+      "poll_ms": 50.885374999999996,
+      "rss_kib": null
+    },
+    {
+      "batch": 25,
+      "entries": 41600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1601600,
+      "phase": 0,
+      "poll_ms": 55.808875,
+      "rss_kib": null
+    },
+    {
+      "batch": 26,
+      "entries": 43200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1663200,
+      "phase": 0,
+      "poll_ms": 56.463625,
+      "rss_kib": null
+    },
+    {
+      "batch": 27,
+      "entries": 44800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1724800,
+      "phase": 0,
+      "poll_ms": 50.969083999999995,
+      "rss_kib": null
+    },
+    {
+      "batch": 28,
+      "entries": 46400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1786400,
+      "phase": 0,
+      "poll_ms": 61.062625000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 29,
+      "entries": 48000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1848000,
+      "phase": 0,
+      "poll_ms": 51.682832999999995,
+      "rss_kib": null
+    },
+    {
+      "batch": 30,
+      "entries": 49600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1909600,
+      "phase": 0,
+      "poll_ms": 50.751667,
+      "rss_kib": null
+    },
+    {
+      "batch": 31,
+      "entries": 51200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1971200,
+      "phase": 0,
+      "poll_ms": 51.151209,
+      "rss_kib": null
+    },
+    {
+      "batch": 32,
+      "entries": 52800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2032800,
+      "phase": 0,
+      "poll_ms": 50.940417000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 33,
+      "entries": 54400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2094400,
+      "phase": 0,
+      "poll_ms": 50.98525,
+      "rss_kib": null
+    },
+    {
+      "batch": 34,
+      "entries": 56000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2156000,
+      "phase": 0,
+      "poll_ms": 50.750917,
+      "rss_kib": null
+    },
+    {
+      "batch": 35,
+      "entries": 57600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2217600,
+      "phase": 0,
+      "poll_ms": 51.102166999999994,
+      "rss_kib": null
+    },
+    {
+      "batch": 36,
+      "entries": 59200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2279200,
+      "phase": 0,
+      "poll_ms": 51.275332999999996,
+      "rss_kib": null
+    },
+    {
+      "batch": 37,
+      "entries": 60800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2340800,
+      "phase": 0,
+      "poll_ms": 51.288209,
+      "rss_kib": null
+    },
+    {
+      "batch": 38,
+      "entries": 62400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2402400,
+      "phase": 0,
+      "poll_ms": 51.697084,
+      "rss_kib": null
+    },
+    {
+      "batch": 39,
+      "entries": 64000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2464000,
+      "phase": 0,
+      "poll_ms": 50.629374999999996,
+      "rss_kib": null
+    },
+    {
+      "batch": 40,
+      "entries": 65600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2525600,
+      "phase": 0,
+      "poll_ms": 50.652750000000005,
+      "rss_kib": null
+    },
+    {
+      "batch": 41,
+      "entries": 67200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2587200,
+      "phase": 0,
+      "poll_ms": 51.369209,
+      "rss_kib": null
+    },
+    {
+      "batch": 42,
+      "entries": 68800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2648800,
+      "phase": 0,
+      "poll_ms": 50.918208,
+      "rss_kib": null
+    },
+    {
+      "batch": 43,
+      "entries": 70400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2710400,
+      "phase": 0,
+      "poll_ms": 50.751,
+      "rss_kib": null
+    },
+    {
+      "batch": 44,
+      "entries": 72000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2772000,
+      "phase": 0,
+      "poll_ms": 52.096833000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 45,
+      "entries": 73600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2833600,
+      "phase": 0,
+      "poll_ms": 51.661625,
+      "rss_kib": null
+    },
+    {
+      "batch": 46,
+      "entries": 75200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2895200,
+      "phase": 0,
+      "poll_ms": 50.97691699999999,
+      "rss_kib": null
+    },
+    {
+      "batch": 47,
+      "entries": 76800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2956800,
+      "phase": 0,
+      "poll_ms": 50.80975,
+      "rss_kib": null
+    },
+    {
+      "batch": 48,
+      "entries": 78400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3018400,
+      "phase": 0,
+      "poll_ms": 51.040292,
+      "rss_kib": null
+    },
+    {
+      "batch": 49,
+      "entries": 80000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3080000,
+      "phase": 0,
+      "poll_ms": 50.638208,
+      "rss_kib": null
+    },
+    {
+      "batch": 50,
+      "entries": 81600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3141600,
+      "phase": 0,
+      "poll_ms": 50.974375,
+      "rss_kib": null
+    },
+    {
+      "batch": 51,
+      "entries": 83200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3203200,
+      "phase": 0,
+      "poll_ms": 51.175290999999994,
+      "rss_kib": null
+    },
+    {
+      "batch": 52,
+      "entries": 84800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3264800,
+      "phase": 0,
+      "poll_ms": 50.530667,
+      "rss_kib": null
+    },
+    {
+      "batch": 53,
+      "entries": 86400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3326400,
+      "phase": 0,
+      "poll_ms": 50.8585,
+      "rss_kib": null
+    },
+    {
+      "batch": 54,
+      "entries": 88000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3388000,
+      "phase": 0,
+      "poll_ms": 51.318333,
+      "rss_kib": null
+    },
+    {
+      "batch": 55,
+      "entries": 89600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3449600,
+      "phase": 0,
+      "poll_ms": 51.017584,
+      "rss_kib": null
+    },
+    {
+      "batch": 56,
+      "entries": 91200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3511200,
+      "phase": 0,
+      "poll_ms": 69.55550000000001,
+      "rss_kib": null
+    },
+    {
+      "batch": 57,
+      "entries": 92800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3572800,
+      "phase": 0,
+      "poll_ms": 51.275584,
+      "rss_kib": null
+    },
+    {
+      "batch": 58,
+      "entries": 94400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3634400,
+      "phase": 0,
+      "poll_ms": 50.916667,
+      "rss_kib": null
+    },
+    {
+      "batch": 59,
+      "entries": 96000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3696000,
+      "phase": 0,
+      "poll_ms": 50.513374999999996,
+      "rss_kib": null
+    },
+    {
+      "batch": 60,
+      "entries": 97600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3757600,
+      "phase": 0,
+      "poll_ms": 50.957457999999995,
+      "rss_kib": null
+    },
+    {
+      "batch": 61,
+      "entries": 99200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3819200,
+      "phase": 0,
+      "poll_ms": 52.014333,
+      "rss_kib": null
+    },
+    {
+      "batch": 62,
+      "entries": 100800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3880800,
+      "phase": 0,
+      "poll_ms": 50.740584,
+      "rss_kib": null
+    },
+    {
+      "batch": 63,
+      "entries": 102400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3942400,
+      "phase": 0,
+      "poll_ms": 63.549625,
+      "rss_kib": null
+    },
+    {
+      "batch": 64,
+      "entries": 104000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4004000,
+      "phase": 0,
+      "poll_ms": 53.831042000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 65,
+      "entries": 105600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4065600,
+      "phase": 0,
+      "poll_ms": 53.162665999999994,
+      "rss_kib": null
+    },
+    {
+      "batch": 66,
+      "entries": 107200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4127200,
+      "phase": 0,
+      "poll_ms": 52.331999999999994,
+      "rss_kib": null
+    },
+    {
+      "batch": 67,
+      "entries": 108800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4188800,
+      "phase": 0,
+      "poll_ms": 54.189958000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 68,
+      "entries": 110400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4250400,
+      "phase": 0,
+      "poll_ms": 50.884375000000006,
+      "rss_kib": null
+    },
+    {
+      "batch": 69,
+      "entries": 112000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4312000,
+      "phase": 0,
+      "poll_ms": 50.853041000000005,
+      "rss_kib": null
+    },
+    {
+      "batch": 70,
+      "entries": 113600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4373600,
+      "phase": 0,
+      "poll_ms": 51.0715,
+      "rss_kib": null
+    },
+    {
+      "batch": 71,
+      "entries": 115200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4435200,
+      "phase": 0,
+      "poll_ms": 50.850709,
+      "rss_kib": null
+    },
+    {
+      "batch": 72,
+      "entries": 116800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4496800,
+      "phase": 0,
+      "poll_ms": 50.908125,
+      "rss_kib": null
+    },
+    {
+      "batch": 73,
+      "entries": 118400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4558400,
+      "phase": 0,
+      "poll_ms": 50.877375,
+      "rss_kib": null
+    },
+    {
+      "batch": 74,
+      "entries": 120000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4620000,
+      "phase": 0,
+      "poll_ms": 51.114208,
+      "rss_kib": null
+    },
+    {
+      "batch": 75,
+      "entries": 121600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4681600,
+      "phase": 0,
+      "poll_ms": 51.533500000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 76,
+      "entries": 123200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4743200,
+      "phase": 0,
+      "poll_ms": 51.379958,
+      "rss_kib": null
+    },
+    {
+      "batch": 77,
+      "entries": 124800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4804800,
+      "phase": 0,
+      "poll_ms": 51.328917000000004,
+      "rss_kib": null
+    },
+    {
+      "batch": 78,
+      "entries": 126400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4866400,
+      "phase": 0,
+      "poll_ms": 50.860625,
+      "rss_kib": null
+    },
+    {
+      "batch": 79,
+      "entries": 128000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4928000,
+      "phase": 0,
+      "poll_ms": 51.019416,
+      "rss_kib": null
+    }
+  ],
+  "scope": "Direct ClaudeSource fixture replay in a Rust test process; sampled RSS is separate from owned-string accounting; no live provider, World or terminal.",
+  "workers": 50
+}

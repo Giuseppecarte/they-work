@@ -24,12 +24,21 @@ use crate::DEFAULT_ACTIVE_WITHIN;
 const CHUNK_SIZE: usize = 64 * 1024;
 const MAX_LINE_BYTES: usize = 1024 * 1024;
 
+#[cfg(test)]
+#[path = "claude_correlation_tests.rs"]
+mod correlation_tests;
+
+#[path = "claude_pending.rs"]
+mod pending;
+use pending::{PendingScope, PendingStore};
+
 /// Tails Claude Code's JSONL transcripts without ever opening them for write.
 pub struct ClaudeSource {
     home: PathBuf,
     only_paths: Vec<PathBuf>,
     active_within: Duration,
     files: BTreeMap<PathBuf, FileCursor>,
+    pending_tools: PendingStore,
     office_cache: HashMap<String, String>,
     worker_names: HashMap<(String, String), NameAssignment>,
     identities: HashMap<WorkerId, ThreadIdentity>,
@@ -57,6 +66,7 @@ impl ClaudeSource {
             only_paths,
             active_within,
             files: BTreeMap::new(),
+            pending_tools: PendingStore::default(),
             office_cache: HashMap::new(),
             worker_names: HashMap::new(),
             identities: HashMap::new(),
@@ -158,6 +168,7 @@ impl ClaudeSource {
     }
     fn clear_runtime_state(&mut self) {
         self.files.clear();
+        self.pending_tools = PendingStore::default();
         self.office_cache.clear();
         self.worker_names.clear();
         self.identities.clear();
@@ -228,11 +239,18 @@ impl ClaudeSource {
                 paths.len()
             );
         }
-        self.files.retain(|path, _| paths.contains_key(path));
+        self.files.retain(|path, cursor| {
+            if paths.contains_key(path) {
+                true
+            } else {
+                self.pending_tools.unregister(cursor.correlation_cursor);
+                false
+            }
+        });
         for (path, discovery) in paths {
-            self.files
-                .entry(path)
-                .or_insert_with(|| FileCursor::new(discovery));
+            if let std::collections::btree_map::Entry::Vacant(entry) = self.files.entry(path) {
+                entry.insert(FileCursor::new(discovery, self.pending_tools.register()));
+            }
         }
         true
     }
@@ -267,6 +285,8 @@ impl Source for ClaudeSource {
             if !read_file(
                 &path,
                 &mut cursor,
+                &mut self.pending_tools,
+                now,
                 &self.only_paths,
                 &mut self.office_cache,
                 &mut events,
@@ -276,6 +296,18 @@ impl Source for ClaudeSource {
             self.files.insert(path, cursor);
         }
         let current = self.roster_events(now);
+        let mut correlations = HashMap::new();
+        for cursor in self.files.values() {
+            if let Some(mut coverage) = self.pending_tools.coverage(cursor.correlation_cursor, now)
+            {
+                let worker = cursor.metadata.identity().worker_id();
+                if let Some(previous) = correlations.get(&worker) {
+                    let previous: &theywork_core::ToolCorrelationCoverage = previous;
+                    coverage.prior_loss |= previous.has_loss();
+                }
+                correlations.insert(worker, coverage);
+            }
+        }
         for (id, mut event) in previous {
             if !current.contains_key(&id) {
                 event.kind = EventKind::Left;
@@ -283,7 +315,9 @@ impl Source for ClaudeSource {
             }
         }
         for (id, mut event) in current {
-            event.kind = EventKind::Coverage(claude_coverage(now, !unreadable.contains(&id)));
+            let mut coverage = claude_coverage(now, !unreadable.contains(&id));
+            coverage.tool_correlation = correlations.remove(&id);
+            event.kind = EventKind::Coverage(coverage);
             events.push(event);
         }
         self.resolve_collaboration(&mut events);
@@ -507,13 +541,13 @@ struct FileCursor {
     file_identity: Option<FileIdentity>,
     last_modified: Option<SystemTime>,
     checkpoint: Vec<u8>,
-    pending_tools: HashMap<String, PendingTool>,
+    correlation_cursor: u64,
     tokens_used: u64,
     metadata: SessionMetadata,
 }
 
 impl FileCursor {
-    fn new(discovery: Discovery) -> Self {
+    fn new(discovery: Discovery, correlation_cursor: u64) -> Self {
         Self {
             offset: 0,
             pending: Vec::new(),
@@ -523,12 +557,39 @@ impl FileCursor {
             last_modified: None,
             checkpoint: Vec::new(),
             tokens_used: 0,
-            pending_tools: HashMap::new(),
+            correlation_cursor,
             metadata: SessionMetadata::new(discovery),
         }
     }
 
-    fn reset(&mut self) {
+    fn reset(
+        &mut self,
+        pending: &mut PendingStore,
+        now: Millis,
+        only_paths: &[PathBuf],
+        office_cache: &mut HashMap<String, String>,
+        events: &mut Vec<Event>,
+    ) {
+        if let Some(raw) = self.metadata.office_path.as_deref() {
+            let office_path = repository_root_with_project_hint(
+                raw,
+                office_cache,
+                Some(&self.metadata.project_key),
+            );
+            if path_allowed(raw, only_paths) || path_allowed(&office_path, only_paths) {
+                let mut coverage = claude_coverage(now, true);
+                coverage.tool_correlation = pending.reset_coverage(self.correlation_cursor, now);
+                events.push(Event {
+                    at: now,
+                    office: OfficeId(office_path.clone()),
+                    office_path,
+                    worker: self.metadata.identity().worker_id(),
+                    agent: Agent::Claude,
+                    kind: EventKind::Coverage(coverage),
+                });
+            }
+        }
+        pending.restart(self.correlation_cursor);
         self.offset = 0;
         self.pending.clear();
         self.discarding_line = false;
@@ -536,21 +597,21 @@ impl FileCursor {
         self.file_identity = None;
         self.last_modified = None;
         self.checkpoint.clear();
-        self.pending_tools.clear();
         self.tokens_used = 0;
         self.metadata.reset_identity();
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 struct PendingTool {
     kind: PendingToolKind,
     activity: Activity,
     input_counts: Option<(u32, u32)>,
     background: bool,
+    fingerprint: u64,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum PendingToolKind {
     Command,
     Edit,
@@ -559,7 +620,7 @@ enum PendingToolKind {
 
 struct ParseState<'a> {
     metadata: &'a mut SessionMetadata,
-    pending_tools: &'a mut HashMap<String, PendingTool>,
+    pending_tools: &'a mut PendingScope<'a>,
     last_timestamp: &'a mut Option<Millis>,
     tokens_used: &'a mut u64,
 }
@@ -802,6 +863,8 @@ fn walk_directory(
 fn read_file(
     path: &Path,
     cursor: &mut FileCursor,
+    pending_tools: &mut PendingStore,
+    now: Millis,
     only_paths: &[PathBuf],
     office_cache: &mut HashMap<String, String>,
     events: &mut Vec<Event>,
@@ -825,7 +888,7 @@ fn read_file(
             .is_some_and(|(old, new)| old != new)
         && length <= cursor.offset;
     if replaced || length < cursor.offset || rewritten_in_place {
-        cursor.reset();
+        cursor.reset(pending_tools, now, only_paths, office_cache, events);
     }
     cursor.file_identity = identity;
     cursor.last_modified = modified;
@@ -838,7 +901,7 @@ fn read_file(
     if cursor.offset > 0 && !cursor.checkpoint.is_empty() {
         if let Ok(checkpoint) = read_checkpoint(&mut file, cursor.offset) {
             if checkpoint != cursor.checkpoint {
-                cursor.reset();
+                cursor.reset(pending_tools, now, only_paths, office_cache, events);
             }
         }
     }
@@ -870,7 +933,10 @@ fn read_file(
                         metadata: &mut cursor.metadata,
                         last_timestamp: &mut cursor.last_timestamp,
                         tokens_used: &mut cursor.tokens_used,
-                        pending_tools: &mut cursor.pending_tools,
+                        pending_tools: &mut PendingScope {
+                            store: pending_tools,
+                            cursor: cursor.correlation_cursor,
+                        },
                     },
                     file_mtime,
                     only_paths,
@@ -1055,7 +1121,7 @@ fn record_claude_collaboration<F>(
     value: &Value,
     at: Millis,
     identity: &ThreadIdentity,
-    pending: &HashMap<String, PendingTool>,
+    pending: &PendingScope<'_>,
     make_event: &F,
     events: &mut Vec<Event>,
 ) where
@@ -1254,7 +1320,7 @@ fn record_claude_collaboration<F>(
 fn parse_assistant<F>(
     value: &Value,
     at: Millis,
-    pending_tools: &mut HashMap<String, PendingTool>,
+    pending_tools: &mut PendingScope<'_>,
     make_event: F,
     events: &mut Vec<Event>,
 ) where
@@ -1289,7 +1355,7 @@ fn parse_assistant<F>(
                     pending_tool_kind(name),
                 ) {
                     pending_tools.insert(
-                        tool_id.to_string(),
+                        tool_id,
                         PendingTool {
                             kind,
                             activity,
@@ -1299,6 +1365,7 @@ fn parse_assistant<F>(
                                 .or_else(|| block.pointer("/input/runInBackground"))
                                 .and_then(Value::as_bool)
                                 == Some(true),
+                            fingerprint: tool_fingerprint(block),
                         },
                     );
                 }
@@ -1326,7 +1393,7 @@ fn parse_assistant<F>(
 fn parse_user<F>(
     value: &Value,
     at: Millis,
-    pending_tools: &mut HashMap<String, PendingTool>,
+    pending_tools: &mut PendingScope<'_>,
     make_event: F,
     events: &mut Vec<Event>,
 ) where
@@ -1344,6 +1411,23 @@ fn parse_user<F>(
                     let Some(tool_id) = block.get("tool_use_id").and_then(Value::as_str) else {
                         continue;
                     };
+                    if pending_tools.get(tool_id).is_some_and(|pending| {
+                        pending.background
+                            && match pending.kind {
+                                PendingToolKind::Delegation => !value
+                                    .pointer("/toolUseResult/status")
+                                    .and_then(Value::as_str)
+                                    .is_some_and(|status| matches!(status, "completed" | "failed")),
+                                PendingToolKind::Command => {
+                                    exit_code_from_values(value, block).is_none()
+                                }
+                                PendingToolKind::Edit => false,
+                            }
+                    }) {
+                        // A background launch acknowledgement is not a terminal
+                        // result. Its bounded correlation remains available.
+                        continue;
+                    }
                     let Some(pending) = pending_tools.remove(tool_id) else {
                         continue;
                     };
@@ -1398,6 +1482,25 @@ fn pending_tool_kind(name: &str) -> Option<PendingToolKind> {
         "Task" | "Agent" => Some(PendingToolKind::Delegation),
         _ => None,
     }
+}
+
+fn tool_fingerprint(block: &Value) -> u64 {
+    use std::hash::Hasher;
+    struct Sink(std::collections::hash_map::DefaultHasher);
+    impl io::Write for Sink {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.0.write(bytes);
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut sink = Sink(std::collections::hash_map::DefaultHasher::new());
+    // Hash the complete canonical tool block, including input omitted from the
+    // display caption, without keeping a second full input allocation.
+    serde_json::to_writer(&mut sink, block).expect("JSON value to infallible fingerprint writer");
+    sink.0.finish()
 }
 
 fn input_text<'a>(input: Option<&'a Value>, keys: &[&str]) -> Option<&'a str> {
@@ -1800,12 +1903,15 @@ mod tests {
 
     fn cursor(path: &str, session_id: &str, office_path: &str) -> (PathBuf, FileCursor) {
         let path = PathBuf::from(path);
-        let mut cursor = FileCursor::new(Discovery {
-            path: path.clone(),
-            is_subagent: false,
-            session_id: session_id.to_string(),
-            project_key: String::new(),
-        });
+        let mut cursor = FileCursor::new(
+            Discovery {
+                path: path.clone(),
+                is_subagent: false,
+                session_id: session_id.to_string(),
+                project_key: String::new(),
+            },
+            0,
+        );
         cursor.metadata.office_path = Some(office_path.to_string());
         (path, cursor)
     }

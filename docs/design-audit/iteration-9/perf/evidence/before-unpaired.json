@@ -1,0 +1,732 @@
+{
+  "activities": 128000,
+  "calls": 128000,
+  "elapsed_seconds": 24.231999958,
+  "mode": "unpaired",
+  "outcomes": 0,
+  "overlap_per_worker": 32,
+  "samples": [
+    {
+      "batch": 0,
+      "entries": 1600,
+      "lookup_capacity": 2800,
+      "owned_string_bytes": 61600,
+      "phase": 0,
+      "poll_ms": 53.058709,
+      "rss_kib": 9168
+    },
+    {
+      "batch": 1,
+      "entries": 3200,
+      "lookup_capacity": 5600,
+      "owned_string_bytes": 123200,
+      "phase": 0,
+      "poll_ms": 52.320040999999996,
+      "rss_kib": 9888
+    },
+    {
+      "batch": 2,
+      "entries": 4800,
+      "lookup_capacity": 5600,
+      "owned_string_bytes": 184800,
+      "phase": 0,
+      "poll_ms": 50.832291000000005,
+      "rss_kib": 10000
+    },
+    {
+      "batch": 3,
+      "entries": 6400,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 246400,
+      "phase": 0,
+      "poll_ms": 52.239792,
+      "rss_kib": 11184
+    },
+    {
+      "batch": 4,
+      "entries": 8000,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 308000,
+      "phase": 0,
+      "poll_ms": 52.101458,
+      "rss_kib": 11264
+    },
+    {
+      "batch": 5,
+      "entries": 9600,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 369600,
+      "phase": 0,
+      "poll_ms": 51.378166,
+      "rss_kib": 11392
+    },
+    {
+      "batch": 6,
+      "entries": 11200,
+      "lookup_capacity": 11200,
+      "owned_string_bytes": 431200,
+      "phase": 0,
+      "poll_ms": 51.392916,
+      "rss_kib": 11456
+    },
+    {
+      "batch": 7,
+      "entries": 12800,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 492800,
+      "phase": 0,
+      "poll_ms": 53.857791,
+      "rss_kib": 14016
+    },
+    {
+      "batch": 8,
+      "entries": 14400,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 554400,
+      "phase": 0,
+      "poll_ms": 51.385625,
+      "rss_kib": 14432
+    },
+    {
+      "batch": 9,
+      "entries": 16000,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 616000,
+      "phase": 0,
+      "poll_ms": 51.200625,
+      "rss_kib": 14496
+    },
+    {
+      "batch": 10,
+      "entries": 17600,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 677600,
+      "phase": 0,
+      "poll_ms": 51.195167,
+      "rss_kib": 14688
+    },
+    {
+      "batch": 11,
+      "entries": 19200,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 739200,
+      "phase": 0,
+      "poll_ms": 50.915792,
+      "rss_kib": 14752
+    },
+    {
+      "batch": 12,
+      "entries": 20800,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 800800,
+      "phase": 0,
+      "poll_ms": 51.190958,
+      "rss_kib": 14848
+    },
+    {
+      "batch": 13,
+      "entries": 22400,
+      "lookup_capacity": 22400,
+      "owned_string_bytes": 862400,
+      "phase": 0,
+      "poll_ms": 51.339292,
+      "rss_kib": 14912
+    },
+    {
+      "batch": 14,
+      "entries": 24000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 924000,
+      "phase": 0,
+      "poll_ms": 55.84075,
+      "rss_kib": 16352
+    },
+    {
+      "batch": 15,
+      "entries": 25600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 985600,
+      "phase": 0,
+      "poll_ms": 51.249167,
+      "rss_kib": 17632
+    },
+    {
+      "batch": 16,
+      "entries": 27200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1047200,
+      "phase": 0,
+      "poll_ms": 52.112542,
+      "rss_kib": 17696
+    },
+    {
+      "batch": 17,
+      "entries": 28800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1108800,
+      "phase": 0,
+      "poll_ms": 52.64425,
+      "rss_kib": 17776
+    },
+    {
+      "batch": 18,
+      "entries": 30400,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1170400,
+      "phase": 0,
+      "poll_ms": 51.05075,
+      "rss_kib": 17888
+    },
+    {
+      "batch": 19,
+      "entries": 32000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1232000,
+      "phase": 0,
+      "poll_ms": 51.203958,
+      "rss_kib": 17968
+    },
+    {
+      "batch": 20,
+      "entries": 33600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1293600,
+      "phase": 0,
+      "poll_ms": 51.162667,
+      "rss_kib": 18048
+    },
+    {
+      "batch": 21,
+      "entries": 35200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1355200,
+      "phase": 0,
+      "poll_ms": 51.365125,
+      "rss_kib": 18128
+    },
+    {
+      "batch": 22,
+      "entries": 36800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1416800,
+      "phase": 0,
+      "poll_ms": 51.116167,
+      "rss_kib": 18208
+    },
+    {
+      "batch": 23,
+      "entries": 38400,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1478400,
+      "phase": 0,
+      "poll_ms": 51.157583,
+      "rss_kib": 18304
+    },
+    {
+      "batch": 24,
+      "entries": 40000,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1540000,
+      "phase": 0,
+      "poll_ms": 51.410375,
+      "rss_kib": 18384
+    },
+    {
+      "batch": 25,
+      "entries": 41600,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1601600,
+      "phase": 0,
+      "poll_ms": 51.310874999999996,
+      "rss_kib": 18448
+    },
+    {
+      "batch": 26,
+      "entries": 43200,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1663200,
+      "phase": 0,
+      "poll_ms": 51.526,
+      "rss_kib": 18544
+    },
+    {
+      "batch": 27,
+      "entries": 44800,
+      "lookup_capacity": 44800,
+      "owned_string_bytes": 1724800,
+      "phase": 0,
+      "poll_ms": 51.240666,
+      "rss_kib": 18608
+    },
+    {
+      "batch": 28,
+      "entries": 46400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1786400,
+      "phase": 0,
+      "poll_ms": 61.473791999999996,
+      "rss_kib": 21520
+    },
+    {
+      "batch": 29,
+      "entries": 48000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1848000,
+      "phase": 0,
+      "poll_ms": 51.698833,
+      "rss_kib": 22224
+    },
+    {
+      "batch": 30,
+      "entries": 49600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1909600,
+      "phase": 0,
+      "poll_ms": 52.917708,
+      "rss_kib": 22304
+    },
+    {
+      "batch": 31,
+      "entries": 51200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 1971200,
+      "phase": 0,
+      "poll_ms": 52.360709,
+      "rss_kib": 21392
+    },
+    {
+      "batch": 32,
+      "entries": 52800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2032800,
+      "phase": 0,
+      "poll_ms": 55.605624999999996,
+      "rss_kib": 21344
+    },
+    {
+      "batch": 33,
+      "entries": 54400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2094400,
+      "phase": 0,
+      "poll_ms": 58.791916,
+      "rss_kib": 21424
+    },
+    {
+      "batch": 34,
+      "entries": 56000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2156000,
+      "phase": 0,
+      "poll_ms": 53.157416,
+      "rss_kib": 21504
+    },
+    {
+      "batch": 35,
+      "entries": 57600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2217600,
+      "phase": 0,
+      "poll_ms": 52.554458,
+      "rss_kib": 21472
+    },
+    {
+      "batch": 36,
+      "entries": 59200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2279200,
+      "phase": 0,
+      "poll_ms": 51.0475,
+      "rss_kib": 21536
+    },
+    {
+      "batch": 37,
+      "entries": 60800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2340800,
+      "phase": 0,
+      "poll_ms": 51.121917,
+      "rss_kib": 21616
+    },
+    {
+      "batch": 38,
+      "entries": 62400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2402400,
+      "phase": 0,
+      "poll_ms": 51.377667,
+      "rss_kib": 21696
+    },
+    {
+      "batch": 39,
+      "entries": 64000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2464000,
+      "phase": 0,
+      "poll_ms": 51.371917,
+      "rss_kib": 21760
+    },
+    {
+      "batch": 40,
+      "entries": 65600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2525600,
+      "phase": 0,
+      "poll_ms": 51.452084,
+      "rss_kib": 21840
+    },
+    {
+      "batch": 41,
+      "entries": 67200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2587200,
+      "phase": 0,
+      "poll_ms": 51.543916,
+      "rss_kib": 21904
+    },
+    {
+      "batch": 42,
+      "entries": 68800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2648800,
+      "phase": 0,
+      "poll_ms": 51.28875,
+      "rss_kib": 22000
+    },
+    {
+      "batch": 43,
+      "entries": 70400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2710400,
+      "phase": 0,
+      "poll_ms": 53.732209000000005,
+      "rss_kib": 22064
+    },
+    {
+      "batch": 44,
+      "entries": 72000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2772000,
+      "phase": 0,
+      "poll_ms": 51.323958000000005,
+      "rss_kib": 22000
+    },
+    {
+      "batch": 45,
+      "entries": 73600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2833600,
+      "phase": 0,
+      "poll_ms": 51.044166000000004,
+      "rss_kib": 22096
+    },
+    {
+      "batch": 46,
+      "entries": 75200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2895200,
+      "phase": 0,
+      "poll_ms": 51.019417,
+      "rss_kib": 22160
+    },
+    {
+      "batch": 47,
+      "entries": 76800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 2956800,
+      "phase": 0,
+      "poll_ms": 51.43525,
+      "rss_kib": 22240
+    },
+    {
+      "batch": 48,
+      "entries": 78400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3018400,
+      "phase": 0,
+      "poll_ms": 52.092375000000004,
+      "rss_kib": 22304
+    },
+    {
+      "batch": 49,
+      "entries": 80000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3080000,
+      "phase": 0,
+      "poll_ms": 53.742375,
+      "rss_kib": 22384
+    },
+    {
+      "batch": 50,
+      "entries": 81600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3141600,
+      "phase": 0,
+      "poll_ms": 51.472625,
+      "rss_kib": 22464
+    },
+    {
+      "batch": 51,
+      "entries": 83200,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3203200,
+      "phase": 0,
+      "poll_ms": 51.367292,
+      "rss_kib": 22544
+    },
+    {
+      "batch": 52,
+      "entries": 84800,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3264800,
+      "phase": 0,
+      "poll_ms": 51.024708000000004,
+      "rss_kib": 22608
+    },
+    {
+      "batch": 53,
+      "entries": 86400,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3326400,
+      "phase": 0,
+      "poll_ms": 51.313207999999996,
+      "rss_kib": 22688
+    },
+    {
+      "batch": 54,
+      "entries": 88000,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3388000,
+      "phase": 0,
+      "poll_ms": 51.282208000000004,
+      "rss_kib": 22768
+    },
+    {
+      "batch": 55,
+      "entries": 89600,
+      "lookup_capacity": 89600,
+      "owned_string_bytes": 3449600,
+      "phase": 0,
+      "poll_ms": 51.146542000000004,
+      "rss_kib": 22832
+    },
+    {
+      "batch": 56,
+      "entries": 91200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3511200,
+      "phase": 0,
+      "poll_ms": 72.438458,
+      "rss_kib": 30000
+    },
+    {
+      "batch": 57,
+      "entries": 92800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3572800,
+      "phase": 0,
+      "poll_ms": 51.460208,
+      "rss_kib": 31248
+    },
+    {
+      "batch": 58,
+      "entries": 94400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3634400,
+      "phase": 0,
+      "poll_ms": 52.68,
+      "rss_kib": 31328
+    },
+    {
+      "batch": 59,
+      "entries": 96000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3696000,
+      "phase": 0,
+      "poll_ms": 53.126959,
+      "rss_kib": 31408
+    },
+    {
+      "batch": 60,
+      "entries": 97600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3757600,
+      "phase": 0,
+      "poll_ms": 60.570042,
+      "rss_kib": 31472
+    },
+    {
+      "batch": 61,
+      "entries": 99200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3819200,
+      "phase": 0,
+      "poll_ms": 57.114,
+      "rss_kib": 31584
+    },
+    {
+      "batch": 62,
+      "entries": 100800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3880800,
+      "phase": 0,
+      "poll_ms": 52.048249999999996,
+      "rss_kib": 31664
+    },
+    {
+      "batch": 63,
+      "entries": 102400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 3942400,
+      "phase": 0,
+      "poll_ms": 51.1115,
+      "rss_kib": 31744
+    },
+    {
+      "batch": 64,
+      "entries": 104000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4004000,
+      "phase": 0,
+      "poll_ms": 51.1875,
+      "rss_kib": 31808
+    },
+    {
+      "batch": 65,
+      "entries": 105600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4065600,
+      "phase": 0,
+      "poll_ms": 51.084959,
+      "rss_kib": 31888
+    },
+    {
+      "batch": 66,
+      "entries": 107200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4127200,
+      "phase": 0,
+      "poll_ms": 52.196958,
+      "rss_kib": 31968
+    },
+    {
+      "batch": 67,
+      "entries": 108800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4188800,
+      "phase": 0,
+      "poll_ms": 53.777958,
+      "rss_kib": 32032
+    },
+    {
+      "batch": 68,
+      "entries": 110400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4250400,
+      "phase": 0,
+      "poll_ms": 51.741542,
+      "rss_kib": 32112
+    },
+    {
+      "batch": 69,
+      "entries": 112000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4312000,
+      "phase": 0,
+      "poll_ms": 51.093375,
+      "rss_kib": 32176
+    },
+    {
+      "batch": 70,
+      "entries": 113600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4373600,
+      "phase": 0,
+      "poll_ms": 51.373917,
+      "rss_kib": 32288
+    },
+    {
+      "batch": 71,
+      "entries": 115200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4435200,
+      "phase": 0,
+      "poll_ms": 51.194166,
+      "rss_kib": 32352
+    },
+    {
+      "batch": 72,
+      "entries": 116800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4496800,
+      "phase": 0,
+      "poll_ms": 51.395,
+      "rss_kib": 32432
+    },
+    {
+      "batch": 73,
+      "entries": 118400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4558400,
+      "phase": 0,
+      "poll_ms": 51.541541,
+      "rss_kib": 32496
+    },
+    {
+      "batch": 74,
+      "entries": 120000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4620000,
+      "phase": 0,
+      "poll_ms": 51.585041999999994,
+      "rss_kib": 32576
+    },
+    {
+      "batch": 75,
+      "entries": 121600,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4681600,
+      "phase": 0,
+      "poll_ms": 51.613625000000006,
+      "rss_kib": 32656
+    },
+    {
+      "batch": 76,
+      "entries": 123200,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4743200,
+      "phase": 0,
+      "poll_ms": 51.10037500000001,
+      "rss_kib": 32720
+    },
+    {
+      "batch": 77,
+      "entries": 124800,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4804800,
+      "phase": 0,
+      "poll_ms": 51.017875,
+      "rss_kib": 32800
+    },
+    {
+      "batch": 78,
+      "entries": 126400,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4866400,
+      "phase": 0,
+      "poll_ms": 51.403625,
+      "rss_kib": 32880
+    },
+    {
+      "batch": 79,
+      "entries": 128000,
+      "lookup_capacity": 179200,
+      "owned_string_bytes": 4928000,
+      "phase": 0,
+      "poll_ms": 51.202667,
+      "rss_kib": 32960
+    }
+  ],
+  "scope": "Direct ClaudeSource fixture replay in a Rust test process; sampled RSS is separate from owned-string accounting; no live provider, World or terminal.",
+  "workers": 50
+}

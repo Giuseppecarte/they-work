@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "status": "pass_with_documented_limits",
+  "recorded_at": "2026-09-09T19:34:31.149437+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "profile": "Rust debug test executable",
+  "rust_version": "1.90.0",
+  "baseline_pending_implementation_revision": "77a9b785dd25d27884b7fe2f81548d538f53a35a",
+  "baseline_integration_note": "The pending-map implementation was unchanged; additive shared coverage fields/defaults were already in the working checkout. The retained baseline probe reconstructs exact workload/accounting semantics, not byte-identical original formatting.",
+  "candidate_source_reference": "77a9b785dd25d27884b7fe2f81548d538f53a35a",
+  "candidate_source_dirty": true,
+  "binary_sha256": {
+    "before": "44103f0883e457d75bd24a1275728332ba6a27326aebc40a9f12d484c05387c7",
+    "after": "6c89f9471111703e3caee7b3744578e567d698e553d18f08ceb3ee9c683bb6d7"
+  },
+  "measured_source_sha256": {
+    "crates/theywork-collect/src/claude.rs": "cac79f4387e8dc3ca1e5bf3baff7b647c0c358637366892a8a28e9998be9c7b6",
+    "crates/theywork-collect/src/claude_pending.rs": "23b9212b0f391f7d7b55967b5a3eb6241b6bdc21aa4a6eca863bb4622cdf99a0",
+    "crates/theywork-collect/src/claude_correlation_tests.rs": "3b8424b42754a4b12677deb409a7077d8e339ef7ee1f2abba424da3e716f4572"
+  },
+  "source_after_measurement_note": "Only the resource-test output guard was subsequently tightened; the production Claude/store implementation is unchanged at report creation.",
+  "limits": {
+    "cursor_entries": 256,
+    "cursor_owned_string_bytes": 262144,
+    "source_entries": 8192,
+    "source_owned_string_bytes": 8388608
+  },
+  "cases": [
+    {
+      "phase": "before",
+      "mode": "paired",
+      "evidence": "evidence/before-paired.json",
+      "exit_code": 0,
+      "executed_tests": 1,
+      "calls": 128000,
+      "activities": 128000,
+      "outcomes": 128000,
+      "elapsed_seconds": 46.247604667,
+      "peak_entries": 1600,
+      "peak_owned_string_bytes": 61600,
+      "peak_lookup_capacity": 4736,
+      "final_lookup_capacity": 4151,
+      "peak_sampled_rss_kib": 10944,
+      "poll_p95_ms": 73.822,
+      "final_retirements": null,
+      "final_entries": 0
+    },
+    {
+      "phase": "before",
+      "mode": "unpaired",
+      "evidence": "evidence/before-unpaired.json",
+      "exit_code": 0,
+      "executed_tests": 1,
+      "calls": 128000,
+      "activities": 128000,
+      "outcomes": 0,
+      "elapsed_seconds": 24.231999958,
+      "peak_entries": 128000,
+      "peak_owned_string_bytes": 4928000,
+      "peak_lookup_capacity": 179200,
+      "final_lookup_capacity": 179200,
+      "peak_sampled_rss_kib": 32960,
+      "poll_p95_ms": 57.114,
+      "final_retirements": null,
+      "final_entries": 128000
+    },
+    {
+      "phase": "after",
+      "mode": "paired",
+      "evidence": "evidence/after-paired.json",
+      "exit_code": 0,
+      "executed_tests": 1,
+      "calls": 128000,
+      "activities": 128000,
+      "outcomes": 128000,
+      "elapsed_seconds": 52.554411584,
+      "peak_entries": 1600,
+      "peak_owned_string_bytes": 61600,
+      "peak_lookup_capacity": 2800,
+      "final_lookup_capacity": 0,
+      "peak_sampled_rss_kib": 12400,
+      "poll_p95_ms": 92.155125,
+      "final_retirements": 0,
+      "final_entries": 0
+    },
+    {
+      "phase": "after",
+      "mode": "unpaired",
+      "evidence": "evidence/after-unpaired.json",
+      "exit_code": 0,
+      "executed_tests": 1,
+      "calls": 128000,
+      "activities": 128000,
+      "outcomes": 0,
+      "elapsed_seconds": 30.312906,
+      "peak_entries": 8192,
+      "peak_owned_string_bytes": 315392,
+      "peak_lookup_capacity": 22005,
+      "final_lookup_capacity": 14351,
+      "peak_sampled_rss_kib": 16656,
+      "poll_p95_ms": 175.25812499999998,
+      "final_retirements": 119808,
+      "final_entries": 8192
+    }
+  ],
+  "focused_acceptance": {
+    "collector_unit_tests_passed": 26,
+    "resource_replay_ignored_by_default": 1,
+    "late_output_guard_test_passed": 1,
+    "normal_collector_regression_suites": "Recorded by iteration-wide integrated validation"
+  },
+  "measurement_limits": [
+    "Direct ClaudeSource only; no World fold in the resource replay, provider execution, renderer or terminal.",
+    "RSS sampled after polls; not allocator attribution. Desktop/development load and filesystem cache not isolated.",
+    "Initial sandboxed runs had no ps access; their data is retained separately and is not used as RSS evidence.",
+    "Debug poll timing does not establish the 150 ms visual-response target.",
+    "No authenticated sessions, real-user concurrency study, Windows/Linux RSS measurement, or new two-hour soak."
+  ],
+  "evidence_sha256": {
+    "evidence/after-paired.json": "02e1f1ff65e5cc8b24c818cd33c1f774c644b7e05ed5c2ee120a595febc22d51",
+    "evidence/after-unpaired.json": "7ddd068635b29fde60937f8c809a2226b2b2064d6a0f8dfedbdb6d399857247d",
+    "evidence/before-paired.json": "04e59325eee5b0d1dc5d89e46440786dc7864c279139706ca7dd51e3daed9eea",
+    "evidence/before-unpaired.json": "45981f2ef6ee37273443db6feb80fd29e7e335ff7edc6584979c225dbf58e093",
+    "evidence/initial-without-rss-paired.json": "ee49b871638e519c9b6f53a07f07088655cd6d074bc4b4c008dc3edf0a918f9b",
+    "evidence/initial-without-rss-unpaired.json": "0ba893e2a8ca9cc05d25bfab336866c57ca08a9ca50cd1085bbe2c5ea5293ddd",
+    "evidence/measured-probe.rs": "3b8424b42754a4b12677deb409a7077d8e339ef7ee1f2abba424da3e716f4572"
+  },
+  "reproduction_sha256": {
+    "baseline-probe.rs": "cdc3c17070ed7372f70701cdb2bd0f308bfa2039109d7231ef1a9327be457c46"
+  }
+}

@@ -300,6 +300,7 @@ fn claude_coverage(now: Millis, available: bool) -> SourceCoverage {
         lifecycle: CoverageLevel::Partial, observed_at: now,
         detail: if available { "Local transcripts; session membership is known, immediate parents and final output require explicit metadata." }
             else { "Local transcript source unavailable; last observations are retained." }.into(),
+        ..SourceCoverage::default()
     }
 }
 

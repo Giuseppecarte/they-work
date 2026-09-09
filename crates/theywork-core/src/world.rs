@@ -12,7 +12,7 @@ pub struct World {
     desks: HashMap<WorkerId, OfficeId>,
     retired: BTreeMap<WorkerId, Worker>,
     relationships: BTreeMap<(WorkerId, WorkerId, RelationshipKind), Relationship>,
-    collaboration: VecDeque<CollaborationEvent>,
+    collaboration: crate::history::HistoryStore,
 }
 
 impl World {
@@ -51,6 +51,19 @@ impl World {
     }
     pub fn collaboration(&self) -> impl DoubleEndedIterator<Item = &CollaborationEvent> {
         self.collaboration.iter()
+    }
+    /// Project recorded with the event, independent of later worker moves.
+    pub fn collaboration_office(&self, event: &CollaborationEvent) -> Option<&OfficeId> {
+        self.collaboration.office(event)
+    }
+    pub fn history_window(&self, office: &OfficeId) -> crate::HistoryWindow {
+        self.collaboration.window(office)
+    }
+    pub fn history_windows(&self) -> impl Iterator<Item = (&OfficeId, &crate::HistoryWindow)> {
+        self.collaboration.windows()
+    }
+    pub fn older_project_windows_unknown(&self) -> bool {
+        self.collaboration.older_project_windows_unknown()
     }
     pub fn collaboration_for<'a>(
         &'a self,
@@ -229,30 +242,18 @@ impl World {
                 return;
             }
             EventKind::Collaboration(event) => {
-                if let Some(index) = self
-                    .collaboration
-                    .iter()
-                    .position(|old| old.actor == event.actor && old.id == event.id)
-                {
-                    if self.collaboration[index].at > event.at {
-                        return;
-                    }
-                    self.collaboration.remove(index);
-                }
-                let index = self
-                    .collaboration
-                    .iter()
-                    .position(|old| old.at > event.at)
-                    .unwrap_or(self.collaboration.len());
-                self.collaboration.insert(index, event.clone());
-                if self.collaboration.len() > crate::COLLABORATION_HISTORY_LEN {
-                    self.collaboration.pop_front();
-                }
+                self.collaboration.insert(ev.office.clone(), event.clone());
                 return;
             }
             EventKind::Coverage(coverage) => {
                 if let Some(worker) = self.worker_mut(&ev.worker) {
-                    worker.coverage = coverage.clone();
+                    worker.coverage.merge_observation(coverage.clone());
+                }
+                return;
+            }
+            EventKind::HistoricalBeat(beat) => {
+                if let Some(worker) = self.worker_mut(&ev.worker) {
+                    worker.remember(beat.clone());
                 }
                 return;
             }
@@ -360,6 +361,7 @@ impl World {
             EventKind::Relationship(_)
             | EventKind::Collaboration(_)
             | EventKind::Coverage(_)
+            | EventKind::HistoricalBeat(_)
             | EventKind::Left => unreachable!("handled above"),
         }
         self.offices.retain(|_, office| !office.workers.is_empty());

@@ -95,6 +95,9 @@ pub struct Workboard {
     pub channel: Channel,
     pub rows: Vec<Entry>,
     pub coverage: String,
+    coverage_details: String,
+    showing_coverage: bool,
+    coverage_scroll: u16,
     pub scope: String,
     pub folded: BTreeSet<String>,
     selected: usize,
@@ -116,6 +119,9 @@ impl Default for Workboard {
             channel: Channel::default(),
             rows: Vec::new(),
             coverage: String::new(),
+            coverage_details: String::new(),
+            showing_coverage: false,
+            coverage_scroll: 0,
             scope: String::new(),
             folded: BTreeSet::new(),
             selected: 0,
@@ -194,6 +200,9 @@ fn coverage_summary(workers: &[&Worker], now: Millis) -> String {
 }
 
 impl Workboard {
+    pub(crate) fn showing_coverage(&self) -> bool {
+        self.showing_coverage
+    }
     /// Select a requested person after the next family roster is populated.
     pub fn focus_worker(&mut self, id: WorkerId) {
         self.pending_worker = Some(id);
@@ -268,6 +277,88 @@ impl Workboard {
             .filter(|worker| selected(&worker.office))
             .collect();
         self.coverage = coverage_summary(&workers, now);
+        let mut streams = BTreeMap::new();
+        for worker in &workers {
+            if let Some(stream) = &worker.coverage.stream {
+                let key = (&stream.source, &stream.stream_id);
+                if streams
+                    .get(&key)
+                    .is_none_or(|old: &&theywork_core::StreamContinuity| {
+                        old.missing_events < stream.missing_events
+                    })
+                {
+                    streams.insert(key, stream);
+                }
+            }
+        }
+        let missing = streams.values().fold(0u64, |total, stream| {
+            total.saturating_add(stream.missing_events)
+        });
+        let windows: Vec<_> = world
+            .history_windows()
+            .filter(|(id, _)| selected(id))
+            .collect();
+        let evicted = windows.iter().fold(0u64, |total, (_, window)| {
+            total.saturating_add(window.evicted_count)
+        });
+        let older_local_unknown = office.map_or_else(
+            || world.older_project_windows_unknown(),
+            |office| {
+                world
+                    .history_window(&office.id)
+                    .prior_local_evictions_unknown
+            },
+        );
+        let limits = missing > 0
+            || evicted > 0
+            || older_local_unknown
+            || workers
+                .iter()
+                .any(|worker| presentation::coverage_has_loss(&worker.coverage));
+        self.coverage_details = format!("COVERAGE · {}\n{}\n{missing} numbered events missing across distinct source lineages.\n{evicted} local collaboration retention evictions in recorded project windows.\nThese units differ; neither counts unique missing results. Earlier provider history is unknown.", self.scope, self.coverage);
+        self.coverage_details.push_str("\nStream counts cover each whole source; absent events cannot be attributed to a particular floor.");
+        if older_local_unknown {
+            self.coverage_details.push_str("\nOlder project eviction metadata was retired; earlier local totals may be unknown.");
+        }
+        for (id, window) in windows {
+            self.coverage_details.push_str(&format!(
+                "\n\nPROJECT {}\n{}",
+                id.0,
+                presentation::history_text(window)
+            ));
+        }
+        for worker in &workers {
+            self.coverage_details.push_str(&format!(
+                "\n\nTASK {}\n{}",
+                worker.name,
+                coverage_detail(worker, now)
+            ));
+        }
+        if limits {
+            let health = if workers
+                .iter()
+                .any(|worker| worker.coverage.observed_at > 0 && !worker.coverage.available)
+            {
+                "Unavailable"
+            } else if workers
+                .iter()
+                .any(|worker| worker.coverage.observed_at > 0 && worker.coverage.is_stale_at(now))
+            {
+                "Stale"
+            } else if workers
+                .iter()
+                .any(|worker| worker.coverage.observed_at == 0)
+            {
+                "Unchecked"
+            } else {
+                "History"
+            };
+            self.coverage = format!(
+                "{health} · limits · h coverage · {missing} missing stream events · {evicted} local evictions"
+            );
+        } else {
+            self.coverage = format!("h coverage · {}", self.coverage);
+        }
         let mut rows = Vec::new();
         match self.channel {
             Channel::Attention => {
@@ -355,20 +446,20 @@ impl Workboard {
             }
             Channel::Deliveries | Channel::Changes => {
                 for event in world.collaboration() {
-                    // A returned child result can precede the child's transcript.
-                    // The known recipient supplies project context, never actor identity.
+                    // Project belongs to the recorded event, even if both
+                    // participants are missing or subsequently move floors.
                     let actor = world.worker(&event.actor);
                     let context =
                         actor.or_else(|| event.recipient.as_ref().and_then(|id| world.worker(id)));
-                    let Some(worker) = context else {
+                    let Some(record_office) = world.collaboration_office(event) else {
                         continue;
                     };
-                    if !selected(&worker.office) {
+                    if !selected(record_office) {
                         continue;
                     }
                     let baseline = baselines
-                        .get(&worker.office.0)
-                        .or_else(|| memory.last_visits.get(&worker.office.0))
+                        .get(&record_office.0)
+                        .or_else(|| memory.last_visits.get(&record_office.0))
                         .copied()
                         .unwrap_or(0);
                     if self.channel == Channel::Deliveries
@@ -387,13 +478,24 @@ impl Workboard {
                         .unwrap_or_else(|| "Not recorded".into());
                     let actor_label = task_label(world, &event.actor);
                     let record = crate::work_brief::event_record(world, event, &self.profiles);
+                    let project_coverage = format!(
+                        "Recorded project: {}\n{}\n{}",
+                        record_office.0,
+                        context.map_or_else(
+                            || "Participant source coverage unavailable.".into(),
+                            |worker| coverage_detail(worker, now)
+                        ),
+                        presentation::history_text(&world.history_window(record_office))
+                    );
                     let detail = format!(
                         "{}\n\nFrom: {}\nTo: {}\n\n{}{}\n\nRECORDED IDS\n{}",
                         record.detail(),
                         actor_label,
                         target,
-                        coverage_detail(worker, now),
-                        if actor.is_none() {
+                        project_coverage,
+                        if context.is_none() {
+                            "\nBoth participant transcripts are unavailable. The recorded result remains inspectable here."
+                        } else if actor.is_none() {
                             "\nCoverage belongs to the known recipient; the sender's transcript is unavailable."
                         } else if !world.is_present(&event.actor) {
                             "\nThe sender is no longer in the current roster. Its recorded output is retained."
@@ -408,7 +510,7 @@ impl Workboard {
                         worker: actor
                             .filter(|worker| world.is_present(&worker.id))
                             .map(|worker| worker.id.clone()),
-                        office: worker.office.clone(),
+                        office: record_office.clone(),
                         title: actor_label,
                         label: format!(
                             "{} · {} ago",
@@ -620,6 +722,8 @@ impl Workboard {
         self.scroll = 0;
         self.rows.clear();
         self.pending_worker = None;
+        self.showing_coverage = false;
+        self.coverage_scroll = 0;
     }
 
     pub fn replace(&mut self, rows: Vec<Entry>) {
@@ -638,6 +742,28 @@ impl Workboard {
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) -> Option<Action> {
+        if key.code == KeyCode::Char('h') {
+            self.showing_coverage = !self.showing_coverage;
+            return None;
+        }
+        if self.showing_coverage {
+            match key.code {
+                KeyCode::Esc => {
+                    self.showing_coverage = false;
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    self.coverage_scroll = self.coverage_scroll.saturating_add(1)
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    self.coverage_scroll = self.coverage_scroll.saturating_sub(1)
+                }
+                KeyCode::PageDown => self.coverage_scroll = self.coverage_scroll.saturating_add(5),
+                KeyCode::PageUp => self.coverage_scroll = self.coverage_scroll.saturating_sub(5),
+                KeyCode::Home => self.coverage_scroll = 0,
+                _ => {}
+            }
+            return None;
+        }
         if self.blocked_by_size && matches!(key.code, KeyCode::Enter | KeyCode::Char('r')) {
             return None;
         }
@@ -815,15 +941,42 @@ impl Workboard {
         Paragraph::new(format!("{}\n{controls}", safe_display(&self.coverage)))
             .style(Style::default().fg(MUTED))
             .render(footer, frame.buffer_mut());
+        self.hits.push(HitRegion::new(
+            Rect::new(footer.x, footer.y, footer.width, 1),
+            HitAction::Key(KeyCode::Char('h')),
+        ));
         let body = Rect::new(area.x + 1, area.y + 4, area.width - 2, area.height - 6);
+        if self.showing_coverage {
+            // Remove row/tab actions while reading coverage; inspection cannot
+            // accidentally mark or act on a hidden request underneath.
+            self.hits
+                .retain(|hit| hit.action == HitAction::Key(KeyCode::Char('h')));
+            let lines =
+                super::wrap_text(&super::safe_multiline(&self.coverage_details), body.width);
+            self.coverage_scroll = self.coverage_scroll.min(
+                lines
+                    .len()
+                    .saturating_sub(body.height as usize)
+                    .min(u16::MAX as usize) as u16,
+            );
+            Paragraph::new(lines.join("\n"))
+                .scroll((self.coverage_scroll, 0))
+                .style(Style::default().fg(INK))
+                .render(body, frame.buffer_mut());
+            Paragraph::new("Esc back · ↑↓ / PgUp/PgDn read").render(
+                Rect::new(footer.x, footer.y + 1, footer.width, 1),
+                frame.buffer_mut(),
+            );
+            return;
+        }
         if self.rows.is_empty() {
             Paragraph::new(match self.channel {
                 Channel::Attention => "No attention items in the available observations.",
                 Channel::Deliveries => {
-                    "No recorded deliveries yet. A quiet or finished turn alone is not a delivery."
+                    "No qualifying deliveries remain in the current retained window. Earlier history is unknown. Press h for coverage. A finished turn alone is not a delivery."
                 }
                 Channel::Changes => {
-                    "No recorded changes since the previous visit. History may be incomplete."
+                    "No qualifying changes remain in the current retained window since your visit. Earlier history is unknown. Press h for coverage."
                 }
                 Channel::Team => "No tasks in this project yet.",
             })
@@ -1008,6 +1161,230 @@ mod tests {
         Agent, Beat, CoverageLevel, Event, EventKind, Evidence, Relationship, SourceCoverage,
         BLOCKED_AFTER_MS,
     };
+
+    #[test]
+    fn retained_delivery_uses_recorded_floor_even_when_actors_move_or_are_missing() {
+        let mut world = World::new();
+        hire(&mut world, "mover");
+        record(
+            &mut world,
+            "mover",
+            None,
+            "original",
+            CollaborationKind::Result,
+            20,
+        );
+        record(
+            &mut world,
+            "missing",
+            None,
+            "orphan",
+            CollaborationKind::Result,
+            21,
+        );
+        world.apply(Event {
+            at: 30,
+            office: OfficeId("other".into()),
+            office_path: "other".into(),
+            worker: id("mover"),
+            agent: Agent::Codex,
+            kind: EventKind::Seen {
+                name: "Moved".into(),
+                git_branch: None,
+            },
+        });
+        let mut board = Workboard::default();
+        board.show(Channel::Deliveries);
+        board.refresh(
+            &world,
+            None,
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            100,
+        );
+        assert_eq!(board.rows.len(), 2);
+        assert!(board
+            .rows
+            .iter()
+            .all(|row| row.office == OfficeId("/project".into())));
+        assert!(board
+            .rows
+            .iter()
+            .find(|row| row.key.contains("orphan"))
+            .unwrap()
+            .worker
+            .is_none());
+        board.refresh(
+            &world,
+            world.office(&OfficeId("other".into())),
+            &ReviewMemory::default(),
+            &BTreeMap::new(),
+            100,
+        );
+        assert!(board.rows.is_empty());
+    }
+
+    #[test]
+    fn coverage_counts_distinct_streams_and_is_safe_to_read_at_all_sizes() {
+        let mut world = World::new();
+        for worker in ["parent", "child"] {
+            hire(&mut world, worker);
+            observe(
+                &mut world,
+                worker,
+                100,
+                EventKind::Coverage(SourceCoverage {
+                    available: true,
+                    observed_at: 100,
+                    stream: Some(theywork_core::StreamContinuity {
+                        source: theywork_core::SourceId("one-host".into()),
+                        stream_id: Some("lineage".into()),
+                        lineage_known: true,
+                        missing_events: 300,
+                        missing_ranges: vec![theywork_core::SequenceRange {
+                            first: 1,
+                            last: 300,
+                        }],
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }),
+            );
+        }
+        observe(
+            &mut world,
+            "child",
+            100,
+            EventKind::Coverage(SourceCoverage {
+                available: false,
+                observed_at: 100,
+                ..Default::default()
+            }),
+        );
+        record(
+            &mut world,
+            "parent",
+            None,
+            "request",
+            CollaborationKind::HumanRequest,
+            110,
+        );
+        observe(
+            &mut world,
+            "parent",
+            110,
+            EventKind::Wait(Some(WaitReason::HumanInput)),
+        );
+        for (width, height) in [
+            (32, 14),
+            (80, 24),
+            (120, 36),
+            (192, 58),
+            (110, 80),
+            (240, 70),
+        ] {
+            let mut board = Workboard::default();
+            board.show(Channel::Attention);
+            board.refresh(
+                &world,
+                None,
+                &ReviewMemory::default(),
+                &BTreeMap::new(),
+                120,
+            );
+            assert!(board
+                .coverage_details
+                .contains("300 numbered events missing across distinct"));
+            assert!(!board.coverage_details.contains("600 numbered events"));
+            assert!(board.coverage.contains("300 missing stream events"));
+            assert!(board
+                .coverage
+                .starts_with("Unavailable · limits · h coverage"));
+            let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            assert!(board
+                .hit_regions()
+                .iter()
+                .any(|hit| hit.action == HitAction::Key(KeyCode::Char('h'))));
+            board.handle_key(key(KeyCode::Char('h')));
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            assert!(board.handle_key(key(KeyCode::Enter)).is_none());
+            assert!(board.handle_key(key(KeyCode::Char('r'))).is_none());
+            assert!(board
+                .hit_regions()
+                .iter()
+                .all(|hit| hit.action == HitAction::Key(KeyCode::Char('h'))));
+            for _ in 0..8 {
+                board.handle_key(key(KeyCode::PageDown));
+                terminal.draw(|frame| board.draw(frame)).unwrap();
+            }
+            board.handle_key(key(KeyCode::Home));
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            if let Some(directory) = std::env::var_os("THEYWORK_COVERAGE_CAPTURE") {
+                std::fs::create_dir_all(&directory).unwrap();
+                let buffer = terminal.backend().buffer();
+                let text = (0..height)
+                    .map(|y| {
+                        (0..width)
+                            .map(|x| buffer[(x, y)].symbol())
+                            .collect::<String>()
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                std::fs::write(
+                    std::path::Path::new(&directory).join(format!("coverage-{width}x{height}.txt")),
+                    text,
+                )
+                .unwrap();
+            }
+            board.handle_key(key(KeyCode::Esc));
+            terminal.draw(|frame| board.draw(frame)).unwrap();
+            assert!(matches!(
+                board.handle_key(key(KeyCode::Enter)),
+                Some(Action::Review(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn coverage_back_button_matches_escape_and_restores_record_reading_position() {
+        let mut world = World::new();
+        hire(&mut world, "reader");
+        record(
+            &mut world,
+            "reader",
+            None,
+            "delivery",
+            CollaborationKind::Result,
+            20,
+        );
+        let mut ui = crate::Ui::new();
+        ui.tick(100);
+        ui.workboard.show(Channel::Deliveries);
+        let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        ui.frame_presented();
+        ui.workboard.scroll = 3;
+        ui.handle_key(key(KeyCode::Char('h')));
+        terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+        ui.frame_presented();
+        assert!(ui.workboard.showing_coverage());
+        let back = ui
+            .hit_regions()
+            .iter()
+            .find(|hit| hit.action == HitAction::Key(KeyCode::Esc))
+            .unwrap()
+            .clone();
+        ui.handle_mouse(crossterm::event::MouseEvent {
+            kind: crossterm::event::MouseEventKind::Down(crossterm::event::MouseButton::Left),
+            column: back.area.x,
+            row: back.area.y,
+            modifiers: KeyModifiers::NONE,
+        });
+        assert!(ui.workboard.open);
+        assert!(!ui.workboard.showing_coverage());
+        assert_eq!(ui.workboard.scroll, 3);
+    }
 
     fn id(name: &str) -> WorkerId {
         WorkerId(name.into())

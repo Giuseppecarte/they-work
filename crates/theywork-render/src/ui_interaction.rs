@@ -506,7 +506,9 @@ impl Ui {
             || self.more_open;
         let mut actions = vec![if self.more_open {
             Action::More
-        } else if self.settings_open && self.advanced_settings {
+        } else if (self.settings_open && self.advanced_settings)
+            || (self.workboard.open && self.workboard.showing_coverage())
+        {
             Action::Key(KeyCode::Esc)
         } else {
             Action::Close
@@ -550,6 +552,8 @@ impl Ui {
                 "Type to search · ↑↓ results · Enter open"
             }
             .into()
+        } else if self.workboard.open && self.workboard.showing_coverage() {
+            "↑↓ / PgUp/PgDn read · h back".into()
         } else if self.workboard.open || self.phone_open {
             "↑↓ · Enter opens".into()
         } else if self.view == View::Desk {

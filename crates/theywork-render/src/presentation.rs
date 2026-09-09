@@ -109,8 +109,96 @@ pub fn coverage_label(coverage: &SourceCoverage, now: i64) -> &'static str {
     }
 }
 
+pub fn coverage_has_loss(coverage: &SourceCoverage) -> bool {
+    coverage
+        .stream
+        .as_ref()
+        .is_some_and(|stream| stream.has_limitation())
+        || coverage
+            .tool_correlation
+            .as_ref()
+            .is_some_and(|tools| tools.has_loss())
+}
+
+pub fn coverage_headline(coverage: &SourceCoverage, now: i64, local_loss: bool) -> String {
+    if coverage_has_loss(coverage) || local_loss {
+        let health = if coverage.observed_at == 0 {
+            "Unchecked"
+        } else if !coverage.available {
+            "Unavailable"
+        } else if coverage.is_stale_at(now) {
+            "Stale"
+        } else {
+            "History"
+        };
+        format!("{health} · limits in Details")
+    } else {
+        coverage_label(coverage, now).into()
+    }
+}
+
 pub fn coverage_text(coverage: &SourceCoverage, now: i64) -> String {
-    format!("{}\n{}", coverage_label(coverage, now), coverage.detail)
+    let mut text = format!(
+        "{}\n{}",
+        coverage_headline(coverage, now, false),
+        coverage.detail
+    );
+    if let Some(stream) = &coverage.stream {
+        text.push_str(&format!("\nSTREAM OBSERVATION\nSource: {}\nLineage: {}\n{} numbered events missing in this lineage; {} events awaiting an actor; {} deferred events retired locally.",
+            stream.source.0, stream.stream_id.as_deref().unwrap_or("unknown"), stream.missing_events, stream.deferred_events, stream.dropped_deferred_events));
+        if !stream.lineage_known {
+            text.push_str(
+                "\nThe initial stream prefix is unknown; no missing-event count is inferred.",
+            );
+        }
+        if stream.prior_stream_unknown {
+            text.push_str("\nEarlier stream continuity is unknown or had a recorded limitation.");
+        }
+        if !stream.missing_ranges.is_empty() {
+            text.push_str(&format!(
+                "\nMissing sequence ranges: {}",
+                stream
+                    .missing_ranges
+                    .iter()
+                    .map(|range| format!("{}–{}", range.first, range.last))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+        if stream.omitted_ranges > 0 {
+            text.push_str(&format!(
+                "\n{} older range details omitted; event total retained.",
+                stream.omitted_ranges
+            ));
+        }
+        text.push_str("\nThese are event counts, not counts of missing results or requests.");
+    }
+    if let Some(tools) = &coverage.tool_correlation {
+        if tools.has_loss() {
+            text.push_str(&format!("\nTOOL CORRELATION\n{} pending entries evicted; {} oversized starts; {} conflicting IDs; {} pending entries discarded on reset.\nCounts cover observer epoch {} and are not distinct lost results.", tools.evicted, tools.oversized, tools.ambiguous, tools.reset_discarded, tools.epoch));
+            if tools.prior_loss {
+                text.push_str("\nEarlier correlation loss was observed; its counts are unavailable in this epoch.");
+            }
+        }
+    }
+    text
+}
+
+pub fn history_text(window: &theywork_core::HistoryWindow) -> String {
+    let mut text = format!("LOCAL PROJECT WINDOW\n{} collaboration records retained; {} local retention evictions.\nOldest retained source timestamp: {}\nLast eviction observation: {} (record source timestamp: {}).\nThe shared limit is 512 records, retired from the largest project partition first. Evictions are retention actions, not unique missing deliveries.",
+        window.retained_count, window.evicted_count,
+        window.oldest_retained_at.map_or_else(|| "unavailable".into(), |at| at.to_string()),
+        window.last_eviction_ordinal.map_or_else(|| "none recorded".into(), |ordinal| ordinal.to_string()),
+        window.last_evicted_record_at.map_or_else(|| "unavailable".into(), |at| at.to_string()));
+    if window.prior_history_unknown {
+        text.push_str("\nHistory before this observer's retained window is unknown.");
+    }
+    if window.prior_local_evictions_unknown {
+        text.push_str(
+            "\nEarlier local project eviction counts are unknown: bounded metadata was retired.",
+        );
+    }
+    text
 }
 
 pub fn event_label(kind: CollaborationKind) -> &'static str {

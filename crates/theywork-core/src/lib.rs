@@ -10,15 +10,18 @@
 mod collaboration;
 pub mod demo;
 mod event;
+mod history;
 mod model;
 mod source;
 mod world;
 
 pub use collaboration::{
     CollaborationEvent, CollaborationKind, CoverageLevel, Evidence, Relationship, RelationshipKind,
-    SourceCoverage, SourceId, ThreadIdentity, TreeEntry, WaitReason, WorkerLifecycle, WorkerRole,
+    SequenceRange, SourceCoverage, SourceId, StreamContinuity, ThreadIdentity,
+    ToolCorrelationCoverage, TreeEntry, WaitReason, WorkerLifecycle, WorkerRole,
 };
 pub use event::{Event, EventKind};
+pub use history::HistoryWindow;
 pub use model::{Activity, Agent, Beat, Office, OfficeId, Outcome, Worker, WorkerId, WorkerStatus};
 pub use source::{Source, SourceError};
 pub use world::World;

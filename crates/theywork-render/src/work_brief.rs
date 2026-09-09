@@ -271,7 +271,11 @@ impl WorkBrief {
                 }
             })
             .collect();
-        let warning = worker.coverage.observed_at == 0
+        let history = world.history_window(&worker.office);
+        let local_loss = history.evicted_count > 0 || history.prior_local_evictions_unknown;
+        let warning = local_loss
+            || presentation::coverage_has_loss(&worker.coverage)
+            || worker.coverage.observed_at == 0
             || !worker.coverage.available
             || worker.coverage.incomplete
             || worker.coverage.is_stale_at(now);
@@ -292,8 +296,8 @@ impl WorkBrief {
         };
         Some(Self {
             worker:id.clone(),alias,title:worker.name.clone(),project:world.office(&worker.office).map_or_else(||worker.office.0.clone(),|office|office.name.clone()),provider:worker.agent.label(),state:presentation::state_label(worker,now),
-            observed,observed_at:worker.last_seen,records,team,coverage:presentation::coverage_text(&worker.coverage,now),warning,present:world.is_present(id),
-            details:format!("CONVERSATION\n{}\n\nPROJECT\n{}\nBranch: {}\n\nSOURCE\n{}\n\nUSAGE\n{}\n\nIDENTITY\n{}\n\nRetained observations are bounded; they are not a complete transcript.",worker.name,worker.office.0,worker.git_branch.as_deref().unwrap_or("not recorded"),presentation::coverage_text(&worker.coverage,now),usage,worker.identity.as_ref().map_or_else(||"Native identity not recorded".into(),|identity|format!("{} · {}",identity.provider.label(),identity.native_id))),
+            observed,observed_at:worker.last_seen,records,team,coverage:presentation::coverage_headline(&worker.coverage,now,local_loss),warning,present:world.is_present(id),
+            details:format!("CONVERSATION\n{}\n\nPROJECT\n{}\nBranch: {}\n\nSOURCE\n{}\n\n{}\n\nUSAGE\n{}\n\nIDENTITY\n{}\n\nRetained observations are bounded; they are not a complete transcript.",worker.name,worker.office.0,worker.git_branch.as_deref().unwrap_or("not recorded"),presentation::coverage_text(&worker.coverage,now),presentation::history_text(&history),usage,worker.identity.as_ref().map_or_else(||"Native identity not recorded".into(),|identity|format!("{} · {}",identity.provider.label(),identity.native_id))),
         })
     }
     pub fn latest_result(&self) -> Option<&WorkRecord> {

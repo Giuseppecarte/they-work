@@ -146,6 +146,16 @@ pub fn draw_with_state(
             .requests
             .iter()
             .find(|request| request.worker == brief.worker);
+        let coverage = if brief.coverage.ends_with("limits in Details") {
+            match brief.coverage.split(" · ").next().unwrap_or("History") {
+                "History" => "History limited · enlarge to read",
+                "Unavailable" => "Unavailable · history limited",
+                "Stale" => "Stale source · history limited",
+                _ => "Unchecked · history limited",
+            }
+        } else {
+            &brief.coverage
+        };
         let header = format!(
             "{} · {}\n{}\n{}\n{}",
             safe_display(&brief.alias),
@@ -156,7 +166,7 @@ pub fn draw_with_state(
             } else {
                 brief.state
             },
-            safe_display(&brief.coverage)
+            safe_display(coverage)
         );
         Paragraph::new(header)
             .style(Style::default().fg(INK))
@@ -898,6 +908,10 @@ mod tests {
                 available: false,
                 incomplete: true,
                 observed_at: 1010,
+                stream: Some(theywork_core::StreamContinuity {
+                    missing_events: 3000,
+                    ..Default::default()
+                }),
                 ..Default::default()
             }),
         ));
@@ -922,7 +936,7 @@ mod tests {
             })
             .unwrap();
         let text = text(&terminal);
-        assert!(text.contains("Source unavailable"));
+        assert!(text.contains("Unavailable · limits in Details"));
         assert!(hits
             .iter()
             .any(|hit| hit.action == Action::Review(id.clone())));

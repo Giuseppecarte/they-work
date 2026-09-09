@@ -82,6 +82,7 @@ pub fn events(now: Millis) -> Vec<Event> {
                     lifecycle: CoverageLevel::Supported,
                     observed_at: now,
                     detail: "Fictional demo scenario.".into(),
+                    ..SourceCoverage::default()
                 })),
                 mk(EventKind::Seen {
                     name: (*name).to_string(),

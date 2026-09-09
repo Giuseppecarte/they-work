@@ -44,6 +44,8 @@ pub enum EventKind {
     /// Sets the current activity *and* appends to the timeline, so a collector
     /// never has to emit the same moment twice.
     Did(Beat),
+    /// Recovered historical evidence; never changes current state or freshness.
+    HistoricalBeat(Beat),
     /// Cumulative token count for this worker.
     Tokens(u64),
     /// A request/response turn started or finished.

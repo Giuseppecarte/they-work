@@ -319,6 +319,7 @@ impl CodexSource {
                         lifecycle: CoverageLevel::Unavailable,
                         observed_at: now,
                         detail: "Local store unavailable; last observations retained.".into(),
+                        ..SourceCoverage::default()
                     }),
                 )
             })
@@ -490,6 +491,7 @@ impl Source for CodexSource {
                 relationships: if edges_supported { CoverageLevel::Supported } else { CoverageLevel::Partial },
                 messages: CoverageLevel::Partial, lifecycle: CoverageLevel::Supported,
                 observed_at: now, detail: "Local history tail; only typed collaboration and explicit final messages are known.".into(),
+                ..SourceCoverage::default()
             })));
             if let Some(parent) = &thread.delegated_from {
                 events.push(thread.event(

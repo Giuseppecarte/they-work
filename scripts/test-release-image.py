@@ -5,8 +5,11 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import shlex
+import shutil
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from unittest.mock import patch
 
@@ -20,6 +23,41 @@ OLD = 'sha256:' + 'b' * 64
 OTHER = 'sha256:' + 'c' * 64
 COMMIT = 'd' * 40
 REPOSITORY = 'localhost:5058/fixture'
+
+
+class DockerCacheContextTests(unittest.TestCase):
+    def test_dependency_cache_contains_explicit_cargo_targets(self):
+        root = Path(__file__).resolve().parents[1]
+        dockerfile = (root / 'docker/Dockerfile').read_text().replace('\\\n', ' ')
+        cache = dockerfile.split('COPY . .', 1)[0]
+        copies = [shlex.split(line)[1:] for line in cache.splitlines() if line.startswith('COPY ')]
+        stubs = next(line[4:] for line in cache.splitlines() if line.startswith('RUN for c in '))
+        self.assertIn(' && cargo build --release --locked', stubs)
+        # Execute the actual cache-layer file preparation without compiling or
+        # accessing a registry. Cargo validates explicit targets even for build.
+        stubs = stubs.rsplit(' && cargo build --release --locked', 1)[0]
+        with tempfile.TemporaryDirectory() as temporary:
+            context = Path(temporary)
+            for *patterns, destination in copies:
+                dest = context / destination
+                dest.mkdir(parents=True, exist_ok=True)
+                for pattern in patterns:
+                    for source in root.glob(pattern):
+                        shutil.copy2(source, dest / source.name)
+            subprocess.run(['sh', '-eu', '-c', stubs], cwd=context, check=True)
+            checked = 0
+            for manifest_path in context.rglob('Cargo.toml'):
+                manifest = tomllib.loads(manifest_path.read_text())
+                for kind, directory in [('test', 'tests'), ('bench', 'benches'),
+                                        ('example', 'examples'), ('bin', 'src/bin')]:
+                    for target in manifest.get(kind, []):
+                        default = f"{directory}/{target['name']}"
+                        paths = ([target['path']] if 'path' in target else
+                                 [default + '.rs', default + '/main.rs'])
+                        self.assertTrue(any((manifest_path.parent / path).is_file() for path in paths),
+                                        f"Cache layer omits {kind} {target['name']} in {manifest_path.relative_to(context)}")
+                        checked += 1
+            self.assertGreater(checked, 0, 'The explicit-target regression must inspect at least one target')
 
 
 def manifest(digest=CANDIDATE):

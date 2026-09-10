@@ -23,6 +23,8 @@ RUN for c in core collect control terminal-image render tui; do \
     done \
  && mkdir -p crates/theywork-tui/src \
  && echo "fn main() {}" > crates/theywork-tui/src/main.rs \
+ && mkdir -p crates/theywork-control/tests \
+ && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs \
  && cargo build --release --locked
 
 COPY . .

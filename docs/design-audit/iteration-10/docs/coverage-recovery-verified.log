@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 185, in <module>
+    main()
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 173, in main
+    result["cases"]["recovery"] = recovery(binary, folder / "recovery", output)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 124, in recovery
+    s.wait(lambda: len(resumes()) == 1, "explicit resume without sending a turn")
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-6/review_control_pty.py", line 134, in wait
+    raise AssertionError(f'Timed out: {label}\n{self.text()}')
+AssertionError: Timed out: explicit resume without sending a turn
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+vertical-project / Work brief                                                   
+                                                                                
+ Alex J.                                                                        
+ working                                                                        
+ codex · Source unavailable · 23s                                               
+ Source unavailable                                                             
+ [ Now ][ Activity ][ Team ][ Details ]                                         
+                                                                                
+ OBSERVED · 23s ago                                                             
+ Last recorded: No current activity reported                                    
+                                                                                
+ RECORDED UPDATES                                                               
+ No retained activity or result from this source yet.                           
+ [ Expand ]                                                                     
+ PgUp/Dn · line 1/6 · Esc                                                       
+                                                                                
+ INSTRUCTION TO vertical-project / working                                      
+ Observation only. This connection cannot accept instructions.                  
+                                                                                
+                                                                                
+                                                                                
+ [ Back ]                                                                       
+ Tab/Enter · F7 expand · Esc cancel                                             

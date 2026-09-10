@@ -1,0 +1,128 @@
+{
+  "measured_revision": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "integrated_candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "reused_on_basis": "All relevant core/collector and build-input source bytes match; unrelated changes do not alter this test.",
+  "matched_files": 24,
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "f9945b22eb91a6607503b2252798eac5678c5ce2abf1a1a6d5861138e3e7eecb",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "8b18423d4897e5f21d7764f3bf8d7e1890d265555a773343c60ee4727d858d03",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/Cargo.toml",
+      "sha256": "4f517282eace65bf6ed65dfba3cae92d633ac9d42197e14b34cc46293d58fd18",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/claude.rs",
+      "sha256": "cac79f4387e8dc3ca1e5bf3baff7b647c0c358637366892a8a28e9998be9c7b6",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/claude_correlation_tests.rs",
+      "sha256": "882de99d38fc43e7e2a3ed1ba56baf101882edcdb9954817f03973c4dcb878f1",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/claude_pending.rs",
+      "sha256": "23b9212b0f391f7d7b55967b5a3eb6241b6bdc21aa4a6eca863bb4622cdf99a0",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/codex.rs",
+      "sha256": "34328e51a5c9e5837eb0bf618e039b1589eaae36257a667ed20d54c6984fb2ca",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/codex_source.rs",
+      "sha256": "d061c087b573469ad27ef99079df5c0193aad5439f1a73ed26c551b2ec42d17a",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/lib.rs",
+      "sha256": "fcf527aff9f2c24181fc6fdf8bd8117164543a3d0d10bf3fd9a64490afaf6b48",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/src/util.rs",
+      "sha256": "62b4a4ae9d235c74a85fa8e31f8094c8d4623610fcb9452bfa89018cb7376ab0",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/tests/collaboration.rs",
+      "sha256": "debac39aa7f9b0e2967f8dadc3d7c5e2f6708a549a826e9ba9481d41440c4475",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-collect/tests/collectors.rs",
+      "sha256": "d1dbbe393eb7874017e4adddf6c4edd0b66e49df1c30168becad69b74e8eec75",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/Cargo.toml",
+      "sha256": "299e2f98b72845571a22e07b1ede91c2951efa1a0695c387a16aec0e860a0ce1",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/collaboration.rs",
+      "sha256": "f0dbbd9b2659400e3dc6261abc42ea067f3a4e4cf75121be6be84cd96ac88e48",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/demo.rs",
+      "sha256": "ec97d21b994686efcbedda610040467f67745ae7e7ac232b8f6e3466928ec0ea",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/event.rs",
+      "sha256": "f8f88320994ad12b5ff83de87d9403991c7ea7e19b5fedf11066a610d86a6349",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/history.rs",
+      "sha256": "af2398ffbc44960ebdbb3dd84ac691c9133ad7b1155d0b5485c55b2d4d41537f",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/lib.rs",
+      "sha256": "cf55da32f31be5ed6355260c27b46753546ed5d284c470acb6284695af34500d",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/model.rs",
+      "sha256": "148e9398852a4972f651f988d6eff067c647dc230b285b07762bf31fcb81fe74",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/source.rs",
+      "sha256": "1f8a104cc78888ae9e257cb8f5d7fecff80af5b637268744c696401e938c92ab",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/src/world.rs",
+      "sha256": "daf0961d827f3cf3347c73a1151592076db27bbabf13e096147adacd645b911b",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/tests/collaboration.rs",
+      "sha256": "18b7cffb0098a9a766b5d4ba7a24e9ddc6d170c08ab5412b0e18eee1d5b77a77",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "crates/theywork-core/tests/coverage_retention.rs",
+      "sha256": "2a508fd82d26e801d04cb5dae18198238efc5d653a10976106db1532fe1a891c",
+      "matches_frozen_measurement": true
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "sha256": "0484a3d0d7267e43e09b8b0e76a799bed558037d7ccd6046dd70fdd0cc1b6ef9",
+      "matches_frozen_measurement": true
+    }
+  ]
+}

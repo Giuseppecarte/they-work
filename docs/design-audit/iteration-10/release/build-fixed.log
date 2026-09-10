@@ -1,0 +1,584 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.91kB done
+#1 DONE 0.0s
+
+#2 [linux/amd64 internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#2 DONE 0.4s
+
+#3 [linux/arm64 internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#3 DONE 0.5s
+
+#4 [linux/arm64 internal] load metadata for docker.io/library/debian:bookworm-slim
+#4 DONE 0.5s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 173B done
+#5 DONE 0.0s
+
+#6 [linux/amd64 internal] load metadata for docker.io/library/debian:bookworm-slim
+#6 DONE 0.5s
+
+#7 [linux/amd64 runtime 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+#7 resolve docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 0.0s done
+#7 DONE 0.0s
+
+#8 [linux/arm64 build  1/13] FROM docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
+#8 resolve docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9 0.0s done
+#8 DONE 0.0s
+
+#9 [linux/arm64 runtime 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+#9 resolve docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 0.0s done
+#9 DONE 0.0s
+
+#10 [linux/amd64 build  1/13] FROM docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
+#10 resolve docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9 0.0s done
+#10 DONE 0.0s
+
+#11 [internal] load build context
+#11 transferring context: 366.47kB 0.1s done
+#11 DONE 0.1s
+
+#12 [linux/arm64 build  2/13] RUN apt-get update  && apt-get install -y --no-install-recommends gcc libc6-dev  && rm -rf /var/lib/apt/lists/*
+#12 CACHED
+
+#13 [linux/arm64 build  8/13] COPY crates/theywork-terminal-image/Cargo.toml crates/theywork-terminal-image/
+#13 CACHED
+
+#14 [linux/arm64 build  4/13] COPY Cargo.toml Cargo.lock* rust-toolchain.toml ./
+#14 CACHED
+
+#15 [linux/arm64 build  5/13] COPY crates/theywork-core/Cargo.toml    crates/theywork-core/
+#15 CACHED
+
+#16 [linux/arm64 build  6/13] COPY crates/theywork-collect/Cargo.toml crates/theywork-collect/
+#16 CACHED
+
+#17 [linux/arm64 build  7/13] COPY crates/theywork-control/Cargo.toml crates/theywork-control/
+#17 CACHED
+
+#18 [linux/arm64 build  3/13] WORKDIR /src
+#18 CACHED
+
+#19 [linux/arm64 build  9/13] COPY crates/theywork-render/Cargo.toml  crates/theywork-render/
+#19 CACHED
+
+#20 [linux/arm64 build 10/13] COPY crates/theywork-tui/Cargo.toml     crates/theywork-tui/
+#20 CACHED
+
+#21 [linux/amd64 build  3/13] WORKDIR /src
+#21 CACHED
+
+#22 [linux/amd64 build  4/13] COPY Cargo.toml Cargo.lock* rust-toolchain.toml ./
+#22 CACHED
+
+#23 [linux/amd64 build  2/13] RUN apt-get update  && apt-get install -y --no-install-recommends gcc libc6-dev  && rm -rf /var/lib/apt/lists/*
+#23 CACHED
+
+#24 [linux/amd64 build  6/13] COPY crates/theywork-collect/Cargo.toml crates/theywork-collect/
+#24 CACHED
+
+#25 [linux/amd64 build  8/13] COPY crates/theywork-terminal-image/Cargo.toml crates/theywork-terminal-image/
+#25 CACHED
+
+#26 [linux/amd64 build  9/13] COPY crates/theywork-render/Cargo.toml  crates/theywork-render/
+#26 CACHED
+
+#27 [linux/amd64 build  7/13] COPY crates/theywork-control/Cargo.toml crates/theywork-control/
+#27 CACHED
+
+#28 [linux/amd64 build  5/13] COPY crates/theywork-core/Cargo.toml    crates/theywork-core/
+#28 CACHED
+
+#29 [linux/amd64 build 10/13] COPY crates/theywork-tui/Cargo.toml     crates/theywork-tui/
+#29 CACHED
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 0.831 info: syncing channel updates for '1.90.0-x86_64-unknown-linux-gnu'
+#30 1.444 info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
+#30 1.486 info: downloading component 'clippy'
+#30 2.070 info: downloading component 'rustfmt'
+#30 2.288 info: installing component 'clippy'
+#30 2.712 info: installing component 'rustfmt'
+#30 3.611     Updating crates.io index
+#30 4.733  Downloading crates ...
+#30 4.832   Downloaded adler2 v2.0.1
+#30 4.866   Downloaded bitflags v2.13.1
+#30 4.872   Downloaded allocator-api2 v0.2.21
+#30 4.885   Downloaded lru v0.12.5
+#30 4.888   Downloaded scopeguard v1.2.0
+#30 4.891   Downloaded ident_case v1.0.1
+#30 4.895   Downloaded heck v0.5.0
+#30 4.898   Downloaded errno v0.3.14
+#30 4.902   Downloaded unicode-truncate v1.1.0
+#30 4.904   Downloaded version_check v0.9.5
+#30 4.906   Downloaded strsim v0.11.1
+#30 4.909   Downloaded strum v0.26.3
+#30 4.912   Downloaded itoa v1.0.18
+#30 4.914   Downloaded darling_macro v0.24.1
+#30 4.915   Downloaded equivalent v1.0.2
+#30 4.917   Downloaded cfg-if v1.0.4
+#30 4.928   Downloaded signal-hook-mio v0.2.5
+#30 4.930   Downloaded castaway v0.2.4
+#30 4.933   Downloaded instability v0.3.13
+#30 4.936   Downloaded signal-hook-registry v1.4.8
+#30 4.938   Downloaded static_assertions v1.1.0
+#30 4.941   Downloaded lock_api v0.4.14
+#30 4.944   Downloaded pkg-config v0.3.34
+#30 4.946   Downloaded fdeflate v0.3.7
+#30 4.948   Downloaded zmij v1.0.23
+#30 4.952   Downloaded simd-adler32 v0.3.10
+#30 4.955   Downloaded hashlink v0.9.1
+#30 4.958   Downloaded find-msvc-tools v0.1.11
+#30 4.960   Downloaded bitflags v1.3.2
+#30 4.964   Downloaded shlex v2.0.1
+#30 4.966   Downloaded ahash v0.8.12
+#30 4.969   Downloaded strum_macros v0.26.4
+#30 4.973   Downloaded either v1.18.0
+#30 4.975   Downloaded crc32fast v1.5.1
+#30 4.978   Downloaded smallvec v1.15.2
+#30 4.979   Downloaded unicode-ident v1.0.24
+#30 4.982   Downloaded proc-macro2 v1.0.107
+#30 4.987   Downloaded serde_derive v1.0.229
+#30 4.992   Downloaded parking_lot v0.12.5
+#30 4.995   Downloaded serde_core v1.0.229
+#30 4.999   Downloaded miniz_oxide v0.9.1
+#30 5.002   Downloaded serde v1.0.229
+#30 5.006   Downloaded darling_core v0.24.1
+#30 5.013   Downloaded unicode-segmentation v1.13.3
+#30 5.016   Downloaded mio v1.2.2
+#30 5.027   Downloaded miniz_oxide v0.8.9
+#30 5.030   Downloaded png v0.17.16
+#30 5.035   Downloaded hashbrown v0.14.5
+#30 5.042   Downloaded itertools v0.13.0
+#30 5.049   Downloaded rusqlite v0.32.1
+#30 5.056   Downloaded hashbrown v0.15.5
+#30 5.062   Downloaded serde_json v1.0.151
+#30 5.072   Downloaded zlib-rs v0.6.7
+#30 5.078   Downloaded vcpkg v0.2.15
+#30 5.146   Downloaded crossterm v0.28.1
+#30 5.153   Downloaded zerocopy v0.8.56
+#30 5.173   Downloaded syn v3.0.4
+#30 5.197   Downloaded unicode-width v0.2.0
+#30 5.206   Downloaded unicode-width v0.1.14
+#30 5.213   Downloaded syn v2.0.119
+#30 5.240   Downloaded rustix v0.38.44
+#30 5.311   Downloaded memchr v2.8.3
+#30 5.321   Downloaded cc v1.4.4
+#30 5.332   Downloaded compact_str v0.8.2
+#30 5.341   Downloaded darling v0.24.1
+#30 5.359   Downloaded flate2 v1.1.10
+#30 5.368   Downloaded log v0.4.34
+#30 5.374   Downloaded ryu v1.0.23
+#30 5.382   Downloaded anyhow v1.0.104
+#30 5.388   Downloaded ratatui v0.29.0
+#30 5.457   Downloaded signal-hook v0.3.18
+#30 5.475   Downloaded once_cell v1.21.4
+#30 5.487   Downloaded paste v1.0.15
+#30 5.492   Downloaded parking_lot_core v0.9.12
+#30 5.498   Downloaded rustversion v1.0.23
+#30 5.506   Downloaded indoc v2.0.7
+#30 5.517   Downloaded foldhash v0.1.5
+#30 5.522   Downloaded quote v1.0.47
+#30 5.528   Downloaded fallible-iterator v0.3.0
+#30 5.531   Downloaded cassowary v0.3.0
+#30 5.536   Downloaded fallible-streaming-iterator v0.1.9
+#30 5.542   Downloaded libc v0.2.189
+#30 5.626   Downloaded linux-raw-sys v0.4.15
+#30 5.744   Downloaded libsqlite3-sys v0.30.1
+#30 6.678    Compiling proc-macro2 v1.0.107
+#30 6.698    Compiling unicode-ident v1.0.24
+#30 6.711    Compiling quote v1.0.47
+#30 6.711    Compiling cfg-if v1.0.4
+#30 6.711    Compiling libc v0.2.189
+#30 6.721    Compiling smallvec v1.15.2
+#30 6.758    Compiling serde_core v1.0.229
+#30 6.759    Compiling rustversion v1.0.23
+#30 6.759    Compiling signal-hook v0.3.18
+#30 6.777    Compiling bitflags v2.13.1
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 0.444 info: syncing channel updates for '1.90.0-aarch64-unknown-linux-gnu'
+#31 0.878 info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
+#31 0.976 info: downloading component 'clippy'
+#31 1.543 info: downloading component 'rustfmt'
+#31 1.783 info: installing component 'clippy'
+#31 2.170 info: installing component 'rustfmt'
+#31 2.608     Updating crates.io index
+#31 3.340  Downloading crates ...
+#31 3.437   Downloaded castaway v0.2.4
+#31 3.445   Downloaded adler2 v2.0.1
+#31 3.464   Downloaded find-msvc-tools v0.1.11
+#31 3.478   Downloaded allocator-api2 v0.2.21
+#31 3.505   Downloaded cfg-if v1.0.4
+#31 3.513   Downloaded unicode-truncate v1.1.0
+#31 3.526   Downloaded version_check v0.9.5
+#31 3.527   Downloaded equivalent v1.0.2
+#31 3.536   Downloaded strum v0.26.3
+#31 3.538   Downloaded ident_case v1.0.1
+#31 3.539   Downloaded fallible-streaming-iterator v0.1.9
+#31 3.540   Downloaded errno v0.3.14
+#31 3.542   Downloaded darling_macro v0.24.1
+#31 3.545   Downloaded scopeguard v1.2.0
+#31 3.564   Downloaded signal-hook-mio v0.2.5
+#31 3.574   Downloaded itoa v1.0.18
+#31 3.593   Downloaded strsim v0.11.1
+#31 3.602   Downloaded heck v0.5.0
+#31 3.609   Downloaded static_assertions v1.1.0
+#31 3.610   Downloaded instability v0.3.13
+#31 3.614   Downloaded lru v0.12.5
+#31 3.615   Downloaded fallible-iterator v0.3.0
+#31 3.617   Downloaded cassowary v0.3.0
+#31 3.618   Downloaded bitflags v1.3.2
+#31 3.623   Downloaded signal-hook-registry v1.4.8
+#31 3.625   Downloaded shlex v2.0.1
+#31 3.628   Downloaded simd-adler32 v0.3.10
+#31 3.631   Downloaded zmij v1.0.23
+#31 3.636   Downloaded rustversion v1.0.23
+#31 3.637   Downloaded pkg-config v0.3.34
+#31 3.639   Downloaded either v1.18.0
+#31 3.641   Downloaded hashlink v0.9.1
+#31 3.647   Downloaded foldhash v0.1.5
+#31 3.649   Downloaded quote v1.0.47
+#31 3.655   Downloaded strum_macros v0.26.4
+#31 3.657   Downloaded paste v1.0.15
+#31 3.665   Downloaded indoc v2.0.7
+#31 3.667   Downloaded lock_api v0.4.14
+#31 3.671   Downloaded crc32fast v1.5.1
+#31 3.673   Downloaded ahash v0.8.12
+#31 3.682   Downloaded parking_lot v0.12.5
+#31 3.685   Downloaded smallvec v1.15.2
+#31 3.692   Downloaded parking_lot_core v0.9.12
+#31 3.694   Downloaded once_cell v1.21.4
+#31 3.700   Downloaded anyhow v1.0.104
+#31 3.705   Downloaded fdeflate v0.3.7
+#31 3.715   Downloaded unicode-ident v1.0.24
+#31 3.719   Downloaded bitflags v2.13.1
+#31 3.726   Downloaded signal-hook v0.3.18
+#31 3.729   Downloaded proc-macro2 v1.0.107
+#31 3.731   Downloaded ryu v1.0.23
+#31 3.735   Downloaded log v0.4.34
+#31 3.740   Downloaded serde_derive v1.0.229
+#31 3.744   Downloaded darling v0.24.1
+#31 3.754   Downloaded miniz_oxide v0.8.9
+#31 3.769   Downloaded miniz_oxide v0.9.1
+#31 3.777   Downloaded flate2 v1.1.10
+#31 3.784   Downloaded darling_core v0.24.1
+#31 3.790   Downloaded serde_core v1.0.229
+#31 3.794   Downloaded compact_str v0.8.2
+#31 3.799   Downloaded serde v1.0.229
+#31 3.803   Downloaded memchr v2.8.3
+#31 3.816   Downloaded mio v1.2.2
+#31 3.824   Downloaded unicode-segmentation v1.13.3
+#31 3.829   Downloaded png v0.17.16
+#31 3.836   Downloaded crossterm v0.28.1
+#31 3.844   Downloaded cc v1.4.4
+#31 3.848   Downloaded hashbrown v0.15.5
+#31 3.853   Downloaded hashbrown v0.14.5
+#31 3.860   Downloaded serde_json v1.0.151
+#31 3.871   Downloaded rusqlite v0.32.1
+#31 3.878   Downloaded itertools v0.13.0
+#31 3.911   Downloaded zlib-rs v0.6.7
+#31 3.933   Downloaded vcpkg v0.2.15
+#31 4.007   Downloaded unicode-width v0.2.0
+#31 4.015   Downloaded zerocopy v0.8.56
+#31 4.033   Downloaded unicode-width v0.1.14
+#31 4.039   Downloaded syn v2.0.119
+#31 4.052   Downloaded syn v3.0.4
+#31 4.066   Downloaded rustix v0.38.44
+#31 4.095   Downloaded ratatui v0.29.0
+#31 4.125   Downloaded libc v0.2.189
+#31 4.192   Downloaded linux-raw-sys v0.4.15
+#31 4.288   Downloaded libsqlite3-sys v0.30.1
+#31 4.419    Compiling proc-macro2 v1.0.107
+#31 4.419    Compiling quote v1.0.47
+#31 4.419    Compiling unicode-ident v1.0.24
+#31 4.419    Compiling cfg-if v1.0.4
+#31 4.419    Compiling libc v0.2.189
+#31 4.419    Compiling rustversion v1.0.23
+#31 4.420    Compiling serde_core v1.0.229
+#31 4.420    Compiling smallvec v1.15.2
+#31 4.424    Compiling signal-hook v0.3.18
+#31 4.424    Compiling version_check v0.9.5
+#31 5.920    Compiling zerocopy v0.8.56
+#31 6.134    Compiling parking_lot_core v0.9.12
+#31 6.226    Compiling bitflags v2.13.1
+#31 6.388    Compiling ahash v0.8.12
+#31 7.035    Compiling scopeguard v1.2.0
+#31 7.344    Compiling zmij v1.0.23
+#31 7.506    Compiling shlex v2.0.1
+#31 7.508    Compiling itoa v1.0.18
+#31 7.542    Compiling strsim v0.11.1
+#31 7.555    Compiling rustix v0.38.44
+#31 7.568    Compiling serde v1.0.229
+#31 7.803    Compiling ident_case v1.0.1
+#31 7.995    Compiling find-msvc-tools v0.1.11
+#31 8.051    Compiling log v0.4.34
+#31 8.098    Compiling simd-adler32 v0.3.10
+#31 8.314    Compiling cc v1.4.4
+#31 8.436    Compiling lock_api v0.4.14
+#31 8.459    Compiling serde_json v1.0.151
+#31 8.580    Compiling adler2 v2.0.1
+#31 8.824    Compiling crc32fast v1.5.1
+#31 8.957    Compiling vcpkg v0.2.15
+#31 9.047    Compiling pkg-config v0.3.34
+#31 9.996    Compiling syn v3.0.4
+#31 10.06    Compiling linux-raw-sys v0.4.15
+#31 10.11    Compiling once_cell v1.21.4
+#31 10.26    Compiling syn v2.0.119
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 10.57    Compiling parking_lot_core v0.9.12
+#30 13.77    Compiling zerocopy v0.8.56
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 10.77    Compiling errno v0.3.14
+#31 11.36    Compiling signal-hook-registry v1.4.8
+#31 11.39    Compiling mio v1.2.2
+#31 12.86    Compiling parking_lot v0.12.5
+#31 12.88    Compiling paste v1.0.15
+#31 13.68    Compiling libsqlite3-sys v0.30.1
+#31 14.91    Compiling signal-hook-mio v0.2.5
+#31 15.43    Compiling heck v0.5.0
+#31 15.47    Compiling either v1.18.0
+#31 15.66    Compiling foldhash v0.1.5
+#31 15.91    Compiling allocator-api2 v0.2.21
+#31 16.00    Compiling equivalent v1.0.2
+#31 16.02    Compiling instability v0.3.13
+#31 16.30    Compiling memchr v2.8.3
+#31 16.54    Compiling itertools v0.13.0
+#31 16.56    Compiling crossterm v0.28.1
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 17.70    Compiling version_check v0.9.5
+#30 18.81    Compiling zmij v1.0.23
+#30 19.21    Compiling rustix v0.38.44
+#30 20.44    Compiling ident_case v1.0.1
+#30 24.38    Compiling serde v1.0.229
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 18.03    Compiling castaway v0.2.4
+#31 18.75    Compiling miniz_oxide v0.9.1
+#31 19.40    Compiling hashbrown v0.15.5
+#31 19.88    Compiling unicode-width v0.1.14
+#31 21.64    Compiling unicode-segmentation v1.13.3
+#31 23.94    Compiling static_assertions v1.1.0
+#31 24.36    Compiling ryu v1.0.23
+#31 24.66    Compiling anyhow v1.0.104
+#31 24.87    Compiling indoc v2.0.7
+#31 24.96    Compiling compact_str v0.8.2
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 25.17    Compiling log v0.4.34
+#30 28.23    Compiling shlex v2.0.1
+#30 31.28    Compiling itoa v1.0.18
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 25.53    Compiling unicode-truncate v1.1.0
+#31 26.60    Compiling lru v0.12.5
+#31 27.19    Compiling flate2 v1.1.10
+#31 29.12    Compiling darling_core v0.24.1
+#31 29.93    Compiling miniz_oxide v0.8.9
+#31 30.69    Compiling fdeflate v0.3.7
+#31 31.95    Compiling cassowary v0.3.0
+#31 34.11    Compiling bitflags v1.3.2
+#31 34.41    Compiling strum_macros v0.26.4
+#31 34.49    Compiling fallible-iterator v0.3.0
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 35.34    Compiling ahash v0.8.12
+#30 35.38    Compiling simd-adler32 v0.3.10
+#30 42.71    Compiling strsim v0.11.1
+#30 43.60    Compiling find-msvc-tools v0.1.11
+#30 43.77    Compiling scopeguard v1.2.0
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 36.62    Compiling unicode-width v0.2.0
+#31 38.20    Compiling fallible-streaming-iterator v0.1.9
+#31 38.65    Compiling png v0.17.16
+#31 41.13    Compiling hashbrown v0.14.5
+#31 44.74    Compiling serde_derive v1.0.229
+#31 45.85    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#31 48.14    Compiling hashlink v0.9.1
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 48.24    Compiling lock_api v0.4.14
+#30 50.03    Compiling linux-raw-sys v0.4.15
+#30 52.86    Compiling errno v0.3.14
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 50.79    Compiling strum v0.26.3
+#31 50.79    Compiling darling_macro v0.24.1
+#31 53.14    Compiling darling v0.24.1
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 56.09    Compiling cc v1.4.4
+#30 56.67    Compiling mio v1.2.2
+#30 58.41    Compiling signal-hook-registry v1.4.8
+#30 60.56    Compiling pkg-config v0.3.34
+#30 61.22    Compiling syn v3.0.4
+#30 61.80    Compiling serde_json v1.0.151
+#30 63.41    Compiling vcpkg v0.2.15
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 56.75    Compiling ratatui v0.29.0
+#31 60.54    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#31 60.61    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#31 65.28    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#31 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 73.25    Compiling adler2 v2.0.1
+#30 74.08    Compiling once_cell v1.21.4
+#30 76.03    Compiling crc32fast v1.5.1
+#30 82.23    Compiling parking_lot v0.12.5
+#30 83.33    Compiling signal-hook-mio v0.2.5
+#30 83.63    Compiling syn v2.0.119
+#30 85.47    Compiling equivalent v1.0.2
+#30 86.58    Compiling libsqlite3-sys v0.30.1
+#30 87.03    Compiling heck v0.5.0
+#30 87.05    Compiling either v1.18.0
+#30 87.51    Compiling paste v1.0.15
+#30 94.08    Compiling allocator-api2 v0.2.21
+#30 94.39    Compiling instability v0.3.13
+#30 95.03    Compiling memchr v2.8.3
+#30 96.14    Compiling foldhash v0.1.5
+#30 98.75    Compiling itertools v0.13.0
+#30 101.1    Compiling crossterm v0.28.1
+#30 107.2    Compiling darling_core v0.24.1
+#30 109.4    Compiling hashbrown v0.15.5
+#30 120.1    Compiling miniz_oxide v0.9.1
+#30 123.1    Compiling strum_macros v0.26.4
+#30 125.5    Compiling serde_derive v1.0.229
+#30 125.6    Compiling hashbrown v0.14.5
+#30 130.7    Compiling castaway v0.2.4
+#30 131.7    Compiling anyhow v1.0.104
+#30 134.4    Compiling unicode-segmentation v1.13.3
+#30 134.4    Compiling indoc v2.0.7
+#30 137.8    Compiling static_assertions v1.1.0
+#30 137.9    Compiling ryu v1.0.23
+#30 138.0    Compiling unicode-width v0.1.14
+#30 141.4    Compiling compact_str v0.8.2
+#30 141.7    Compiling hashlink v0.9.1
+#30 142.5    Compiling strum v0.26.3
+#30 143.1    Compiling darling_macro v0.24.1
+#30 143.8    Compiling unicode-truncate v1.1.0
+#30 143.8    Compiling flate2 v1.1.10
+#30 144.1    Compiling lru v0.12.5
+#30 147.3    Compiling miniz_oxide v0.8.9
+#30 147.9    Compiling fdeflate v0.3.7
+#30 147.9    Compiling fallible-iterator v0.3.0
+#30 148.5    Compiling cassowary v0.3.0
+#30 151.2    Compiling darling v0.24.1
+#30 156.3    Compiling unicode-width v0.2.0
+#30 157.9    Compiling fallible-streaming-iterator v0.1.9
+#30 158.2    Compiling bitflags v1.3.2
+#30 160.1    Compiling png v0.17.16
+#30 165.4    Compiling ratatui v0.29.0
+#30 166.1    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#30 166.9    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#30 169.1    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#30 178.9    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#30 ...
+
+#31 [linux/arm64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#31 190.3    Compiling rusqlite v0.32.1
+#31 194.7    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#31 194.8    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#31 199.1     Finished `release` profile [optimized] target(s) in 3m 16s
+#31 DONE 199.9s
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 ...
+
+#32 [linux/arm64 build 12/13] COPY . .
+#32 DONE 3.5s
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 ...
+
+#33 [linux/arm64 build 13/13] RUN find crates -name '*.rs' -exec touch {} +  && cargo build --release --locked --bin they-work
+#33 1.348    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#33 1.353    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#33 2.829    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#33 2.829    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#33 2.829    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#33 7.308    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#33 ...
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 252.6    Compiling rusqlite v0.32.1
+#30 256.9    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#30 257.4    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#30 ...
+
+#33 [linux/arm64 build 13/13] RUN find crates -name '*.rs' -exec touch {} +  && cargo build --release --locked --bin they-work
+#33 63.35     Finished `release` profile [optimized] target(s) in 1m 02s
+#33 DONE 63.5s
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 ...
+
+#34 [linux/arm64 runtime 2/3] RUN useradd --create-home --uid 10001 watcher
+#34 CACHED
+
+#35 [linux/arm64 runtime 3/3] COPY --from=build /src/target/release/they-work /usr/local/bin/they-work
+#35 DONE 0.1s
+
+#30 [linux/amd64 build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && echo "fn main() {}" > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked
+#30 272.1     Finished `release` profile [optimized] target(s) in 4m 29s
+#30 DONE 272.3s
+
+#36 [linux/amd64 build 12/13] COPY . .
+#36 DONE 1.1s
+
+#37 [linux/amd64 build 13/13] RUN find crates -name '*.rs' -exec touch {} +  && cargo build --release --locked --bin they-work
+#37 1.401    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#37 1.402    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#37 16.86    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#37 16.86    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#37 16.86    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#37 25.02    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#37 108.5     Finished `release` profile [optimized] target(s) in 1m 47s
+#37 DONE 109.0s
+
+#38 [linux/amd64 runtime 2/3] RUN useradd --create-home --uid 10001 watcher
+#38 CACHED
+
+#39 [linux/amd64 runtime 3/3] COPY --from=build /src/target/release/they-work /usr/local/bin/they-work
+#39 DONE 0.0s
+
+#40 exporting to image
+#40 exporting layers
+#40 exporting layers 0.2s done
+#40 exporting manifest sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d done
+#40 exporting config sha256:61d278a7f966f76ae3240c1f9b388730bdaf05e0dcf817288ac53e94adef0730 done
+#40 exporting attestation manifest sha256:ed69d881be0748587ac987a1e79d84ee854810fbe45ee0980cdad47200568e44 done
+#40 exporting manifest sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c done
+#40 exporting config sha256:04940e4fe63c1e3c98ad6aef09185853fbcc61b9dda30d4ce9c03f8fc6e4aa33 done
+#40 exporting attestation manifest sha256:a71aadd477e559ee27d7a24ae32dc0d04ce6ec3ce21a29b1efcd0e832a06c925 0.0s done
+#40 exporting manifest list sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324 done
+#40 naming to localhost:5060/they-work:candidate-audit10-7cb26e4 done
+#40 unpacking to localhost:5060/they-work:candidate-audit10-7cb26e4 0.0s done
+#40 pushing layers
+#40 pushing layers 0.8s done
+#40 pushing manifest for localhost:5060/they-work:candidate-audit10-7cb26e4@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324
+#40 pushing manifest for localhost:5060/they-work:candidate-audit10-7cb26e4@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324 0.0s done
+#40 DONE 1.2s
+
+#41 resolving provenance for metadata file
+#41 DONE 0.0s

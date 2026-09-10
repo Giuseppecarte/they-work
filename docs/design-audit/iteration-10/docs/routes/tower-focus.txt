@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+  F01/03 alpha-shop                                     2 people · ! 1  [Visit]
+  ! Nico M. · codex                                 Approval needed      0s ago
+   Review checkout release
+   Partial local history
+  · Blair J. · codex                                          Ready      0s ago
+   Checkout test evidence
+   Partial local history
+
+
+ People 2/2 · page 1/1 · Enter visit
+▸ F02/03 beta-docs                                    2 people · ready  [Visit]
+ >· Charlie E. · codex                                        Ready      0s ago
+   Verify guide links
+   Partial local history
+  · Taylor Q. · codex                                         Ready      0s ago
+   Draft API guide
+   Partial local history
+
+
+
+ People 2/2 · page 1/1 · Enter visit
+[ Back ] [ Settings ] > Design ] Floor 2/3

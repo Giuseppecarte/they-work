@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+Software tower · 2 projects                                                     
+ PROJECT NOTEBOOK  /  All floors                                                
+f All floors · i Show IDs                                                       
+1 Attention 2 Deliveries 3 Since your visit 4 Team                              
+                                                                                
+ COVERAGE · All floors                                                          
+ Local history · 3 partial                                                      
+ 300 numbered events missing across distinct source lineages.                   
+ 2 local collaboration retention evictions in recorded project windows.         
+ These units differ; neither counts unique missing results. Earlier provider    
+ history is unknown.                                                            
+ Stream counts cover each whole source; absent events cannot be attributed to   
+ a particular floor.                                                            
+                                                                                
+ PROJECT /projects/accounts                                                     
+ LOCAL PROJECT WINDOW                                                           
+ 512 collaboration records retained; 2 local retention evictions.               
+ Oldest retained source timestamp: 3                                            
+ Last eviction observation: 514 (record source timestamp: 2).                   
+ The shared limit is 512 records, retired from the largest project partition    
+ first. Evictions are retention actions, not unique missing deliveries.         
+History · limits · h coverage · 300 missing stream events · 2 local evictions   
+[ Back ] ↑↓ / PgUp/PgDn read · h back                                           

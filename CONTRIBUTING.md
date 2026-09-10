@@ -152,7 +152,8 @@ follow the [recovery runbook](docs/release.md), not an automatic rollback. The
 workflow serializes promotion but does not prevent external publishers or impose
 semantic version order. Branch and pull-request CI does not publish packages.
 
-Run the deterministic release checks without registry writes:
+Run the deterministic release checks without registry writes using Python 3.11
+or newer (the prepared audit environment uses Python 3.12):
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-image.py

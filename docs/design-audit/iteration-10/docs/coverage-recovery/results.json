@@ -1,0 +1,66 @@
+{
+  "binary_sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "cells": [
+    80,
+    24
+  ],
+  "keyboard_only": true,
+  "authenticated_provider": false,
+  "participant_sessions": 0,
+  "physical_terminal": "not tested",
+  "cases": {
+    "coverage": {
+      "attention": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "deliveries": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "changes": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "team": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "terminal_exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    },
+    "recovery": {
+      "draft_visible_during_fault": false,
+      "same_draft_visible_after_checked_reconnect": true,
+      "exact_recipient_after_reconnect": "managed-1",
+      "explicit_reconnects": 1,
+      "recovery_error_discoverable": true,
+      "rejected_provider_calls": 0,
+      "automatic_resends": 0,
+      "initial_turn_starts": 1,
+      "terminal_exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "reopened_exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    }
+  },
+  "status": "pass"
+}

@@ -1,0 +1,14 @@
+{
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "path": "target/native-macos/release/they-work",
+  "sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "demo_command": [
+    "target/native-macos/release/they-work",
+    "--demo",
+    "--no-save",
+    "--once"
+  ],
+  "demo_exit": 0,
+  "demo_output_sha256": "4cae296df6ffe24ec75ed392f7261c35c890417648dfa79a15dfe0fffe284cda",
+  "demo_stderr": ""
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "action": "Review(WorkerId(\"account-owner\"))",
+    "height": 1,
+    "width": 10,
+    "x": 0,
+    "y": 12
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 11,
+    "y": 12
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "More",
+    "height": 1,
+    "width": 8,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 13
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 12,
+    "x": 9,
+    "y": 13
+  },
+  {
+    "action": "Decorate(OfficeId(\"/projects/accounts\"))",
+    "height": 1,
+    "width": 10,
+    "x": 22,
+    "y": 13
+  }
+]

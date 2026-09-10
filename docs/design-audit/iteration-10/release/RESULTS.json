@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "item": "RELEASE-01",
+  "status": "blocked/not tested",
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "source_state": "clean",
+  "reproduced_defect": {
+    "baseline": "4097e4f",
+    "problem": "Docker dependency-cache layer omitted explicitly declared storage_process test target",
+    "failure_log": "build.log",
+    "regression_before": "regression-before.log",
+    "fix_commit": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+    "regression_tests": 1,
+    "final_helper_tests": 21,
+    "helper_python": "3.12.14"
+  },
+  "image": {
+    "status": "verified",
+    "reference": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+    "index_digest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+    "attestation_descriptors": [
+      {
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "digest": "sha256:ed69d881be0748587ac987a1e79d84ee854810fbe45ee0980cdad47200568e44",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "size": 567
+      },
+      {
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "digest": "sha256:a71aadd477e559ee27d7a24ae32dc0d04ce6ec3ce21a29b1efcd0e832a06c925",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "size": 567
+      }
+    ],
+    "platforms": {
+      "linux/amd64": {
+        "status": "verified",
+        "execution": "emulated",
+        "manifest_digest": "sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d",
+        "pty_cases": 3,
+        "quit_sent": true,
+        "exit_codes": [
+          0,
+          0,
+          0
+        ],
+        "forced_cleanup": false,
+        "binary_sha256": "e2eea7a65ff3ee9076e8e1e70d93956220377ba467332ffa1bc730b2afc6da0a"
+      },
+      "linux/arm64": {
+        "status": "verified",
+        "execution": "daemon-native",
+        "manifest_digest": "sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c",
+        "pty_cases": 3,
+        "quit_sent": true,
+        "exit_codes": [
+          0,
+          0,
+          0
+        ],
+        "forced_cleanup": false,
+        "binary_sha256": "8ae8fe9b5f8c4e739586e5e5cf45fb812896d2f19b38bf4e231ba218793675d2"
+      }
+    },
+    "build_metadata": "build-fixed-metadata.json",
+    "verification": "verification.json"
+  },
+  "recovery": {
+    "status": "verified with checksum fixtures only",
+    "scenarios_executed": 9,
+    "scenarios_passed": 9,
+    "results": "rehearsal/results.json",
+    "native_inputs": "six synthetic checksum fixtures; not native executables or CI archives",
+    "native_publication_failure": "injected workflow outcome; no GitHub API call",
+    "exact_index_and_attestations_preserved": true
+  },
+  "not_tested": [
+    "Promotion rehearsal using all six actual native archive/checksum pairs from the candidate CI run",
+    "Actual native archive packaging and execution on all six targets",
+    "Public registry publication and GitHub Release recovery",
+    "Physical terminal transport and authenticated providers"
+  ],
+  "closure_blocker": "Actual native CI artifacts for the frozen candidate are unavailable. Auxiliary fixture promotion cannot close this acceptance requirement.",
+  "cleanup": {
+    "owned_loopback_registry_removed": true,
+    "log": "cleanup.log",
+    "public_tags_changed": false,
+    "other_docker_resources_modified": false
+  },
+  "files_sha256": {
+    "RELEASE.md": "7d9722e23370b8f35cab6e5d287f44701e9eb9f89c221abef75aaab0c5562c04",
+    "binary-amd64.sha256": "2423aa3a9266322d7b0b87689fec88aedc325148bb3cbdd34f58397a9d8c553a",
+    "binary-arm64.sha256": "f8a4bbbbbbde387715bf1f73969eb333388f84656013cc77f48d34a625025d92",
+    "build-fixed-metadata.json": "bc4a856e5b71e48341622a51f4a56ece808f71fd16c92e614cf50fd01ddb38c2",
+    "build-fixed.log": "f244bb9e9eb812f14916c039e867c9dc37588b594a4734d840e7238562179c73",
+    "build.log": "07ffeb232015c4ec2159aaa1046b6ec41ede46c03e674fe8172f03b0fd3799c6",
+    "cleanup.log": "59ef604b74f279ea4fa0b8f47f18f1e6da05308be1b471cea596564bbd50d149",
+    "commands.json": "7e1d3113c6b2b91fad345dbd0f4539b0bdbf580fb9a2d26d3c2ee5349ad340f5",
+    "docker-version.json": "37eaf40f28ec4ce3d14415cd1449cb282bfc1d6063716c559bcba5d7bf4f2e81",
+    "regression-before.log": "38772b8724c1994bd75c89f82a2bdf52abd4b810ba04cb6f182c2d9211bbfc69",
+    "rehearsal/between-tags/intent.json": "13cf6eb03392e66185b4c16c06cf661ab3d306998be966bb08eff6f4926f9fb3",
+    "rehearsal/between-tags/promotion.json": "2836f09c9ac2b0e2538e05c39d4987f207485213bfea191da7b6e71b21deef34",
+    "rehearsal/between-tags/retry.json": "4f2535eca7909438278fca8552abab7ecc967ab51d8ba23b92f879b71ab3c897",
+    "rehearsal/between-tags/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/later-latest/intent.json": "cff77a823e17d75e00059af6c7f9f36876091d3d6829cfe4c39f31b7068004ce",
+    "rehearsal/later-latest/promotion.json": "3338fb2218512d5dbc7d0df0d2a702a6159b901e9a42339412f2e6a3d8cf7732",
+    "rehearsal/later-latest/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/lost-latest-ack/intent.json": "26fcfe0c381d1c2e5208b6469f4b64b3e263e6ea28eb895768dd89fc14022608",
+    "rehearsal/lost-latest-ack/promotion.json": "de919e7f7562ef2e99ac256f15b9c64ae3707d13ab5560d1dfc36a0082a68834",
+    "rehearsal/lost-latest-ack/retry.json": "25d7c8b7fe001470d116dc92e70bf9fd0559f8583d8e82f250ef12acce962ca5",
+    "rehearsal/lost-latest-ack/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/lost-version-ack/intent.json": "3635d7529d872c01c4623093d07d60c6fbc84d70f5082b6f8450c9790010af64",
+    "rehearsal/lost-version-ack/promotion.json": "c358fda510093d9f222aa9ef184413d45655a93a0619c5778d2c84995267f200",
+    "rehearsal/lost-version-ack/retry.json": "25d7c8b7fe001470d116dc92e70bf9fd0559f8583d8e82f250ef12acce962ca5",
+    "rehearsal/lost-version-ack/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/native-publication-failed/intent.json": "389ae9aa6b5d943dea7af80924ede5e3925f589f7a5ab6dd23dfe8eeae1b3655",
+    "rehearsal/native-publication-failed/promotion.json": "85593bb9e7a7c375c56694a5863c11f230a7e447f6450c33e2a227933b8a8aa6",
+    "rehearsal/native-publication-failed/retry.json": "25d7c8b7fe001470d116dc92e70bf9fd0559f8583d8e82f250ef12acce962ca5",
+    "rehearsal/native-publication-failed/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/results.json": "adceba7cb5dacf9e6c11968108c14bfa29ded27fa06b8c2b4e4f8a99e013c4e8",
+    "rehearsal/success/intent.json": "a887981328338949894ef1c3812a4cc2d74f3331cca1a9de189cc76cbe1bf059",
+    "rehearsal/success/promotion.json": "e8287ac6e95ef06c7fba6f639b12c20cf48793ebb27bcfe061b8c7465d51065d",
+    "rehearsal/success/retry.json": "25d7c8b7fe001470d116dc92e70bf9fd0559f8583d8e82f250ef12acce962ca5",
+    "rehearsal/success/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal/version-conflict/intent.json": "2c90612090492a1f58c4a9ccb5fbb46756693f934e20b1a26b012d8d05b3d49a",
+    "rehearsal/version-conflict/promotion.json": "b177a6e7828c179fcff0d91d5810e7b629e7bcd91f815bcd61b3e93084ac43bc",
+    "rehearsal/version-conflict/verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "rehearsal.log": "269563845b74e122232a70a7b3679b1c1f63136057cd995954ee32029da0830f",
+    "unit-tests-fixed.log": "5f07302016ce7f336cd2238765fa17dff510a3cec1a63c55d0ee2aef51410da3",
+    "unit-tests-python312.log": "8947a9b2ab1ed0c60e5bc10dbd3267d61e97c04bfd91426078202a5d8d6cd919",
+    "unit-tests.log": "8696c27f6fc1879b0831f161ea808285d484202f7e3a07c1fd08007f38285cc7",
+    "verification.json": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4",
+    "verification.log": "22873c94b79c1028e6dc5f985359f1bad469ff3c86440ce92ba86fd2c06696da"
+  }
+}

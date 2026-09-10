@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-8/control/verify_admission.py", line 106, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-8/control/verify_admission.py", line 97, in main
+    checks = run_case(name, binary, folder, output)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-8/control/verify_admission.py", line 37, in run_case
+    host.start()
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-7/reliability/run_reliability.py", line 108, in start
+    wait(ready, "host endpoint")
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-7/reliability/run_reliability.py", line 51, in wait
+    value = check()
+            ^^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-7/reliability/run_reliability.py", line 103, in ready
+    raise RuntimeError("Host startup failed: " + (self.folder / "host.log").read_text())
+RuntimeError: Host startup failed: Error: Operation not permitted (os error 1)
+

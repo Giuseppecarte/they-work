@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "notes": [
+    "Docker was available only through authorized local-daemon sandbox escalation.",
+    "All registry writes target owned loopback registry only.",
+    "Logs and metadata output paths are under this evidence directory."
+  ],
+  "steps": [
+    {
+      "name": "helper-baseline",
+      "source": "4097e4f",
+      "command": [
+        "python3",
+        "-B",
+        "scripts/test-release-image.py"
+      ],
+      "log": "unit-tests.log",
+      "executed_tests": 20
+    },
+    {
+      "name": "baseline-build",
+      "source": "4097e4f",
+      "working_directory": "target/audit/iteration-10/clean-macos (at baseline)",
+      "command": [
+        "docker",
+        "buildx",
+        "build",
+        "--platform",
+        "linux/amd64,linux/arm64",
+        "--file",
+        "docker/Dockerfile",
+        "--tag",
+        "localhost:5060/they-work:candidate-audit10-4097e4f",
+        "--provenance=mode=max",
+        "--metadata-file",
+        "build-metadata.json",
+        "--push",
+        "."
+      ],
+      "log": "build.log",
+      "result": "failed: missing explicit Cargo test target"
+    },
+    {
+      "name": "helper-fixed",
+      "source": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+      "working_directory": "target/audit/iteration-10/clean-macos",
+      "command": [
+        "target/audit/venv/bin/python",
+        "-B",
+        "scripts/test-release-image.py"
+      ],
+      "log": "unit-tests-python312.log",
+      "python": "3.12.14",
+      "executed_tests": 21
+    },
+    {
+      "name": "fixed-build",
+      "source": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+      "working_directory": "target/audit/iteration-10/clean-macos",
+      "command": [
+        "docker",
+        "buildx",
+        "build",
+        "--platform",
+        "linux/amd64,linux/arm64",
+        "--file",
+        "docker/Dockerfile",
+        "--tag",
+        "localhost:5060/they-work:candidate-audit10-7cb26e4",
+        "--provenance=mode=max",
+        "--metadata-file",
+        "build-fixed-metadata.json",
+        "--push",
+        "."
+      ],
+      "log": "build-fixed.log"
+    },
+    {
+      "name": "verify-image",
+      "source": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+      "command": [
+        "target/audit/venv/bin/python",
+        "-B",
+        "scripts/test-published-image.py",
+        "--image",
+        "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "--platform",
+        "linux/amd64",
+        "--platform",
+        "linux/arm64",
+        "--commit",
+        "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+        "--source-state",
+        "clean",
+        "--report",
+        "verification.json"
+      ],
+      "log": "verification.log",
+      "pty_cases": 6
+    },
+    {
+      "name": "rehearse-local-recovery",
+      "source": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+      "command": [
+        "target/audit/venv/bin/python",
+        "-B",
+        "scripts/rehearse-release-image.py",
+        "--verification",
+        "verification.json",
+        "--output",
+        "rehearsal",
+        "--scratch",
+        "target/audit/iteration-10/release-rehearsal"
+      ],
+      "log": "rehearsal.log",
+      "cases": 9,
+      "native_input_scope": "checksum fixtures only"
+    }
+  ]
+}

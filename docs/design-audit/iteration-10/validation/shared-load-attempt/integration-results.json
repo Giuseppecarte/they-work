@@ -1,0 +1,50 @@
+{
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "started_at": "2026-09-10T16:21:01.228081+00:00",
+  "platform_evidence": "native macOS; no authenticated providers or terminal paint",
+  "cases": [
+    {
+      "name": "format",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 0.9,
+      "expected_passed": null,
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "log": "format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    },
+    {
+      "name": "workspace",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "--workspace",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "fail",
+      "exit_code": 101,
+      "elapsed_seconds": 181.028,
+      "expected_passed": "nonzero",
+      "passed": 386,
+      "failed": 1,
+      "ignored": 4,
+      "log": "workspace.log",
+      "sha256": "0a1c6d16ca52d2a24c606e07658bfb3dd9cfb76b340abe6537aa4e39defb0024",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    }
+  ]
+}

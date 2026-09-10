@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+Software tower · 2 projects                                                     
+ PROJECT NOTEBOOK  /  All floors                                                
+f All floors · i Show IDs                                                       
+1 Attention 2 Deliveries 3 Since your visit 4 Team                              
+                                                                                
+ > Rene P. · accounts / Review … Request recorded                        0s ago 
+   Rene P. · accounts / Review … Result delivered                        0s ago 
+   Rene P. · accounts / Review … editing                                 0s ago 
+   Riley C. · accounts / Check … editing                                 0s ago 
+   Emery V. · jobs / Update the… editing                                 0s ago 
+   Rene P. · accounts / Review … Message                                 0s ago 
+   Rene P. · accounts / Review … Message                                 0s ago 
+   Rene P. · accounts / Review … Message                                 0s ago 
+                                                               [ Inspect task ] 
+ Request recorded · 0s ago  ·  record 1/515                                     
+                                                                                
+ Rene P. · Review the account permission changes recorded a question or         
+ approval request.                                                              
+ Review the simulated command for the account project. Opening this request     
+ does not approve it.                                                           
+                                                                                
+History · limits · h coverage · 300 missing stream events · 2 local evictions · 
+[ Back ] ↑↓ · Enter opens                                                       

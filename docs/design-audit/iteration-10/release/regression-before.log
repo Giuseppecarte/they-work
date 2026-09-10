@@ -1,0 +1,18 @@
+test_dependency_cache_contains_explicit_cargo_targets (release_tests.DockerCacheContextTests.test_dependency_cache_contains_explicit_cargo_targets) ... FAIL
+
+======================================================================
+FAIL: test_dependency_cache_contains_explicit_cargo_targets (release_tests.DockerCacheContextTests.test_dependency_cache_contains_explicit_cargo_targets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/scripts/test-release-image.py", line 57, in test_dependency_cache_contains_explicit_cargo_targets
+    self.assertTrue(any((manifest_path.parent / path).is_file() for path in paths),
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    f"Cache layer omits {kind} {target['name']} in {manifest_path.relative_to(context)}")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : Cache layer omits test storage_process in crates/theywork-control/Cargo.toml
+
+----------------------------------------------------------------------
+Ran 1 test in 0.029s
+
+FAILED (failures=1)
+Expected baseline defect reproduced; fixed source has separate passing suite.

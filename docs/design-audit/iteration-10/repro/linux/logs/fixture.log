@@ -1,0 +1,22 @@
+$ ["/usr/local/cargo/bin/cargo", "test", "--locked", "--offline", "-p", "theywork-collect", "--test", "collaboration", "codex_updates_same_timestamp_items_and_retains_removed_deliveries_without_writing_stores", "--", "--exact", "--nocapture"]
+
+running 1 test
+test codex_updates_same_timestamp_items_and_retains_removed_deliveries_without_writing_stores ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.13s
+
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling zerocopy v0.8.56
+   Compiling ahash v0.8.12
+   Compiling libsqlite3-sys v0.30.1
+   Compiling syn v3.0.4
+   Compiling serde_derive v1.0.229
+   Compiling hashbrown v0.14.5
+   Compiling hashlink v0.9.1
+   Compiling serde v1.0.229
+   Compiling theywork-core v0.1.0 (/repo/crates/theywork-core)
+   Compiling rusqlite v0.32.1
+   Compiling theywork-collect v0.1.0 (/repo/crates/theywork-collect)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 49.57s
+     Running tests/collaboration.rs (target/audit/cargo-target/debug/deps/collaboration-692301c537e04e99)

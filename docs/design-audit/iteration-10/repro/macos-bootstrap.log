@@ -1,0 +1,11 @@
+Audit error: Command failed (1): /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/clean-macos/target/audit/venv/bin/python
+WARNING: The directory '/Users/gc/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x10ac16cf0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known')': /simple/pillow/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x10acf3d70>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known')': /simple/pillow/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x10ad6e8a0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known')': /simple/pillow/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x10ad6eab0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known')': /simple/pillow/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x10ad6ecc0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known')': /simple/pillow/
+ERROR: Could not find a version that satisfies the requirement Pillow==12.3.0 (from versions: none)
+ERROR: No matching distribution found for Pillow==12.3.0
+
+Full log: /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/clean-macos/target/audit/bootstrap-pillow.log

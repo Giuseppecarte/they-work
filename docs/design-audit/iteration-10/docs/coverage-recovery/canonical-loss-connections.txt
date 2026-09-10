@@ -1,0 +1,23 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+vertical-project / Office
+
+ CONNECTIONS
+
+ Choose which local conversations appear in your office with Local sources.
+
+ Codex: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/docs/fixtu
+ res/coverage-recovery-fre4irzb/recovery/codex · Could not save instruction
+ intent: Control storage needs recovery: the established state is missing or
+ unreadable. Restore the canonical state file and restart the host; nothing
+ was resent. Rejection is recorded only in this running host: Control storage
+ needs recovery: the established state is missing or unreadable. Restore the
+ canonical state file and restart the host; nothing was resent. Control
+ storage needs recovery: the established state is missing or unreadable.
+ Restore the canonical state file and restart the host; nothing was resent
+ Claude: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/docs/fixtu
+ [ Local sources ] [ Codex login ] [ Claude login ] [ Back ]
+
+
+ Tab focus · Enter choose · Esc back

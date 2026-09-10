@@ -1,0 +1,8 @@
+
+running 1 test
+test claude::correlation_tests::correlation_resource_replay has been running for over 60 seconds
+audit result: /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/frozen/target/audit/paired-1/result.json
+test claude::correlation_tests::correlation_resource_replay ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 200.85s
+

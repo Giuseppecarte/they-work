@@ -1,0 +1,39 @@
+{
+  "status": "blocked/not tested",
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "native_runtime_results": [],
+  "architectures_required": [
+    "x86_64-pc-windows-msvc",
+    "aarch64-pc-windows-msvc"
+  ],
+  "per_architecture": {
+    "replacement_unit_results": 6,
+    "replacement_unit_helper_entries": 1,
+    "shared_recovery_tests": 4,
+    "live_fault_tests": 1,
+    "native_process_cases": 4,
+    "zero_match_allowed": false
+  },
+  "required_artifact_metadata": [
+    "candidate commit",
+    "OS",
+    "runner",
+    "compiled architecture",
+    "filesystem",
+    "raw logs",
+    "structured process report"
+  ],
+  "local_evidence": "See integrated native macOS workspace and REL-01 recovery results; they do not satisfy this gate.",
+  "remote_branch_probe": {
+    "command": "git ls-remote origin refs/heads/audit/design-and-usability",
+    "exit_code": 0,
+    "matching_refs": 0,
+    "effect": "read only; no push performed"
+  },
+  "blocking_action": "Exact-candidate native CI, after explicit authorization to upload branch to https://github.com/Giuseppecarte/they-work.git or supplied owner-run equivalent artifacts.",
+  "excluded_claims": [
+    "cross compilation is not Windows execution",
+    "a child helper is not an independent fault scenario",
+    "process interruption is not physical power loss"
+  ]
+}

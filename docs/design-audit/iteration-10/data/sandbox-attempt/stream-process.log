@@ -1,0 +1,37 @@
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running tests/control.rs (target/native-macos/debug/deps/control-1e7c51d4a06c4eb1)
+
+running 2 tests
+test data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage ... FAILED
+test data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage ... FAILED
+
+failures:
+
+---- data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage stdout ----
+
+thread 'data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage stdout ----
+
+thread 'data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+
+failures:
+    data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage
+    data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p theywork-control --test control`

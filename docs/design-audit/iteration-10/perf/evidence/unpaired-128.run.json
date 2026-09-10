@@ -1,0 +1,27 @@
+{
+  "revision": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "mode": "unpaired",
+  "overlap_per_worker": 128,
+  "started_at": "2026-09-10T16:28:46.794446+00:00",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/envelope-test",
+    "claude::correlation_tests::correlation_resource_replay",
+    "--exact",
+    "--ignored",
+    "--nocapture"
+  ],
+  "binary_sha256": "cf0703faeb5fd2095056c2873ac643c80d9afaa2ee7e6cee56a3d9bb58e2b1a3",
+  "cwd": "/Users/gc/Documents/Programming/they-work",
+  "environment": {
+    "THEYWORK_PERF_MODE": "unpaired",
+    "THEYWORK_PERF_OUTPUT": "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/frozen/target/audit/unpaired-128",
+    "THEYWORK_PERF_OVERLAP": "128",
+    "TMPDIR": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-10T16:29:16.650243+00:00",
+  "raw_result": "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/frozen/target/audit/unpaired-128/result.json",
+  "executed_tests": 1
+}

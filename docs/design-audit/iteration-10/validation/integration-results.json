@@ -1,0 +1,98 @@
+{
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "started_at": "2026-09-10T16:29:06.342928+00:00",
+  "platform_evidence": "native macOS; no authenticated providers or terminal paint",
+  "cases": [
+    {
+      "name": "format",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 0.861,
+      "expected_passed": null,
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "log": "format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    },
+    {
+      "name": "workspace",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "--workspace",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 110.434,
+      "expected_passed": "nonzero",
+      "passed": 466,
+      "failed": 0,
+      "ignored": 4,
+      "log": "workspace.log",
+      "sha256": "a0e5b693880c6a78fb7f1cab096bf47f63497935e1617199ec54d2021ae89ba7",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count.",
+      "native_process_cases": 3,
+      "native_process_report_sha256": "6ae62703c50a245c8f40aab8022ea03a29565cc7255c608878c6ef1bcc4c0a3c"
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "clippy",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 0.327,
+      "expected_passed": null,
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "log": "clippy.log",
+      "sha256": "f2066ca264b9a8598ecd436c70919e1efe1acea4098ad2a13b5d82d67bc049ec",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    },
+    {
+      "name": "release",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "build",
+        "--locked",
+        "--release",
+        "--bin",
+        "they-work"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 0.158,
+      "expected_passed": null,
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "log": "release.log",
+      "sha256": "85c8dbac64ed6a362d668bf3988686e26e947620bb15cfdbe2e999a0ff8261b2",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    }
+  ]
+}

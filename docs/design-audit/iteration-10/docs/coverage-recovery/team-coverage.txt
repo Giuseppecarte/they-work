@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+ PROJECT NOTEBOOK  /  All floors
+f All floors · i Show IDs
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+ COVERAGE · All floors
+ Local history · 6 partial
+ 0 numbered events missing across distinct source lineages.
+ 0 local collaboration retention evictions in recorded project windows.
+ These units differ; neither counts unique missing results. Earlier provider
+ history is unknown.
+ Stream counts cover each whole source; absent events cannot be attributed to
+ a particular floor.
+
+ PROJECT
+ /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/docs/fixtu
+ res/coverage-recovery-fre4irzb/coverage/alpha-shop
+ LOCAL PROJECT WINDOW
+ 2 collaboration records retained; 0 local retention evictions.
+ Oldest retained source timestamp: 1789057505611
+ Last eviction observation: none recorded (record source timestamp:
+h coverage · Local history · 6 partial · ← collapse / → expand
+[ Back ] ↑↓ / PgUp/PgDn read · h back

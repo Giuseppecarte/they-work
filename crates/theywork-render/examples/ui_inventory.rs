@@ -60,7 +60,7 @@ const SURFACES: &[&str] = &[
     "more",
 ];
 
-fn draw(ui: &mut Ui, terminal: &mut Terminal<TestBackend>, world: &World) {
+pub(crate) fn draw(ui: &mut Ui, terminal: &mut Terminal<TestBackend>, world: &World) {
     terminal.draw(|frame| ui.draw(frame, world)).unwrap();
     ui.frame_presented();
 }
@@ -87,7 +87,7 @@ fn click(ui: &mut Ui, terminal: &mut Terminal<TestBackend>, world: &World, actio
     draw(ui, terminal, world);
     true
 }
-fn status() -> ControlStatus {
+pub(crate) fn status() -> ControlStatus {
     let worker = WorkerId("floor-00-person-0".into());
     ControlStatus {
         can_start_codex:true, can_start_claude:true,
@@ -98,7 +98,7 @@ fn status() -> ControlStatus {
     }
 }
 
-fn fixture() -> World {
+pub(crate) fn fixture() -> World {
     let mut world = tower_fixture::fixture(20);
     let workers = world
         .offices()
@@ -163,7 +163,12 @@ fn fixture() -> World {
     world
 }
 
-fn route(surface: &str, ui: &mut Ui, terminal: &mut Terminal<TestBackend>, world: &World) -> bool {
+pub(crate) fn route(
+    surface: &str,
+    ui: &mut Ui,
+    terminal: &mut Terminal<TestBackend>,
+    world: &World,
+) -> bool {
     let key =
         |ui: &mut Ui, terminal: &mut Terminal<TestBackend>, code| key(ui, terminal, world, code);
     match surface {
@@ -304,7 +309,7 @@ fn route(surface: &str, ui: &mut Ui, terminal: &mut Terminal<TestBackend>, world
     true
 }
 
-fn record(
+pub(crate) fn record(
     out: &Path,
     name: &str,
     surface: &str,

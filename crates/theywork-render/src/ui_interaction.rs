@@ -3,7 +3,7 @@ use crate::interaction::{Action, HitRegion};
 use crossterm::event::{MouseButton, MouseEvent, MouseEventKind};
 use ratatui::{
     layout::Rect,
-    style::{Modifier, Style},
+    style::Style,
     widgets::{Paragraph, Widget},
 };
 
@@ -464,17 +464,11 @@ impl Ui {
                 area.width.saturating_sub(2),
                 1,
             );
-            let style = Style::default()
-                .fg(if i == self.more_cursor {
-                    views::ACCENT
-                } else {
-                    views::INK
-                })
-                .bg(if i == self.more_cursor {
-                    views::PANEL_HIGHLIGHT
-                } else {
-                    views::PANEL
-                });
+            let style = if i == self.more_cursor {
+                views::selection_style()
+            } else {
+                Style::default().fg(views::INK).bg(views::PANEL)
+            };
             let text = format!(
                 "{} {:<14} {}",
                 if i == self.more_cursor { ">" } else { " " },
@@ -581,13 +575,9 @@ impl Ui {
                 return;
             }
             let rect = Rect::new(hit.area.x, hit.area.y, 1, 1);
-            views::paint_opaque(frame, rect, Style::default().bg(views::PANEL_HIGHLIGHT));
+            views::paint_opaque(frame, rect, views::selection_style());
             Paragraph::new(">")
-                .style(
-                    Style::default()
-                        .fg(views::ACCENT)
-                        .add_modifier(Modifier::BOLD),
-                )
+                .style(views::selection_style())
                 .render(rect, frame.buffer_mut());
         }
     }

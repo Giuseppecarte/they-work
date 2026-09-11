@@ -1,7 +1,5 @@
 //! Appearance and input preferences, with compatibility settings kept explicit.
-use super::{
-    office::Projection, paint_opaque, UiTheme, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
-};
+use super::{office::Projection, paint_opaque, UiTheme, INK, MUTED, PANEL};
 use crate::{
     canvas::{ColorDepth, PixelEncoding},
     interaction::{Action, HitRegion},
@@ -62,7 +60,7 @@ pub(crate) fn draw(frame: &mut Frame, c: SettingsDrawContext) -> Vec<HitRegion> 
                     }
                 ),
             ),
-            ("Legacy palette", format!("{} / 4", c.room_palette + 1)),
+            ("Office palette", format!("{} / 4", c.room_palette + 1)),
             ("Back to Settings", "Enter".into()),
         ]
     } else {
@@ -116,9 +114,11 @@ pub(crate) fn draw(frame: &mut Frame, c: SettingsDrawContext) -> Vec<HitRegion> 
     for (i, (label, value)) in rows.iter().enumerate().skip(first).take(available) {
         let row = Rect::new(inner.x, inner.y + 1 + (i - first) as u16, inner.width, 1);
         let selected = i == c.cursor;
-        let style = Style::default()
-            .fg(if selected { ACCENT } else { INK })
-            .bg(if selected { PANEL_HIGHLIGHT } else { PANEL });
+        let style = if selected {
+            super::selection_style()
+        } else {
+            Style::default().fg(INK).bg(PANEL)
+        };
         let label_width = (inner.width / 2).min(20) as usize;
         let label = super::short_path(label, label_width.saturating_sub(2));
         paint_opaque(frame, row, style);

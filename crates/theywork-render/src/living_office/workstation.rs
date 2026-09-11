@@ -131,11 +131,8 @@ pub(super) fn chair(a: &mut Raster, key: RoomKey, x: usize) {
     let (x, y, w, h) = (r.x as i32, r.y as i32, r.width as i32, r.height as i32);
     let small = key.overview;
     let ink = rgb(27, 40, 50);
-    let upholstery = if key.light {
-        rgb(120, 143, 147)
-    } else {
-        rgb(86, 123, 134)
-    };
+    let materials = super::materials::for_room(key);
+    let upholstery = materials.upholstery;
     let seat = if small { 5 } else { 9 };
     a.ellipse(x - 2, y + h - 3, w + 4, 4, rgb(45, 54, 55));
     a.rect(x + 2, y, w - 4, h - seat - 1, ink);
@@ -148,7 +145,7 @@ pub(super) fn chair(a: &mut Raster, key: RoomKey, x: usize) {
         y + h - seat + 2,
         2,
         seat - 3,
-        rgb(174, 184, 177),
+        materials.metal,
     );
     a.rect(x + 2, y + h - 2, w - 4, 1, ink);
     for cx in [x + 2, x + w - 5] {
@@ -168,11 +165,8 @@ pub(super) fn furniture(
     let x = x as i32;
     let small = key.overview;
     let sw = key.slot as i32;
-    let edge = match key.preset {
-        crate::design::OfficePreset::Studio => rgb(182, 143, 94),
-        crate::design::OfficePreset::Workshop => rgb(132, 129, 106),
-        crate::design::OfficePreset::Laboratory => rgb(161, 190, 183),
-    };
+    let materials = super::materials::for_room(key);
+    let edge = materials.desk_edge;
     let y = f - if small { 7 } else { 16 };
     let th = if small { 3 } else { 4 };
     let inset = if key.meeting && key.zones[2].is_multiple_of(3) && x == key.first_x as i32 {
@@ -194,7 +188,7 @@ pub(super) fn furniture(
         sw - 4
     };
     a.rect(x + inset, y, width, th, edge);
-    a.rect(x + inset, y, width, 1, lighten(edge, 30));
+    a.rect(x + inset, y, width, 1, lighten(materials.desktop, 22));
     a.rect(x + inset, y + th - 1, width, 1, darken(edge, 34));
     for leg in [x + 5, x + sw - 10] {
         a.rect(leg, y + th, 2, f - y - th, rgb(32, 47, 55));
@@ -202,8 +196,8 @@ pub(super) fn furniture(
     }
     if key.zones[1] % 3 == 1 {
         let dw = if small { 9 } else { 17 };
-        a.rect(x + 2, y + th, dw, f - y - th, rgb(95, 111, 111));
-        a.rect(x + 3, y + th + 1, dw - 2, 1, rgb(161, 173, 161));
+        a.rect(x + 2, y + th, dw, f - y - th, materials.storage);
+        a.rect(x + 3, y + th + 1, dw - 2, 1, lighten(materials.storage, 28));
         a.rect(x + dw / 2, y + th + 3, 2, 1, rgb(37, 53, 62));
     }
     let g = geometry(key, x as usize);
@@ -211,11 +205,7 @@ pub(super) fn furniture(
     let (cx, cy, cw, ch) = (c.x as i32, c.y as i32, c.width as i32, c.height as i32);
     let portable = laptop(key);
     let variant = key.zones[1] % 3;
-    let shell = if key.light {
-        rgb(50, 65, 75)
-    } else {
-        rgb(181, 193, 188)
-    };
+    let shell = materials.bezel;
     let ink = rgb(27, 40, 52);
     let screen_rect;
     if portable {
@@ -227,14 +217,14 @@ pub(super) fn furniture(
             cw - 2,
             lid_h - 2,
             if variant == 1 {
-                rgb(106, 137, 139)
+                materials.equipment
             } else {
                 shell
             },
         );
         screen_rect = rect(c.x + 2, c.y + 2, c.width - 4, lid_h as usize - 4);
         if variant == 2 {
-            a.rect(cx + 1, cy, cw - 2, 1, rgb(115, 159, 164));
+            a.rect(cx + 1, cy, cw - 2, 1, materials.equipment);
         }
         // The base meets the hinge and projects toward the working hands.
         let k = g.keyboard;
@@ -261,16 +251,16 @@ pub(super) fn furniture(
         );
         let stand_w = if small { 2 } else { 3 };
         a.rect(cx + cw / 2 - 1, cy + ch, stand_w, y - (cy + ch), ink);
-        a.rect(cx + cw / 2, cy + ch, 1, y - (cy + ch), rgb(191, 200, 185));
+        a.rect(
+            cx + cw / 2,
+            cy + ch,
+            1,
+            y - (cy + ch),
+            lighten(materials.metal, 16),
+        );
         let bw = if small { 9 } else { 16 };
         a.rect(cx + cw / 2 - bw / 2, y - 1, bw, 2, ink);
-        a.rect(
-            cx + cw / 2 - bw / 2 + 1,
-            y - 1,
-            bw - 2,
-            1,
-            rgb(177, 191, 182),
-        );
+        a.rect(cx + cw / 2 - bw / 2 + 1, y - 1, bw - 2, 1, materials.metal);
         a.rect(
             cx + cw - 4,
             cy + ch - 2,
@@ -283,20 +273,28 @@ pub(super) fn furniture(
             },
         );
     }
+    // A small colored bezel edge belongs to the computer case, not its state.
+    a.rect(cx + 1, cy + 1, cw - 2, 1, materials.equipment);
     screen_art(a, screen_rect, motif, phase);
     let k = g.keyboard;
     let (kx, ky, kw, kh) = (k.x as i32, k.y as i32, k.width as i32, k.height as i32);
     a.rect(kx, ky, kw, kh, ink);
-    a.rect(kx + 1, ky + 1, kw - 2, kh - 2, rgb(117, 140, 143));
+    a.rect(
+        kx + 1,
+        ky + 1,
+        kw - 2,
+        kh - 2,
+        darken(materials.equipment, 17),
+    );
     for xx in (kx + 2..kx + kw - 2).step_by(if small { 3 } else { 4 }) {
-        a.rect(xx, ky + 1, if small { 1 } else { 2 }, 1, rgb(210, 218, 198));
+        a.rect(xx, ky + 1, if small { 1 } else { 2 }, 1, materials.bezel);
     }
     if !portable {
         a.rect(x + sw - 7, y - 3, 3, 3, ink);
-        a.rect(x + sw - 6, y - 3, 1, 2, rgb(204, 211, 194));
+        a.rect(x + sw - 6, y - 3, 1, 2, materials.prop);
     }
     if key.meeting && key.zones[2] % 3 == 2 {
-        a.rect(x + 2, y - 4, 3, 4, rgb(133, 181, 174));
+        a.rect(x + 2, y - 4, 3, 4, materials.prop);
         a.rect(x + 3, y - 4, 2, 1, rgb(226, 220, 193));
     }
     let py = key.plate_y() as i32;
@@ -417,6 +415,62 @@ mod tests {
             title: 8,
             plate: if small { 8 } else { 16 },
             first_x: 60,
+        }
+    }
+    #[test]
+    fn office_palettes_recolor_equipment_and_chairs_without_changing_any_hit_anchor() {
+        use crate::design::OfficePreset;
+        use std::collections::HashSet;
+
+        for preset in [
+            OfficePreset::Studio,
+            OfficePreset::Workshop,
+            OfficePreset::Laboratory,
+        ] {
+            for light in [false, true] {
+                for small in [false, true] {
+                    for meeting in [false, true] {
+                        for variant in 0..3 {
+                            let base = RoomKey {
+                                preset,
+                                light,
+                                ..key(small, meeting, variant)
+                            };
+                            let station = geometry(base, base.first_x);
+                            let mut chairs = HashSet::new();
+                            let mut computers = HashSet::new();
+                            let mut edges = HashSet::new();
+                            let mut masks = HashSet::new();
+                            for palette in 0..4 {
+                                let key = RoomKey { palette, ..base };
+                                assert_eq!(geometry(key, key.first_x), station);
+                                let mut a = Raster::new(key.width, key.height);
+                                chair(&mut a, key, key.first_x);
+                                furniture(&mut a, key, key.first_x, true, Screen::Code, 0);
+                                let crop = |r: PixelRect| {
+                                    (r.y..r.y + r.height)
+                                        .flat_map(|y| (r.x..r.x + r.width).map(move |x| (x, y)))
+                                        .map(|(x, y)| a.pixels[y * a.width + x])
+                                        .collect::<Vec<_>>()
+                                };
+                                chairs.insert(crop(station.chair));
+                                computers.insert(crop(station.computer));
+                                edges.insert(crop(rect(
+                                    key.first_x,
+                                    key.floor - if small { 7 } else { 16 },
+                                    key.slot - 4,
+                                    if small { 3 } else { 4 },
+                                )));
+                                masks.insert(
+                                    a.pixels.iter().map(Option::is_some).collect::<Vec<_>>(),
+                                );
+                            }
+                            assert_eq!((chairs.len(), computers.len(), edges.len()), (4, 4, 4));
+                            assert_eq!(masks.len(), 1, "materials must not change drawn geometry");
+                        }
+                    }
+                }
+            }
         }
     }
     #[test]

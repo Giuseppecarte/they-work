@@ -15,31 +15,11 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         key.floor as i32,
         key.shaft as i32,
     );
-    let warm = key.preset == OfficePreset::Studio;
-    let wall = match (key.preset, key.light) {
-        (OfficePreset::Studio, false) => rgb(85, 91, 98),
-        (OfficePreset::Studio, true) => rgb(223, 213, 189),
-        (OfficePreset::Workshop, false) => rgb(83, 91, 90),
-        (OfficePreset::Workshop, true) => rgb(207, 202, 176),
-        (OfficePreset::Laboratory, false) => rgb(61, 88, 100),
-        (OfficePreset::Laboratory, true) => rgb(203, 226, 220),
-    };
-    let accent = [
-        rgb(103, 141, 144),
-        rgb(109, 139, 171),
-        rgb(129, 153, 107),
-        rgb(164, 120, 143),
-    ][key.palette];
-    let trim = if key.light {
-        rgb(113, 128, 130)
-    } else {
-        rgb(36, 48, 61)
-    };
-    let wood = match key.preset {
-        OfficePreset::Studio => rgb(141, 112, 86),
-        OfficePreset::Workshop => rgb(111, 107, 89),
-        OfficePreset::Laboratory => rgb(106, 135, 138),
-    };
+    let materials = super::materials::for_room(key);
+    let wall = materials.wall;
+    let accent = materials.equipment;
+    let trim = materials.trim;
+    let wood = materials.floor;
     a.rect(0, 0, w, h, rgb(31, 42, 55));
     a.rect(s, 2, w - s - 2, f, wall);
     a.rect(s, f, w - s, h - f, wood);
@@ -76,33 +56,39 @@ pub(super) fn background(key: RoomKey) -> Sprite {
                     top,
                     if key.overview { 47 } else { 70 },
                     window_h,
-                    darken(accent, 18),
+                    materials.glazing,
                 );
             }
             if !key.overview {
-                a.rect(w - 42, top + 5, 27, 4, rgb(99, 76, 58));
-                books(&mut a, w - 40, top - 8, 24, 13);
+                a.rect(w - 42, top + 5, 27, 4, materials.storage);
+                books(&mut a, w - 40, top - 8, 24, 13, materials.supplies);
             }
         }
         OfficePreset::Workshop => {
             let peg_w = (w - s - 26).min(if key.overview { 110 } else { 190 });
-            a.rect(s + 10, top, peg_w, window_h + 5, rgb(119, 109, 82));
+            a.rect(
+                s + 10,
+                top,
+                peg_w,
+                window_h + 5,
+                lighten(materials.storage, 22),
+            );
             for yy in (top + 3..top + window_h).step_by(5) {
                 for xx in (s + 13..s + peg_w).step_by(7) {
-                    a.rect(xx, yy, 1, 1, rgb(77, 78, 68));
+                    a.rect(xx, yy, 1, 1, darken(materials.storage, 12));
                 }
             }
             for x in (s + 18..s + peg_w - 7).step_by(24) {
-                a.rect(x, top + 6, 2, 12, rgb(179, 181, 156));
+                a.rect(x, top + 6, 2, 12, materials.metal);
                 a.rect(x - 3, top + 6, 8, 3, accent);
             }
-            a.rect(s + 8, top + window_h + 5, peg_w + 4, 3, rgb(73, 75, 67));
+            a.rect(s + 8, top + window_h + 5, peg_w + 4, 3, materials.storage);
             a.rect(
                 w - 21,
                 title + 10,
                 3,
                 (f - title - 10).max(0),
-                rgb(56, 68, 68),
+                materials.trim,
             );
         }
         OfficePreset::Laboratory => {
@@ -117,14 +103,14 @@ pub(super) fn background(key: RoomKey) -> Sprite {
                     top,
                     if key.overview { 40 } else { 65 },
                     window_h,
-                    rgb(91, 135, 139),
+                    materials.glazing,
                 );
                 a.rect(
                     x + 4,
                     top + window_h + 4,
                     if key.overview { 31 } else { 56 },
                     3,
-                    rgb(154, 183, 173),
+                    materials.desktop,
                 );
             }
             for x in (s + 8..w - 8).step_by(28) {
@@ -142,7 +128,7 @@ pub(super) fn background(key: RoomKey) -> Sprite {
     let metal = if key.zones[0] % 3 == 1 {
         accent
     } else {
-        rgb(128, 152, 159)
+        materials.metal
     };
     if key.elevator {
         a.rect(8, door_y, door_w - 2, door_h, metal);
@@ -157,14 +143,14 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         a.rect(11, door_y + 3, 2, door_h - 6, lighten(metal, 33));
         a.rect(s / 2 - 4, door_y - 5, 8, 2, rgb(171, 218, 180));
     } else {
-        a.rect(8, door_y, door_w - 2, door_h, rgb(154, 115, 78));
+        a.rect(8, door_y, door_w - 2, door_h, materials.desktop);
         a.rect(11, door_y + 4, door_w - 8, door_h / 2, accent);
         a.rect(12, door_y + 5, 2, door_h / 2 - 2, lighten(accent, 40));
         a.rect(s - 12, door_y + door_h / 2 + 6, 3, 2, rgb(232, 202, 133));
     }
     a.rect(6, f, door_w + 2, 2, rgb(174, 182, 165));
     if key.zones[0] % 3 == 2 {
-        a.rect(8, door_y - 11, door_w - 4, 3, rgb(202, 166, 105));
+        a.rect(8, door_y - 11, door_w - 4, 3, materials.prop);
     }
     if key.zones[0].is_multiple_of(3) && door_y > 16 {
         a.rect(8, 7, s - 18, 7, trim);
@@ -179,7 +165,7 @@ pub(super) fn background(key: RoomKey) -> Sprite {
     let rest_x = (w - 34).max(s + 16);
     let rest_floor = key.rest_floor() as i32;
     match key.zones[3] % 3 {
-        0 => coffee_station(&mut a, rest_x, rest_floor, key.overview, warm),
+        0 => coffee_station(&mut a, rest_x, rest_floor, key.overview, materials),
         1 => {
             let width = if key.overview { 21 } else { 32 };
             a.rect(rest_x - 12, rest_floor - 14, width, 12, accent);
@@ -191,7 +177,14 @@ pub(super) fn background(key: RoomKey) -> Sprite {
                 lighten(accent, 18),
             );
             a.rect(rest_x - 12, rest_floor - 3, width, 3, darken(accent, 20));
-            books(&mut a, rest_x - 9, rest_floor - 6, 12, 3);
+            books(
+                &mut a,
+                rest_x - 9,
+                rest_floor - 6,
+                12,
+                3,
+                materials.supplies,
+            );
         }
         _ => super::plant(&mut a, rest_x, rest_floor, if key.overview { 0 } else { 1 }),
     }
@@ -203,7 +196,7 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         rest_floor - 4,
         if key.overview { 16 } else { 26 },
         4,
-        rgb(108, 91, 76),
+        materials.storage,
     );
     books(
         &mut a,
@@ -211,17 +204,18 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         rest_floor - if key.overview { 7 } else { 10 },
         if key.overview { 12 } else { 20 },
         if key.overview { 3 } else { 6 },
+        materials.supplies,
     );
     a.rect(
         shelf_x + 2,
         rest_floor - 2,
         if key.overview { 9 } else { 16 },
         1,
-        rgb(225, 194, 132),
+        materials.prop,
     );
     if !key.zones[3].is_multiple_of(3) {
-        a.rect(w - 20, rest_floor - 8, 12, 8, rgb(101, 109, 98));
-        a.rect(w - 17, rest_floor - 12, 4, 4, rgb(230, 214, 168));
+        a.rect(w - 20, rest_floor - 8, 12, 8, materials.storage);
+        a.rect(w - 17, rest_floor - 12, 4, 4, materials.prop);
     }
     if key.zones[3] % 3 != 2 {
         super::plant(&mut a, w - 11, rest_floor, 0);
@@ -246,38 +240,26 @@ fn glazing(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, c: Color) {
     a.rect(x + w / 2, y, 2, h, rgb(65, 93, 101));
     a.rect(x - 3, y + h + 2, w + 6, 2, rgb(123, 138, 134));
 }
-fn books(a: &mut Raster, x: i32, y: i32, w: i32, h: i32) {
-    for (i, c) in [
-        rgb(182, 105, 87),
-        rgb(113, 158, 158),
-        rgb(198, 170, 105),
-        rgb(147, 129, 167),
-    ]
-    .into_iter()
-    .enumerate()
-    {
+fn books(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, colors: [Color; 4]) {
+    for (i, c) in colors.into_iter().enumerate() {
         let bx = x + i as i32 * (w / 4);
         a.rect(bx, y + (i % 2) as i32, w / 4 - 1, h - (i % 2) as i32, c);
         a.rect(bx + 1, y + 2, 1, (h - 3).max(1), lighten(c, 18));
     }
 }
-fn coffee_station(a: &mut Raster, x: i32, f: i32, small: bool, warm: bool) {
+fn coffee_station(
+    a: &mut Raster,
+    x: i32,
+    f: i32,
+    small: bool,
+    materials: super::materials::Materials,
+) {
     let w = if small { 20 } else { 30 };
     let h = if small { 11 } else { 19 };
-    a.rect(x - 10, f - h, w, h, rgb(96, 86, 72));
-    a.rect(x - 11, f - h, w + 2, 2, rgb(214, 181, 124));
-    a.rect(
-        x - 7,
-        f - h - 10,
-        10,
-        10,
-        if warm {
-            rgb(156, 110, 78)
-        } else {
-            rgb(125, 152, 153)
-        },
-    );
+    a.rect(x - 10, f - h, w, h, materials.storage);
+    a.rect(x - 11, f - h, w + 2, 2, materials.desktop);
+    a.rect(x - 7, f - h - 10, 10, 10, materials.equipment);
     a.rect(x - 5, f - h - 8, 6, 4, rgb(35, 54, 64));
     a.rect(x - 4, f - h - 3, 4, 3, rgb(237, 225, 179));
-    a.rect(x + 7, f - h - 4, 4, 4, rgb(232, 216, 163));
+    a.rect(x + 7, f - h - 4, 4, 4, materials.prop);
 }

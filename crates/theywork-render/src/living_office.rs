@@ -3,6 +3,7 @@
 //! composition can therefore be inspected without pretending a PTY is a GPU.
 
 pub mod art;
+mod materials;
 pub mod overview;
 mod rooms;
 mod workstation;
@@ -877,6 +878,92 @@ mod tests {
                                 + original.workstation.selection.width
                 );
                 assert!(r.y + r.height <= 304);
+            }
+        }
+    }
+    #[test]
+    fn material_changes_preserve_full_scene_identity_and_geometry_in_both_scales() {
+        let office = office(3);
+        let group = MeetingGroup {
+            parent: office.workers[0].id.clone(),
+            members: office.workers[1..].iter().map(|w| w.id.clone()).collect(),
+        };
+        let mut studio = Studio::new();
+        for overview in [false, true] {
+            for meeting in [None, Some(&group)] {
+                let mut canvas = Canvas::new(0, 0);
+                canvas.set_image_cell_size(Some((8, 16)));
+                canvas.resize(640, if overview { 128 } else { 304 });
+                let baseline = studio.paint(
+                    &mut canvas,
+                    &office,
+                    &SceneOptions {
+                        motion: false,
+                        overview,
+                        meeting,
+                        ..Default::default()
+                    },
+                );
+                for preset in [
+                    OfficePreset::Studio,
+                    OfficePreset::Workshop,
+                    OfficePreset::Laboratory,
+                ] {
+                    let design = OfficeDesign {
+                        preset,
+                        ..Default::default()
+                    };
+                    for light in [false, true] {
+                        for palette in 0..4 {
+                            let current = studio.paint(
+                                &mut canvas,
+                                &office,
+                                &SceneOptions {
+                                    motion: false,
+                                    overview,
+                                    meeting,
+                                    light,
+                                    palette,
+                                    design: Some(&design),
+                                    ..Default::default()
+                                },
+                            );
+                            assert_eq!(current.seats.len(), 3);
+                            assert_eq!(
+                                (
+                                    current.scale,
+                                    current.capacity,
+                                    current.sign,
+                                    current.elevator
+                                ),
+                                (
+                                    baseline.scale,
+                                    baseline.capacity,
+                                    baseline.sign,
+                                    baseline.elevator
+                                )
+                            );
+                            for (a, b) in current.seats.iter().zip(&baseline.seats) {
+                                assert_eq!(
+                                    (
+                                        &a.worker_id,
+                                        a.costume,
+                                        a.bounds,
+                                        a.nameplate,
+                                        a.workstation
+                                    ),
+                                    (
+                                        &b.worker_id,
+                                        b.costume,
+                                        b.bounds,
+                                        b.nameplate,
+                                        b.workstation
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
             }
         }
     }

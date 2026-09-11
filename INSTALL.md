@@ -156,9 +156,10 @@ The dialog's own hints describe what its keys do.
   have explicit Apply and Cancel controls.
 - Compatibility shortcuts remain available: `w` changes the selected worker's
   costume and `W` clears that override from a work brief; `o` cycles the selected
-  office's legacy palette and `O` clears that override. They do not open the
-  Character or Office Design editors. The legacy palette is separate from the
-  authored office preset.
+  office palette and `O` clears that override. They do not open the Character
+  or Office Design editors. **Office palette**, also available in Advanced,
+  colors trim, upholstery, desk edges, computer details and props. It is separate
+  from the authored office preset.
 
 Each repository gets one floor; its Git worktrees remain together. Merely
 switching floors does not change source access or hide other projects.

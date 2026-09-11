@@ -1,0 +1,60 @@
+{
+  "checked_at_utc": "2026-09-11T15:50:42.748901+00:00",
+  "passed": true,
+  "checks": {
+    "amd64": {
+      "kitty": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+        "compressed_sha256": "fb900e53da048a025dfe927c1de45a7f8f5275003d1c7eea2c02f5c072fd2195"
+      },
+      "iterm2": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "269d01d8f2e66e62d20498f5f0a8ffc76b973e6e132d3e74aabc4309882bf9ed",
+        "compressed_sha256": "910e49526fae057d5d1aa475afdd56a42ed217b04a9c6e33c4785fd3a9998ad1"
+      },
+      "sixel": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "a734e5dd085787d64aa0d324c74bbd39b9027f28aca15f19b27894c67b71703e",
+        "compressed_sha256": "68ae6c622d932ba1123a0449af592794bbd5c975fa10e36e2044ce80074f3461"
+      },
+      "fallback": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+        "compressed_sha256": "7165a5e21116c92c6538c3ec0e759ae3692da5a97fab7ba13fa28eafd3afe933",
+        "no_image_transmission": true
+      }
+    },
+    "arm64": {
+      "kitty": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+        "compressed_sha256": "fb900e53da048a025dfe927c1de45a7f8f5275003d1c7eea2c02f5c072fd2195"
+      },
+      "iterm2": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "90c19aacc73751723cf916abf9ea727f25607ff3b3592d4e85b1c68f1effc37b",
+        "compressed_sha256": "3b5f939a0727920015ce0e18b13bf87efd26ba318e2b4298521bbd8acc848809"
+      },
+      "sixel": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "f7b4aec3565e1dd5b75d3a22aec05ba40884634d1d8e4b22872ad73f4167e11b",
+        "compressed_sha256": "403a1fc85a739b82e54328575f0f10e4e9e44e7da8d42f63e25d974399caee33"
+      },
+      "fallback": {
+        "truecolor_foreground": true,
+        "truecolor_background": true,
+        "raw_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+        "compressed_sha256": "7165a5e21116c92c6538c3ec0e759ae3692da5a97fab7ba13fa28eafd3afe933",
+        "no_image_transmission": true
+      }
+    }
+  }
+}

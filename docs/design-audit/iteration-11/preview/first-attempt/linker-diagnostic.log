@@ -1,0 +1,121 @@
+debug_assertions
+panic="unwind"
+target_abi=""
+target_arch="x86_64"
+target_endian="little"
+target_env="musl"
+target_family="unix"
+target_feature="crt-static"
+target_feature="fxsr"
+target_feature="sse"
+target_feature="sse2"
+target_has_atomic="16"
+target_has_atomic="32"
+target_has_atomic="64"
+target_has_atomic="8"
+target_has_atomic="ptr"
+target_os="linux"
+target_pointer_width="64"
+target_vendor="unknown"
+unix
+%rename cpp_options old_cpp_options
+
+*cpp_options:
+-nostdinc -isystem /usr/include/x86_64-linux-musl -isystem include%s %(old_cpp_options)
+
+*cc1:
+%(cc1_cpu) -nostdinc -isystem /usr/include/x86_64-linux-musl -isystem include%s
+
+*link_libgcc:
+-L/usr/lib/x86_64-linux-musl -L .%s
+
+*libgcc:
+libgcc.a%s %:if-exists(libgcc_eh.a%s)
+
+*startfile:
+%{!shared: /usr/lib/x86_64-linux-musl/Scrt1.o} /usr/lib/x86_64-linux-musl/crti.o crtbeginS.o%s
+
+*endfile:
+crtendS.o%s /usr/lib/x86_64-linux-musl/crtn.o
+
+*link:
+-dynamic-linker /lib/ld-musl-x86_64.so.1 -nostdlib %{shared:-shared} %{static:-static} %{rdynamic:-export-dynamic}
+
+*esp_link:
+
+
+*esp_options:
+
+
+*esp_cpp_options:
+
+
+
+Elf file type is DYN (Position-Independent Executable file)
+Entry point 0x41e76
+There are 11 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
+                 0x0000000000000268 0x0000000000000268  R      0x8
+  INTERP         0x00000000000002a8 0x00000000000002a8 0x00000000000002a8
+                 0x0000000000000019 0x0000000000000019  R      0x1
+      [Requesting program interpreter: /lib/ld-musl-x86_64.so.1]
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000023760 0x0000000000023760  R      0x1000
+  LOAD           0x0000000000024000 0x0000000000024000 0x0000000000024000
+                 0x000000000051fd52 0x000000000051fd52  R E    0x1000
+  LOAD           0x0000000000544000 0x0000000000544000 0x0000000000544000
+                 0x000000000007b2c4 0x000000000007b2c4  R      0x1000
+  LOAD           0x00000000005bfb20 0x00000000005c0b20 0x00000000005c0b20
+                 0x00000000000749f0 0x00000000000768c0  RW     0x1000
+  DYNAMIC        0x000000000062f950 0x0000000000630950 0x0000000000630950
+                 0x0000000000000190 0x0000000000000190  RW     0x8
+  TLS            0x000000000061a668 0x000000000061b668 0x000000000061b668
+                 0x0000000000000021 0x0000000000000100  R      0x8
+  GNU_EH_FRAME   0x0000000000597e10 0x0000000000597e10 0x0000000000597e10
+                 0x000000000000b1b4 0x000000000000b1b4  R      0x4
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x00000000005bfb20 0x00000000005c0b20 0x00000000005c0b20
+                 0x00000000000704e0 0x00000000000704e0  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .hash .gnu.hash .dynsym .dynstr .rela.dyn 
+   03     .init .plt .plt.got .text .fini 
+   04     .rodata .eh_frame_hdr .gcc_except_table 
+   05     .eh_frame .tdata .init_array .fini_array .data.rel.ro .dynamic .got .data .bss 
+   06     .dynamic 
+   07     .tdata .tbss 
+   08     .eh_frame_hdr 
+   09     
+   10     .eh_frame .tdata .init_array .fini_array .data.rel.ro .dynamic .got 
+
+Dynamic section at offset 0x62f950 contains 21 entries:
+  Tag        Type                         Name/Value
+ 0x000000000000000c (INIT)               0x24000
+ 0x000000000000000d (FINI)               0x543d4f
+ 0x0000000000000019 (INIT_ARRAY)         0x61b690
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x61b698
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x0000000000000004 (HASH)               0x2c8
+ 0x000000006ffffef5 (GNU_HASH)           0x320
+ 0x0000000000000005 (STRTAB)             0x400
+ 0x0000000000000006 (SYMTAB)             0x340
+ 0x000000000000000a (STRSZ)              123 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x630ae0
+ 0x0000000000000007 (RELA)               0x480
+ 0x0000000000000008 (RELASZ)             144096 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000000000001e (FLAGS)              BIND_NOW
+ 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE
+ 0x000000006ffffff9 (RELACOUNT)          5997
+ 0x0000000000000000 (NULL)               0x0

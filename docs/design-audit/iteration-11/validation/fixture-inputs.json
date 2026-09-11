@@ -1,0 +1,14 @@
+[
+  {
+    "file": "color_preview.rs",
+    "baseline_input_sha256": "0c0b6c3580f1ae48379ff5bc2bdfc5b9b6c544fec298a0365a34b394073617e7",
+    "candidate_input_sha256": "09f0cf1bce515be0f8d68b5ddfdb86d5e89121fb7de98a2c5e19d6ec4f2b88c6",
+    "normalized_inputs_equal": true
+  },
+  {
+    "file": "ui_inventory.rs",
+    "baseline_input_sha256": "44557f182b8ba7ce880a525c15505e820a7074c701bc2fcfe8c3d5133bee36f1",
+    "candidate_input_sha256": "5d8a0c1dc5e729fa988c099ddce4118b780138c2c27bd6077e0a931160f3cf89",
+    "normalized_inputs_equal": true
+  }
+]

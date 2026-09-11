@@ -1,0 +1,4951 @@
+{
+  "kind": "Compositor comparisons; no terminal, provider or human trial",
+  "baseline_revision": "282722294b8b372d7e20bda4a3705f3e19b62b1b",
+  "fixture": "crates/theywork-render/examples/color_preview.rs",
+  "fixture_sha256": "09f0cf1bce515be0f8d68b5ddfdb86d5e89121fb7de98a2c5e19d6ec4f2b88c6",
+  "replay": {
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "pillow": "12.3.0",
+    "freetype": "2.14.3"
+  },
+  "cases": [
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p0-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p0-desks-tower-80x24.cells.json",
+      "native_text": "studio-p0-desks-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "studio-p0-desks-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5e188cceef7786ed014bfdfe4db59aa4efa472b5ef2d34cbaccd77f61e45c94a",
+        "after_rgb_sha256": "1bdaadbe7e038188a57f7f9fc7b14575471f1cdd7b125784819eded295a3b59d"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p0-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p0-desks-office-auto-80x24.cells.json",
+      "native_text": "studio-p0-desks-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "studio-p0-desks-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "8252b7644c22dac83305df4ee047bf807b2f540d5407ac33844e4a0e43654c25",
+        "after_rgb_sha256": "08d711c606d17e3e7cc7402eb38b984fcccabf538e15899ee3bb7294a72b772c"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p0-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p0-team-tower-80x24.cells.json",
+      "native_text": "studio-p0-team-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "studio-p0-team-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "071eeed3e100beadcefd27d0c0ebdfd7478ecf4a3ef4a298b5bdf89ab561bbe4",
+        "after_rgb_sha256": "9e8db346128f1b8734c5bba9d1fa37f22832dd6ca5d90b444f3a55f14647b3d9"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p0-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p0-team-office-auto-80x24.cells.json",
+      "native_text": "studio-p0-team-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "studio-p0-team-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b66647485c26af0d8cb05c85bce9c2fdee3ee8182f840211a4ccb5ddbe994572",
+        "after_rgb_sha256": "2ed757c922f5bd8548df34244c37698947162fda67bad1e6e16ae0d3f9ea1cb1"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p1-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p1-desks-tower-80x24.cells.json",
+      "native_text": "studio-p1-desks-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "studio-p1-desks-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3585c3e93c8331e20fde163425aedb3d143301aa40924d824f08372917988d13",
+        "after_rgb_sha256": "6bcf1e138f716c5216d1a5a2f99e0cdcddee78ea396daccdb38b3b6d72980f8c"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p1-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p1-desks-office-auto-80x24.cells.json",
+      "native_text": "studio-p1-desks-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "studio-p1-desks-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "95e68c125efa4735330630501e9e04c0c0b6bf9476694221de3417b5d1a660c0",
+        "after_rgb_sha256": "94ec79ab277ea896d9f54861cb0afb818af6494d22f23fbc1d58a65f9331f257"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p1-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p1-team-tower-80x24.cells.json",
+      "native_text": "studio-p1-team-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "studio-p1-team-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "c8165820eb34ecb6e5e0bab15ace8d5e0bd116bbaf16a8ffa25c18f7ed4779cb",
+        "after_rgb_sha256": "02b4b5fafe886174144bc63182fcf2b4d0c023c2fca0694e880982dd9d8f31b9"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p1-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p1-team-office-auto-80x24.cells.json",
+      "native_text": "studio-p1-team-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "studio-p1-team-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f8c9ba1ec7de8ae10f6f1204d8bb07c6e4f13fd05280cc0f05a441914246b08e",
+        "after_rgb_sha256": "7f506ba9db851fa1c754c36cd7adfdfba9dde5bd7c61d91033ec24a9b3be3e40"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p2-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p2-desks-tower-80x24.cells.json",
+      "native_text": "studio-p2-desks-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "studio-p2-desks-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "cd4ff4008fcdde852c6956aeb2f47893c768495131f659770ce1261be426ac13",
+        "after_rgb_sha256": "45a7726fc143326758973ec1bb0884a1088deb837e2c684d3529b72fb25d7ba5"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p2-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p2-desks-office-auto-80x24.cells.json",
+      "native_text": "studio-p2-desks-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "studio-p2-desks-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "7a2dc988da332beebe45d5a3717ba82eca4ba5065b7c21ce1c250d4b07598ffd",
+        "after_rgb_sha256": "0db8b5f8d5ea8fd10182da5d9af22e09a12ca808df3b851a9d97d50a6d1abb53"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p2-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p2-team-tower-80x24.cells.json",
+      "native_text": "studio-p2-team-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "studio-p2-team-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b5cb5a662c39cc1408eb417979a8e989b599d809713c79e3576ab26bee51a48e",
+        "after_rgb_sha256": "4b62f7119a2e85592d745e2fe32a97909ad6ef7592e8971642c6cd63bedafad0"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p2-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p2-team-office-auto-80x24.cells.json",
+      "native_text": "studio-p2-team-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "studio-p2-team-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "0d28cff8efe869b85741d117b62b2a6e6e9b51fbcd76e2e7b3e4696d1406fbee",
+        "after_rgb_sha256": "ed2753d8a8b9c392fed77884392481f775e47fa7379c2a2875ef24c6d2f8f3cc"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p3-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p3-desks-tower-80x24.cells.json",
+      "native_text": "studio-p3-desks-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "studio-p3-desks-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5ec426b2699ce473cc4323eb852a4c6db177bf51131beefc7f19a554d7628dd6",
+        "after_rgb_sha256": "3e6dbb8271ee8380c728f5ded70f2b4362fdee82d5f9b815f6da82d386204842"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p3-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p3-desks-office-auto-80x24.cells.json",
+      "native_text": "studio-p3-desks-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "studio-p3-desks-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "c5b957fd2a3276ca0cdb79fe7bcaf3795c5fcd438846b5114612aa22f0d606ac",
+        "after_rgb_sha256": "43cd8cdf11c8cf64ddf13db5ee87ae5737385092446854ebab2cb7b97768818e"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p3-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p3-team-tower-80x24.cells.json",
+      "native_text": "studio-p3-team-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "studio-p3-team-tower-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "27ce436f4d5b8b2a3385d79b6216f399ad07da537b11f90c97bd32df54ec9643",
+        "after_rgb_sha256": "f9d016b641839e087c25f8920f2896c2c04181bd083137b9983dd6c9dcf376de"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "studio-p3-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "studio-p3-team-office-auto-80x24.cells.json",
+      "native_text": "studio-p3-team-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "studio-p3-team-office-auto-80x24.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "e0b80a69f3a41b3e0fdcae061f5779ca649f1fdf4700332f4a8aeee958b321c6",
+        "after_rgb_sha256": "ae24f38acfd55758d06a6cd57742437a3b4db6b951e7ba8a4635c6d72bacf178"
+      },
+      "review_evidence": "studio-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p0-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p0-desks-tower-80x24.cells.json",
+      "native_text": "workshop-p0-desks-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "workshop-p0-desks-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "4be6139f088ad2debf7b51e4961a5c84c0bf729ee969e74b3f6c5ca7d676edb4",
+        "after_rgb_sha256": "7eb57beb1a7dd6d83144a449fd723a0cedd4eade4358bd0e339dcb98de15dfe8"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p0-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p0-desks-office-auto-80x24.cells.json",
+      "native_text": "workshop-p0-desks-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "workshop-p0-desks-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "881116e330f38ea61608885833b515f6aa83e9a539e5929b6ae62cfc7e505ea2",
+        "after_rgb_sha256": "1b7f133d02d886a4c1b29a775249696849ece545e311fd24a79384148412b709"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p0-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p0-team-tower-80x24.cells.json",
+      "native_text": "workshop-p0-team-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "workshop-p0-team-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "19760703647473ed71ec18022626bb1e84b6e78e208b37aa03a65b1b77508625",
+        "after_rgb_sha256": "82c096899257f7c38e8fe26e5c3e89cbf6de2849ca55e41a86ed62862325b9c8"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p0-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p0-team-office-auto-80x24.cells.json",
+      "native_text": "workshop-p0-team-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "workshop-p0-team-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "2c93280bf45738b41297cafb7a3d807fd9aa9e47c8b2b53b60aebdf144c86288",
+        "after_rgb_sha256": "e761ba46f1bd872aaaf3280806f77763b6d3d1d663a38ef6b6ffff0789d04b92"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p1-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p1-desks-tower-80x24.cells.json",
+      "native_text": "workshop-p1-desks-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "workshop-p1-desks-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3aadfcf23b3bc7b160fba1721240f9b924d3a8d77366947589607afd9d180a50",
+        "after_rgb_sha256": "9165006e2cf114c273f1ab07022e35de38c15f4d6dda0f634600c9b535bf9a24"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p1-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p1-desks-office-auto-80x24.cells.json",
+      "native_text": "workshop-p1-desks-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "workshop-p1-desks-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "2a13cb9f7fb3848d5a1b46cc3517f1728238a9cc87d3e32c06ff50a17d5fc563",
+        "after_rgb_sha256": "bcb6fea1b2dddf89f4621f527769dda3eddd95e0115e72b9a5504f3420e59485"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p1-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p1-team-tower-80x24.cells.json",
+      "native_text": "workshop-p1-team-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "workshop-p1-team-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5f7c1ba27504d611a0e818315acac5eeafe902ee09325ca6b7b4be329f873343",
+        "after_rgb_sha256": "2ca0726617efd2b5505902b7a2658a02773b7beea44ca84a3997fd41aa162552"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p1-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p1-team-office-auto-80x24.cells.json",
+      "native_text": "workshop-p1-team-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "workshop-p1-team-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "cc125c15afd28c2940e68047dbe5758f1e20904fa25cecf9d9a323276b03df77",
+        "after_rgb_sha256": "78e8d961e925dc55ac7f55c9f8f8f6842c3eeaed26d6ac77b8f0b0b1dadb6c1a"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p2-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p2-desks-tower-80x24.cells.json",
+      "native_text": "workshop-p2-desks-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "workshop-p2-desks-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "69714840a26359043f4cb19650fc8b000fb306027f873a79504bc0d71db0bece",
+        "after_rgb_sha256": "d1c4d655efa181599ba59709b9d97c16f6b02d5c3f7e694d0f5582d0b2876ec0"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p2-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p2-desks-office-auto-80x24.cells.json",
+      "native_text": "workshop-p2-desks-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "workshop-p2-desks-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "8a45d37bdfe3f6eb08ed1c157372af594f750ad0549b49f25b4ab496be078e53",
+        "after_rgb_sha256": "3120b4a8b963adb881a0499d848e6e20488a4b65afa89138290f455c643236e9"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p2-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p2-team-tower-80x24.cells.json",
+      "native_text": "workshop-p2-team-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "workshop-p2-team-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "2a78ce428df60b7de2df242e5547a57afdb16713dba8f8eb5fa0b5afb6275a73",
+        "after_rgb_sha256": "43982438d9a0aed6777ca6cd2236448d625cb3aac92d6b74663c59aee8870a34"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p2-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p2-team-office-auto-80x24.cells.json",
+      "native_text": "workshop-p2-team-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "workshop-p2-team-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "069b0d0c88fc113547d1d2c35a206ef52c65da0270e1c20f9a71ee0d139a772c",
+        "after_rgb_sha256": "794644fe49f1468130831c933016d8dd75261bcfce5aa31fe8eea60cdfdb0321"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p3-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p3-desks-tower-80x24.cells.json",
+      "native_text": "workshop-p3-desks-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "workshop-p3-desks-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5ebbf3eaeb04a4ad1eca17608a03b4fab4b4b5ee856113e58a2559555aac6d8b",
+        "after_rgb_sha256": "f1cdc2fe59b34ae47bda78805f7f3f292a4827c4c4cb37309887cc37a0516042"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p3-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p3-desks-office-auto-80x24.cells.json",
+      "native_text": "workshop-p3-desks-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "workshop-p3-desks-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "21bfe720673140e6fdaceff1dd8892e9ddd6e48578194421fcfa3b17bc8279e5",
+        "after_rgb_sha256": "61f6563cde29f929af9ea60513312991c9eeb172a9f5de787eb4b1987d350942"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p3-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p3-team-tower-80x24.cells.json",
+      "native_text": "workshop-p3-team-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "workshop-p3-team-tower-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6aadbcb5d925dd7281539d6f424d290f3c47748958bcdd7c7cf4e96314af9f40",
+        "after_rgb_sha256": "9c34d4f66efa9f37b92dde337945c356c287a8752867d08a10b50ff3dd0fcfe0"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "workshop-p3-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "workshop-p3-team-office-auto-80x24.cells.json",
+      "native_text": "workshop-p3-team-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "workshop-p3-team-office-auto-80x24.rgba",
+      "preset": "Workshop",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5e85fba72562cd85c92a343970a4a9f592eec8485376afc1885f140b4405bbbf",
+        "after_rgb_sha256": "2b3d14873972a83ae0b98ae54728474efdae927344677bdc88f5d761999cb62d"
+      },
+      "review_evidence": "workshop-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p0-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p0-desks-tower-80x24.cells.json",
+      "native_text": "lab-p0-desks-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "lab-p0-desks-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "35439a85caf4e23748417ddba648729f876c11858a7db80787c5ee1ad8d6d8d2",
+        "after_rgb_sha256": "8174664f84bc23ca9f2524d4cc2b176b8299e158116abd6f0fc482eae3b78b61"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p0-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p0-desks-office-auto-80x24.cells.json",
+      "native_text": "lab-p0-desks-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "lab-p0-desks-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "125cd9f9a1ef2cfa47e56210ede07f0a1eaabd2cf6c9c8bbed0562e8d202dbe4",
+        "after_rgb_sha256": "b1b0864b57eaf9a2dd6f8da0001e24e957720c4d67c84bd1a8843999b0d61c61"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p0-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p0-team-tower-80x24.cells.json",
+      "native_text": "lab-p0-team-tower-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "lab-p0-team-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3e5e390f29e57efc8ecd7ad527b9a7c8c123e432d71b97acd71887b4fc9cb2ce",
+        "after_rgb_sha256": "fb0df4c1085886633ba5074b515490649efdffc10b082f8b9442dcfcaef2afe7"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p0-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p0-team-office-auto-80x24.cells.json",
+      "native_text": "lab-p0-team-office-auto-80x24.txt",
+      "palette": 0,
+      "physical_rgba": "lab-p0-team-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f8cd4092d9196c30445ebe472f10225c23b03e8d88c245b01ea7f832ca782924",
+        "after_rgb_sha256": "d2fac10010b35aaf6d383b3f6819083f3ae6958a7f30ae953603f95f69562267"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p1-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p1-desks-tower-80x24.cells.json",
+      "native_text": "lab-p1-desks-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "lab-p1-desks-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "35439a85caf4e23748417ddba648729f876c11858a7db80787c5ee1ad8d6d8d2",
+        "after_rgb_sha256": "d1736a2aab78dd44025bf79add2105c66198fb7178c169b7a2bf91578ef97afc"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p1-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p1-desks-office-auto-80x24.cells.json",
+      "native_text": "lab-p1-desks-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "lab-p1-desks-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "125cd9f9a1ef2cfa47e56210ede07f0a1eaabd2cf6c9c8bbed0562e8d202dbe4",
+        "after_rgb_sha256": "b7f87c0a8be9e643c9fe9fae05e2471f09ef7a3af6aa98452b756b483c96d075"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p1-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p1-team-tower-80x24.cells.json",
+      "native_text": "lab-p1-team-tower-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "lab-p1-team-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3e5e390f29e57efc8ecd7ad527b9a7c8c123e432d71b97acd71887b4fc9cb2ce",
+        "after_rgb_sha256": "652a4cd9706c4d722e85907d954e44d49aa8f72344b6c2b679e73ada668def48"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p1-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p1-team-office-auto-80x24.cells.json",
+      "native_text": "lab-p1-team-office-auto-80x24.txt",
+      "palette": 1,
+      "physical_rgba": "lab-p1-team-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f8cd4092d9196c30445ebe472f10225c23b03e8d88c245b01ea7f832ca782924",
+        "after_rgb_sha256": "8bf35504a3bdfd3f84e76091f0bf37cd113346d2ab386e6557dcb991b0829194"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p2-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p2-desks-tower-80x24.cells.json",
+      "native_text": "lab-p2-desks-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "lab-p2-desks-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "35439a85caf4e23748417ddba648729f876c11858a7db80787c5ee1ad8d6d8d2",
+        "after_rgb_sha256": "15eefce3427b40146100cfc95fa6a144a807634e2c51a5a28ae13be7939eaf1d"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p2-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p2-desks-office-auto-80x24.cells.json",
+      "native_text": "lab-p2-desks-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "lab-p2-desks-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "125cd9f9a1ef2cfa47e56210ede07f0a1eaabd2cf6c9c8bbed0562e8d202dbe4",
+        "after_rgb_sha256": "1fbc024308d1d816d0912735a0cf6e3b8071fed3ca3644e9bde0b79325df9282"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p2-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p2-team-tower-80x24.cells.json",
+      "native_text": "lab-p2-team-tower-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "lab-p2-team-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3e5e390f29e57efc8ecd7ad527b9a7c8c123e432d71b97acd71887b4fc9cb2ce",
+        "after_rgb_sha256": "b4d0972286e15caf2b0ca095c91d3fd43237f2784c35816bf1b595fa25337b75"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p2-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p2-team-office-auto-80x24.cells.json",
+      "native_text": "lab-p2-team-office-auto-80x24.txt",
+      "palette": 2,
+      "physical_rgba": "lab-p2-team-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f8cd4092d9196c30445ebe472f10225c23b03e8d88c245b01ea7f832ca782924",
+        "after_rgb_sha256": "dba1b37850f65d6530f524774373812f8b65adbab787eacc82ba2f6e4c5c3b4b"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p3-desks-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p3-desks-tower-80x24.cells.json",
+      "native_text": "lab-p3-desks-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "lab-p3-desks-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "35439a85caf4e23748417ddba648729f876c11858a7db80787c5ee1ad8d6d8d2",
+        "after_rgb_sha256": "b76ec29863727ccd74236b1aec1dbf2b55177f2789f887a9f58f38b82724003d"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p3-desks-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p3-desks-office-auto-80x24.cells.json",
+      "native_text": "lab-p3-desks-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "lab-p3-desks-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "125cd9f9a1ef2cfa47e56210ede07f0a1eaabd2cf6c9c8bbed0562e8d202dbe4",
+        "after_rgb_sha256": "c1892e8b18db7c3fa52eb0b9ae44d0a34c8e1b59fb79ba6907edf6a39cc40ece"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p3-team-tower-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p3-team-tower-80x24.cells.json",
+      "native_text": "lab-p3-team-tower-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "lab-p3-team-tower-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "3e5e390f29e57efc8ecd7ad527b9a7c8c123e432d71b97acd71887b4fc9cb2ce",
+        "after_rgb_sha256": "559b78477b0828b83d39e8509bb8b89941447ce0ecbc672ed2f109c5f933b2c1"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "lab-p3-team-office-auto-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "lab-p3-team-office-auto-80x24.cells.json",
+      "native_text": "lab-p3-team-office-auto-80x24.txt",
+      "palette": 3,
+      "physical_rgba": "lab-p3-team-office-auto-80x24.rgba",
+      "preset": "Laboratory",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f8cd4092d9196c30445ebe472f10225c23b03e8d88c245b01ea7f832ca782924",
+        "after_rgb_sha256": "3b116a9f0afcb089579cd63f679746c2ad13f62b2971870bbb7c03d35922e0f6"
+      },
+      "review_evidence": "lab-all-palettes.png"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-32x14-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-32x14-8x16.cells.json",
+      "native_text": "tower-image-32x14-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-32x14-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "c79d2f36b554be9845c088121e651362d904be6eb53bd7dcac30ffc5500ce0df",
+        "after_rgb_sha256": "764922fea9c53a111d525885c4929571a4bd2c43c222cb19b93871ada2ceec19"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-32x14-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-32x14-10x20.cells.json",
+      "native_text": "tower-image-32x14-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-32x14-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "737aee7fb53f147e9045c76223b9cecfafa267929d055c9122096d1b02c081d3",
+        "after_rgb_sha256": "a2cfc2ccd1482dcd343da2ef22c883ec65ac1423694a0b8f71898920098d336c"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-80x24-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-80x24-8x16.cells.json",
+      "native_text": "tower-image-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1a8d639d3d4c601769493b2ea353b7801fae1a53b929abb5d9706e83d5677325",
+        "after_rgb_sha256": "982020789c33ac69c30c33c321cbfa7097315bea3ce67f185243d6a9e84f03ab"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-light-80x24-8x16",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "tower-light-80x24-8x16.cells.json",
+      "native_text": "tower-light-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-light-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "c4d4ba37ad337890167957d89b4e7a89db06911015bf663877ba46d82c81bcef",
+        "after_rgb_sha256": "a5dd6d1fe4119a8ce7e62f37d5e3aca4bf981d52ef13d56cc252b5de2fb9cbf3"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-256-80x24-8x16",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "tower-256-80x24-8x16.cells.json",
+      "native_text": "tower-256-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-256-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "18df6333df249a323ddaa6fc48fc336f1edfa53a750c1869b0f7d58cef973b5b",
+        "after_rgb_sha256": "3e2ef1363acd41de0486459112430ebce30ed728e4f3937b09d1709eabd80b69"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-mono-80x24-8x16",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "tower-mono-80x24-8x16.cells.json",
+      "native_text": "tower-mono-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-mono-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "83bbbbd63ab308f4d96ffccbd92a803df25a8de011122f6f5c0da785fbbb853f",
+        "after_rgb_sha256": "5fdc55ff0d3e1446f72cac1673dc58ce785c22380bb8f3883f1c64d9f136af37"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-native-80x24-8x16",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "tower-native-80x24-8x16.cells.json",
+      "native_text": "tower-native-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-native-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "bceaf2bc4cff1cef3713bf36526fb0ba84de9705a711da3d17750245c4f49809",
+        "after_rgb_sha256": "24ba7ef395903f3b03df1a54a0eb4f4e744e7e429b5c43809feb36e4ec54364d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-80x24-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-80x24-10x20.cells.json",
+      "native_text": "tower-image-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "9004cff92945bb13d8847b94bb99552a26f59ba178c480ea086034dcdec3ecbf",
+        "after_rgb_sha256": "07d97e8415ab2af0e3081ccd90e9ef7e8a2b100c53a0ae63b37b06ee9a03ec83"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-light-80x24-10x20",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "tower-light-80x24-10x20.cells.json",
+      "native_text": "tower-light-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-light-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5759d40bd2b7b2ebd9512ee977aff276371ca3beb97ad3ae659e42a6debf4a34",
+        "after_rgb_sha256": "8fe6396e5a1254aa0c7341adcade6360b2d8cfb802e49b4281e6a57886807d61"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-256-80x24-10x20",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "tower-256-80x24-10x20.cells.json",
+      "native_text": "tower-256-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-256-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "31d886faec2e05d32e6310f76f67dc36e184549d1a583b38867aa7c0f6659c92",
+        "after_rgb_sha256": "5fe6fa8a9c741203694b276e3390d23c6e438c3a8a536589f629f34cd78ade02"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-mono-80x24-10x20",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "tower-mono-80x24-10x20.cells.json",
+      "native_text": "tower-mono-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-mono-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b68fb2f36518ade5b38dc63511756f8d253eb7d5b37ee9720cb6b2925680d584",
+        "after_rgb_sha256": "a35b0823181de4b61bc574fb0ea759522dea1e3d023cb15f81400e12b0eca932"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-native-80x24-10x20",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "tower-native-80x24-10x20.cells.json",
+      "native_text": "tower-native-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-native-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "c5982fb8b9a41aa738624fe555659517179a57e48ac32c15537974b1656ddb49",
+        "after_rgb_sha256": "de67c36ba792ec51daf9d140e6654c0185fb4776be2ccaf353695c1cca0508f5"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-120x36-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-120x36-8x16.cells.json",
+      "native_text": "tower-image-120x36-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-120x36-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 36,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "76e09e1c9ee4dc757fd6745f89c006893357b003d59d196b7b6e0cbbcd084a1c",
+        "after_rgb_sha256": "d1bf05241664462fbe14fe0713f095bbd0f983b5fd42aaa6cd3f55804367b58b"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-120x36-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-120x36-10x20.cells.json",
+      "native_text": "tower-image-120x36-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-120x36-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 36,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "791c9ccbdd1cf4729831b5984d3893f0830bd5ace3a74dc59d8f7a6e5bcc5127",
+        "after_rgb_sha256": "12c441bcb8dc7150037857915bdfb894492e70171a1d4da0b6a73583022d7af0"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-192x58-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-192x58-8x16.cells.json",
+      "native_text": "tower-image-192x58-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-192x58-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "tower",
+      "rows": 58,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "40db5179da9d4b64821a9d088cbaf2afa0ae1c1809f6bdb2fc1ab49df8602737",
+        "after_rgb_sha256": "b8f3ccb48a76b84a0752123927acf72e9f8ef46726c6851905cbc3ce805806ae"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-192x58-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-192x58-10x20.cells.json",
+      "native_text": "tower-image-192x58-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "tower-image-192x58-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f9dae4ce4734445131acce84809e3171c83c1f02c670dd25125df829c3aa995c",
+        "after_rgb_sha256": "2dff60255a2e8f3c7415c43efc035c9f7ac4729076ff073ea4699db1ec399694"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-32x14-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-32x14-8x16.cells.json",
+      "native_text": "office-auto-image-32x14-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-32x14-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 14,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1fceecc136b2f84b1e4c810115a71fbd721f84b17114b1d510fb0b2f450d8c0c",
+        "after_rgb_sha256": "6da6b0bdac700cd04303e2b91ddf6d4779173c398348283674e55f758a809ecc"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-32x14-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-32x14-10x20.cells.json",
+      "native_text": "office-auto-image-32x14-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-32x14-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "861ba9d5898f3a14c9e72247b640608399db68378c3089a514ae9e3c0ab3edfd",
+        "after_rgb_sha256": "81efc460d47b04b25688ee96261e3cb8cf3c83b6b36cfc5998a7dc26e23cef90"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-80x24-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-80x24-8x16.cells.json",
+      "native_text": "office-auto-image-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b0560e40d819c6d71ffd75fde9df2c39c2570188c0b1e83bdd875fcd00341605",
+        "after_rgb_sha256": "bf94935bdfc309d20a9a029973216e1da3b3e88fe7139e9a1825b2490e92acb4"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-light-80x24-8x16",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "office-auto-light-80x24-8x16.cells.json",
+      "native_text": "office-auto-light-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-light-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "e01b93ae3ca2f453793e3732167c6ca85420536adaf39af20c4af502e64c1e38",
+        "after_rgb_sha256": "30757727a8f656e58a75c34b4bfcbe7562cd761eb2846f78015bfdd3078fa0d8"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-256-80x24-8x16",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "office-auto-256-80x24-8x16.cells.json",
+      "native_text": "office-auto-256-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-256-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "abc0caeab873d39f800af3125e8a167ce692d9ca4624055be2da3361c3185530",
+        "after_rgb_sha256": "d87b51c75352e864646682cd84103d52f16255b08a8d8e59e9401c74dd903f60"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-mono-80x24-8x16",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "office-auto-mono-80x24-8x16.cells.json",
+      "native_text": "office-auto-mono-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-mono-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6ab80533c8ec472bac7bfb8f6f0c6a5b0acb30edde6e771661273575ffca012d",
+        "after_rgb_sha256": "27e3516f107ae691386930d858548badbb42331d3118ee22809e5673e474544b"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-native-80x24-8x16",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "office-auto-native-80x24-8x16.cells.json",
+      "native_text": "office-auto-native-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-native-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "7476c51b8aa225b8530fe7cacab1f8c35ea206715749d6a5194e0c57fdcf6e29",
+        "after_rgb_sha256": "a16085c9d1ed33cb0400998b6b7b49d03a176ec4c4cdeeb9d8c280a6a6da83ef"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-80x24-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-80x24-10x20.cells.json",
+      "native_text": "office-auto-image-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "a07e4d0fcee31adb59b906de19cb17521a585b9feebfc91b07c59a456bdbf2ea",
+        "after_rgb_sha256": "48951a469bb4984428af433a17d1cdfc7bc07757ca1589eb0bfe4dcefa8b049e"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-light-80x24-10x20",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "office-auto-light-80x24-10x20.cells.json",
+      "native_text": "office-auto-light-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-light-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "4bd77a90355d9a3d5b5b50eb91ee0ec09568daacee379fc7a92f41f132f82005",
+        "after_rgb_sha256": "e6a686cf03d9d785dac2cad9933007813c0a4b7720af85d5c4b917d5fbe2dad7"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-256-80x24-10x20",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "office-auto-256-80x24-10x20.cells.json",
+      "native_text": "office-auto-256-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-256-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1c337dd2718f8af8b061f7779e56b5d890d172c1de5a20e72b3148d33c3010b4",
+        "after_rgb_sha256": "6e2f0346c0a0ab9e427c67bd5c64e05bf00540e1af84f10952973566e08fe352"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-mono-80x24-10x20",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "office-auto-mono-80x24-10x20.cells.json",
+      "native_text": "office-auto-mono-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-mono-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "0d11d05059bc267e612abe89b846e4f065123433afa7d7a5638142f74d11dd39",
+        "after_rgb_sha256": "46ee3778ff73a3ac4684b1b77f9105043e4935c84bc5fdd5374769d31e6f5edd"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-native-80x24-10x20",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "office-auto-native-80x24-10x20.cells.json",
+      "native_text": "office-auto-native-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-native-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "86eb152c48b1bfd498e08b42d1b236138ab24a1a2af1a5cccd46e70ff22ce73e",
+        "after_rgb_sha256": "e569d22e7d0adeaa7f4ba5b9aaada4095126547fbfab5380236c5bda3e4459ab"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-120x36-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-120x36-8x16.cells.json",
+      "native_text": "office-auto-image-120x36-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-120x36-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "office-auto",
+      "rows": 36,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "fc8b2599d78fd8768720f3d8d500b147c30832d07c902aca2d56729157e2bd84",
+        "after_rgb_sha256": "07b27cf7799c970aa380269a1d89a350f4dbaf1e30301747ab12c3b794ee88cf"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-120x36-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-120x36-10x20.cells.json",
+      "native_text": "office-auto-image-120x36-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-120x36-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 36,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "dd763b1e1a86e61eee775a519305aa0531bb9a310a84026055f16d20d892dc0f",
+        "after_rgb_sha256": "b85983668076b184897b29c1deb26df2fa8588bbb3a36688d3918f1da1581254"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-192x58-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-192x58-8x16.cells.json",
+      "native_text": "office-auto-image-192x58-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-192x58-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "480f4d90a725cabf3c14c0373dafa4dd85a34672a160a16c1b36992ee6a09ac3",
+        "after_rgb_sha256": "67b197e4638f249433f5cad4204ba488a024a1ed3e34d6aa41f85a516f683d6a"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-192x58-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "office-auto-image-192x58-10x20.cells.json",
+      "native_text": "office-auto-image-192x58-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "office-auto-image-192x58-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "9431cb6022df3a8b7c8847d0d9dccbe76bfa9967d1671e4fc102564aa7fe76ee",
+        "after_rgb_sha256": "17016b651f1b9b50cec923b9e5155e76450736705176f9812e1b32dff80637bb"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-32x14-8x16",
+      "limitation": "Emergency work brief: full tabs require a larger window. Non-Now tabs were opened at 80x24 before resizing; this frame does not claim their controls are available here.",
+      "mode": "image",
+      "native_cells": "inspector-now-image-32x14-8x16.cells.json",
+      "native_text": "inspector-now-image-32x14-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-32x14-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "compact-work-brief",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "4f39ee57212fbf54d433c92bf2c8f997862366f82c287e3553d293b176c25fd7",
+        "after_rgb_sha256": "670bc505ce6a70b0303eff4739e0fd58eae02a0fe17d2ee1d899f9c2dd481b5d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-32x14-10x20",
+      "limitation": "Emergency work brief: full tabs require a larger window. Non-Now tabs were opened at 80x24 before resizing; this frame does not claim their controls are available here.",
+      "mode": "image",
+      "native_cells": "inspector-now-image-32x14-10x20.cells.json",
+      "native_text": "inspector-now-image-32x14-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-32x14-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "compact-work-brief",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "a06af797b00c9d9dda22989e690e0c671997078fe102e21efd24033e7d6ee225",
+        "after_rgb_sha256": "bea5e77d969612207b3e08ea283dec41b850d6a1c218c40cb3d45863870dbe44"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-80x24-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-80x24-8x16.cells.json",
+      "native_text": "inspector-now-image-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f19bac94feb68ddd626c9bde6f469ca25b8338b3a1395197857195de3de812c6",
+        "after_rgb_sha256": "478799d09749ac32464948b73c2976f5f644271d536a71e233d1818b265ba2c9"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-light-80x24-8x16",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "inspector-now-light-80x24-8x16.cells.json",
+      "native_text": "inspector-now-light-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-light-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6e58176cbc3a3bb4d74a726d792969dd832490afe51b90136712a251cc366b4c",
+        "after_rgb_sha256": "e36ba47b6eee0ab58a7008f1ff2b33737aa11d8019ee8a4b56629662da0cd80a"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-256-80x24-8x16",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "inspector-now-256-80x24-8x16.cells.json",
+      "native_text": "inspector-now-256-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-256-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "632d93a8422b8315153ce523c29d16f0bf851edd878e7cf8e661f32cb48c3abd",
+        "after_rgb_sha256": "a771129bc06c527a9347292405a58619160c5f62e33d52b7192b917c2d4a3cfd"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-mono-80x24-8x16",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "inspector-now-mono-80x24-8x16.cells.json",
+      "native_text": "inspector-now-mono-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-mono-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "ecee205037eb5086033865a249ee536a6ace223d26bd9b9f1b636e26e4c644a4",
+        "after_rgb_sha256": "ecee205037eb5086033865a249ee536a6ace223d26bd9b9f1b636e26e4c644a4"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-native-80x24-8x16",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "inspector-now-native-80x24-8x16.cells.json",
+      "native_text": "inspector-now-native-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-native-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f19bac94feb68ddd626c9bde6f469ca25b8338b3a1395197857195de3de812c6",
+        "after_rgb_sha256": "478799d09749ac32464948b73c2976f5f644271d536a71e233d1818b265ba2c9"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-80x24-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-80x24-10x20.cells.json",
+      "native_text": "inspector-now-image-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "cc33c84d250e933b5aa144e0e637db44b65ee5bbc2f86613ae8ee2e349262990",
+        "after_rgb_sha256": "dd96bf950b0f11dc1cd2391d368a7568fd1df4ac3ee1a93de4047b921c70f4fd"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-light-80x24-10x20",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "inspector-now-light-80x24-10x20.cells.json",
+      "native_text": "inspector-now-light-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-light-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "2233ace7e5887667d5a2df2294a4ff7e74f1b282d2766eb9c2bff6dcb8a448b5",
+        "after_rgb_sha256": "638e855676f51c695e62952714c3b3da3b885c3a74910b72c744dcac6daaf94d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-256-80x24-10x20",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "inspector-now-256-80x24-10x20.cells.json",
+      "native_text": "inspector-now-256-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-256-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "ada17994fdbf3b6bd4243b01f7b415f38b86f8456aadb1be1536ed0bb8d2c9c9",
+        "after_rgb_sha256": "3617872ec50770ecd5c609fea8b8f4ca3c59fbbbff73589f233ee8055f428c55"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-mono-80x24-10x20",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "inspector-now-mono-80x24-10x20.cells.json",
+      "native_text": "inspector-now-mono-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-mono-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "2fa19fead428ca37c5bcc8e7b3e5af3e30a03ef28aeb0c7d9255b814293f2634",
+        "after_rgb_sha256": "2fa19fead428ca37c5bcc8e7b3e5af3e30a03ef28aeb0c7d9255b814293f2634"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-native-80x24-10x20",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "inspector-now-native-80x24-10x20.cells.json",
+      "native_text": "inspector-now-native-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-native-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "cc33c84d250e933b5aa144e0e637db44b65ee5bbc2f86613ae8ee2e349262990",
+        "after_rgb_sha256": "dd96bf950b0f11dc1cd2391d368a7568fd1df4ac3ee1a93de4047b921c70f4fd"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-120x36-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-120x36-8x16.cells.json",
+      "native_text": "inspector-now-image-120x36-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-120x36-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "inspector-now",
+      "rows": 36,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "7001da999b291fe8a936c41e52a6fce370a438ebe77c7325d53d443dd2fafa93",
+        "after_rgb_sha256": "1dec7ea2993f4ec6aeb2643503284d7727adb01fe858c38ff1297e0cd9bf164b"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-120x36-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-120x36-10x20.cells.json",
+      "native_text": "inspector-now-image-120x36-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-120x36-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 36,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "e8def0d6781eb29bb823a073b548ee421430ea13fe437800733de959a4d0a26d",
+        "after_rgb_sha256": "325b19a8dd65f71b4d2e4d680b15a69b3e38627629cc52d4e4e8d506995c0413"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-192x58-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-192x58-8x16.cells.json",
+      "native_text": "inspector-now-image-192x58-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-192x58-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6b51851fa6bc36a9f712e376558bde29c00e782e47739e8e74784274ca7281ef",
+        "after_rgb_sha256": "80ff3dba89e9722bc160c01d75f9a93530ed90a3eb340c7d29db1c0970b81e87"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-192x58-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "inspector-now-image-192x58-10x20.cells.json",
+      "native_text": "inspector-now-image-192x58-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "inspector-now-image-192x58-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b672142ee58cf4de0efad4dd3656adac3316c5a31c09c53c19dbfa02ace07c60",
+        "after_rgb_sha256": "31807d8b4005c4684824c9d2fe0442adc8f6d03a1486c97468ef92b85f5c6928"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-32x14-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-32x14-8x16.cells.json",
+      "native_text": "attention-image-32x14-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-32x14-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "8237490a165ed1682b81b6c045c0a2e6132b855e992e1c61d3d6e4a9f678fac9",
+        "after_rgb_sha256": "5db652a1d88add71fac66a84b05123d7f5b71f554ce2e08046766b5f0a873cc5"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-32x14-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-32x14-10x20.cells.json",
+      "native_text": "attention-image-32x14-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-32x14-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "34fdd00d0b433f30ce0dac18fbaeeff2f2bc62dfd8e9b1b86eaa9272b21685cd",
+        "after_rgb_sha256": "22dad596b7f99f1b75323e6133c8b0f6afcf2a27870385f5e589e2864a079434"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-80x24-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-80x24-8x16.cells.json",
+      "native_text": "attention-image-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "pass",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "29e78ae6260aa670fea0d9c584253a9e645b250328ed94f08393009f01184f58",
+        "after_rgb_sha256": "50a0f10a58d0ba1d99fb81b20bdd8309404f5f7af164b1cee714d882d45a23c0"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-light-80x24-8x16",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "attention-light-80x24-8x16.cells.json",
+      "native_text": "attention-light-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-light-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "5b850d53293595c8f454f1ea3d0bd522fd396413fa88a769d45afc16e89c5907",
+        "after_rgb_sha256": "b4b7888e80e580dcd9be74e5424a8ac5bac494a4a98b68a5442c9ae0627a6866"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-256-80x24-8x16",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "attention-256-80x24-8x16.cells.json",
+      "native_text": "attention-256-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-256-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "e95d94d11a1006ab041f441d69e668705bdfa01cb6a72ffbb5ab0a91695d9e9a",
+        "after_rgb_sha256": "4efa9cb2a06ced9f089a78665f2edf4e3291e2b01608904720779a18ab0320a0"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-mono-80x24-8x16",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "attention-mono-80x24-8x16.cells.json",
+      "native_text": "attention-mono-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-mono-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "fd40d0f341c3c59811e72868086c5fdd8c426a1752c54a47832c3c43b69e8900",
+        "after_rgb_sha256": "fd40d0f341c3c59811e72868086c5fdd8c426a1752c54a47832c3c43b69e8900"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-native-80x24-8x16",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "attention-native-80x24-8x16.cells.json",
+      "native_text": "attention-native-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-native-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "29e78ae6260aa670fea0d9c584253a9e645b250328ed94f08393009f01184f58",
+        "after_rgb_sha256": "50a0f10a58d0ba1d99fb81b20bdd8309404f5f7af164b1cee714d882d45a23c0"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-80x24-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-80x24-10x20.cells.json",
+      "native_text": "attention-image-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "34adb4ea6ab43edf672d219488b83ae29b522aa4c1850537bbca3a8762fe6d6c",
+        "after_rgb_sha256": "3c6c2a5d63076660cba394f1fed9e27e8ade2409b5336a3ab98db5a54d66243d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-light-80x24-10x20",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "attention-light-80x24-10x20.cells.json",
+      "native_text": "attention-light-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-light-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f7e7c5b21143d01e89d433c0bd4ff6abd9b50e690faf274a759a301324e418af",
+        "after_rgb_sha256": "448feef8f3f86cebd66d6fc6e4a4637f9cbb38344b5fb811147bbcaf87b46b91"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-256-80x24-10x20",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "attention-256-80x24-10x20.cells.json",
+      "native_text": "attention-256-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-256-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "10c8d714878396d572d2f6ec8b284494dd6b755c3e792766acc88ab918520bf1",
+        "after_rgb_sha256": "5dbb79e6ace242caf28fe2d649a78ebd69ba25fc164ed3d8393ac3f34abc6bfd"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-mono-80x24-10x20",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "attention-mono-80x24-10x20.cells.json",
+      "native_text": "attention-mono-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-mono-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "567b86ad1e2b8f33cf0a9657c9c478cc9c6c33d8d562fc80d47908a31f16925c",
+        "after_rgb_sha256": "567b86ad1e2b8f33cf0a9657c9c478cc9c6c33d8d562fc80d47908a31f16925c"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-native-80x24-10x20",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "attention-native-80x24-10x20.cells.json",
+      "native_text": "attention-native-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-native-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "34adb4ea6ab43edf672d219488b83ae29b522aa4c1850537bbca3a8762fe6d6c",
+        "after_rgb_sha256": "3c6c2a5d63076660cba394f1fed9e27e8ade2409b5336a3ab98db5a54d66243d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-120x36-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-120x36-8x16.cells.json",
+      "native_text": "attention-image-120x36-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-120x36-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "attention",
+      "rows": 36,
+      "status": "pass",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "245de28312d0790f29960fadbc286a618b3a60c6ebf3315901d5d3430861c889",
+        "after_rgb_sha256": "ab807046f64154c3f890a66081a9388782835bdc3fa00b95cb32ec6c7fea0edd"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-120x36-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-120x36-10x20.cells.json",
+      "native_text": "attention-image-120x36-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-120x36-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 36,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6ca6d1d5099501c2dd1331515b5771a3d8eb160150c6e91426e232a1d7bc54bf",
+        "after_rgb_sha256": "10bc139fcf43af9a0aeba79b24bb1fa366a791a95eb8deb73e759e0fa5b3802c"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-192x58-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-192x58-8x16.cells.json",
+      "native_text": "attention-image-192x58-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-192x58-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6bea246a06186a5b9282a6efafa6a51ad5f1bea694ddd0038d09f10a18cbfe91",
+        "after_rgb_sha256": "980e03ec6e43891f92895338001cc4f2b625f3f705b8122c5be4ebeaf17befba"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "attention-image-192x58-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "attention-image-192x58-10x20.cells.json",
+      "native_text": "attention-image-192x58-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "attention-image-192x58-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "attention",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "777c5b06b13f25997c156cdf6e2ca34116de8da56d37af5aed3cb3ea1a58bd69",
+        "after_rgb_sha256": "95b70725251b185df8121ddba4d9e96f0b7ced840b16df3c4534c6878c0afe69"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-32x14-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-32x14-8x16.cells.json",
+      "native_text": "connections-image-32x14-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-32x14-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "277c681bcadfa5b71d684ed30c987e877ebbcc24088904682063d0017b0196b8",
+        "after_rgb_sha256": "dd2deec0a4bd6b61826a746eea9d18497afd7d5f546aed557290f8783463618e"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 32,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-32x14-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-32x14-10x20.cells.json",
+      "native_text": "connections-image-32x14-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-32x14-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 14,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6366f46aa2a03e93aa795486315e39b420c4af40d6a535b4ef31c4a1251d0131",
+        "after_rgb_sha256": "d16dff9a4669bad96bbe2a8ec659ff7e77300b01372bc78a54ef080077163053"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-80x24-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-80x24-8x16.cells.json",
+      "native_text": "connections-image-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "pass",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1e5ec8069ec662ed29bcd698efcb978410ff5b873cc901072a6c3b2d871550b1",
+        "after_rgb_sha256": "5669a0ca7e9705cb35a719958f939e63f1f1789a2311f89794ea92b9557a2bc6"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-light-80x24-8x16",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "connections-light-80x24-8x16.cells.json",
+      "native_text": "connections-light-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-light-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "594cf44ddf8f250f228c3f5138ddf2e96a7671e05a19b9bd03e75547df545f96",
+        "after_rgb_sha256": "329c46ae3c6e9a793f97a0e957a21f8b9d15f69152a90d582fbf5e2a7aa9f9be"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-256-80x24-8x16",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "connections-256-80x24-8x16.cells.json",
+      "native_text": "connections-256-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-256-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1a5ad41b96f5e13612e5799d7f8cf02bd1150b8582f383059b73b2f974200939",
+        "after_rgb_sha256": "372a5ad2b8a4ae52089d59cd1108bf315bba8a06925926ef45ba2b862d758ce2"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-mono-80x24-8x16",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "connections-mono-80x24-8x16.cells.json",
+      "native_text": "connections-mono-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-mono-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "f1509fd1a693d6f35472f0576c527befe6a8fff3b66923da2dc5e8b9d1e6c6f5",
+        "after_rgb_sha256": "f1509fd1a693d6f35472f0576c527befe6a8fff3b66923da2dc5e8b9d1e6c6f5"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-native-80x24-8x16",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "connections-native-80x24-8x16.cells.json",
+      "native_text": "connections-native-80x24-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-native-80x24-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "1e5ec8069ec662ed29bcd698efcb978410ff5b873cc901072a6c3b2d871550b1",
+        "after_rgb_sha256": "5669a0ca7e9705cb35a719958f939e63f1f1789a2311f89794ea92b9557a2bc6"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-80x24-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-80x24-10x20.cells.json",
+      "native_text": "connections-image-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6e1cca3631e44239dc29f6844494ff58d80f2462b5b1197a63bab67b2bdfbaec",
+        "after_rgb_sha256": "1abc6c903ef6cad5a8628e7b4d9582511fe73f4e133e97636da31d8aff684d44"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-light-80x24-10x20",
+      "limitation": null,
+      "mode": "light",
+      "native_cells": "connections-light-80x24-10x20.cells.json",
+      "native_text": "connections-light-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-light-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "d70338c067764e8566b8f59fa7f9aaedf79d7666889b61e348544fa97511a158",
+        "after_rgb_sha256": "9f1530c898cf429fb4d63bade996df73f60a7f260cd5c719adde841c47cf4089"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "Palette256",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-256-80x24-10x20",
+      "limitation": null,
+      "mode": "256",
+      "native_cells": "connections-256-80x24-10x20.cells.json",
+      "native_text": "connections-256-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-256-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "490610530dde05929f038db71580faa6b9f82615115ab7f242a147195218c92e",
+        "after_rgb_sha256": "fa29b471732c16ce2eda3228d2e7eee0bc266c95c43f2f61aca3136203fb05cf"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "None",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-mono-80x24-10x20",
+      "limitation": null,
+      "mode": "mono",
+      "native_cells": "connections-mono-80x24-10x20.cells.json",
+      "native_text": "connections-mono-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-mono-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": false,
+        "before_rgb_sha256": "b8261cae4620ae7763fc2dc6930667c3b1b0cb0013cfb231b11a3a1ae85f4c03",
+        "after_rgb_sha256": "b8261cae4620ae7763fc2dc6930667c3b1b0cb0013cfb231b11a3a1ae85f4c03"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-native-80x24-10x20",
+      "limitation": null,
+      "mode": "native",
+      "native_cells": "connections-native-80x24-10x20.cells.json",
+      "native_text": "connections-native-80x24-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-native-80x24-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "6e1cca3631e44239dc29f6844494ff58d80f2462b5b1197a63bab67b2bdfbaec",
+        "after_rgb_sha256": "1abc6c903ef6cad5a8628e7b4d9582511fe73f4e133e97636da31d8aff684d44"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-120x36-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-120x36-8x16.cells.json",
+      "native_text": "connections-image-120x36-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-120x36-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Reviewed full native-font replay or full-scene palette contact sheet for material separation, visible requests, preserved hierarchy and clipping.",
+      "rendered_surface": "connections",
+      "rows": 36,
+      "status": "pass",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "332a54fc2a76d3a59000b66ad8dfd5180ef7735d281626165a5112e1423ddb64",
+        "after_rgb_sha256": "18e26fccb7f66613af96f3ae2ba3bbb520e004ecf845d656886f577687a66c42"
+      },
+      "review_evidence": "individual before/after specimen"
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-120x36-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-120x36-10x20.cells.json",
+      "native_text": "connections-image-120x36-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-120x36-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 36,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "b6c50e93f87e0f00b08c336e594c64d05ee3ae86d8388915c2c5a2f48f5d0524",
+        "after_rgb_sha256": "722782558a61cf235efec56b022db32a11a617c79fb6441fee70ba351ed9e293"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-192x58-8x16",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-192x58-8x16.cells.json",
+      "native_text": "connections-image-192x58-8x16.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-192x58-8x16.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "98ba3b1a5c3db08033918858d35caf6faa49119cdab21ec7fde0634f5bbf2158",
+        "after_rgb_sha256": "1d05d3a26927f5897b7e386c3ba0bb11f2990c644f24831f4196f55989dbd96d"
+      }
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "connections-image-192x58-10x20",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "connections-image-192x58-10x20.cells.json",
+      "native_text": "connections-image-192x58-10x20.txt",
+      "palette": 0,
+      "physical_rgba": "connections-image-192x58-10x20.rgba",
+      "preset": "Studio",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "connections",
+      "rows": 58,
+      "status": "not-tested",
+      "surface": "connections",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested",
+      "comparison": {
+        "native_text_identical": true,
+        "hit_geometry_identical": true,
+        "image_geometry_identical": true,
+        "pixels_changed": true,
+        "before_rgb_sha256": "f7d481d21fb85e190a88db2654cae59b14fbcec2f55b7b3a33fb152691df15fa",
+        "after_rgb_sha256": "748d298e1db45eb3c1887fa00ab9943ee0cb2a5bed6b95af82738199116f23c5"
+      }
+    }
+  ]
+}

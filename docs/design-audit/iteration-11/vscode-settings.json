@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.enableImages": true,
+  "terminal.integrated.gpuAcceleration": "auto",
+  "terminal.integrated.customGlyphs": true
+}

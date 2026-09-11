@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "passed": true,
+  "source_revision": "17ae09f85982b2e29c701fe47b7ce03fa34c488e",
+  "source_mode": "git archive; working-tree edits excluded",
+  "driver": "macOS-26.6.2-arm64-arm-64bit",
+  "daemon_architecture": "arm64",
+  "docker": "{\"Client\":{\"Version\":\"29.1.3\",\"ApiVersion\":\"1.52\",\"DefaultAPIVersion\":\"1.52\",\"GitCommit\":\"f52814d\",\"GoVersion\":\"go1.25.5\",\"Os\":\"darwin\",\"Arch\":\"arm64\",\"BuildTime\":\"Fri Dec 12 14:48:46 2025\",\"Context\":\"desktop-linux\"},\"Server\":{\"Platform\":{\"Name\":\"Docker Desktop 4.56.0 (214940)\"},\"Version\":\"29.1.3\",\"ApiVersion\":\"1.52\",\"MinAPIVersion\":\"1.44\",\"Os\":\"linux\",\"Arch\":\"arm64\",\"Components\":[{\"Name\":\"Engine\",\"Version\":\"29.1.3\",\"Details\":{\"ApiVersion\":\"1.52\",\"Arch\":\"arm64\",\"BuildTime\":\"Fri Dec 12 14:50:40 2025\",\"Experimental\":\"false\",\"GitCommit\":\"fbf3ed2\",\"GoVersion\":\"go1.25.5\",\"KernelVersion\":\"6.12.54-linuxkit\",\"MinAPIVersion\":\"1.44\",\"Os\":\"linux\"}},{\"Name\":\"containerd\",\"Version\":\"v2.2.1\",\"Details\":{\"GitCommit\":\"dea7da592f5d1d2b7755e3a161be07f43fad8f75\"}},{\"Name\":\"runc\",\"Version\":\"1.3.4\",\"Details\":{\"GitCommit\":\"v1.3.4-0-gd6d73eb8\"}},{\"Name\":\"docker-init\",\"Version\":\"0.19.0\",\"Details\":{\"GitCommit\":\"de40ad0\"}}],\"GitCommit\":\"fbf3ed2\",\"GoVersion\":\"go1.25.5\",\"KernelVersion\":\"6.12.54-linuxkit\",\"BuildTime\":\"2025-12-12T14:50:40.000000000+00:00\"}}",
+  "recipe_sha256": "6ecfd33da0b006959cea178357339eca7cbb5a35a365ffc6ac93239d963d9d7b",
+  "helper_sha256": "c126d9564ce14e496f50db07780ca184bea7317072e6561770084cf0da2355b0",
+  "pty_helper_sha256": "06636b8c6d969b0fa9d7df82b40371e79b51b9f85e4ae3bb225208f1801a75cb",
+  "platforms": {
+    "amd64": {
+      "target": "x86_64-unknown-linux-musl",
+      "source_revision": "17ae09f85982b2e29c701fe47b7ce03fa34c488e",
+      "binary": {
+        "machine": 62,
+        "architecture": "amd64",
+        "elf_type": 3,
+        "interpreter": false,
+        "needed_shared_libraries": false,
+        "bytes": 6507736,
+        "sha256": "e02b43e3d90b64a5201cb790d7f9aaa690659a35b701ec6e6b76899940ecdb6b"
+      },
+      "image_id": "sha256:336a056ac7fc78a7f4ca4dc532f44d8a764dec702c6c4006fa623f900e517b8d",
+      "image": "they-work-preview:iteration11-17ae09f85982-amd64",
+      "execution": "emulated",
+      "toolchain_sha256": "9d2302bd462bf235c867d1d7983f14a52f20700aad88a46bf9c7837a3553ad74",
+      "provider_stores_mounted": false,
+      "runtime_network": "none",
+      "runtime_filesystem": "read-only",
+      "pty_geometry": {
+        "columns": 160,
+        "rows": 48,
+        "cell_pixels": [
+          8,
+          16
+        ]
+      },
+      "real_terminal": "not tested",
+      "wsl": "not tested",
+      "process_smoke": [
+        {
+          "name": "help",
+          "exit_code": 0,
+          "elapsed_seconds": 0.335
+        },
+        {
+          "name": "once",
+          "exit_code": 0,
+          "elapsed_seconds": 0.283
+        },
+        {
+          "name": "headless",
+          "exit_code": 0,
+          "elapsed_seconds": 0.503
+        }
+      ],
+      "pty_smoke": {
+        "kitty": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+          "frame_bytes": 138686,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "iterm2": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "269d01d8f2e66e62d20498f5f0a8ffc76b973e6e132d3e74aabc4309882bf9ed",
+          "frame_bytes": 138442,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "sixel": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "a734e5dd085787d64aa0d324c74bbd39b9027f28aca15f19b27894c67b71703e",
+          "frame_bytes": 39039,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "fallback": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": false,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+          "frame_bytes": 9465,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        }
+      },
+      "passed": true,
+      "documentation_sha256": {
+        "WSL-PREVIEW.md": "a5b9acc99d03842ee71d5ce00a4ee7ae7d8cb1a2d518b17c1d27cac7a8051703",
+        "WSL-SESSION.md": "6437d901c07f88acb44e69d6627fc3de69e39f61f0ac48b09cd07d759cbeda19",
+        "vscode-settings.json": "4d33a79d5328d9b687f059c749831a0279ab963698dec8f356aabb7c6172fb43",
+        "INSTALL.md": "1e2692d855277b5e23378923b90005743a6cf14486b928ae4a5f2f3d217a1756",
+        "docs/CONTROLS.md": "5c7b2d0ab86b723ec0925c839e6f5c31f55c4911c7bd233506e6e20abc5ee50f"
+      },
+      "archive": {
+        "name": "they-work-x86_64-unknown-linux-musl.tar.gz",
+        "sha256": "c87ffe9484b6f319f683d2b6ce77f7170b1c693e71d2c7a888f6c13983717ae0",
+        "bytes": 3102600
+      }
+    },
+    "arm64": {
+      "target": "aarch64-unknown-linux-musl",
+      "source_revision": "17ae09f85982b2e29c701fe47b7ce03fa34c488e",
+      "binary": {
+        "machine": 183,
+        "architecture": "arm64",
+        "elf_type": 2,
+        "interpreter": false,
+        "needed_shared_libraries": false,
+        "bytes": 5524704,
+        "sha256": "78694c3c7a4afac4db3b6efde3e74405c52afa5e631208cd6af06dc4d7e91698"
+      },
+      "image_id": "sha256:4a4f56bfb00b4b4e7c3dff86123c2467db444306fc9137c2e909560c17580c9b",
+      "image": "they-work-preview:iteration11-17ae09f85982-arm64",
+      "execution": "daemon-native",
+      "toolchain_sha256": "b2b9aa30c5b55eedca1b3b3b8566012d4d8cad241e8101dbee7bb79a81d1ec0e",
+      "provider_stores_mounted": false,
+      "runtime_network": "none",
+      "runtime_filesystem": "read-only",
+      "pty_geometry": {
+        "columns": 160,
+        "rows": 48,
+        "cell_pixels": [
+          8,
+          16
+        ]
+      },
+      "real_terminal": "not tested",
+      "wsl": "not tested",
+      "process_smoke": [
+        {
+          "name": "help",
+          "exit_code": 0,
+          "elapsed_seconds": 0.293
+        },
+        {
+          "name": "once",
+          "exit_code": 0,
+          "elapsed_seconds": 0.397
+        },
+        {
+          "name": "headless",
+          "exit_code": 0,
+          "elapsed_seconds": 0.614
+        }
+      ],
+      "pty_smoke": {
+        "kitty": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+          "frame_bytes": 138686,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "iterm2": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "90c19aacc73751723cf916abf9ea727f25607ff3b3592d4e85b1c68f1effc37b",
+          "frame_bytes": 138443,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "sixel": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "f7b4aec3565e1dd5b75d3a22aec05ba40884634d1d8e4b22872ad73f4167e11b",
+          "frame_bytes": 39000,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        },
+        "fallback": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": false,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "frame_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+          "frame_bytes": 9465,
+          "mouse_released": true,
+          "alternate_screen_left": true
+        }
+      },
+      "passed": true,
+      "documentation_sha256": {
+        "WSL-PREVIEW.md": "a5b9acc99d03842ee71d5ce00a4ee7ae7d8cb1a2d518b17c1d27cac7a8051703",
+        "WSL-SESSION.md": "6437d901c07f88acb44e69d6627fc3de69e39f61f0ac48b09cd07d759cbeda19",
+        "vscode-settings.json": "4d33a79d5328d9b687f059c749831a0279ab963698dec8f356aabb7c6172fb43",
+        "INSTALL.md": "1e2692d855277b5e23378923b90005743a6cf14486b928ae4a5f2f3d217a1756",
+        "docs/CONTROLS.md": "5c7b2d0ab86b723ec0925c839e6f5c31f55c4911c7bd233506e6e20abc5ee50f"
+      },
+      "archive": {
+        "name": "they-work-aarch64-unknown-linux-musl.tar.gz",
+        "sha256": "05d5288483e0175ef7490d79892afceb149f53b72e19ad472a8c0e0ceec82523",
+        "bytes": 2866486
+      }
+    }
+  },
+  "evidence_kind": "container execution and simulated PTY, not real terminal",
+  "physical_wsl_validation": "not tested",
+  "packaging_helper_sha256": "8f6ea34331651d2799035155110ffb406eef20af97cd265cf570a297a461f94f",
+  "packaging_note": "Documentation bundle repaired; executed binaries unchanged"
+}

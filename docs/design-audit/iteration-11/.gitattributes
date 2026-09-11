@@ -1,0 +1,3 @@
+# Preserve compiler/terminal evidence bytes, including carriage returns and spaces.
+*.log -text -whitespace
+preview/**/toolchain.txt -text -whitespace

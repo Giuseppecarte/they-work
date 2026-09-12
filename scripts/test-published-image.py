@@ -155,6 +155,25 @@ def check_frame(name, frame, has_graphics, replied, expect_graphics, transmissio
     return failures, counts
 
 
+def count_report(graphics_counts, iterm_counts, fallback_counts):
+    return (
+        "160x48 PTY glyph counts: "
+        f"Kitty probe half={graphics_counts['half']} quadrant={graphics_counts['quadrant']} sextant={graphics_counts['sextant']}; "
+        f"iTerm2 probe half={iterm_counts['half']} quadrant={iterm_counts['quadrant']} sextant={iterm_counts['sextant']}; "
+        f"no-reply fallback half={fallback_counts['half']} quadrant={fallback_counts['quadrant']} sextant={fallback_counts['sextant']}"
+    )
+
+
+def write_github_summary(image, report):
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_path:
+        return
+    with Path(summary_path).open("a", encoding="utf-8") as summary:
+        summary.write("## Published image PTY verification\n\n")
+        summary.write(f"`{image}`\n\n")
+        summary.write(f"{report}\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True, help="published image tag or digest to pull")
@@ -192,6 +211,8 @@ def main():
     failures.extend(graphics_failures)
     failures.extend(iterm_failures)
     failures.extend(fallback_failures)
+    report = count_report(graphics_counts, iterm_counts, fallback_counts)
+    write_github_summary(image, report)
 
     if failures:
         print("published image verification failed:", file=sys.stderr)
@@ -199,12 +220,7 @@ def main():
         return 1
     print(f"verified published image {image}")
     print("runtime locale: LANG=C.UTF-8 LC_ALL=C.UTF-8 LC_CTYPE=C.UTF-8")
-    print(
-        "160x48 PTY glyph counts: "
-        f"Kitty probe half={graphics_counts['half']} quadrant={graphics_counts['quadrant']} sextant={graphics_counts['sextant']}; "
-        f"iTerm2 probe half={iterm_counts['half']} quadrant={iterm_counts['quadrant']} sextant={iterm_counts['sextant']}; "
-        f"no-reply fallback half={fallback_counts['half']} quadrant={fallback_counts['quadrant']} sextant={fallback_counts['sextant']}"
-    )
+    print(report)
     return 0
 
 

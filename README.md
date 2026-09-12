@@ -25,7 +25,7 @@ emulation and have not been verified.
 ~~~bash
 docker run --rm -it --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges -e TERM -e COLORTERM -e TERM_PROGRAM -e THEYWORK_ENCODING \
-  ghcr.io/giuseppecarte/they-work:v0.1.0 --demo
+  ghcr.io/giuseppecarte/they-work:v0.1.1 --demo
 ~~~
 
 This shows an imaginary company and **mounts nothing from your disk**. Press

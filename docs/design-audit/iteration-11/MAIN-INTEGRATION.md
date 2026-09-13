@@ -8,24 +8,25 @@ The README installs the current checkout. The published `v0.1.1` screenshots,
 their evidence and their capture tools are retained as historical evidence;
 that published image does not contain the new office.
 
-## Include the deferred CI work
+## CI is included in the same PR
 
-The active `.github/workflows/` files intentionally match the current main
-branch. GitHub accepted this application branch with the existing credential.
-The complete follow-up definitions are retained under
-[deferred-workflows/](deferred-workflows/): `ci.yml`, `native.yml` and
-`release.yml`. This location does not activate them as GitHub Actions workflows.
+After the owner enabled workflow permission, the CI definitions were restored
+under `.github/workflows/`. The definitions under
+[deferred-workflows/](deferred-workflows/) remain a historical record of the
+permission-related split; the active workflow directory is authoritative.
 
-To include all of the work, copy those three files to `.github/workflows/` in a
-follow-up branch and review the diff. Commit and push with a credential allowed
-to update workflows, or make the equivalent edits through GitHub's web editor.
-Merging the application PR does not add permissions to an existing token.
-Recheck for intervening workflow changes before replacing any file.
+CI runs the normal verification suite, Cargo wrapper contracts, native builds
+for six targets, the macOS/Linux reproduction smoke and Windows storage
+contracts. The release workflow runs only for `v*.*.*` tag pushes. It verifies
+both container architectures and native archive checksums before public image
+tags change. Ordinary branch and PR pushes do not publish releases.
 
-Do not create a `v*.*.*` tag until that follow-up is integrated and verified.
-The old release workflow publishes public image tags before verification and
-passes only `--image`; the current verifier requires `--commit` and `--report`
-and verifies both Linux architectures. The old invocation will fail.
+The application-only candidate `92c26ba` passed both its
+[push CI](https://github.com/Giuseppecarte/they-work/actions/runs/34773134733) and
+[PR CI](https://github.com/Giuseppecarte/they-work/actions/runs/34773175922).
+The restored native matrix must be assessed from its own run on the new commit;
+those earlier checks did not execute the native jobs. Public release execution
+and real-terminal certification remain separate from a passing CI build.
 
 ## Use main as the application baseline
 

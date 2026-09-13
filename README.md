@@ -47,12 +47,10 @@ gets its own office floor and each conversation a worker you can inspect.
 
 The [installation guide](INSTALL.md) covers compiler setup, custom data paths,
 Windows PowerShell, WSL, and Docker. Native installers and a six-platform release
-workflow were developed with this version; the workflow update is currently
-separate from the application preview because it requires GitHub workflow
-permissions. Those release assets have **not been published**. The published
-`v0.1.1` image does not contain this office design. See the
-[main integration notes](docs/design-audit/iteration-11/MAIN-INTEGRATION.md)
-before creating a release tag.
+workflow are included in this PR. Those release assets have **not been
+published**. The published `v0.1.1` image does not contain this office design.
+See the [main integration notes](docs/design-audit/iteration-11/MAIN-INTEGRATION.md)
+for CI evidence and the remaining publication checks.
 
 For this version without local Rust, use Docker from a checkout:
 

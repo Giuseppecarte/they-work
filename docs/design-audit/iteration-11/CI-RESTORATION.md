@@ -159,3 +159,21 @@ Windows-target production-library Clippy. The bounded installer/package source
 review found no further concrete blocker, but it does not replace native
 execution. Commands, source hashes and results are in
 `ci-restoration/round-4/`.
+
+## Windows recovery report destination
+
+Candidate `4fc94c6` passed the full native Windows workspace suites on x64 and
+ARM64. Both dedicated recovery steps also executed six replacement tests,
+four shared recovery tests, one live-fault test and four passing process
+scenarios. They then failed while writing the structured process report:
+the workflow supplied a workspace-relative destination, but Cargo starts the
+integration executable from its crate directory. The report's parent directory
+therefore did not exist. This was an evidence-output failure after the checked
+scenarios, and the jobs correctly remained failed.
+
+The workflow now anchors the evidence directory to the workspace's absolute
+path before exporting it. Test behavior and required result counts are
+unchanged. `ci-restoration/round-5/` retains the native results and the local
+relative/absolute-path reproduction. The next native run must still save and
+validate the report, then execute the previously skipped Windows installer and
+archive checks before the candidate can be considered green.

@@ -1,9 +1,17 @@
 # Try the colorful office in VS Code + Ubuntu WSL
 
-This is a local preview of iteration 11, not a published release. The Linux
-archives live in `target/audit/iteration-11/dist/`; their `PREVIEW.json` records
-the exact source revision, architectures, executable hashes and smoke results.
-No Rust or Docker installation is needed in WSL to run the extracted executable.
+This is a local preview of iteration 11, not a published release. For the
+current branch or merged main, open its successful [CI run](https://github.com/Giuseppecarte/they-work/actions/workflows/ci.yml)
+and download `native-x86_64-unknown-linux-musl` or
+`native-aarch64-unknown-linux-musl` from **Artifacts**. Unzip the downloaded
+artifact to obtain the `.tar.gz` and `.sha256` files. Check the run's source
+commit so you know which version you are testing; artifact downloads require
+GitHub sign-in.
+
+The original visual-preview archives remain in
+`target/audit/iteration-11/dist/`; their `PREVIEW.json` records that earlier
+source revision, architectures, executable hashes and smoke results.
+No Rust or Docker installation is needed in WSL to run either extracted executable.
 
 ## 1. Enable the terminal image option
 

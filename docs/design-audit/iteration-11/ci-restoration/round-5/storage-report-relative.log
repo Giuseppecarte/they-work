@@ -1,0 +1,26 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running tests/storage_process.rs (target/native-macos/debug/deps/storage_process-4f39b60f6cf693f5)
+{
+  "architecture": "aarch64",
+  "cases": [
+    {
+      "name": "durable_receipt_and_fingerprint",
+      "status": "pass"
+    },
+    {
+      "name": "interrupted_send_never_replays",
+      "status": "pass"
+    },
+    {
+      "name": "missing_established_state_blocks_startup",
+      "status": "pass"
+    }
+  ],
+  "fixture_provider": "native Rust test executable; no account or model",
+  "platform": "macos"
+}
+Error: No such file or directory (os error 2)
+error: test failed, to rerun pass `-p theywork-control --test storage_process`
+
+Caused by:
+  process didn't exit successfully: `/Users/gc/Documents/Programming/they-work/target/native-macos/debug/deps/storage_process-4f39b60f6cf693f5` (exit status: 1)

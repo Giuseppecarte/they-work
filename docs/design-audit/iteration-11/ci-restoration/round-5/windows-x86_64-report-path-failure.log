@@ -1,0 +1,151 @@
+# Source: docs/design-audit/tmp/ci-follow-up/job-103784979708.log; SHA-256: 36226ea15613b90f27c5f5b6819ba388621a0c489bfeacc3dab4313e02d6b208
+# Candidate: 4fc94c6b413b941a7d2d71495dab40e72b9258b5; native runner: windows-2022
+# Bounded extraction retains original lines, with line ranges stated below.
+
+# Raw log lines 1-34
+2026-09-13T20:10:28.4505817Z Current runner version: '2.337.0'
+2026-09-13T20:10:28.4539699Z ##[group]Runner Image Provisioner
+2026-09-13T20:10:28.4540911Z Hosted Compute Agent
+2026-09-13T20:10:28.4541789Z Version: 20260828.587
+2026-09-13T20:10:28.4542800Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-13T20:10:28.4543925Z Build Date: 2026-08-28T16:44:25Z
+2026-09-13T20:10:28.4544952Z Worker ID: {c8c68ac9-eda1-497b-9e28-1f1f9aa64272}
+2026-09-13T20:10:28.4546111Z Azure Region: eastus
+2026-09-13T20:10:28.4546896Z ##[endgroup]
+2026-09-13T20:10:28.4549206Z ##[group]Operating System
+2026-09-13T20:10:28.4550237Z Microsoft Windows Server 2022
+2026-09-13T20:10:28.4551201Z 10.0.20348
+2026-09-13T20:10:28.4552030Z Datacenter
+2026-09-13T20:10:28.4552902Z ##[endgroup]
+2026-09-13T20:10:28.4553774Z ##[group]Runner Image
+2026-09-13T20:10:28.4554677Z Image: windows-2022
+2026-09-13T20:10:28.4555502Z Version: 20260907.297.1
+2026-09-13T20:10:28.4558200Z Included Software: https://github.com/actions/runner-images/blob/win22/20260907.297/images/windows/Windows2022-Readme.md
+2026-09-13T20:10:28.4561125Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260907.297
+2026-09-13T20:10:28.4562758Z ##[endgroup]
+2026-09-13T20:10:28.4564471Z ##[group]GITHUB_TOKEN Permissions
+2026-09-13T20:10:28.4566974Z Contents: read
+2026-09-13T20:10:28.4567909Z Metadata: read
+2026-09-13T20:10:28.4568804Z ##[endgroup]
+2026-09-13T20:10:28.4571652Z Secret source: Actions
+2026-09-13T20:10:28.4573145Z Cache mode: write
+2026-09-13T20:10:28.4574313Z Prepare workflow directory
+2026-09-13T20:10:28.5102255Z Prepare all required actions
+2026-09-13T20:10:28.5171435Z Getting action download info
+2026-09-13T20:10:28.6830246Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-13T20:10:28.7973394Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-13T20:10:28.9236200Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-09-13T20:10:29.2469121Z Uses: Giuseppecarte/they-work/.github/workflows/native.yml@refs/heads/codex/office-preview (4fc94c6b413b941a7d2d71495dab40e72b9258b5)
+2026-09-13T20:10:29.2474492Z Complete job name: native / x86_64-pc-windows-msvc
+
+# Raw log lines 1125-1234
+2026-09-13T20:20:33.4487074Z ##[group]Run $evidence = "target/windows-storage-x86_64-pc-windows-msvc"
+2026-09-13T20:20:33.4487707Z [36;1m$evidence = "target/windows-storage-x86_64-pc-windows-msvc"[0m
+2026-09-13T20:20:33.4488163Z [36;1mNew-Item -ItemType Directory -Force $evidence | Out-Null[0m
+2026-09-13T20:20:33.4488610Z [36;1m$env:THEYWORK_STORAGE_REPORT = "$evidence/process-results.json"[0m
+2026-09-13T20:20:33.4488992Z [36;1m$environment = @{[0m
+2026-09-13T20:20:33.4489220Z [36;1m  runner = "windows-2022"[0m
+2026-09-13T20:20:33.4489497Z [36;1m  target = "x86_64-pc-windows-msvc"[0m
+2026-09-13T20:20:33.4489837Z [36;1m  os = [System.Environment]::OSVersion.VersionString[0m
+2026-09-13T20:20:33.4490401Z [36;1m  architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()[0m
+2026-09-13T20:20:33.4491236Z [36;1m  filesystem = (Get-Volume -DriveLetter ([System.IO.Path]::GetPathRoot($PWD.Path).Substring(0,1))).FileSystem[0m
+2026-09-13T20:20:33.4491819Z [36;1m  source = (git rev-parse HEAD)[0m
+2026-09-13T20:20:33.4492068Z [36;1m}[0m
+2026-09-13T20:20:33.4492382Z [36;1m$environment | ConvertTo-Json | Set-Content "$evidence/environment.json"[0m
+2026-09-13T20:20:33.4493242Z [36;1mcargo test --locked -p theywork-control --lib security::windows_tests --target x86_64-pc-windows-msvc -- --test-threads=1 2>&1 | Tee-Object "$evidence/replacement.log"[0m
+2026-09-13T20:20:33.4494037Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-09-13T20:20:33.4494755Z [36;1mif (-not (Select-String -Quiet -Path "$evidence/replacement.log" -Pattern 'test result: ok\. 6 passed')) { throw "Windows replacement tests were not executed" }[0m
+2026-09-13T20:20:33.4495855Z [36;1mcargo test --locked -p theywork-control --lib state_storage::tests --target x86_64-pc-windows-msvc -- --test-threads=1 2>&1 | Tee-Object "$evidence/recovery.log"[0m
+2026-09-13T20:20:33.4496576Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-09-13T20:20:33.4497457Z [36;1mif (-not (Select-String -Quiet -Path "$evidence/recovery.log" -Pattern 'test result: ok\. 4 passed')) { throw "Storage recovery tests were not executed" }[0m
+2026-09-13T20:20:33.4498797Z [36;1mcargo test --locked -p theywork-control --lib supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state --target x86_64-pc-windows-msvc -- --exact 2>&1 | Tee-Object "$evidence/live-fault.log"[0m
+2026-09-13T20:20:33.4499791Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-09-13T20:20:33.4500490Z [36;1mif (-not (Select-String -Quiet -Path "$evidence/live-fault.log" -Pattern 'test result: ok\. 1 passed')) { throw "Live host storage fault test was not executed" }[0m
+2026-09-13T20:20:33.4501512Z [36;1mcargo test --locked -p theywork-control --test storage_process --target x86_64-pc-windows-msvc 2>&1 | Tee-Object "$evidence/process.log"[0m
+2026-09-13T20:20:33.4502156Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-09-13T20:20:33.4502602Z [36;1m$report = Get-Content "$evidence/process-results.json" -Raw | ConvertFrom-Json[0m
+2026-09-13T20:20:33.4503258Z [36;1m$expectedArchitecture = if ("x86_64-pc-windows-msvc".StartsWith("aarch64")) { "aarch64" } else { "x86_64" }[0m
+2026-09-13T20:20:33.4504257Z [36;1mif ($report.platform -ne "windows" -or $report.architecture -ne $expectedArchitecture -or $report.cases.Count -ne 4 -or @($report.cases | Where-Object status -ne "pass").Count -ne 0) {[0m
+2026-09-13T20:20:33.4505141Z [36;1m  throw "Expected exactly four passing native Windows process cases"[0m
+2026-09-13T20:20:33.4505511Z [36;1m}[0m
+2026-09-13T20:20:33.4538222Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-09-13T20:20:33.4538569Z env:
+2026-09-13T20:20:33.4538761Z   MACOSX_DEPLOYMENT_TARGET: 11.0
+2026-09-13T20:20:33.4539088Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.13.15\x64
+2026-09-13T20:20:33.4539542Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.13.15\x64/lib/pkgconfig
+2026-09-13T20:20:33.4541873Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.13.15\x64
+2026-09-13T20:20:33.4542383Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.13.15\x64
+2026-09-13T20:20:33.4542810Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.13.15\x64
+2026-09-13T20:20:33.4543131Z ##[endgroup]
+2026-09-13T20:20:36.3498288Z [31;1m   Compiling proc-macro2 v1.0.107[0m
+2026-09-13T20:20:36.3507942Z [31;1m   Compiling quote v1.0.47[0m
+2026-09-13T20:20:37.4182036Z [31;1m   Compiling syn v3.0.4[0m
+2026-09-13T20:20:40.0661210Z [31;1m   Compiling serde_derive v1.0.229[0m
+2026-09-13T20:20:42.8750202Z [31;1m   Compiling serde v1.0.229[0m
+2026-09-13T20:20:43.3257391Z [31;1m   Compiling theywork-core v0.1.0 (D:\a\they-work\they-work\crates\theywork-core)[0m
+2026-09-13T20:20:44.4156626Z [31;1m   Compiling theywork-collect v0.1.0 (D:\a\they-work\they-work\crates\theywork-collect)[0m
+2026-09-13T20:20:48.2497380Z [31;1m   Compiling theywork-control v0.1.0 (D:\a\they-work\they-work\crates\theywork-control)[0m
+2026-09-13T20:20:51.6917111Z [31;1m    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.52s[0m
+2026-09-13T20:20:51.6968766Z [31;1m     Running unittests src\lib.rs (target\x86_64-pc-windows-msvc\debug\deps\theywork_control-a2b278030e470246.exe)[0m
+2026-09-13T20:20:51.7079039Z 
+2026-09-13T20:20:51.7081488Z running 6 tests
+2026-09-13T20:20:52.6311871Z test security::windows_tests::concurrent_readers_never_see_missing_or_partial_state ... ok
+2026-09-13T20:20:52.7198967Z test security::windows_tests::interruption_before_and_after_publication_preserves_complete_state ... ok
+2026-09-13T20:20:52.7283701Z test security::windows_tests::rejects_directory_and_reparse_destination_without_touching_target ... ok
+2026-09-13T20:20:52.7285052Z test security::windows_tests::replacement_child ... ok
+2026-09-13T20:20:52.7858460Z test security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint ... ok
+2026-09-13T20:20:52.8252171Z test security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate ... ok
+2026-09-13T20:20:52.8253059Z 
+2026-09-13T20:20:52.8254664Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 1.12s
+2026-09-13T20:20:52.8255599Z 
+2026-09-13T20:20:52.9649590Z [31;1m    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s[0m
+2026-09-13T20:20:52.9655788Z [31;1m     Running unittests src\lib.rs (target\x86_64-pc-windows-msvc\debug\deps\theywork_control-a2b278030e470246.exe)[0m
+2026-09-13T20:20:52.9657140Z 
+2026-09-13T20:20:52.9658919Z running 4 tests
+2026-09-13T20:20:53.0005847Z test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok
+2026-09-13T20:20:53.0295667Z test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok
+2026-09-13T20:20:53.0572545Z test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok
+2026-09-13T20:20:53.0907262Z test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok
+2026-09-13T20:20:53.0908319Z 
+2026-09-13T20:20:53.0910685Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.13s
+2026-09-13T20:20:53.0912351Z 
+2026-09-13T20:20:53.2235328Z [31;1m    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s[0m
+2026-09-13T20:20:53.2240495Z [31;1m     Running unittests src\lib.rs (target\x86_64-pc-windows-msvc\debug\deps\theywork_control-a2b278030e470246.exe)[0m
+2026-09-13T20:20:53.2244988Z 
+2026-09-13T20:20:53.2246948Z running 1 test
+2026-09-13T20:20:53.2335886Z test supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state ... ok
+2026-09-13T20:20:53.2336847Z 
+2026-09-13T20:20:53.2338595Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.01s
+2026-09-13T20:20:53.2339260Z 
+2026-09-13T20:20:53.3633977Z [31;1m   Compiling theywork-control v0.1.0 (D:\a\they-work\they-work\crates\theywork-control)[0m
+2026-09-13T20:20:57.7273481Z [31;1m    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.44s[0m
+2026-09-13T20:20:57.7415773Z [31;1m     Running tests\storage_process.rs (target\x86_64-pc-windows-msvc\debug\deps\storage_process-6426e5d5c21f80aa.exe)[0m
+2026-09-13T20:20:59.5537672Z {
+2026-09-13T20:20:59.5538671Z   "architecture": "x86_64",
+2026-09-13T20:20:59.5539535Z   "cases": [
+2026-09-13T20:20:59.5540789Z     {
+2026-09-13T20:20:59.5543580Z       "name": "durable_receipt_and_fingerprint",
+2026-09-13T20:20:59.5547545Z       "status": "pass"
+2026-09-13T20:20:59.5549063Z     },
+2026-09-13T20:20:59.5551229Z     {
+2026-09-13T20:20:59.5552409Z       "name": "interrupted_send_never_replays",
+2026-09-13T20:20:59.5553942Z       "status": "pass"
+2026-09-13T20:20:59.5554332Z     },
+2026-09-13T20:20:59.5556194Z     {
+2026-09-13T20:20:59.5557956Z       "name": "missing_established_state_blocks_startup",
+2026-09-13T20:20:59.5558645Z       "status": "pass"
+2026-09-13T20:20:59.5560249Z     },
+2026-09-13T20:20:59.5562185Z     {
+2026-09-13T20:20:59.5564151Z       "name": "sharing_violation_preserves_state_and_rejects_unsent",
+2026-09-13T20:20:59.5565136Z       "status": "pass"
+2026-09-13T20:20:59.5566773Z     }
+2026-09-13T20:20:59.5568061Z   ],
+2026-09-13T20:20:59.5572051Z   "fixture_provider": "native Rust test executable; no account or model",
+2026-09-13T20:20:59.5573194Z   "platform": "windows"
+2026-09-13T20:20:59.5573607Z }
+2026-09-13T20:20:59.5580990Z [31;1mError: The system cannot find the path specified. (os error 3)[0m
+2026-09-13T20:20:59.5584579Z [31;1merror: test failed, to rerun pass `-p theywork-control --test storage_process`[0m
+2026-09-13T20:20:59.5596330Z [31;1m[0m
+2026-09-13T20:20:59.5599930Z [31;1mCaused by:[0m
+2026-09-13T20:20:59.5604862Z [31;1m  process didn't exit successfully: `D:\a\they-work\they-work\target\x86_64-pc-windows-msvc\debug\deps\storage_process-6426e5d5c21f80aa.exe` (exit code: 1)[0m
+2026-09-13T20:20:59.5961764Z ##[error]Process completed with exit code 1.

@@ -44,9 +44,11 @@ they-work --demo --no-save
 
 The source build requires the Rust toolchain and native compiler described in
 [INSTALL.md](../../../INSTALL.md). For the prepared Linux binaries and the
-VS Code/Ubuntu WSL settings, use [WSL-PREVIEW.md](WSL-PREVIEW.md). Those archives
-were built from the earlier visual candidate; they are not rebuilt or published
-merely by merging a PR. Record the binary revision when reporting a test.
+VS Code/Ubuntu WSL settings, use [WSL-PREVIEW.md](WSL-PREVIEW.md). Each successful
+native CI job uploads an archive for that run's source commit. Download from
+the intended branch or main run; merging does not publish a public release.
+The original local visual-preview archives remain bound to their earlier
+candidate. Record the binary revision when reporting a test.
 
 After checking the demo, quit and run `they-work --setup` to choose existing
 local sources. Use `they-work --doctor` directly in the WSL terminal to record

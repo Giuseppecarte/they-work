@@ -1,0 +1,179 @@
+{
+  "candidate_commit": "4fc94c6b413b941a7d2d71495dab40e72b9258b5",
+  "previous_candidate_commit": "c3b56e74f2e36f09d00d23e47d5184d3f17c3764",
+  "collected_at_utc": "2026-09-13T20:26:17.942287+00:00",
+  "run_id": 34779937844,
+  "scope": "Native Windows correctness and report-write failure; not completed native packaging or publication.",
+  "source_sha256": {
+    ".github/workflows/native.yml": "5da7021d72a980d3150056d70dcaf87831c722f1644e80a7751e0c39d010645d",
+    "rust-toolchain.toml": "0484a3d0d7267e43e09b8b0e76a799bed558037d7ccd6046dd70fdd0cc1b6ef9",
+    "Cargo.lock": "f9945b22eb91a6607503b2252798eac5678c5ce2abf1a1a6d5861138e3e7eecb",
+    "crates/theywork-control/src/security.rs": "3e07184bfb47785331af776c97c024b0678a61cae05995ea81fb27110d571c2c",
+    "crates/theywork-control/src/security_windows_tests.rs": "082b6711a6d2185a3f9e258d4cdd3787b474a11c7fd1c1f85cf18e67f0338a97",
+    "crates/theywork-control/src/state_storage.rs": "f3b3da3443d776ec8f8698ddd9e56d5f47250db50bbdd1523c9aa5730189163f",
+    "crates/theywork-control/src/supervisor.rs": "9b006838d23bb7c054cecf021feb4dd623d7a80db997eec8fa277ac9979552cf",
+    "crates/theywork-control/tests/storage_process.rs": "3874e757064aae4c6601634942dbe0c19c783703a3925bebf3ace17ba787cf9a"
+  },
+  "jobs": [
+    {
+      "job_id": 103784979708,
+      "url": "https://github.com/Giuseppecarte/they-work/actions/runs/34779937844/job/103784979708",
+      "runner": "windows-2022",
+      "target": "x86_64-pc-windows-msvc",
+      "execution": "native, not emulated",
+      "candidate_verified_in_checkout_log": true,
+      "raw_log_path": "docs/design-audit/tmp/ci-follow-up/job-103784979708.log",
+      "raw_log_sha256": "36226ea15613b90f27c5f5b6819ba388621a0c489bfeacc3dab4313e02d6b208",
+      "raw_log_bytes": 116494,
+      "raw_log_lines": 1283,
+      "excerpt": "windows-x86_64-report-path-failure.log",
+      "excerpt_raw_line_ranges": [
+        [
+          1,
+          34
+        ],
+        [
+          1125,
+          1234
+        ]
+      ],
+      "replacement": {
+        "passed": 6,
+        "failed": 0,
+        "test_lines": [
+          "test security::windows_tests::concurrent_readers_never_see_missing_or_partial_state ... ok",
+          "test security::windows_tests::interruption_before_and_after_publication_preserves_complete_state ... ok",
+          "test security::windows_tests::rejects_directory_and_reparse_destination_without_touching_target ... ok",
+          "test security::windows_tests::replacement_child ... ok",
+          "test security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint ... ok",
+          "test security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate ... ok"
+        ]
+      },
+      "recovery": {
+        "passed": 4,
+        "failed": 0,
+        "test_lines": [
+          "test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok",
+          "test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok",
+          "test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok",
+          "test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok"
+        ]
+      },
+      "live_fault": {
+        "passed": 1,
+        "failed": 0,
+        "test_lines": [
+          "test supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state ... ok"
+        ]
+      },
+      "process_cases": {
+        "passed": 4,
+        "failed": 0,
+        "stdout_report": "windows-x86_64-process-stdout.json",
+        "report_persisted": false,
+        "executable_exit_code": 1
+      },
+      "job_status": "failed",
+      "failure": "After all four process cases passed, fs::write(THEYWORK_STORAGE_REPORT) failed with OS error 3. The workflow supplied a relative path rooted at the repository while Cargo executes integration tests from their crate directory.",
+      "packaging": "skipped"
+    },
+    {
+      "job_id": 103784979736,
+      "url": "https://github.com/Giuseppecarte/they-work/actions/runs/34779937844/job/103784979736",
+      "runner": "windows-11-arm",
+      "target": "aarch64-pc-windows-msvc",
+      "execution": "native, not emulated",
+      "candidate_verified_in_checkout_log": true,
+      "raw_log_path": "docs/design-audit/tmp/ci-follow-up/job-103784979736.log",
+      "raw_log_sha256": "603b6315aff90fcb10ddcab255b8e28d3a9fd3681b8d146ac3bad65ddadff888",
+      "raw_log_bytes": 120786,
+      "raw_log_lines": 1349,
+      "excerpt": "windows-aarch64-report-path-failure.log",
+      "excerpt_raw_line_ranges": [
+        [
+          1,
+          34
+        ],
+        [
+          1191,
+          1300
+        ]
+      ],
+      "replacement": {
+        "passed": 6,
+        "failed": 0,
+        "test_lines": [
+          "test security::windows_tests::concurrent_readers_never_see_missing_or_partial_state ... ok",
+          "test security::windows_tests::interruption_before_and_after_publication_preserves_complete_state ... ok",
+          "test security::windows_tests::rejects_directory_and_reparse_destination_without_touching_target ... ok",
+          "test security::windows_tests::replacement_child ... ok",
+          "test security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint ... ok",
+          "test security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate ... ok"
+        ]
+      },
+      "recovery": {
+        "passed": 4,
+        "failed": 0,
+        "test_lines": [
+          "test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok",
+          "test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok",
+          "test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok",
+          "test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok"
+        ]
+      },
+      "live_fault": {
+        "passed": 1,
+        "failed": 0,
+        "test_lines": [
+          "test supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state ... ok"
+        ]
+      },
+      "process_cases": {
+        "passed": 4,
+        "failed": 0,
+        "stdout_report": "windows-aarch64-process-stdout.json",
+        "report_persisted": false,
+        "executable_exit_code": 1
+      },
+      "job_status": "failed",
+      "failure": "After all four process cases passed, fs::write(THEYWORK_STORAGE_REPORT) failed with OS error 3. The workflow supplied a relative path rooted at the repository while Cargo executes integration tests from their crate directory.",
+      "packaging": "skipped"
+    }
+  ],
+  "local_report_path_reproduction": {
+    "platform": "macos",
+    "architecture": "aarch64",
+    "relative_exit_code": 1,
+    "absolute_exit_code": 0,
+    "cases_per_run": 3,
+    "same_cases_and_results": true,
+    "relative_parent_created_in_repository": true,
+    "absolute_report_matches_stdout": true,
+    "production_or_fixture_changes": false,
+    "validation_file": "report-path-validation.json",
+    "candidate_source": "4fc94c6b413b941a7d2d71495dab40e72b9258b5",
+    "scope": "macOS native fixture confirms Cargo-relative report path failure, not Windows filesystem behavior."
+  },
+  "evidence_sha256": {
+    "report-path-validation.json": "7bcf124da261256a94a2e7f52e54a85fdddc46d7e32c80f71c35be243b85f6c2",
+    "storage-report-absolute.log": "2417dfe16d3e12952c9c516179703461c34142b7b32834b971da7781b1c2048b",
+    "storage-report-relative.log": "4a5a0d8c55fde288d1d0267dbf67ed6b365c4372625dfc84a472be0da4f8e169",
+    "windows-aarch64-process-stdout.json": "c0006cff39c54453c72daa6b99b2aa87682a6c543422f29527cda275e3aa9586",
+    "windows-aarch64-report-path-failure.log": "56674f4615d3fa154535b7eb7a44d238c6408131f796b5589ba43321f32884f6",
+    "windows-x86_64-process-stdout.json": "a0c6f65bc55c90188f6e91b2c84ec466f948dca27f90fa6999e4a5037fbea92c",
+    "windows-x86_64-report-path-failure.log": "2dec67266d4c54a7758f6c7413b6e1e974f4bbc9e3015000dbeeeceffa5538c4"
+  },
+  "limitations": [
+    "Windows job result is failure because process report persistence failed after all four cases passed.",
+    "Build release binary, installer boundary checks, packaging and native archive upload were skipped for both Windows jobs.",
+    "Raw job logs are retained in ignored docs/design-audit/tmp/ci-follow-up; bounded excerpts and their provenance are retained here.",
+    "Physical-terminal latency, authenticated providers, and publication are not tested by this evidence."
+  ],
+  "failure_source_contract": {
+    "path": "crates/theywork-control/tests/storage_process.rs",
+    "candidate": "4fc94c6b413b941a7d2d71495dab40e72b9258b5",
+    "stdout_before_report_write_line": 48,
+    "report_write_line": 50,
+    "inference": "The complete pass report is printed before the only remaining fallible operation: fs::write to THEYWORK_STORAGE_REPORT. Local relative-versus-absolute execution reproduces the same failure and correction."
+  }
+}

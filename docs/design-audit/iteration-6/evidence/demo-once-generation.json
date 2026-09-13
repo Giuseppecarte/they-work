@@ -1,0 +1,7 @@
+{
+  "command": "target/native-macos/release/they-work --demo --once --no-save",
+  "exit_code": 0,
+  "binary_sha256": "b2c529653f5b9d6a2ee93cd84cb87772ee8e1dee96b431ac9b645f3bfd33de84",
+  "source_commit": "5ea7f77dce57e9fde450800da8125d89ee3b452d",
+  "scope": "Non-interactive executable demo smoke; synthetic conversations and temporary preferences; not a physical terminal or provider check."
+}

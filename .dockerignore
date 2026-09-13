@@ -1,5 +1,11 @@
 target
 .cargo-home
 docs/shots
+docs/design-audit/tmp
+docs/design-audit/evidence/tmp
+.agents
+.codex
+.claude
+.standup
 .git
 .gitignore

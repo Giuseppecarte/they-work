@@ -1,0 +1,153 @@
+name: Native builds
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-smoke:
+    name: Audit smoke (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, macos-15]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned audit toolchain
+        run: rustup toolchain install 1.90.0 --profile minimal --component clippy --component rustfmt
+      - name: Bootstrap locked audit dependencies
+        run: python scripts/audit.py bootstrap
+      - name: Check audit runner contracts
+        run: target/audit/venv/bin/python -B scripts/test-audit.py
+      - name: Reproduce one screen and one fixture offline
+        run: python scripts/audit.py smoke
+      - name: Upload bounded audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-smoke-${{ matrix.runner }}
+          path: |
+            target/audit/smoke/
+            target/audit/bootstrap*.log
+            target/audit/bootstrap.json
+          if-no-files-found: warn
+  native:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: windows-2022
+            target: x86_64-pc-windows-msvc
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust and target
+        shell: bash
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal --component clippy --component rustfmt
+          rustup target add --toolchain 1.90.0 ${{ matrix.target }}
+      - name: Set up Python for native packaging
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install static Linux C toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Check native portability
+        run: cargo clippy --locked --workspace --all-targets --target ${{ matrix.target }} -- -D warnings
+      - name: Run native tests
+        # Keep debug assertions for correctness; measure frame cost below using
+        # the optimized profile that users run, without concurrent test work.
+        run: cargo test --locked --workspace --no-fail-fast --target ${{ matrix.target }} -- --test-threads=1 --skip m3_tests::encoding_frame_cost_stays_within_ten_fps_budget
+      - name: Check optimized frame budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/native-timing
+          cargo test --locked --release -p theywork-render --lib --target ${{ matrix.target }} m3_tests::encoding_frame_cost_stays_within_ten_fps_budget -- --exact --nocapture --test-threads=1 2>&1 | tee target/native-timing/${{ matrix.target }}.log
+          grep -F 'test result: ok. 1 passed; 0 failed;' target/native-timing/${{ matrix.target }}.log
+      - name: Upload native timing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame-timing-${{ matrix.target }}
+          path: target/native-timing/${{ matrix.target }}.log
+          if-no-files-found: warn
+      - name: Verify Windows state replacement and recovery
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Cargo runs integration executables from the crate directory. Keep
+          # the report destination anchored to the workspace used by upload.
+          $evidence = Join-Path $PWD.Path "target/windows-storage-${{ matrix.target }}"
+          New-Item -ItemType Directory -Force $evidence | Out-Null
+          $env:THEYWORK_STORAGE_REPORT = "$evidence/process-results.json"
+          $environment = @{
+            runner = "${{ matrix.runner }}"
+            target = "${{ matrix.target }}"
+            os = [System.Environment]::OSVersion.VersionString
+            architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+            filesystem = (Get-Volume -DriveLetter ([System.IO.Path]::GetPathRoot($PWD.Path).Substring(0,1))).FileSystem
+            source = (git rev-parse HEAD)
+          }
+          $environment | ConvertTo-Json | Set-Content "$evidence/environment.json"
+          cargo test --locked -p theywork-control --lib security::windows_tests --target ${{ matrix.target }} -- --test-threads=1 2>&1 | Tee-Object "$evidence/replacement.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/replacement.log" -Pattern 'test result: ok\. 6 passed')) { throw "Windows replacement tests were not executed" }
+          cargo test --locked -p theywork-control --lib state_storage::tests --target ${{ matrix.target }} -- --test-threads=1 2>&1 | Tee-Object "$evidence/recovery.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/recovery.log" -Pattern 'test result: ok\. 4 passed')) { throw "Storage recovery tests were not executed" }
+          cargo test --locked -p theywork-control --lib supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state --target ${{ matrix.target }} -- --exact 2>&1 | Tee-Object "$evidence/live-fault.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path "$evidence/live-fault.log" -Pattern 'test result: ok\. 1 passed')) { throw "Live host storage fault test was not executed" }
+          cargo test --locked -p theywork-control --test storage_process --target ${{ matrix.target }} 2>&1 | Tee-Object "$evidence/process.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $report = Get-Content "$evidence/process-results.json" -Raw | ConvertFrom-Json
+          $expectedArchitecture = if ("${{ matrix.target }}".StartsWith("aarch64")) { "aarch64" } else { "x86_64" }
+          if ($report.platform -ne "windows" -or $report.architecture -ne $expectedArchitecture -or $report.cases.Count -ne 4 -or @($report.cases | Where-Object status -ne "pass").Count -ne 0) {
+            throw "Expected exactly four passing native Windows process cases"
+          }
+      - name: Upload Windows storage evidence
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-storage-${{ matrix.target }}
+          path: target/windows-storage-${{ matrix.target }}/
+          if-no-files-found: warn
+      - name: Build release binary
+        run: cargo build --locked --release --bin they-work --target ${{ matrix.target }}
+      - name: Test native installer failure boundaries
+        if: runner.os != 'Windows'
+        run: python3 scripts/test-native-install.py
+      - name: Test Windows installer failure boundaries
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/test-native-install.ps1
+      - name: Package and smoke-test native executable
+        run: python scripts/package-release.py --target ${{ matrix.target }}
+      - name: Upload native distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: target/dist/*
+          if-no-files-found: error

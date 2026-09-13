@@ -1,0 +1,32 @@
+ 0 TOWER  7 07-atlas-web×         >8 08-billing-service!    9 09-customer-onboard…●  8/20 · / find · c sources · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  15 working · 35 idle · 5 need help · 5 failed
+┌ FLOORS /┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────────────────────────────┐─────────┐
+│  F01 ▸ 0│/ 20-billing-service account                                                                      │         │
+│     3 wo│1 match · 1–1                                                                                     │-service │
+│─────────│> Build account settings                                                               ATTENTION  │▄▄▄▄▄▄▄▄▄│
+│  F02 ▸ 0│  20-billing-service · codex · floor 20                                                           │▄▄▄▄▄▄▄▄▄│
+│     3 wo│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│─────────│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│  F03 × 0│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│     3 wo│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│─────────│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│  F04 ! 0│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│     3 wo│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│─────────│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│  F05 ▸ 0│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│     3 wo│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│─────────│                                                                                                  │▄▄▄▄▄▄▄▄▄│
+│  F06 ▸ 0│                                                                                                  │         │
+│     3 wo│                                                                                                  │         │
+│─────────│                                                                                                  │         │
+│  F07 × 0│                                                                                                  │         │
+│     3 wo│                                                                                                  │         │
+│─────────│                                                                                                  │         │
+│> F08 ! 0│…ts/Programming/they-work/docs/design-audit/tmp/iteration-3-finder/fixture-60-0/20-billing-service│         │
+│     3 wo│↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear                                   │         │
+│─────────└──────────────────────────────────────────────────────────────────────────────────────────────────┘         │
+└──────────────────────────────────────┘ │                                                                             │
+                                         └─────────────────────────────────────────────────────────────────────────────┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 8/20 · page 1/3 · PgUp/PgDn pages · Home first · End last

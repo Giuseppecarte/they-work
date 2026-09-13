@@ -1,0 +1,24 @@
+THEY WORK  /  YOUR SOFTWARE TOWER
+Connect your team
+One project per floor. One conversation per worker.
+Choose whose local conversations appear here. No sign-in or API key needed.
+Reads titles, messages and tool activity from app data folders.
+Everything stays on this computer. Approve requests in the original app.
+┌   [ ] CLAUDE CODE ───────────────────────────────────────────────────────────┐
+│…amming/they-work/docs/design-audit/tmp/iteration-3-entry/after-repair/.claude│
+│Off · no conversations will be read                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ > [x] CODEX ─────────────────────────────────────────────────────────────────┐
+│‹r-repair/team 東京/a long folder to test the visible insertion cursor/.codex │
+│Folder not found                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+  [x] Remember on this computer
+Save sources, appearance and floor.
+App data folder (.codex / .claude).
+
+
+
+
+
+←→ move  Home/End  Ctrl+U clear
+Enter apply folder   Esc cancel edit

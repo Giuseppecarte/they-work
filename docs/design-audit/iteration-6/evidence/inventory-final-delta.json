@@ -1,0 +1,18 @@
+{
+  "changed_count": 12,
+  "changed": [
+    "directed-single-project-32x14",
+    "directed-single-project-80x24",
+    "directed-single-project-120x36",
+    "directed-single-project-192x58",
+    "directed-single-project-110x80",
+    "directed-single-project-240x70",
+    "directed-single-worker-32x14",
+    "directed-single-worker-80x24",
+    "directed-single-worker-120x36",
+    "directed-single-worker-192x58",
+    "directed-single-worker-110x80",
+    "directed-single-worker-240x70"
+  ],
+  "reason": "Final singular project-count copy only."
+}

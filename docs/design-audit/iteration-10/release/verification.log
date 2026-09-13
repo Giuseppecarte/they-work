@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "passed": true,
+  "commit": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "image": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+  "platforms": {
+    "linux/amd64": {
+      "passed": true,
+      "manifest_digest": "sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d",
+      "frames": {
+        "kitty": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        },
+        "iterm2": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        },
+        "fallback": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": false,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        }
+      },
+      "locale": {
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LC_CTYPE": "C.UTF-8"
+      },
+      "execution": "emulated",
+      "errors": []
+    },
+    "linux/arm64": {
+      "passed": true,
+      "manifest_digest": "sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c",
+      "frames": {
+        "kitty": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        },
+        "iterm2": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": true,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        },
+        "fallback": {
+          "exit_code": 0,
+          "quit_sent": true,
+          "probe_answered": false,
+          "forced_cleanup": false,
+          "passed": true,
+          "errors": [],
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "native_roster": true
+        }
+      },
+      "locale": {
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LC_CTYPE": "C.UTF-8"
+      },
+      "execution": "daemon-native",
+      "errors": []
+    }
+  },
+  "terminal_evidence": "simulated PTY; not a physical terminal",
+  "driver_platform": "macOS-26.6.2-arm64-arm-64bit",
+  "source_state": "clean",
+  "index": {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+    "size": 1607,
+    "manifests": [
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "digest": "sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d",
+        "size": 863,
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        }
+      },
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "digest": "sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c",
+        "size": 863,
+        "platform": {
+          "architecture": "arm64",
+          "os": "linux"
+        }
+      },
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "digest": "sha256:ed69d881be0748587ac987a1e79d84ee854810fbe45ee0980cdad47200568e44",
+        "size": 567,
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:2fadddc28c672e3105f6c40a5523d8d7a36db83d9921e70d252cfc2f687b112d",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        }
+      },
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "digest": "sha256:a71aadd477e559ee27d7a24ae32dc0d04ce6ec3ce21a29b1efcd0e832a06c925",
+        "size": 567,
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:66200044f7d39a13543fbfb6c8c2e7137ae97a4fc5adfc23e35b64edfabde08c",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        }
+      }
+    ]
+  },
+  "daemon_architecture": "arm64"
+}

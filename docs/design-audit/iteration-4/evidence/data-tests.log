@@ -1,0 +1,112 @@
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.29s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-7c24cd2786d1f4fd)
+
+running 15 tests
+test util::tests::normalizes_real_office_path_spellings ... ok
+test util::tests::parses_utc_timestamp_to_epoch_millis ... ok
+test tests::windows_profile_spellings_map_to_wsl_mounts ... ok
+test codex_source::tests::ended_threads_leave_every_codex_runtime_map ... ok
+test util::tests::normalizes_and_caps_details ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test util::tests::project_key_finds_unmounted_repository_root ... ok
+test claude::tests::current_questions_keep_their_context_beyond_caption_length ... ok
+test util::tests::terminal_controls_are_visible_and_inert_before_truncation ... ok
+test util::tests::windows_canonical_paths_and_wsl_linux_case_keep_project_identity ... ok
+test tests::recent_populated_candidate_wins_over_stale_candidate ... ok
+test codex_source::tests::pending_requests_preserve_command_suffixes_and_mark_the_resource_limit ... ok
+test util::tests::codex_recorded_project_survives_a_store_only_mount ... ok
+test util::tests::unknown_paths_share_a_non_project_bucket ... ok
+test util::tests::project_hint_cannot_promote_home_or_codex_conversation ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/collaboration.rs (target/native-macos/debug/deps/collaboration-477155ac11ffb850)
+
+running 10 tests
+test old_worker_json_defaults_to_unknown_coverage_and_no_control_identity ... ok
+test claude_same_agent_ids_in_different_sessions_and_providers_remain_distinct ... ok
+test claude_explicit_child_result_keeps_its_parent_as_recipient ... ok
+test claude_background_launch_ack_is_not_a_delivery_and_late_child_resolves_the_original_event ... ok
+test claude_joins_nested_delegation_by_tool_id_and_does_not_promote_membership_to_parentage ... ok
+test codex_structural_provenance_supplies_parentage_when_edge_table_is_absent ... ok
+test codex_source_loss_marks_coverage_without_turn_completion_or_clock_refresh ... ok
+test codex_archived_endpoints_are_graph_history_and_internal_tool_calls_do_not_leak_nodes ... ok
+test codex_updates_same_timestamp_items_and_retains_removed_deliveries_without_writing_stores ... ok
+test codex_reads_work_families_forks_and_correlated_events_without_internal_workers ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/collectors.rs (target/native-macos/debug/deps/collectors-786f9ac066399289)
+
+running 23 tests
+test claude_uses_project_key_when_repository_is_unmounted ... ok
+test claude_uses_file_mtime_for_all_untimestamped_lines_and_honors_recency ... ok
+test claude_collapses_nested_workdirs_to_the_nearest_git_root ... ok
+test claude_tails_incrementally_rotates_and_discovers_sessions ... ok
+test claude_carries_real_timestamps_and_accumulates_usage ... ok
+test claude_keeps_one_worker_in_one_office_across_path_spellings ... ok
+test claude_recovers_from_home_gap_deletion_and_same_size_replacement ... ok
+test codex_applies_configured_recency_bound ... ok
+test collector_acceptance_live_when_homes_exist ... ignored, requires the live ~/.claude and ~/.codex stores
+test cold_wal_snapshots_are_rejected_without_creating_shm ... ok
+test clean_wal_database_is_rejected_without_recreating_sidecars ... ok
+test codex_database_symlinks_cannot_escape_the_configured_home ... ok
+test real_machine_smoke_when_homes_exist ... ignored, requires explicit opt-in to read live agent stores; use --doctor for diagnostics
+test claude_maps_tools_text_turns_and_names ... ok
+test sources_wires_existing_homes_and_skips_missing_ones ... ok
+test inspect_rejects_an_incomplete_codex_store ... ok
+test codex_hides_assessors_and_correlates_waiting_developers ... ok
+test codex_reads_roster_items_and_turn_state_incrementally ... ok
+test collector_acceptance_fixtures ... ok
+test codex_recovers_after_replacement_schema_loss_and_wal_lock ... ok
+test codex_groups_home_and_conversation_cwds_under_one_non_project_office ... ok
+test inspect_distinguishes_empty_homes_from_unreadable_stores ... ok
+test collectors_soak_for_hours_with_changing_stores ... ok
+
+test result: ok. 21 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 5.85s
+
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_core-fd2d6f098cc001ff)
+
+running 12 tests
+test collaboration::tests::identities_do_not_collide_between_providers_homes_or_session_scopes ... ok
+test world::tests::first_event_opens_an_office_and_hires_a_worker ... ok
+test world::tests::explicit_request_needs_attention_immediately_and_completion_clears_it ... ok
+test world::tests::a_worker_idle_for_an_hour_is_still_in_the_office ... ok
+test world::tests::a_finished_turn_reads_as_idle_and_ready_for_work ... ok
+test world::tests::no_worker_is_ever_seated_in_two_offices ... ok
+test world::tests::a_worker_who_moves_project_leaves_the_old_office ... ok
+test world::tests::quiet_workers_go_idle_then_offline_and_close_the_office ... ok
+test world::tests::an_open_turn_gone_silent_reads_as_blocked_not_idle ... ok
+test world::tests::token_counts_never_go_backwards ... ok
+test world::tests::history_keeps_the_newest_beats_and_stays_bounded ... ok
+test demo::tests::demo_at_real_clock_times_exposes_attention_without_epoch_sized_usage ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/collaboration.rs (target/native-macos/debug/deps/collaboration-a93bf9854137bcb9)
+
+running 7 tests
+test automatic_waits_keep_running_until_silent_while_human_requests_block_immediately ... ok
+test delivery_and_history_survive_removal_and_a_move_without_duplicate_seats ... ok
+test membership_does_not_claim_immediate_parent_and_unknown_parents_stay_visible ... ok
+test source_health_never_refreshes_activity_and_expired_workers_do_not_finish ... ok
+test nested_graph_deduplicates_membership_and_refuses_structural_cycles ... ok
+test demo_has_a_reviewable_delivery_two_children_and_an_explicit_question ... ok
+test history_is_bounded_deduplicated_and_sorted_even_when_backfill_arrives_late ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests theywork_collect
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests theywork_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

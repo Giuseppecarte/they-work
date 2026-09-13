@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/theywork-core",
+    "crates/theywork-control",
     "crates/theywork-collect",
     "crates/theywork-terminal-image",
     "crates/theywork-render",
@@ -13,11 +14,12 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.90"
 license = "MIT"
-repository = "https://github.com/OWNER/they-work"
+repository = "https://github.com/Giuseppecarte/they-work"
 description = "A pixel-art virtual office for watching your AI coding agents work."
 
 [workspace.dependencies]
 theywork-core = { path = "crates/theywork-core" }
+theywork-control = { path = "crates/theywork-control" }
 theywork-collect = { path = "crates/theywork-collect" }
 theywork-render = { path = "crates/theywork-render" }
 

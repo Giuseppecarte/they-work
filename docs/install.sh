@@ -15,6 +15,7 @@ THEYWORK_CLAUDE_HOST=${THEYWORK_CLAUDE_HOST:-$THEYWORK_DEFAULT_CLAUDE_HOST}
 THEYWORK_CODEX_HOST=${THEYWORK_CODEX_HOST:-$THEYWORK_DEFAULT_CODEX_HOST}
 THEYWORK_DOCKER_USER="$(id -u):$(id -g)"
 
+if [ "${THEYWORK_SKIP_PULL:-0}" != 1 ]; then
 echo "Pulling $THEYWORK_IMAGE ..." >&2
 if THEYWORK_PULL_OUTPUT=$(docker pull "$THEYWORK_IMAGE" 2>&1); then
     printf '%s\n' "$THEYWORK_PULL_OUTPUT" >&2
@@ -31,10 +32,11 @@ else
     esac
     exit "$THEYWORK_PULL_STATUS"
 fi
+fi
 
 THEYWORK_NONINTERACTIVE=
 case " $* " in
-    *" --doctor "*|*" --once "*) THEYWORK_NONINTERACTIVE=1 ;;
+    *" --doctor "*|*" --once "*|*" --headless "*|*" --help "*|*" -h "*) THEYWORK_NONINTERACTIVE=1 ;;
 esac
 
 if [ -t 0 ]; then
@@ -92,20 +94,20 @@ run_container() {
 
 run_with_both_homes() {
     run_container \
-        -v "$THEYWORK_CLAUDE_HOST:/data/claude:ro" \
-        -v "$THEYWORK_CODEX_HOST:/data/codex:ro" \
+        --mount "type=bind,source=$THEYWORK_CLAUDE_HOST,target=/data/claude,readonly" \
+        --mount "type=bind,source=$THEYWORK_CODEX_HOST,target=/data/codex,readonly" \
         "$THEYWORK_IMAGE" "$@"
 }
 
 run_with_claude_home() {
     run_container \
-        -v "$THEYWORK_CLAUDE_HOST:/data/claude:ro" \
+        --mount "type=bind,source=$THEYWORK_CLAUDE_HOST,target=/data/claude,readonly" \
         "$THEYWORK_IMAGE" "$@"
 }
 
 run_with_codex_home() {
     run_container \
-        -v "$THEYWORK_CODEX_HOST:/data/codex:ro" \
+        --mount "type=bind,source=$THEYWORK_CODEX_HOST,target=/data/codex,readonly" \
         "$THEYWORK_IMAGE" "$@"
 }
 
@@ -113,6 +115,10 @@ run_without_agent_homes() {
     run_container \
         "$THEYWORK_IMAGE" "$@"
 }
+
+case " $* " in
+    *" --demo "*) run_without_agent_homes "$@" ;;
+esac
 
 if [ -d "$THEYWORK_CLAUDE_HOST" ] && [ -d "$THEYWORK_CODEX_HOST" ]; then
     run_with_both_homes "$@"

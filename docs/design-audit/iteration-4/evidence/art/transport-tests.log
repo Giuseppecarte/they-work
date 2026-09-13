@@ -1,0 +1,28 @@
+   Compiling theywork-terminal-image v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-terminal-image)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_terminal_image-70c3b44b6b8b7e47)
+
+running 15 tests
+test tests::measurement_rejects_zero_iterations ... ok
+test tests::malformed_captures_are_rejected_without_panicking ... ok
+test tests::base64_is_standard_without_line_breaks ... ok
+test tests::kitty_reply_and_cell_queries_are_parsed ... ok
+test tests::protocol_preference_is_kitty_then_iterm2_then_sixel ... ok
+test tests::resize_retires_old_kitty_image_and_clips_new_target ... ok
+test tests::sixel_and_derived_cell_size_are_detected_without_kitty ... ok
+test tests::identical_frames_skip_transmission_and_resize_invalidates_cache ... ok
+test tests::unsupported_probe_is_bounded_and_emits_all_queries_once ... ok
+test tests::sixel_bytes_have_palette_data_and_placement_surface_clears ... ok
+test tests::small_sixel_palettes_keep_source_colours_at_percentage_precision ... ok
+test tests::iterm2_png_preserves_rgba_and_places_in_cells ... ok
+test tests::captured_protocol_streams_decode_back_to_pixels ... ok
+test tests::kitty_bytes_are_chunked_and_placed ... ok
+test tests::kitty_compresses_flat_art_losslessly_without_changing_placement ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests theywork_terminal_image
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,27 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+beta-docs / Office
+
+ CONNECTIONS
+
+ Choose which local conversations appear in your office with Local sources.
+
+ Codex: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-workflows/run-r80zdeez/canonical/codex
+ Claude: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-workflows/run-r80zdeez/canonical/claude ·
+ native foreground console
+
+ Login opens the provider's official flow. Existing conversations remain tied to their owning runtime.
+ Claude instructions and approvals use its official conversation.
+
+
+
+
+
+
+
+
+ [ Local sources ] [ Codex login ] [ Claude login ] [ Back ]
+
+
+ Tab focus · Enter choose · Esc back

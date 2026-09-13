@@ -1,0 +1,9 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.59s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 1 test
+test views::inspector::tests::source_warning_and_current_request_action_survive_a_short_panel ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 261 filtered out; finished in 0.00s
+

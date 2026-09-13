@@ -1,0 +1,65 @@
+{
+  "kind": "Ui TestBackend + exact physical RGBA + native mask; Menlo/Pillow replay, not a terminal screenshot",
+  "files": [
+    {
+      "path": "deliveries-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "118ef589359d905c9e08fc5e99f9581dacb9c16879beb482c2a232d14ac55f4f"
+    },
+    {
+      "path": "deliveries-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "8f9362d424e98da7a72d8639eb791e7906f71f005809f64adb31a1ff9386c5bd"
+    },
+    {
+      "path": "office-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "21a2dff513bd9cd8962367d1b3d906f8e5b3fc799d6ae431432a0b91358426c9"
+    },
+    {
+      "path": "office-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "f64a835f02dbb71a92ca8dab22c6a3c2b29e4dd36ada7ed19e19b4befc619a8f"
+    },
+    {
+      "path": "office-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "b5f58a70421cf2e81fc59b164c51efbcda6c62887af1879b2e93c8869f48ad49"
+    },
+    {
+      "path": "team-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "d55a3e3c00c78d7cd4af7af2853c60dfee6ef6b9f26daf29cdeda803f4386fc3"
+    },
+    {
+      "path": "team-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "273c4fb395e2f2f2e80c5bd91e73afe92184d54907e2c195fa49513347a5982f"
+    },
+    {
+      "path": "tower-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "10fbbb2c87e24e9c5bcbe978b98a67bbf81ce1d28a0af8d00999df67e8284e5a"
+    },
+    {
+      "path": "tower-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "b0a87368f083a00a88d6d4d6de11e0db4e59558707379d5613842864dfba7963"
+    },
+    {
+      "path": "tower-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "3e0857fb766de18c6533ce850ab605c5ee7375edf46203af03edac67b724139c"
+    }
+  ]
+}

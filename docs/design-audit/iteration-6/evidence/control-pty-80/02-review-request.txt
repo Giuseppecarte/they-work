@@ -1,0 +1,23 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 1 projects
+
+ REVIEW REQUEST
+
+ PENDING REQUEST 1/1 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-co
+ ntrol-pty/run-lxmjnabz/vertical-project / approval · managed-1
+ Approval requested
+
+ command: test-only-command
+
+
+
+
+
+
+
+
+ [ 1 Allow this request ] [ 2 Decline ] [ 3 Cancel ] [ Back ]
+
+
+ Tab focus · Enter choose · PgUp/Dn read · Esc back

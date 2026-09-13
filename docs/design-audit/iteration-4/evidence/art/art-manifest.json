@@ -1,0 +1,156 @@
+{
+  "kind": "original pixel artwork, software composition; not terminal screenshots",
+  "character_source": [
+    48,
+    64
+  ],
+  "files": [
+    {
+      "path": "adjoining-room-20-192x48.png",
+      "width": 1536,
+      "height": 768,
+      "sha256": "e1582b5e8211a78465b53781e0d819330a9536586be1c368823b3ffeb4ed1312"
+    },
+    {
+      "path": "adjoining-room-3-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "8e3cccbb23f94b8f3350c23f91f97274f9bd8f2c0fa70b381090c40ff0e3a8f5"
+    },
+    {
+      "path": "adjoining-room-6-120x32.png",
+      "width": 960,
+      "height": 512,
+      "sha256": "520ecec6260e28b09facf6c7ca7aabe09019f5d075b6462eeb10e924bdbab39c"
+    },
+    {
+      "path": "cast.png",
+      "width": 800,
+      "height": 720,
+      "sha256": "dddad7f7dc346cf7000414682a5bc42e54c7a8dc3c0116d30269236bf4cb8d66"
+    },
+    {
+      "path": "gags-20-192x48.png",
+      "width": 1536,
+      "height": 768,
+      "sha256": "97a8077365c5baee7b112cfbd18d012140f027af1288b5f0dfefb5f71f3dc52b"
+    },
+    {
+      "path": "gags-3-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "9c698efc13450da245c246f567a7679159238fd724a6f1e3b2d3b16d154d3942"
+    },
+    {
+      "path": "gags-6-120x32.png",
+      "width": 960,
+      "height": 512,
+      "sha256": "890e1af0db5a098e18887796b2a0981adfd7ceefef909ac1b3d64c4e763aac27"
+    },
+    {
+      "path": "interactions.png",
+      "width": 480,
+      "height": 220,
+      "sha256": "16e27a17138d50cb17c7d9306c458322faf9f2bc5e67aadc786e34b6d7817c32"
+    },
+    {
+      "path": "meeting-20-192x48.png",
+      "width": 1536,
+      "height": 768,
+      "sha256": "00521617a4d66494fde1ec4e2a28b422cc939903555b0a8d2a79e84970a0f87d"
+    },
+    {
+      "path": "meeting-3-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "ef8e5eebf7f253a151368ce0bc11123656b1555556ac042a892bddde2494d72a"
+    },
+    {
+      "path": "meeting-6-120x32.png",
+      "width": 960,
+      "height": 512,
+      "sha256": "6e57e7bc7d0d8123abe02cee3641254d8dfae10a481a53b5fde10dcc15d72e5a"
+    },
+    {
+      "path": "office-20-192x48.png",
+      "width": 1536,
+      "height": 768,
+      "sha256": "dc5ded004e23ea3c7d9de2a196458086d49f91cbcacdd090fe5e0b6b47379b7f"
+    },
+    {
+      "path": "office-3-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "f597bb28bc2973543125674295654a1c899c1b920c91cd24848a0acf91cbff42"
+    },
+    {
+      "path": "office-6-120x32.png",
+      "width": 960,
+      "height": 512,
+      "sha256": "567ec0f7519044b51e69a7c7f85920d9c1ce9d5c5ade15ee7811022ba49b5231"
+    },
+    {
+      "path": "poses.png",
+      "width": 960,
+      "height": 240,
+      "sha256": "6b9121f7ee79bd756a5385bd8becb3153faa216bd34d4071c8ebbb5b9a1dec4d"
+    },
+    {
+      "path": "decorative-motion.gif",
+      "frames": 48,
+      "source_frame_ms": 125,
+      "gif_frame_ms": [
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130,
+        120,
+        130
+      ],
+      "duration_ms": 6000,
+      "sha256": "df8014014d16d075baa083506a88e2b2dfa9d95c9db25e7cb3544d9ccef36198"
+    }
+  ]
+}

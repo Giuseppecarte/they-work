@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-09T19:34:34.896615+00:00",
+  "source_revision": "77a9b785dd25d27884b7fe2f81548d538f53a35a",
+  "source_state": "working candidate; exact inspected file hashes retained",
+  "environment": {
+    "system": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.2",
+    "rust_pin": "[toolchain]\nchannel = \"1.90.0\"\ncomponents = [\"rustfmt\", \"clippy\"]\n"
+  },
+  "checks": [
+    {
+      "name": "lineage",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--lib",
+        "stream::",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.185,
+      "passed": 3,
+      "log": "lineage.log",
+      "sha256": "555eb04c121816ea4e6ab55b3c9c4b8ba6cfaf84ac6eb4f4ba6cb5e4329f5b3e"
+    },
+    {
+      "name": "reconciliation",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--test",
+        "data_stream",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.354,
+      "passed": 9,
+      "log": "reconciliation.log",
+      "sha256": "4e8fbc6cc7db47d1322de5f0ec8f1a778e4991c1897545e62b6c62928c346e2e"
+    },
+    {
+      "name": "provider-process",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "-p",
+        "theywork-control",
+        "--test",
+        "control",
+        "data_stream_process::",
+        "--",
+        "--nocapture"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.061,
+      "passed": 2,
+      "log": "provider-process.log",
+      "sha256": "4ff2ca04f9e82bc49d0e7a7e8e25bde8192b49b404075c6e80f7693f7b3bb8bd"
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "clippy",
+        "-p",
+        "theywork-control",
+        "--all-targets",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.909,
+      "passed": 0,
+      "log": "clippy.log",
+      "sha256": "3fe32d412c7b675c9dc554e087ac3bf81e7130ef7fdb035f3a790a11f94536b2"
+    }
+  ],
+  "source_sha256": {
+    "crates/theywork-control/src/model.rs": "91c9b3556b57f52a7191146a02b46f15b6e52bbba8ff46b63248f962e6a8767e",
+    "crates/theywork-control/src/stream.rs": "8c7cbfc58c322cf56a20c512dff51a2c35fe68590ca0c8cabe87c6e354b0855c",
+    "crates/theywork-control/src/bridge.rs": "d5b3a9163a8479c6bf23d981e807ffd42b39ab7e02ea03147dd1aa9a32d3f7b0",
+    "crates/theywork-control/src/supervisor.rs": "9b006838d23bb7c054cecf021feb4dd623d7a80db997eec8fa277ac9979552cf",
+    "crates/theywork-control/src/lib.rs": "d5d3407ab6cac10689507337a1a310438505de9427d0054004b146b11d70e9ac",
+    "crates/theywork-control/tests/data_stream.rs": "2fb7f483a548128f100b4dac8806c001dc0d303c8d8de4a4bd59d93a3ea33089",
+    "crates/theywork-control/tests/support/data_stream_process.rs": "c23cca9ceae755b13efc312a6a0b804978aa0d9add68b2a3641a1c8d6b4b1ce6",
+    "crates/theywork-control/tests/support/dual_feed_fixture.rs": "6b7967864b6a8db18925e2863a421e29dd7df89c867d00fae24a9c335881bd11",
+    "crates/theywork-control/tests/fake_stream_provider.py": "3f263156213117a93b2693a1f1d757182e6bf1ce4addc227a6022cfbb518a2b0",
+    "crates/theywork-tui/src/main.rs": "86545bf2229ac7253793d49e102dc4454c67b4984168c223a9eab045daf036d1"
+  },
+  "limitations": [
+    "Offline fake-provider process tests use local loopback sockets; no authenticated provider executes.",
+    "SQLite collector cases use disposable synthetic stores and verify unchanged database bytes.",
+    "No PTY, physical-terminal or cross-platform runtime claim is made by these checks.",
+    "Stream lineage rotates at recovered host startup because live snapshots may precede batched persistence."
+  ]
+}

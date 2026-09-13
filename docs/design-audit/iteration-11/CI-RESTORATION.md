@@ -1,0 +1,209 @@
+# Restoring native CI before the main merge
+
+The owner enabled the required workflow permission and commit `8084397`
+restored the active CI, native build and guarded release workflows to PR #1.
+Native packaging explicitly installs Python 3.13 on all six runners; the
+reproduction smoke retains Python 3.12. Branch and pull-request runs never
+publish a release.
+
+The first native runs exposed four issues that the earlier application-only
+CI did not cover. Exact failure excerpts and job IDs are retained under
+[ci-restoration/](ci-restoration/).
+
+| Case | Correction | Boundary preserved |
+| --- | --- | --- |
+| Windows Clippy compared unit-valued file identities | Use the same optional device/inode identity type across platforms; unsupported metadata still returns `None` | No invented identity or replacement authority |
+| macOS Codex fixtures used `/var`, a symlink alias | Canonicalize newly created fixture directories in collector and CLI test helpers | SQLite `NOFOLLOW`, source symlink rejection and read-only store behavior |
+| A Linux process fixture timed out during provider initialization | Use the production RPC budget; exercise a 750 ms cold startup and assert confirmed, single dispatch | Missing-acknowledgement timeout, restart and no-replay checks |
+| ARM64 musl debug rendering took 5,408 ms against the 5,000 ms budget | Run this exact budget test alone in the optimized profile, with a mandatory one-test result and retained logs | Same frames, assertions and threshold; debug correctness suite still runs all other tests |
+
+The native timing artifact uses `frame-timing-*`, so it cannot enter release
+downloads matching `native-*`. The required-verification job still runs its
+full debug suite. No performance assertion is removed or relaxed.
+
+A separate checkout check reproduced conversion of golden files to CRLF under
+`core.autocrlf=true`, while the serializer requires exact LF bytes. A narrow
+golden-directory attribute now enforces LF; it changes no recorded frames.
+This was a locally reproduced Windows-checkout compatibility issue, not an
+additional observed failure in the first native jobs.
+
+## Validation
+
+The macOS fixture failure was reproduced with the default aliased temp path;
+the same compiled test binary passed when given the canonical path. After the
+fixture fix, both native collector suites pass using the default macOS temp
+location. The cold-start test asserts one initialize, one thread start, one
+turn start and one decision; the uncertainty case still deliberately waits
+for an acknowledgement timeout.
+
+Fresh integrated command output is retained in `ci-restoration/checks.json`
+and its corresponding logs: 471 workspace tests pass (4 ignored), formatting
+and strict Clippy pass, and exactly one optimized timing test passes for all
+three encodings. Native Windows execution and Linux ARM64 timing
+must be confirmed by the subsequent GitHub run; local macOS tests cannot
+replace those results. Earlier failed CI runs remain failure evidence.
+
+## Critical review
+
+The first matrix confirmed that local test success did not establish native
+portability. Most corrections concern fixture assumptions, but the Windows
+comparison also blocked compilation. The optimized frame check is a separate
+measurement from debug correctness, compositor p95 and real-terminal latency.
+These checks support a local testing baseline, not authenticated-provider,
+physical-terminal or release-publication certification.
+
+## Second native pass
+
+Both Linux architectures, required verification, and both audit-smoke jobs
+passed on `b202913` (push run `34777496710`, PR run `34777499056`). The macOS
+CLI suite exposed the same aliased temporary-directory issue in its separate
+fixture helper: 20 passed and 14 failed. On both Windows architectures, the
+discovery timestamp fixture lacked Windows metadata-write access and the flag
+required to open a directory. Excerpts are retained in
+`ci-restoration/round-2/failures.json` and its linked logs.
+
+The fixture corrections keep provider-store access and path-normalization
+behavior unchanged. A bounded Windows review also corrected impossible fixture
+inputs: a Linux UNC path built from a native Windows drive path, a Linux
+project-key directory containing a Windows drive colon, and two CLI assertions
+expecting raw filesystem spelling where the interface prints normalized IDs.
+The Unix WSL cases and dedicated normalization tests remain covered. Native workspace tests now use `--no-fail-fast`, so one
+failed test executable does not prevent execution of the remaining suites.
+A failed suite still fails the job. Native confirmation of these corrections
+is pending the next candidate run.
+
+The `b202913` Linux x86_64 and ARM64 CI archives were downloaded and inspected:
+GitHub artifact digests and included archive checksums match, executable mode
+and ELF architecture are correct, and neither executable has an ELF interpreter
+or dynamic-library dependency. The archive inspection is retained in
+`ci-restoration/round-2/linux-archive-inspection.json`. This verifies the archive
+format and static linkage; physical WSL rendering remains owner validation.
+
+The integrated follow-up passed formatting, strict all-target Clippy, and
+471 workspace tests (4 ignored), plus the separate storage-process
+report. Commands, durations and source hashes are recorded in
+`ci-restoration/round-2/checks.json` and `manifest.json`.
+
+## Windows behavior exposed by the complete suite
+
+Candidate `22d9ab9` passed the Linux builds, macOS ARM64 build, both audit
+smokes and required verification. The complete Windows suites on x64 and
+ARM64 reproduced two production defects, beyond the earlier fixture issues:
+
+- Filesystem traversal converted the Windows verbatim prefix before removing
+  it. The resulting `/?/C:/...` office ID disagreed with the original drive
+  path and could split a repository across floors.
+- Private Windows state was created with the process's default owner and then
+  restricted. An elevated process can default to the Administrators group,
+  while subsequent validation correctly requires the current user's SID.
+
+The correction normalizes verbatim prefixes consistently before traversal
+and creates private Windows objects with an explicit current-user owner and
+protected owner-only permissions. Existing state owned by another identity
+must still be rejected; the application does not take ownership of it.
+
+A separate diagnostic fixture now distinguishes a Unix/WSL `/mnt/c` crossover
+path from a native missing home. Normalized CLI expectations and the Git
+worktree worker count remain assertions, with full stdout on failure.
+
+Raw failure excerpts for both Windows architectures are retained in
+`ci-restoration/round-3/`. Native confirmation of this correction requires the
+next candidate run. These findings show why the earlier local test pass was
+insufficient to claim native Windows readiness.
+
+Microsoft documents that a new object's default owner can differ from the
+process token's user ([owner of a new object](https://learn.microsoft.com/en-us/windows/win32/secauthz/owner-of-a-new-object)).
+The new creation descriptor explicitly selects the user; the existing owner
+comparison remains intact. Independent review also required retaining the
+post-create ACL-support check because security descriptors require filesystem
+support ([CreateFileW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)).
+The existing six-test Windows replacement contract is preserved and its ACL
+case now checks newly created/reopened directories and locks, exact one-ACE
+owner-only DACLs, and file ownership before and after replacement.
+
+Local integration of the Windows correction passed 473 workspace tests
+(4 ignored) plus three separate storage process cases, formatting and
+strict all-target Clippy. The actual Windows-target production control library
+also passes strict Clippy. Cross-compilation is recorded separately from native
+Windows execution in `ci-restoration/round-3/manifest.json`; the latter remains
+pending the next frozen commit.
+
+## Concurrent Windows replacement
+
+On `c3b56e7`, both native Windows architectures passed the path, ownership,
+shared recovery, admission and storage-process cases. The only failing test
+was replacement while a reader held the destination open: `MoveFileExW`
+returned access denied. The reader's later missing-path message came from
+fixture cleanup after the writer panic, not an independently observed gap.
+The original logs remain in `ci-restoration/round-4/`.
+
+The publisher now uses the pinned Rust 1.90 `fs::rename` implementation on the
+same canonical sibling paths. It includes the Windows POSIX rename fallback
+for this exact open-reader case ([Rust issue](https://github.com/rust-lang/rust/issues/123985),
+[pinned implementation](https://raw.githubusercontent.com/rust-lang/rust/1.90.0/library/std/src/sys/fs/windows.rs)).
+There is no delete/copy sequence, retry loop or provider resubmission. The test
+now deliberately holds the old read handle, checks both old-handle and new-path
+contents, performs all 100 publications, and joins its reader before cleanup.
+The separate no-delete-sharing rejection remains required.
+
+The staged file is still synced before publication. The old explicit
+`MOVEFILE_WRITE_THROUGH` flag was documented around copy/delete moves, which
+this same-volume path never enabled ([MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)).
+This correction does not add a claim about directory-entry durability under
+physical power loss; that remains a separate gate. Native CI must confirm
+concurrency and the existing replacement/recovery counts on this correction.
+
+Local integration passed 473 workspace tests (4 ignored), the
+three separate storage process cases, formatting, strict all-target Clippy and
+Windows-target production-library Clippy. The bounded installer/package source
+review found no further concrete blocker, but it does not replace native
+execution. Commands, source hashes and results are in
+`ci-restoration/round-4/`.
+
+## Windows recovery report destination
+
+Candidate `4fc94c6` passed the full native Windows workspace suites on x64 and
+ARM64. Both dedicated recovery steps also executed six replacement tests,
+four shared recovery tests, one live-fault test and four passing process
+scenarios. They then failed while writing the structured process report:
+the workflow supplied a workspace-relative destination, but Cargo starts the
+integration executable from its crate directory. The report's parent directory
+therefore did not exist. This was an evidence-output failure after the checked
+scenarios, and the jobs correctly remained failed.
+
+The workflow now anchors the evidence directory to the workspace's absolute
+path before exporting it. Test behavior and required result counts are
+unchanged. `ci-restoration/round-5/` retains the native results and the local
+relative/absolute-path reproduction. The next native run must still save and
+validate the report, then execute the previously skipped Windows installer and
+archive checks before the candidate can be considered green.
+
+## Installer fixture execution
+
+On `a320398`, both native Windows storage gates passed, including persisted
+process reports. The retained artifacts match the exact source, x64/ARM64
+architectures and NTFS filesystem. Their raw and structured results agree on
+the required six replacement, four recovery, one live-fault and four process
+results. The next step exposed a separate failure in the offline installer
+fixture: the file intended for its ZIP archive was never created.
+
+The fixture used positional arguments with `Set-Content -NoNewline`. This
+matches a reported PowerShell parameter-binding bug that can silently omit the
+file ([upstream issue](https://github.com/PowerShell/PowerShell/issues/26583)).
+Its writes now specify `-LiteralPath` and `-Value`, keeping all five scenario
+assertions intact. The earlier source-only review missed this runtime behavior,
+so it was insufficient evidence for installer readiness.
+
+Executing the corrected fixture exposed another defect in the actual update
+path. PowerShell converted the `$null` backup argument of `File.Replace` into
+an empty string, which .NET rejected as an invalid path. The installer now
+passes `NullString.Value`, the documented way to supply a null .NET string
+([PowerShell API](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.nullstring?view=powershellsdk-7.4.0)).
+The same replacement operation, checksum requirements, cleanup and PATH policy
+are retained. This preserves the intended no-backup behavior of
+[`File.Replace`](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace?view=net-9.0).
+
+`ci-restoration/round-6/` records fresh Windows storage artifacts, the later
+installer failures and local PowerShell reproduction. Local execution on macOS
+does not establish Windows filesystem behavior. The next frozen native run
+must execute the complete installer fixture and packaged Windows executable.

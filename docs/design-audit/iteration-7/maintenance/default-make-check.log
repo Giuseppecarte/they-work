@@ -1,0 +1,3 @@
+THEYWORK_CARGO_NETWORK=bridge THEYWORK_DEV_IMAGE=they-work-dev:local ./scripts/cargo fetch --locked
+Docker is unavailable. Start Docker Desktop/the Docker daemon, or install Rust for native builds.
+make: *** [fetch] Error 1

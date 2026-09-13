@@ -1,0 +1,24 @@
+ 0 TOWER >20 20-billing-service!                        20/20 · / find · ? help
+  DESK / 20-billing-service  codex conversation · observed 4m 13s ago · read-onl
+  ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐
+▄▄│/  路径 路径 路径 路径 路径 路径 路径 路径 路径 路径 路径 路径 路径 路径… │
+▄▄│0 matches · 0–0                                                           │
+▄▄│No matching projects or conversations.                                    │
+▄▄│Try a task name, codex, claude, or attention.                             │
+▄▄│                                                                          │
+▄▄│                                                                          │
+▄▄│                                                                          │
+▄▄│                                                                          │
+┌ │                                                                          │─┐
+│C│                                                                          │ │
+│T│                                                                          │ │
+│B│                                                                          │ │
+│ │                                                                          │ │
+│N│                                                                          │ │
+│ │                                                                          │ │
+│N│                                                                          │ │
+│N│                                                                          │ │
+│ │↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear           │ │
+└─└──────────────────────────────────────────────────────────────────────────┘─┘
+ Original · w character   11K tokens · branch main
+  ↑↓ history  PgUp/PgDn page  ←→ desks  / find  p phone  Esc floor

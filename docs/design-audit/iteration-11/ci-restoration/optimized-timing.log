@@ -1,0 +1,12 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `release` profile [optimized] target(s) in 24.10s
+     Running unittests src/lib.rs (target/native-macos/release/deps/theywork_render-58e71d33d5468d75)
+
+running 1 test
+test m3_tests::encoding_frame_cost_stays_within_ten_fps_budget ... encoding=sextants frames=100 total_ms=106 per_frame_ms=1.07 cached_packing_ms=0.60
+encoding=quadrants frames=100 total_ms=80 per_frame_ms=0.81 cached_packing_ms=0.47
+encoding=half-blocks frames=100 total_ms=30 per_frame_ms=0.31 cached_packing_ms=0.04
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 266 filtered out; finished in 0.40s
+

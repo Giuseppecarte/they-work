@@ -1,0 +1,128 @@
+[
+  {
+    "action": "WorkTab(Now)",
+    "height": 1,
+    "width": 7,
+    "x": 1,
+    "y": 7
+  },
+  {
+    "action": "WorkTab(Activity)",
+    "height": 1,
+    "width": 12,
+    "x": 8,
+    "y": 7
+  },
+  {
+    "action": "WorkTab(Team)",
+    "height": 1,
+    "width": 8,
+    "x": 20,
+    "y": 7
+  },
+  {
+    "action": "WorkTab(Details)",
+    "height": 1,
+    "width": 11,
+    "x": 28,
+    "y": 7
+  },
+  {
+    "action": "Review(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 18,
+    "x": 1,
+    "y": 20
+  },
+  {
+    "action": "WorkActions",
+    "height": 1,
+    "width": 16,
+    "x": 20,
+    "y": 20
+  },
+  {
+    "action": "WorkExpand",
+    "height": 1,
+    "width": 10,
+    "x": 37,
+    "y": 20
+  },
+  {
+    "action": "Review(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 78,
+    "x": 1,
+    "y": 9
+  },
+  {
+    "action": "WorkRecord(\"event:17:floor-00-person-0:fixture-result\")",
+    "height": 1,
+    "width": 78,
+    "x": 1,
+    "y": 17
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 23
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 12,
+    "x": 9,
+    "y": 23
+  },
+  {
+    "action": "Decorate(OfficeId(\"/projects/00-checkout\"))",
+    "height": 1,
+    "width": 10,
+    "x": 22,
+    "y": 23
+  }
+]

@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 166, in <module>
+    main()
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 154, in main
+    result["cases"]["recovery"] = recovery(binary, folder / "recovery", output)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py", line 91, in recovery
+    assert "Keep recipient and draft" in s.text(), s.text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+vertical-project / Work brief                                                   
+                                                                                
+ Remy A.                                                                        
+ working                                                                        
+ codex · Source unavailable · 1s                                                
+ Source unavailable                                                             
+ [ Now ][ Activity ][ Team ][ Details ]                                         
+                                                                                
+ OBSERVED · 1s ago                                                              
+ Last recorded: No current activity reported                                    
+                                                                                
+ RECORDED UPDATES                                                               
+ No retained activity or result from this source yet.                           
+ [ Expand ]                                                                     
+ PgUp/Dn · line 1/6 · Esc                                                       
+                                                                                
+ INSTRUCTION TO vertical-project / working                                      
+ Observation only. This connection cannot accept instructions.                  
+ Rejected: Not sent: local state could not be saved. Restore storage access     
+ and submit again. · operation                                                  
+ a621247431b90a30fac8f18b9cae49b77ee42941df99dd660ac0e40990954de6               
+ [ Back ]                                                                       
+ Tab/Enter · F7 expand · Esc cancel                                             

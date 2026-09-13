@@ -1,0 +1,53 @@
+2026-09-13T19:26:28.6998000Z 
+2026-09-13T19:26:28.6998560Z ---- an_empty_codex_installation_is_watched_for_its_first_conversation stdout ----
+2026-09-13T19:26:28.7000610Z 
+2026-09-13T19:26:28.7001540Z thread 'an_empty_codex_installation_is_watched_for_its_first_conversation' panicked at crates/theywork-tui/tests/cli.rs:511:5:
+2026-09-13T19:26:28.7002280Z assertion failed: !sources[0].poll(now_ms()).unwrap().is_empty()
+2026-09-13T19:26:28.7002800Z error: test failed, to rerun pass `-p theywork-tui --test cli`
+2026-09-13T19:26:28.7003290Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:26:28.7003600Z 
+2026-09-13T19:26:28.7003790Z ---- codex_desktop_split_database_layout_is_collected stdout ----
+2026-09-13T19:26:28.7004020Z 
+2026-09-13T19:26:28.7004330Z thread 'codex_desktop_split_database_layout_is_collected' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+2026-09-13T19:26:28.7004820Z expected success
+2026-09-13T19:26:28.7005020Z stdout:
+2026-09-13T19:26:28.7005270Z they-work --once
+2026-09-13T19:26:28.7005470Z timestamp_ms=1789327587838
+2026-09-13T19:26:28.7005730Z projects=0 workers=0
+2026-09-13T19:26:28.7006090Z next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+2026-09-13T19:26:28.7007130Z collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/they-work-tui-23933-1/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+2026-09-13T19:26:28.7008620Z 
+2026-09-13T19:26:28.7008750Z stderr:
+2026-09-13T19:26:28.7008840Z 
+2026-09-13T19:26:28.7008840Z 
+2026-09-13T19:26:28.7009080Z ---- default_saved_sources_are_used_without_a_config_flag stdout ----
+2026-09-13T19:26:28.7009360Z 
+2026-09-13T19:26:28.7009690Z thread 'default_saved_sources_are_used_without_a_config_flag' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+2026-09-13T19:26:28.7010300Z expected success
+2026-09-13T19:26:28.7010570Z stdout:
+2026-09-13T19:26:28.7010810Z they-work --once
+2026-09-13T19:26:28.7011030Z timestamp_ms=1789327587872
+2026-09-13T19:26:28.7011320Z projects=0 workers=0
+2026-09-13T19:26:28.7011670Z next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+2026-09-13T19:26:28.7013370Z collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/they-work-tui-23933-2/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+2026-09-13T19:26:28.7014630Z 
+2026-09-13T19:26:28.7014690Z stderr:
+2026-09-13T19:26:28.7014850Z 
+2026-09-13T19:26:28.7014850Z 
+2026-09-13T19:26:28.7015000Z ---- doctor_reports_fixture_homes stdout ----
+2026-09-13T19:26:28.7173880Z     related_git_worktrees_share_the_primary_project_floor
+2026-09-13T19:26:28.7174200Z     saved_sources_are_respected_and_explicit_choice_overrides_them
+2026-09-13T19:26:28.7174410Z 
+2026-09-13T19:26:28.7174630Z test result: FAILED. 20 passed; 14 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+2026-09-13T19:26:28.7174940Z 
+2026-09-13T19:26:28.7200520Z ##[error]Process completed with exit code 101.
+2026-09-13T19:26:28.7349010Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-13T19:26:28.7350140Z ##[group]Run actions/upload-artifact@v4
+2026-09-13T19:26:28.7350350Z with:
+2026-09-13T19:26:28.7350500Z   name: frame-timing-aarch64-apple-darwin
+2026-09-13T19:26:28.7350760Z   path: target/native-timing/aarch64-apple-darwin.log
+2026-09-13T19:26:28.7351000Z   if-no-files-found: warn
+2026-09-13T19:26:28.7351170Z   compression-level: 6
+2026-09-13T19:26:28.7351330Z   overwrite: false
+2026-09-13T19:26:28.7351480Z   include-hidden-files: false
+2026-09-13T19:26:28.7351650Z env:

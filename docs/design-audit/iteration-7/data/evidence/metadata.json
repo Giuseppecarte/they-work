@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-09-08T21:23:16.151428+00:00",
+  "source_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
+  "binary_sha256": "59fd9c82310a7dbc7b3ccf74a3babe78b8fe391001bc8c87d1825ed4b1219429",
+  "source_sha256": {
+    "crates/theywork-control/src/supervisor.rs": "f1eb622581f25fedc34b69298691151889e609211fb430fe39ab570f450b7de4",
+    "crates/theywork-control/src/bridge.rs": "11b29efe341aea53e9344185c07dd33d6e3c030b68975859242f78f308f8f0e6",
+    "crates/theywork-core/src/world.rs": "af0b17082f8d616ee636cc99a67004a58acdf55e65b3f888ad9e79b8f3d55cdc",
+    "crates/theywork-core/src/lib.rs": "84fc957b80477837ddb8498caace4d963ad9b0d708b1a51b65453165e5c2675a",
+    "crates/theywork-render/src/work_brief.rs": "636685484f632c3834b4e9b63667cbb6a2123805a8f6e2d5b57e72bfebe5a209",
+    "crates/theywork-render/src/views/workboard.rs": "96b28b46ace163601fa57dc2d9bcc8ca6f13f7b2fc02f0fe41516471cf8b92c2"
+  },
+  "runner_sha256": "9dff8f4e3768a832519b7b6e3129c2581a19b4f9218570babbdff93a45a000c4",
+  "fake_provider_sha256": "f063c731e8040daed1722b00a5c8e13c7fb2052cc9bda602927bb1dcec590ff5",
+  "raw_synthetic_trace_directory": "docs/design-audit/tmp/iteration-7-data/20260908T212314",
+  "evidence_sha256": {
+    "build.log": "d20a278f356c0f7477af8a732a47909465e7debcf7f9d8a9dcf169731898aeee",
+    "environment-block.log": "9357f4f993f728dfa504d3112b4fbc6f224a5ffa5407f1f077be881d2d952812",
+    "gap-300-changes.txt": "496fc1dd4f4d100d067ea2842fc516308b79c714d4e45a7913d7b95854fe82b8",
+    "gap-300-deliveries.txt": "16de38753d407702b3cee8cbd0d26a9c6565fc44458bac803f9a8f0c1aa713ec",
+    "gap-3000-changes.txt": "ac47eca670c93db1369a31014b0c8da36ba68e4c8459ee7fee481060d3a5f605",
+    "gap-3000-deliveries.txt": "16de38753d407702b3cee8cbd0d26a9c6565fc44458bac803f9a8f0c1aa713ec",
+    "results.json": "38fcbe7caea4a93646d03d9d8cf54d92dcfe3fd5656cd7743d11466f83132eb0",
+    "retention-b-after-changes.txt": "4f4bbf3285ede7bcb74b0faeefbfcbc4149b4aa736a2c8d78632b273399927b1",
+    "retention-b-after-deliveries.txt": "879b297db1c9387a4ae6c15495b4207743728e24b765ab3af39ed57aebba8195",
+    "retention-b-before-deliveries.txt": "6e305ea877b49e61e66fa056a68f5cdf0ff3c07aa25372b5f1b741a464d1c7d2",
+    "run.log": "a747a3f1ffb89d92e72cbe9e6a6ba5940e3980c1fb42be40c88a3f19e89ae267"
+  },
+  "platform": "Darwin arm64",
+  "retained_raw_data": "Synthetic traces/config only, in ignored scratch. Endpoint tokens are not published."
+}

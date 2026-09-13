@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_control-cdcd7915fcdbd0f9)
+
+running 3 tests
+test stream::tests::legacy_and_repaired_sequences_never_claim_known_prior_lineage ... ok
+test stream::tests::restart_rotates_lineage_but_live_empty_windows_keep_their_high_water_mark ... ok
+test stream::tests::sequence_exhaustion_rotates_lineage_without_reusing_a_sequence ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+

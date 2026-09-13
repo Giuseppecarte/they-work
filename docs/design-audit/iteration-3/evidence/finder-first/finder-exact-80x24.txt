@@ -1,0 +1,24 @@
+ 0 TOWER >8 08-billing-service!                          8/20 · / find · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐
+┌ │/ 20-billing-service account                                              │─┐
+│ │1 matches · 1–1                                                           │ │
+│ │> Build account settings                                       ATTENTION  │ │
+│>│  20-billing-service · codex · floor 20                                   │ │
+│ │                                                                          │ │
+│ │                                                                          │ │
+└─│                                                                          │─┘
+┌ │                                                                          │─┐
+│!│                                                                          │ │
+│…│                                                                          │ │
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│ │…/docs/design-audit/tmp/iteration-3-finder/fixture-60-0/20-billing-service│ │
+│ │↑↓ choose · Enter open · Esc back · Ctrl+U clear                          │ │
+└─└──────────────────────────────────────────────────────────────────────────┘─┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 8/20 · page 2/4 · PgUp/PgDn pages · Home first · End last

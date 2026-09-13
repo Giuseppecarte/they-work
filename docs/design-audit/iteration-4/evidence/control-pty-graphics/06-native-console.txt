@@ -1,0 +1,41 @@
+ 0 TOWER >1 vertical-project●                                                                     1/1 · / find · c sources · ? help
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-jcsfxoms/vertical-project▏
+
+
+ native return; literal $(text)▏
+                              they-work · official provider console. Exit or detach to return to the office.
+NATIVE_FIXTURE_READY: press Enter to return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Sending to claude / /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-jcsfxoms/vertical-
+ F5 send · F2 stop · F3 console · F4 requests · F6 reconnect · Esc back

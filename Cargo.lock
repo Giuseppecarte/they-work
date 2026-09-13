@@ -692,6 +692,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "theywork-control"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "libc",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "theywork-collect",
+ "theywork-core",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "theywork-core"
 version = "0.1.0"
 dependencies = [
@@ -704,6 +718,8 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "ratatui",
+ "serde",
+ "serde_json",
  "theywork-core",
 ]
 
@@ -725,8 +741,10 @@ dependencies = [
  "libc",
  "ratatui",
  "rusqlite",
+ "serde",
  "serde_json",
  "theywork-collect",
+ "theywork-control",
  "theywork-core",
  "theywork-render",
  "theywork-terminal-image",

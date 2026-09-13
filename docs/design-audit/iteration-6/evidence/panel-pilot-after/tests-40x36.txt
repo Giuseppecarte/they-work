@@ -1,0 +1,36 @@
+                                        
+ Morgan                                 
+ Validate timeout behavior              
+ codex · Response requested · 0s        
+ Available history                      
+ [ Now ][ Activity ][ Team ][ Details ] 
+                                        
+ FOR YOU · Choose the public timeout    
+ Keep 30 seconds or increase it to 60   
+ seconds? Existing clients rely on 30.  
+                                        
+ RECORDED TEAM · 2 related tasks        
+ Casey · Ready                          
+ Avery · Working                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+ [ Review request ] [ Task actions ]    
+ [ Expand ]                             
+ All shown · Esc back                   
+                                        

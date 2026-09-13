@@ -1,0 +1,218 @@
+[
+  {
+    "source": "inspector-now-image-32x14-8x16.cells.json",
+    "png": "inspector-now-image-32x14-8x16.png",
+    "sha256": "e37c5e891e25cc401534352948d537aab4c28e6b51a7bc1e5dceea7ddbfe8516",
+    "rgb_sha256": "957036a7efa530bd408693d10dce2c3dd7ba8da110ce0eec7439b6383cefd8f1",
+    "width": 256,
+    "height": 224,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Emergency view exposes request and Review separately; title clips and full history requires enlargement. No absent Details tab is advertised."
+  },
+  {
+    "source": "inspector-now-image-80x24-8x16.cells.json",
+    "png": "inspector-now-image-80x24-8x16.png",
+    "sha256": "a06b6ab81017a453bbc9a34000b1cd10d063ac95f65b2d48c555c95260169680",
+    "rgb_sha256": "8eed62e81ab03883d4564fbf8e0202882305061212b52913c5f33ce2e3c163e9",
+    "width": 640,
+    "height": 384,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Task, current request, Editing observation and latest result are visible together; history notice does not replace Review."
+  },
+  {
+    "source": "inspector-details-image-120x36-8x16.cells.json",
+    "png": "inspector-details-image-120x36-8x16.png",
+    "sha256": "de1e8ac1341c4b8a29cb58073798a794c9e38d672541c9770be294aec171ca91",
+    "rgb_sha256": "d75fc047e0954fc3a8504ffe2da10b6746770a095dde37aeb5c2baafaed5823b",
+    "width": 960,
+    "height": 576,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Side panel preserves office and pending worker signal; source facts scroll and Review stays visible."
+  },
+  {
+    "source": "attention-image-192x58-8x16.cells.json",
+    "png": "attention-image-192x58-8x16.png",
+    "sha256": "900435611ea6ac09d3e6df06f53614e52a96062a5331d05a995ce7738952dcf1",
+    "rgb_sha256": "349583304816118707b7c9e09680e11d9db67343f18e1900bc2a92b3f9249781",
+    "width": 1536,
+    "height": 928,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Current request and exact Review action remain visible; source event losses are not counted as missing approvals. Spare vertical space is an existing layout tradeoff."
+  },
+  {
+    "source": "deliveries-image-110x80-8x16.cells.json",
+    "png": "deliveries-image-110x80-8x16.png",
+    "sha256": "c5d65ae7b6fc4b4b302200d02eb183d2f8ebe2ac249c83fbc487c5b1f21450ed",
+    "rgb_sha256": "1da9302ff2c3699a90ce0fce2d0d1f3f0908bc4125f9b6b6a00f6a70ca36932f",
+    "width": 880,
+    "height": 1280,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Recorded result and project survive in the tray; missing recipient says Not recorded. Local-retention and stream units are separate."
+  },
+  {
+    "source": "coverage-image-240x70-10x20.cells.json",
+    "png": "coverage-image-240x70-10x20.png",
+    "sha256": "e20daa5387f3def74be47c72421baafb6785c21b90eb3fb75dd119631993e3f4",
+    "rgb_sha256": "c753561694f73ca4e93f42757c56aa962b9c5a45e9c376c5dc347b5e3b3a6dcb",
+    "width": 2400,
+    "height": 1400,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 16,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Coverage identifies source-wide counts and separate local/tool losses; no project attribution is invented. Full replay displayed at2048x1195 for review; original is2400x1400."
+  },
+  {
+    "source": "changes-light-80x24-10x20.cells.json",
+    "png": "changes-light-80x24-10x20.png",
+    "sha256": "c3d57ef7c698a6da9d06c1957278296481cd02a0703c651bb8a8bea58f18246d",
+    "rgb_sha256": "6841394280d157ea45a0e4209a8a0a93c168b4fc1026a401477cf1d503a65d14",
+    "width": 800,
+    "height": 480,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 16,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Selection and recorded-request wording remain legible without changing its historical authority; age is reserved in the list."
+  },
+  {
+    "source": "coverage-mono-80x24-8x16.cells.json",
+    "png": "coverage-mono-80x24-8x16.png",
+    "sha256": "684d37321d80fcf93b2af55341884c7ee28298516c1b0b94f90dc7a465afb5aa",
+    "rgb_sha256": "18b6d6854009b8514ac02c0829fc95c2df5732141b9e9f953361549407eb71f8",
+    "width": 640,
+    "height": 384,
+    "pillow": "12.3.0",
+    "freetype": "2.14.3",
+    "font_size": 13,
+    "fonts": {
+      "family": "DejaVu Sans Mono",
+      "version": "2.37",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+      "license": "LICENSE.txt",
+      "unmodified": true,
+      "files": {
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+        "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    "visual_review": "pass",
+    "terminal_paint": "not-tested",
+    "review_note": "Image-free report preserves boundaries, scope, separate units and keyboard Back/read controls without color."
+  }
+]

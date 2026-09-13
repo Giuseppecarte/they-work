@@ -1,0 +1,7 @@
+{
+  "command": "make check",
+  "seconds": 1.1327502909989562,
+  "exit": 2,
+  "setup": "Unmodified host PATH; native Rust not on PATH; Docker binary installed.",
+  "checkout_tracked_changes": ""
+}

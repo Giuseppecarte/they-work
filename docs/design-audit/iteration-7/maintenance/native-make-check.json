@@ -1,0 +1,8 @@
+{
+  "command": "make check",
+  "seconds": 0.13248654099879786,
+  "exit": 2,
+  "setup": "Pinned native Rust1.90 available through repository audit runtime; fresh checkout and buildtarget; existing dependency download cache, offline Cargo. Tests may use local fake-provider loopback.",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "checkout_tracked_changes": ""
+}

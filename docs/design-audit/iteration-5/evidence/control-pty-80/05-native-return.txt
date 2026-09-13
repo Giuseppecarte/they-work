@@ -1,0 +1,23 @@
+ 0 TOWER >1 vertical-project●                             1/1 · / find · ? help
+[Tower] [Attention] [Deliveries] [Find] [New task] [Connections]
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-co
+
+ ▏
+
+
+
+
+
+
+
+
+ Returned from official console. Background tasks remain with their provider.
+ [ Choose project ] [ Back ]
+
+
+ Tab fields/buttons · Enter choose · Esc back

@@ -1,0 +1,325 @@
+$ /usr/local/bin/docker buildx build --load --platform linux/amd64 --progress plain --label org.opencontainers.image.revision=17ae09f85982b2e29c701fe47b7ce03fa34c488e -t they-work-preview:iteration11-17ae09f85982-amd64 /Users/gc/Documents/Programming/they-work/target/audit/iteration-11/preview-build/source
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.41kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim
+#3 DONE 0.8s
+
+#2 [internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#2 DONE 0.9s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [build  1/14] FROM docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
+#6 resolve docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9 0.0s done
+#6 DONE 0.0s
+
+#7 [runtime 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+#7 resolve docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 0.0s done
+#7 DONE 0.0s
+
+#6 [build  1/14] FROM docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
+#6 CACHED
+
+#7 [runtime 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+#7 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 20.93MB 0.4s done
+#5 DONE 0.5s
+
+#8 [build  2/14] RUN apt-get update  && apt-get install -y --no-install-recommends musl-tools  && rm -rf /var/lib/apt/lists/*
+#8 0.978 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#8 1.044 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#8 1.044 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#8 1.669 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#8 2.203 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#8 2.752 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [338 kB]
+#8 3.093 Fetched 9376 kB in 2s (4255 kB/s)
+#8 3.093 Reading package lists...
+#8 3.896 Reading package lists...
+#8 4.469 Building dependency tree...
+#8 4.658 Reading state information...
+#8 4.808 The following additional packages will be installed:
+#8 4.808   musl musl-dev
+#8 4.809 Recommended packages:
+#8 4.809   linux-musl-dev
+#8 4.867 The following NEW packages will be installed:
+#8 4.868   musl musl-dev musl-tools
+#8 4.977 0 upgraded, 3 newly installed, 0 to remove and 31 not upgraded.
+#8 4.977 Need to get 1036 kB of archives.
+#8 4.977 After this operation, 3954 kB of additional disk space will be used.
+#8 4.977 Get:1 http://deb.debian.org/debian bookworm/main amd64 musl amd64 1.2.3-1 [406 kB]
+#8 5.059 Get:2 http://deb.debian.org/debian bookworm/main amd64 musl-dev amd64 1.2.3-1 [587 kB]
+#8 5.084 Get:3 http://deb.debian.org/debian bookworm/main amd64 musl-tools amd64 1.2.3-1 [42.3 kB]
+#8 5.406 debconf: delaying package configuration, since apt-utils is not installed
+#8 5.485 Fetched 1036 kB in 0s (5068 kB/s)
+#8 5.576 Selecting previously unselected package musl:amd64.
+#8 5.576 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 9035 files and directories currently installed.)
+#8 5.611 Preparing to unpack .../musl_1.2.3-1_amd64.deb ...
+#8 5.616 Unpacking musl:amd64 (1.2.3-1) ...
+#8 5.739 Selecting previously unselected package musl-dev:amd64.
+#8 5.741 Preparing to unpack .../musl-dev_1.2.3-1_amd64.deb ...
+#8 5.743 Unpacking musl-dev:amd64 (1.2.3-1) ...
+#8 5.896 Selecting previously unselected package musl-tools.
+#8 5.897 Preparing to unpack .../musl-tools_1.2.3-1_amd64.deb ...
+#8 5.899 Unpacking musl-tools (1.2.3-1) ...
+#8 5.993 Setting up musl:amd64 (1.2.3-1) ...
+#8 6.011 Setting up musl-dev:amd64 (1.2.3-1) ...
+#8 6.032 Setting up musl-tools (1.2.3-1) ...
+#8 DONE 6.2s
+
+#9 [build  3/14] RUN case "amd64" in       amd64) target=x86_64-unknown-linux-musl ;;       arm64) target=aarch64-unknown-linux-musl ;;       *) exit 1 ;;     esac  && rustup target add "$target"  && printf '%s' "$target" > /rust-target
+#9 0.959 info: downloading component 'rust-std' for 'x86_64-unknown-linux-musl'
+#9 3.001 info: installing component 'rust-std' for 'x86_64-unknown-linux-musl'
+#9 DONE 7.6s
+
+#10 [build  4/14] WORKDIR /src
+#10 DONE 0.2s
+
+#11 [build  5/14] COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+#11 DONE 0.3s
+
+#12 [build  6/14] COPY crates/theywork-core/Cargo.toml crates/theywork-core/
+#12 DONE 0.2s
+
+#13 [build  7/14] COPY crates/theywork-collect/Cargo.toml crates/theywork-collect/
+#13 DONE 0.3s
+
+#14 [build  8/14] COPY crates/theywork-control/Cargo.toml crates/theywork-control/
+#14 DONE 0.3s
+
+#15 [build  9/14] COPY crates/theywork-terminal-image/Cargo.toml crates/theywork-terminal-image/
+#15 DONE 0.2s
+
+#16 [build 10/14] COPY crates/theywork-render/Cargo.toml crates/theywork-render/
+#16 DONE 0.2s
+
+#17 [build 11/14] COPY crates/theywork-tui/Cargo.toml crates/theywork-tui/
+#17 DONE 0.2s
+
+#18 [build 12/14] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src"       && printf '' > "crates/theywork-$c/src/lib.rs";     done  && printf 'fn main() {}' > crates/theywork-tui/src/main.rs  && mkdir -p crates/theywork-control/tests  && printf 'fn main() {}' > crates/theywork-control/tests/storage_process.rs  && cargo build --release --locked --target "$(cat /rust-target)" --bin they-work
+#18 1.246 info: syncing channel updates for '1.90.0-x86_64-unknown-linux-gnu'
+#18 1.645 info: latest update on 2025-09-18, rust version 1.90.0 (1159e78c4 2025-09-14)
+#18 1.679 info: downloading component 'clippy'
+#18 2.179 info: downloading component 'rustfmt'
+#18 2.368 info: installing component 'clippy'
+#18 2.794 info: installing component 'rustfmt'
+#18 3.707     Updating crates.io index
+#18 4.676  Downloading crates ...
+#18 5.028   Downloaded adler2 v2.0.1
+#18 5.150   Downloaded version_check v0.9.5
+#18 5.163   Downloaded zmij v1.0.23
+#18 5.176   Downloaded smallvec v1.15.2
+#18 5.179   Downloaded crc32fast v1.5.1
+#18 5.193   Downloaded unicode-ident v1.0.24
+#18 5.193   Downloaded darling v0.24.1
+#18 5.214   Downloaded serde_derive v1.0.229
+#18 5.222   Downloaded serde_core v1.0.229
+#18 5.225   Downloaded serde v1.0.229
+#18 5.230   Downloaded darling_core v0.24.1
+#18 5.245   Downloaded unicode-segmentation v1.13.3
+#18 5.249   Downloaded png v0.17.16
+#18 5.255   Downloaded mio v1.2.2
+#18 5.270   Downloaded serde_json v1.0.151
+#18 5.286   Downloaded rusqlite v0.32.1
+#18 5.295   Downloaded zlib-rs v0.6.7
+#18 5.310   Downloaded itertools v0.13.0
+#18 5.322   Downloaded hashbrown v0.15.5
+#18 5.336   Downloaded vcpkg v0.2.15
+#18 5.392   Downloaded unicode-width v0.2.0
+#18 5.399   Downloaded zerocopy v0.8.56
+#18 5.431   Downloaded syn v3.0.4
+#18 5.447   Downloaded unicode-width v0.1.14
+#18 5.460   Downloaded syn v2.0.119
+#18 5.474   Downloaded rustix v0.38.44
+#18 5.514   Downloaded hashbrown v0.14.5
+#18 5.520   Downloaded memchr v2.8.3
+#18 5.529   Downloaded compact_str v0.8.2
+#18 5.536   Downloaded proc-macro2 v1.0.107
+#18 5.542   Downloaded miniz_oxide v0.9.1
+#18 5.547   Downloaded miniz_oxide v0.8.9
+#18 5.551   Downloaded flate2 v1.1.10
+#18 5.559   Downloaded crossterm v0.28.1
+#18 5.577   Downloaded cc v1.4.4
+#18 5.582   Downloaded ratatui v0.29.0
+#18 5.611   Downloaded bitflags v2.13.1
+#18 5.621   Downloaded allocator-api2 v0.2.21
+#18 5.624   Downloaded signal-hook v0.3.18
+#18 5.631   Downloaded ryu v1.0.23
+#18 5.637   Downloaded once_cell v1.21.4
+#18 5.640   Downloaded log v0.4.34
+#18 5.647   Downloaded ahash v0.8.12
+#18 5.651   Downloaded quote v1.0.47
+#18 5.658   Downloaded paste v1.0.15
+#18 5.663   Downloaded parking_lot_core v0.9.12
+#18 5.666   Downloaded parking_lot v0.12.5
+#18 5.670   Downloaded lock_api v0.4.14
+#18 5.674   Downloaded indoc v2.0.7
+#18 5.678   Downloaded hashlink v0.9.1
+#18 5.680   Downloaded foldhash v0.1.5
+#18 5.682   Downloaded libc v0.2.189
+#18 5.753   Downloaded find-msvc-tools v0.1.11
+#18 5.756   Downloaded fdeflate v0.3.7
+#18 5.758   Downloaded fallible-iterator v0.3.0
+#18 5.760   Downloaded errno v0.3.14
+#18 5.763   Downloaded either v1.18.0
+#18 5.766   Downloaded cassowary v0.3.0
+#18 5.771   Downloaded anyhow v1.0.104
+#18 5.779   Downloaded strum_macros v0.26.4
+#18 5.783   Downloaded strsim v0.11.1
+#18 5.788   Downloaded static_assertions v1.1.0
+#18 5.795   Downloaded simd-adler32 v0.3.10
+#18 5.801   Downloaded signal-hook-registry v1.4.8
+#18 5.805   Downloaded shlex v2.0.1
+#18 5.806   Downloaded rustversion v1.0.23
+#18 5.813   Downloaded pkg-config v0.3.34
+#18 5.817   Downloaded itoa v1.0.18
+#18 5.821   Downloaded instability v0.3.13
+#18 5.826   Downloaded ident_case v1.0.1
+#18 5.829   Downloaded equivalent v1.0.2
+#18 5.831   Downloaded darling_macro v0.24.1
+#18 5.832   Downloaded cfg-if v1.0.4
+#18 5.836   Downloaded bitflags v1.3.2
+#18 5.844   Downloaded unicode-truncate v1.1.0
+#18 5.848   Downloaded strum v0.26.3
+#18 5.851   Downloaded signal-hook-mio v0.2.5
+#18 5.855   Downloaded scopeguard v1.2.0
+#18 5.856   Downloaded lru v0.12.5
+#18 5.857   Downloaded heck v0.5.0
+#18 5.859   Downloaded fallible-streaming-iterator v0.1.9
+#18 5.859   Downloaded castaway v0.2.4
+#18 5.871   Downloaded linux-raw-sys v0.4.15
+#18 5.941   Downloaded libsqlite3-sys v0.30.1
+#18 6.221    Compiling proc-macro2 v1.0.107
+#18 6.224    Compiling quote v1.0.47
+#18 6.225    Compiling unicode-ident v1.0.24
+#18 6.227    Compiling cfg-if v1.0.4
+#18 6.227    Compiling libc v0.2.189
+#18 6.227    Compiling rustversion v1.0.23
+#18 6.227    Compiling serde_core v1.0.229
+#18 6.227    Compiling smallvec v1.15.2
+#18 6.228    Compiling signal-hook v0.3.18
+#18 6.228    Compiling zerocopy v0.8.56
+#18 7.292    Compiling parking_lot_core v0.9.12
+#18 9.504    Compiling version_check v0.9.5
+#18 10.64    Compiling bitflags v2.13.1
+#18 11.08    Compiling log v0.4.34
+#18 11.20    Compiling shlex v2.0.1
+#18 11.39    Compiling find-msvc-tools v0.1.11
+#18 12.92    Compiling itoa v1.0.18
+#18 13.38    Compiling ahash v0.8.12
+#18 13.42    Compiling ident_case v1.0.1
+#18 14.21    Compiling simd-adler32 v0.3.10
+#18 14.38    Compiling zmij v1.0.23
+#18 15.37    Compiling strsim v0.11.1
+#18 15.39    Compiling serde v1.0.229
+#18 15.41    Compiling scopeguard v1.2.0
+#18 15.85    Compiling rustix v0.38.44
+#18 16.90    Compiling errno v0.3.14
+#18 17.24    Compiling mio v1.2.2
+#18 17.69    Compiling lock_api v0.4.14
+#18 19.50    Compiling signal-hook-registry v1.4.8
+#18 19.63    Compiling cc v1.4.4
+#18 20.67    Compiling crc32fast v1.5.1
+#18 20.74    Compiling once_cell v1.21.4
+#18 21.15    Compiling adler2 v2.0.1
+#18 23.23    Compiling syn v3.0.4
+#18 23.42    Compiling linux-raw-sys v0.4.15
+#18 23.53    Compiling serde_json v1.0.151
+#18 24.26    Compiling vcpkg v0.2.15
+#18 24.53    Compiling pkg-config v0.3.34
+#18 24.80    Compiling syn v2.0.119
+#18 24.96    Compiling parking_lot v0.12.5
+#18 28.73    Compiling signal-hook-mio v0.2.5
+#18 28.93    Compiling equivalent v1.0.2
+#18 29.62    Compiling foldhash v0.1.5
+#18 29.85    Compiling libsqlite3-sys v0.30.1
+#18 30.51    Compiling heck v0.5.0
+#18 30.86    Compiling memchr v2.8.3
+#18 30.87    Compiling either v1.18.0
+#18 31.56    Compiling paste v1.0.15
+#18 32.20    Compiling allocator-api2 v0.2.21
+#18 32.44    Compiling instability v0.3.13
+#18 32.53    Compiling crossterm v0.28.1
+#18 32.73    Compiling itertools v0.13.0
+#18 35.09    Compiling darling_core v0.24.1
+#18 35.29    Compiling hashbrown v0.15.5
+#18 36.54    Compiling strum_macros v0.26.4
+#18 37.21    Compiling miniz_oxide v0.9.1
+#18 39.61    Compiling hashbrown v0.14.5
+#18 40.84    Compiling castaway v0.2.4
+#18 41.34    Compiling serde_derive v1.0.229
+#18 41.40    Compiling ryu v1.0.23
+#18 42.65    Compiling unicode-segmentation v1.13.3
+#18 42.72    Compiling anyhow v1.0.104
+#18 44.73    Compiling unicode-width v0.1.14
+#18 45.20    Compiling static_assertions v1.1.0
+#18 45.28    Compiling indoc v2.0.7
+#18 45.46    Compiling hashlink v0.9.1
+#18 45.84    Compiling compact_str v0.8.2
+#18 45.92    Compiling strum v0.26.3
+#18 46.94    Compiling unicode-truncate v1.1.0
+#18 47.32    Compiling flate2 v1.1.10
+#18 47.68    Compiling lru v0.12.5
+#18 48.01    Compiling miniz_oxide v0.8.9
+#18 48.71    Compiling fdeflate v0.3.7
+#18 48.92    Compiling unicode-width v0.2.0
+#18 49.52    Compiling darling_macro v0.24.1
+#18 49.67    Compiling bitflags v1.3.2
+#18 50.31    Compiling fallible-streaming-iterator v0.1.9
+#18 51.35    Compiling fallible-iterator v0.3.0
+#18 51.46    Compiling cassowary v0.3.0
+#18 52.02    Compiling png v0.17.16
+#18 52.15    Compiling darling v0.24.1
+#18 55.08    Compiling ratatui v0.29.0
+#18 55.24    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#18 55.59    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#18 55.65    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#18 58.38    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#18 87.48    Compiling rusqlite v0.32.1
+#18 89.02    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#18 89.18    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#18 94.68     Finished `release` profile [optimized] target(s) in 1m 31s
+#18 DONE 94.9s
+
+#19 [build 13/14] COPY crates crates
+#19 DONE 0.2s
+
+#20 [build 14/14] RUN find crates -name '*.rs' -exec touch {} +  && cargo build --release --locked --target "$(cat /rust-target)" --bin they-work  && cp "target/$(cat /rust-target)/release/they-work" /they-work  && rustc -Vv > /toolchain.txt  && musl-gcc -v >> /toolchain.txt 2>&1  && dpkg-query -W musl musl-dev musl-tools >> /toolchain.txt
+#20 1.155    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#20 1.155    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#20 4.139    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#20 4.140    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#20 4.140    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#20 10.61    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#20 66.43     Finished `release` profile [optimized] target(s) in 1m 05s
+#20 DONE 67.1s
+
+#21 [runtime 2/3] COPY --from=build /they-work /usr/local/bin/they-work
+#21 DONE 0.0s
+
+#22 [runtime 3/3] COPY --from=build /toolchain.txt /toolchain.txt
+#22 DONE 0.0s
+
+#23 exporting to image
+#23 exporting layers
+#23 exporting layers 0.2s done
+#23 exporting manifest sha256:73dd76bd2f49650caa28e9ef2bff38f5baa174c2fd10c82995f30c8653418b7e
+#23 exporting manifest sha256:73dd76bd2f49650caa28e9ef2bff38f5baa174c2fd10c82995f30c8653418b7e done
+#23 exporting config sha256:d9802619513f2f6b39a9f8e7d82c73aee6fd873821473731edd5ee95d9989965 done
+#23 exporting attestation manifest sha256:33809547b6ec17826c961ecc18f8c891bc06780b00a4fb2efb503f39a94a4a4b 0.0s done
+#23 exporting manifest list sha256:0ac6570da160ba81abe3f9b67b1429ccbc5b2f5ac9ac37dd07eced2751b7b281 done
+#23 naming to docker.io/library/they-work-preview:iteration11-17ae09f85982-amd64 done
+#23 DONE 0.3s

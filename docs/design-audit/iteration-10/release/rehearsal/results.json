@@ -1,0 +1,148 @@
+{
+  "baseline_digest": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae",
+  "candidate": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+  "cases": [
+    {
+      "after": {
+        "latest": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae",
+        "version": null
+      },
+      "case": "failed-smoke",
+      "expected_rejection": "Candidate verification is missing or failed",
+      "passed": true
+    },
+    {
+      "after": {
+        "latest": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae",
+        "version": null
+      },
+      "case": "failed-checksum",
+      "expected_rejection": "Native checksum failed: they-work-x86_64-pc-windows-msvc.zip",
+      "passed": true
+    },
+    {
+      "after": {
+        "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+      },
+      "case": "success",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "destination": "localhost:5060/they-work:audit-1789057746894386000-2",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        },
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ]
+    },
+    {
+      "after": {
+        "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+      },
+      "case": "between-tags",
+      "expected_rejection": "latest promotion did not complete: Rehearsal: interrupted before registry write",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "destination": "localhost:5060/they-work:audit-1789057746894386000-3",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        },
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ],
+      "retry_calls": [
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ]
+    },
+    {
+      "after": {
+        "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+      },
+      "case": "lost-version-ack",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "destination": "localhost:5060/they-work:audit-1789057746894386000-4",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        },
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ]
+    },
+    {
+      "after": {
+        "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+      },
+      "case": "lost-latest-ack",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "destination": "localhost:5060/they-work:audit-1789057746894386000-5",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        },
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ]
+    },
+    {
+      "after": {
+        "latest": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae",
+        "version": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae"
+      },
+      "case": "version-conflict",
+      "expected_rejection": "Version conflict; no tags were changed",
+      "passed": true,
+      "promotion_calls": []
+    },
+    {
+      "after": {
+        "latest": "sha256:6e8b87b8fbe76f38d42110310b5bf7fe43389557e420c51ab4719f591904daf5",
+        "version": null
+      },
+      "case": "later-latest",
+      "expected_rejection": "Latest changed; no tags were changed",
+      "passed": true,
+      "promotion_calls": []
+    },
+    {
+      "after": {
+        "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+        "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+      },
+      "case": "native-publication-failed",
+      "native_failure_scope": "Injected workflow outcome; no GitHub service was called",
+      "passed": true,
+      "promotion_calls": [
+        {
+          "destination": "localhost:5060/they-work:audit-1789057746894386000-8",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        },
+        {
+          "destination": "localhost:5060/they-work:latest",
+          "source": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+        }
+      ]
+    }
+  ],
+  "commit": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "native_scope": "Six checksum fixtures, not native executable validation",
+  "passed": true,
+  "schema": 1,
+  "scope": "Actual local-registry index promotion; deterministic interruptions at write boundaries",
+  "verification_sha256": "38eba9c5de8cc647a3956475edf570837e5a49af04508b237e519318c6b21cc4"
+}

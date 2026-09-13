@@ -115,7 +115,9 @@ fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme, encoding: Pixe
     // Snapshots use a canonical color depth so the files do not depend on the
     // environment in which the test suite happens to run.
     ui.color_depth = ColorDepth::TrueColor;
+    ui.color_locked = false;
     ui.encoding = encoding;
+    ui.encoding_locked = false;
     ui.canvas = Canvas::with_color_depth_and_encoding(0, 0, ColorDepth::TrueColor, encoding);
     ui.theme = theme;
     ui.tick(now);
@@ -137,7 +139,6 @@ fn configured_ui(view: SnapshotView, now: Millis, theme: UiTheme, encoding: Pixe
             ui.view = View::Cameras;
             ui.phone_open = true;
             ui.phone_channel = crate::views::phone::PhoneChannel::Standup;
-            ui.phone_transition_at = 0;
         }
         SnapshotView::Help => {
             ui.view = View::Office;

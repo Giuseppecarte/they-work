@@ -1,0 +1,2 @@
+# Golden serialization uses LF on every platform, including Windows checkouts.
+*.golden text eol=lf

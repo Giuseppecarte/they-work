@@ -1,90 +1,309 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
-use crate::event::{Event, EventKind};
-use crate::model::{Activity, Office, OfficeId, Worker, WorkerId};
-use crate::Millis;
+use crate::{
+    Activity, CollaborationEvent, Event, EventKind, Millis, Office, OfficeId, Relationship,
+    RelationshipKind, TreeEntry, Worker, WorkerId, WorkerLifecycle,
+};
 
-/// The whole building: every office, every worker, folded from events.
-///
-/// Offices are kept in a `BTreeMap` so the camera grid has a stable,
-/// non-jittering order between frames.
+/// Current offices plus bounded history for workers that leave the live roster.
 #[derive(Debug, Default, Clone)]
 pub struct World {
     offices: BTreeMap<OfficeId, Office>,
-    /// Which office each worker currently sits in.
-    ///
-    /// A worker belongs to exactly one office, always. Agents do report
-    /// different working directories over their life, and without this index a
-    /// thread that moved would be added to the new office while still sitting
-    /// in the old one, putting one developer in two companies at once.
     desks: HashMap<WorkerId, OfficeId>,
+    retired: BTreeMap<WorkerId, Worker>,
+    relationships: BTreeMap<(WorkerId, WorkerId, RelationshipKind), Relationship>,
+    collaboration: crate::history::HistoryStore,
 }
 
 impl World {
     pub fn new() -> Self {
         Self::default()
     }
-
-    /// Offices in stable display order.
     pub fn offices(&self) -> impl Iterator<Item = &Office> {
         self.offices.values()
     }
-
     pub fn office(&self, id: &OfficeId) -> Option<&Office> {
         self.offices.get(id)
     }
-
     pub fn office_count(&self) -> usize {
         self.offices.len()
     }
-
     pub fn worker_count(&self) -> usize {
-        self.offices.values().map(|o| o.workers.len()).sum()
+        self.desks.len()
     }
 
-    /// Fold one event into the world.
-    pub fn apply(&mut self, ev: Event) {
-        // If this worker is already seated somewhere else, they moved. Clear the
-        // old desk first so they can never be drawn in two offices at once.
-        if let Some(previous) = self.desks.get(&ev.worker) {
-            if previous != &ev.office {
-                let previous = previous.clone();
-                if let Some(old) = self.offices.get_mut(&previous) {
-                    old.workers.retain(|w| w.id != ev.worker);
+    /// Includes recently removed workers for delivery and relationship views.
+    pub fn worker(&self, id: &WorkerId) -> Option<&Worker> {
+        self.desks
+            .get(id)
+            .and_then(|office| self.offices.get(office))
+            .and_then(|office| office.workers.iter().find(|w| &w.id == id))
+            .or_else(|| self.retired.get(id))
+    }
+    pub fn is_present(&self, id: &WorkerId) -> bool {
+        self.desks.contains_key(id)
+    }
+    pub fn retired_workers(&self) -> impl Iterator<Item = &Worker> {
+        self.retired.values()
+    }
+    pub fn relationships(&self) -> impl Iterator<Item = &Relationship> {
+        self.relationships.values()
+    }
+    pub fn collaboration(&self) -> impl DoubleEndedIterator<Item = &CollaborationEvent> {
+        self.collaboration.iter()
+    }
+    /// Project recorded with the event, independent of later worker moves.
+    pub fn collaboration_office(&self, event: &CollaborationEvent) -> Option<&OfficeId> {
+        self.collaboration.office(event)
+    }
+    pub fn history_window(&self, office: &OfficeId) -> crate::HistoryWindow {
+        self.collaboration.window(office)
+    }
+    pub fn history_windows(&self) -> impl Iterator<Item = (&OfficeId, &crate::HistoryWindow)> {
+        self.collaboration.windows()
+    }
+    pub fn older_project_windows_unknown(&self) -> bool {
+        self.collaboration.older_project_windows_unknown()
+    }
+    pub fn collaboration_for<'a>(
+        &'a self,
+        id: &'a WorkerId,
+    ) -> impl DoubleEndedIterator<Item = &'a CollaborationEvent> {
+        self.collaboration
+            .iter()
+            .filter(move |event| &event.actor == id || event.recipient.as_ref() == Some(id))
+    }
+    /// Immediate structural children. Session membership is deliberately excluded.
+    pub fn children(&self, id: &WorkerId) -> Vec<WorkerId> {
+        self.relationships
+            .values()
+            .filter(|r| &r.parent == id && r.kind != RelationshipKind::SessionMembership)
+            .map(|r| r.child.clone())
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect()
+    }
+    /// Immediate parents before more distant ancestors, stable and cycle-safe.
+    pub fn ancestors(&self, id: &WorkerId) -> Vec<WorkerId> {
+        let mut seen = HashSet::from([id.clone()]);
+        let mut queue = VecDeque::from([id.clone()]);
+        let mut result = Vec::new();
+        while let Some(child) = queue.pop_front() {
+            for r in self
+                .relationships
+                .values()
+                .filter(|r| r.child == child && r.kind != RelationshipKind::SessionMembership)
+            {
+                if seen.insert(r.parent.clone()) {
+                    result.push(r.parent.clone());
+                    queue.push_back(r.parent.clone());
                 }
-                self.offices.retain(|_, o| !o.workers.is_empty());
             }
         }
+        result
+    }
+    /// Connected component, including recorded session membership and missing IDs.
+    pub fn family(&self, id: &WorkerId) -> Vec<WorkerId> {
+        let mut seen = BTreeSet::from([id.clone()]);
+        let mut queue = VecDeque::from([id.clone()]);
+        while let Some(node) = queue.pop_front() {
+            for r in self.relationships.values() {
+                let neighbor = if r.parent == node {
+                    Some(&r.child)
+                } else if r.child == node {
+                    Some(&r.parent)
+                } else {
+                    None
+                };
+                if let Some(neighbor) = neighbor {
+                    if seen.insert(neighbor.clone()) {
+                        queue.push_back(neighbor.clone());
+                    }
+                }
+            }
+        }
+        seen.into_iter().collect()
+    }
+    /// Projection of descendants. Prefer explicit parentage over membership;
+    /// a family member with an explicit parent is not also drawn under its root.
+    pub fn tree(&self, root: &WorkerId) -> Vec<TreeEntry> {
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+        let mut stack = vec![(root.clone(), 0, None)];
+        while let Some((id, depth, via)) = stack.pop() {
+            if !seen.insert(id.clone()) {
+                continue;
+            }
+            out.push(TreeEntry {
+                worker: id.clone(),
+                depth,
+                via,
+            });
+            let mut children = BTreeMap::new();
+            for r in self.relationships.values().filter(|r| r.parent == id) {
+                if r.kind == RelationshipKind::SessionMembership
+                    && self.ancestors(&r.child).contains(root)
+                {
+                    continue;
+                }
+                children.entry(r.child.clone()).or_insert(r.kind);
+            }
+            for (child, kind) in children.into_iter().rev() {
+                stack.push((child, depth + 1, Some(kind)));
+            }
+        }
+        out
+    }
 
+    fn worker_mut(&mut self, id: &WorkerId) -> Option<&mut Worker> {
+        if let Some(office) = self.desks.get(id) {
+            return self
+                .offices
+                .get_mut(office)
+                .and_then(|o| o.workers.iter_mut().find(|w| &w.id == id));
+        }
+        self.retired.get_mut(id)
+    }
+    fn take_worker(&mut self, id: &WorkerId) -> Option<Worker> {
+        let office = self.desks.remove(id)?;
+        let office = self.offices.get_mut(&office)?;
+        let index = office.workers.iter().position(|worker| &worker.id == id)?;
+        Some(office.workers.remove(index))
+    }
+    fn retire(&mut self, id: &WorkerId) {
+        if let Some(mut worker) = self.take_worker(id) {
+            if matches!(
+                worker.lifecycle,
+                WorkerLifecycle::Unknown | WorkerLifecycle::Active
+            ) {
+                worker.lifecycle = WorkerLifecycle::Removed;
+            }
+            worker.turn_in_flight = false;
+            worker.wait_reason = None;
+            self.retired.insert(id.clone(), worker);
+        }
+        while self.retired.len() > crate::RETIRED_WORKER_LIMIT {
+            let oldest = self
+                .retired
+                .values()
+                .min_by_key(|w| (w.last_seen, &w.id))
+                .map(|w| w.id.clone());
+            if let Some(oldest) = oldest {
+                self.retired.remove(&oldest);
+                self.relationships
+                    .retain(|(parent, child, _), _| parent != &oldest && child != &oldest);
+            }
+        }
+    }
+
+    pub fn apply(&mut self, ev: Event) {
+        match &ev.kind {
+            EventKind::Identity { identity, role } => {
+                if let Some(worker) = self.worker_mut(&ev.worker) {
+                    worker.identity = Some(identity.clone());
+                    worker.role = *role;
+                    return;
+                }
+            }
+            EventKind::Relationship(relationship) => {
+                if relationship.parent == relationship.child {
+                    return;
+                }
+                if relationship.kind != RelationshipKind::SessionMembership
+                    && self
+                        .ancestors(&relationship.parent)
+                        .contains(&relationship.child)
+                {
+                    return;
+                }
+                let key = (
+                    relationship.parent.clone(),
+                    relationship.child.clone(),
+                    relationship.kind,
+                );
+                if self
+                    .relationships
+                    .get(&key)
+                    .is_none_or(|old| old.at <= relationship.at)
+                {
+                    self.relationships.insert(key, relationship.clone());
+                }
+                // Bound unknown-endpoint links as well as live-worker links.
+                if self.relationships.len() > crate::COLLABORATION_HISTORY_LEN * 4 {
+                    if let Some(key) = self
+                        .relationships
+                        .iter()
+                        .min_by_key(|(_, r)| r.at)
+                        .map(|(k, _)| k.clone())
+                    {
+                        self.relationships.remove(&key);
+                    }
+                }
+                return;
+            }
+            EventKind::Collaboration(event) => {
+                self.collaboration.insert(ev.office.clone(), event.clone());
+                return;
+            }
+            EventKind::Coverage(coverage) => {
+                if let Some(worker) = self.worker_mut(&ev.worker) {
+                    worker.coverage.merge_observation(coverage.clone());
+                }
+                return;
+            }
+            EventKind::HistoricalBeat(beat) => {
+                if let Some(worker) = self.worker_mut(&ev.worker) {
+                    worker.remember(beat.clone());
+                }
+                return;
+            }
+            EventKind::Left => {
+                self.retire(&ev.worker);
+                self.offices.retain(|_, office| !office.workers.is_empty());
+                return;
+            }
+            _ => {}
+        }
+        let moved = self
+            .desks
+            .get(&ev.worker)
+            .is_some_and(|office| office != &ev.office);
+        let existing = if moved {
+            self.take_worker(&ev.worker)
+        } else {
+            self.retired.remove(&ev.worker)
+        };
         let office = self
             .offices
             .entry(ev.office.clone())
             .or_insert_with(|| Office::new(ev.office.clone(), ev.office_path.clone()));
-
-        if matches!(ev.kind, EventKind::Left) {
-            office.workers.retain(|w| w.id != ev.worker);
-            self.desks.remove(&ev.worker);
-            self.offices.retain(|_, o| !o.workers.is_empty());
-            return;
-        }
-
-        let idx = match office.workers.iter().position(|w| w.id == ev.worker) {
-            Some(i) => i,
+        let index = match office
+            .workers
+            .iter()
+            .position(|worker| worker.id == ev.worker)
+        {
+            Some(index) => index,
             None => {
-                office.workers.push(Worker::new(
-                    ev.worker.clone(),
-                    ev.office.clone(),
-                    ev.agent,
-                    ev.worker.0.clone(),
-                    ev.at,
-                ));
+                let mut worker = existing.unwrap_or_else(|| {
+                    Worker::new(
+                        ev.worker.clone(),
+                        ev.office.clone(),
+                        ev.agent,
+                        ev.worker.0.clone(),
+                        ev.at,
+                    )
+                });
+                worker.office = ev.office.clone();
+                if worker.lifecycle == WorkerLifecycle::Removed {
+                    worker.lifecycle = WorkerLifecycle::Unknown;
+                }
+                office.workers.push(worker);
                 office.workers.len() - 1
             }
         };
         self.desks.insert(ev.worker.clone(), ev.office.clone());
-        let worker = &mut office.workers[idx];
+        let worker = &mut office.workers[index];
         worker.last_seen = worker.last_seen.max(ev.at);
-
         match ev.kind {
             EventKind::Seen { name, git_branch } => {
                 if !name.is_empty() {
@@ -94,42 +313,79 @@ impl World {
                     worker.git_branch = git_branch;
                 }
             }
+            EventKind::Identity { identity, role } => {
+                worker.identity = Some(identity);
+                worker.role = role;
+            }
             EventKind::Acted(activity) => worker.activity = activity,
             EventKind::Did(beat) => {
                 worker.activity = beat.activity.clone();
                 worker.remember(beat);
             }
             EventKind::Tokens(n) => worker.tokens_used = worker.tokens_used.max(n),
-            EventKind::Turn { in_flight } => worker.turn_in_flight = in_flight,
-            EventKind::Left => unreachable!("handled above"),
+            EventKind::Turn { in_flight } => {
+                worker.turn_in_flight = in_flight;
+                if in_flight {
+                    worker.lifecycle = WorkerLifecycle::Active;
+                }
+                if !in_flight {
+                    worker.wait_reason = None;
+                    if matches!(worker.activity, Activity::Waiting { .. }) {
+                        worker.activity = Activity::Idle;
+                    }
+                }
+            }
+            EventKind::Lifecycle(lifecycle) => {
+                worker.lifecycle = lifecycle;
+                if matches!(
+                    lifecycle,
+                    WorkerLifecycle::Completed
+                        | WorkerLifecycle::Failed
+                        | WorkerLifecycle::Cancelled
+                ) {
+                    worker.turn_in_flight = false;
+                    worker.wait_reason = None;
+                    if matches!(worker.activity, Activity::Waiting { .. }) {
+                        worker.activity = Activity::Idle;
+                    }
+                }
+            }
+            EventKind::Wait(reason) => {
+                worker.wait_reason = reason;
+                if reason.is_none() && matches!(worker.activity, Activity::Waiting { .. }) {
+                    // The source explicitly cleared the request. Keep the turn
+                    // and lifecycle unchanged; no new work has been observed.
+                    worker.activity = Activity::Idle;
+                }
+            }
+            EventKind::Relationship(_)
+            | EventKind::Collaboration(_)
+            | EventKind::Coverage(_)
+            | EventKind::HistoricalBeat(_)
+            | EventKind::Left => unreachable!("handled above"),
         }
+        self.offices.retain(|_, office| !office.workers.is_empty());
     }
 
-    /// Age the world: quiet workers go idle, long-quiet ones go home, and
-    /// offices that empty out are closed.
-    ///
-    /// Call once per frame, after applying the frame's events.
     pub fn tick(&mut self, now: Millis) {
-        let desks = &mut self.desks;
+        let gone: Vec<_> = self
+            .offices
+            .values()
+            .flat_map(|o| &o.workers)
+            .filter(|worker| worker.is_offline_at(now))
+            .map(|worker| worker.id.clone())
+            .collect();
+        for id in gone {
+            self.retire(&id);
+        }
         for office in self.offices.values_mut() {
-            office.workers.retain(|w| {
-                let stays = !w.is_offline_at(now);
-                if !stays {
-                    desks.remove(&w.id);
-                }
-                stays
-            });
             for worker in &mut office.workers {
-                // Stop animating a quiet worker, but leave `turn_in_flight`
-                // alone: an open turn that has gone silent is exactly what
-                // `status_at` reads as blocked, and clearing it here would hide
-                // every blockage behind a coffee cup.
                 if worker.is_idle_at(now) && worker.activity.is_busy() {
                     worker.activity = Activity::Idle;
                 }
             }
         }
-        self.offices.retain(|_, o| !o.workers.is_empty());
+        self.offices.retain(|_, office| !office.workers.is_empty());
     }
 }
 
@@ -165,6 +421,160 @@ mod tests {
         let office = w.office(&OfficeId("/proj".into())).unwrap();
         assert_eq!(office.name, "proj");
         assert_eq!(office.workers[0].name, "Dev 1");
+    }
+
+    #[test]
+    fn explicit_request_needs_attention_immediately_and_completion_clears_it() {
+        use crate::WorkerStatus;
+        let mut world = World::new();
+        world.apply(ev(1, "waiting", EventKind::Turn { in_flight: true }));
+        world.apply(ev(
+            2,
+            "waiting",
+            EventKind::Acted(Activity::Waiting {
+                detail: "Approve command".into(),
+            }),
+        ));
+        let status = |w: &World, now| w.offices().next().unwrap().workers[0].status_at(now);
+        assert_eq!(status(&world, 2), WorkerStatus::Blocked);
+        world.tick(crate::IDLE_AFTER_MS + 3);
+        assert_eq!(
+            status(&world, crate::IDLE_AFTER_MS + 3),
+            WorkerStatus::Blocked
+        );
+        world.apply(ev(
+            crate::IDLE_AFTER_MS + 4,
+            "waiting",
+            EventKind::Turn { in_flight: false },
+        ));
+        assert_eq!(status(&world, crate::IDLE_AFTER_MS + 4), WorkerStatus::Idle);
+    }
+
+    #[test]
+    fn clearing_a_wait_releases_only_the_waiting_pose_without_finishing_the_turn() {
+        use crate::{WaitReason, WorkerStatus};
+        for (in_flight, status) in [(true, WorkerStatus::Running), (false, WorkerStatus::Idle)] {
+            let mut world = World::new();
+            world.apply(ev(1, "worker", EventKind::Turn { in_flight }));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Approve command one".into(),
+                }),
+            ));
+            assert_eq!(
+                world
+                    .worker(&WorkerId("worker".into()))
+                    .unwrap()
+                    .status_at(2),
+                WorkerStatus::Blocked
+            );
+            let lifecycle = world.worker(&WorkerId("worker".into())).unwrap().lifecycle;
+            world.apply(ev(3, "worker", EventKind::Wait(None)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.wait_reason, None);
+            assert_eq!(worker.activity, Activity::Idle);
+            assert_eq!(worker.status_at(3), status);
+            assert_eq!(worker.turn_in_flight, in_flight);
+            assert_eq!(worker.lifecycle, lifecycle);
+            assert!(
+                worker.history.is_empty(),
+                "Clearing a request cannot invent an activity beat"
+            );
+            assert_eq!(
+                world.collaboration().count(),
+                0,
+                "Clearing a request is not a delivery"
+            );
+            world.apply(ev(
+                4,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanInput)),
+            ));
+            world.apply(ev(
+                4,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Choose command two".into(),
+                }),
+            ));
+            assert_eq!(
+                world
+                    .worker(&WorkerId("worker".into()))
+                    .unwrap()
+                    .status_at(4),
+                WorkerStatus::Blocked
+            );
+        }
+    }
+
+    #[test]
+    fn clearing_a_wait_preserves_an_observed_action_or_error() {
+        for activity in [
+            Activity::Typing {
+                detail: "Command resumed".into(),
+            },
+            Activity::Thinking,
+            Activity::Error {
+                detail: "Command failed".into(),
+            },
+        ] {
+            let mut world = World::new();
+            world.apply(ev(
+                1,
+                "worker",
+                EventKind::Wait(Some(crate::WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(2, "worker", EventKind::Acted(activity.clone())));
+            world.apply(ev(3, "worker", EventKind::Wait(None)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.wait_reason, None);
+            assert_eq!(worker.activity, activity);
+        }
+    }
+
+    #[test]
+    fn terminal_lifecycle_clears_a_request_while_failure_remains_a_failure() {
+        use crate::{WaitReason, WorkerStatus};
+        for (lifecycle, status) in [
+            (WorkerLifecycle::Completed, WorkerStatus::Idle),
+            (WorkerLifecycle::Cancelled, WorkerStatus::Idle),
+            (WorkerLifecycle::Failed, WorkerStatus::Failed),
+        ] {
+            let mut world = World::new();
+            world.apply(ev(1, "worker", EventKind::Turn { in_flight: true }));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Wait(Some(WaitReason::HumanApproval)),
+            ));
+            world.apply(ev(
+                2,
+                "worker",
+                EventKind::Acted(Activity::Waiting {
+                    detail: "Pending approval".into(),
+                }),
+            ));
+            world.apply(ev(3, "worker", EventKind::Lifecycle(lifecycle)));
+            let worker = world.worker(&WorkerId("worker".into())).unwrap();
+            assert_eq!(worker.lifecycle, lifecycle);
+            assert_eq!(worker.activity, Activity::Idle);
+            assert_eq!(worker.wait_reason, None);
+            assert!(!worker.turn_in_flight);
+            assert_eq!(worker.status_at(3), status);
+            assert!(worker.history.is_empty());
+            assert_eq!(
+                world.collaboration().count(),
+                0,
+                "A terminal status does not invent a delivery"
+            );
+        }
     }
 
     #[test]

@@ -1,0 +1,30 @@
+{
+  "quadrants-1-resize": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quadrants-3-resize": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "motion-idle-on": {
+    "distinct_room_frames": 14,
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "motion-idle-off": {
+    "distinct_room_frames": 11,
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "motion-working-on": {
+    "distinct_room_frames": 11,
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "motion-working-off": {
+    "distinct_room_frames": 13,
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

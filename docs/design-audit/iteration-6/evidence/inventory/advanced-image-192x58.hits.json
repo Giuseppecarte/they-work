@@ -1,0 +1,79 @@
+[
+  {
+    "action": "Setting(0)",
+    "height": 1,
+    "width": 66,
+    "x": 63,
+    "y": 4
+  },
+  {
+    "action": "Setting(1)",
+    "height": 1,
+    "width": 66,
+    "x": 63,
+    "y": 5
+  },
+  {
+    "action": "Setting(2)",
+    "height": 1,
+    "width": 66,
+    "x": 63,
+    "y": 6
+  },
+  {
+    "action": "Setting(3)",
+    "height": 1,
+    "width": 66,
+    "x": 63,
+    "y": 7
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Key(Esc)",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 57
+  }
+]

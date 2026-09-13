@@ -1,0 +1,18 @@
+
+running 13 tests
+test acceptance_tests::appearance_preview_is_reversible_and_mouse_choices_require_apply ... ok
+test acceptance_tests::character_click_then_request_never_approves_and_expired_buttons_cannot_answer_replacements ... ok
+test acceptance_tests::compact_compatibility_cameras_keep_identity_and_saved_camera ... ok
+test acceptance_tests::graphical_navigation_reaches_every_floor_and_last_of_fifty_without_losing_labels ... ok
+test acceptance_tests::inspector_switches_to_fullscreen_without_clicking_through_opaque_panels ... ok
+test acceptance_tests::legacy_explicit_costume_migrates_to_scoped_identity_and_survives_roster_changes ... ok
+test acceptance_tests::local_character_and_zone_changes_survive_restart_without_changing_tasks ... ok
+test acceptance_tests::old_appearance_defaults_enable_mouse_and_preserve_explicit_wardrobe_and_palette ... ok
+test acceptance_tests::pointer_uses_only_presented_geometry_and_resize_requires_an_acknowledged_frame ... ok
+test acceptance_tests::resize_hides_and_disables_approval_actions_until_the_request_is_visible ... ok
+test acceptance_tests::semantic_focus_completes_both_cycles_with_every_frame_redrawn ... ok
+test acceptance_tests::tab_traverses_controls_without_changing_floor_and_enter_matches_click ... ok
+test acceptance_tests::unbound_historical_worker_does_not_gain_send_authority ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 244 filtered out; finished in 10.17s
+

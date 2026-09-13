@@ -1,0 +1,270 @@
+{
+  "cases": [
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "tower-image-80x24.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "tower-image-80x24.png",
+      "sha256": "f842fa7e33a519791c1821a8678c1dca92c8ea49b632a983719134138da962a7",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-120x36",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "tower-image-120x36.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 36,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "tower-image-120x36.png",
+      "sha256": "efb21e02b1e609abbcbe6ad6f8a7670643218d274b428520f03a9da621035652",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-192x58",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "tower-image-192x58.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 58,
+      "status": "pass",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "tower-image-192x58.png",
+      "sha256": "6371b15770072ff6af360f9f7773f8c62a9b8012238323d326a98788f9cfe21b",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "office-auto-image-80x24.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 24,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "office-auto-image-80x24.png",
+      "sha256": "c2f18c21eaac1ddcbf4f6c0f8860f302de928b1230d687bd2abc7e2729e803df",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-120x36",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "office-auto-image-120x36.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 36,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "office-auto-image-120x36.png",
+      "sha256": "4299b243c5d6d01c1917838057506eeb2c58107295eee7bbe1793696e4a213e4",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "office-auto-image-192x58",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "office-auto-image-192x58.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "office-auto",
+      "rows": 58,
+      "status": "pass",
+      "surface": "office-auto",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "office-auto-image-192x58.png",
+      "sha256": "4828214330b99e23e84f7208dfd86b4fd64e0cebcbbad420021d61b991fc0e3e",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "inspector-now-image-80x24.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 24,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "inspector-now-image-80x24.png",
+      "sha256": "1ec4186afaa167e9370c9d96f1559c056f2a842b6273b3ad849a9873d55af824",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 120,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-120x36",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "inspector-now-image-120x36.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 36,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "inspector-now-image-120x36.png",
+      "sha256": "5017ebfe59fb310fdf474a0027ad8cf638f428943c306a1d5a1def1017310bac",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+    },
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 192,
+      "configuration": {
+        "cell_pixels": [
+          10,
+          20
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "inspector-now-image-192x58",
+      "limitation": null,
+      "mode": "image",
+      "native_text": "inspector-now-image-192x58.txt",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "inspector-now",
+      "rows": 58,
+      "status": "pass",
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "image": "inspector-now-image-192x58.png",
+      "sha256": "0faf2acdb8ee1500427b0e28103e37c92a8277e845b2c1b647b28d8e3f6f3e82",
+      "review_note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+    }
+  ],
+  "summary": {
+    "pass": 9,
+    "defect": 0,
+    "not-tested": 0
+  }
+}

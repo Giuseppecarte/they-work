@@ -1,0 +1,26 @@
+{
+  "1": {
+    "navigation": {
+      "home_end_resize": true,
+      "page_keys": false
+    },
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "6": {
+    "navigation": {
+      "home_end_resize": true,
+      "page_keys": true
+    },
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "20": {
+    "navigation": {
+      "home_end_resize": true,
+      "page_keys": true
+    },
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+00-checkout / Office            
+Blair Y. · Build the shared acco
+Editing src/account.rs          
+Partial local history           
+Synthetic local history; live pr
+                                
+ INSTRUCTION TO 00-checkout / B 
+ ▏                              
+                                
+                                
+                                
+ [ Back ]                       
+ Tab/Enter · F7 size · Esc      

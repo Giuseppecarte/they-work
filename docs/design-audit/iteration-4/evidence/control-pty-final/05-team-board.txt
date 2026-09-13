@@ -1,0 +1,42 @@
+ 0 TOWER >1 vertical-project●                                                                     1/1 · / find · c sources · ? help
+ PROJECT NOTEBOOK  /  vertical-project
+
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+ > approval · family root · idle
+   − team-active · family root · talking
+     Agent child-0 · delegated · talking
+     Agent child-1 · delegated · talking
+
+ family root · idle  ·  1/4
+ approval
+
+ Relationship shown: family root
+
+
+ idle
+
+ Source: partial history
+ Live managed connection; relationship coverage depends on provider events
+ Relationships: Partial · Messages: Partial · Lifecycle: Supported
+
+ HumanRequest: test-only-command
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Local history · 4 partial · ← collapse / → expand
+Esc return · ↑↓ select · Enter inspect · ←/→ fold · PgUp/PgDn detail

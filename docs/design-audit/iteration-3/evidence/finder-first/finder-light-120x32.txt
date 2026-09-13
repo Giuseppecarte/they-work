@@ -1,0 +1,32 @@
+ 0 TOWER  18 18-mobile-app●       19 19-atlas-web×       >20 20-billing-service!  20/20 · / find · c sources · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  15 working · 35 idle · 5 need help · 5 failed
+┌ FLOORS /┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────────────────────────────┐─────────┐
+│  F17 ▸ 1│/ attention                                                                                       │         │
+│     3 wo│10 matches · 1–9                                                                                  │-service │
+│─────────│> Review the API contract                                                                 FAILED  │▄▄▄▄▄▄▄▄▄│
+│  F18 ▸ 1│  03-customer-onboarding · codex · floor 03                                                       │▄▄▄▄▄▄▄▄▄│
+│     3 wo│  Build account settings                                                               ATTENTION  │▄▄▄▄▄▄▄▄▄│
+│─────────│  04-design-system · codex · floor 04                                                             │▄▄▄▄▄▄▄▄▄│
+│  F19 × 1│  Review the API contract                                                                 FAILED  │▄▄▄▄▄▄▄▄▄│
+│     3 wo│  07-atlas-web · codex · floor 07                                                                 │▄▄▄▄▄▄▄▄▄│
+│─────────│  Build account settings                                                               ATTENTION  │▄▄▄▄▄▄▄▄▄│
+│> F20 ! 2│  08-billing-service · codex · floor 08                                                           │▄▄▄▄▄▄▄▄▄│
+│     3 wo│  Review the API contract                                                                 FAILED  │▄▄▄▄▄▄▄▄▄│
+│─────────│  11-event-pipeline · codex · floor 11                                                            │▄▄▄▄▄▄▄▄▄│
+└─────────│  Build account settings                                                               ATTENTION  │▄▄▄▄▄▄▄▄▄│
+          │  12-mobile-app · codex · floor 12                                                                │▄▄▄▄▄▄▄▄▄│
+          │  Review the API contract                                                                 FAILED  │▄▄▄▄▄▄▄▄▄│
+          │  15-customer-onboarding · codex · floor 15                                                       │         │
+          │  Build account settings                                                               ATTENTION  │         │
+          │  16-design-system · codex · floor 16                                                             │         │
+          │  Review the API contract                                                                 FAILED  │         │
+          │  19-atlas-web · codex · floor 19                                                                 │         │
+          │                                                                                                  │         │
+          │…rogramming/they-work/docs/design-audit/tmp/iteration-3-finder/fixture-60-0/03-customer-onboarding│         │
+          │↑↓ choose · Enter open · Esc back · Ctrl+U clear                                                  │         │
+          └──────────────────────────────────────────────────────────────────────────────────────────────────┘         │
+                                         │                                                                             │
+                                         └─────────────────────────────────────────────────────────────────────────────┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 20/20 · page 3/3 · PgUp/PgDn pages · Home first · End last

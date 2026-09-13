@@ -1,7 +1,10 @@
-//! they-work: a read-only terminal office for local agent activity.
+//! they-work: observe local agent activity and explicitly control managed tasks.
 //!
 //! This binary owns command-line policy and the polling loop. Collectors own
 //! the data boundary; the renderer owns presentation state.
+
+mod connections;
+mod control_host;
 
 use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
@@ -15,12 +18,15 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
 use crossterm::cursor::{MoveTo, Show};
-use crossterm::event::{self, Event as TermEvent, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{
+    self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
+    Event as TermEvent, KeyCode, KeyEvent, KeyModifiers,
+};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use ratatui::backend::{CrosstermBackend, TestBackend};
+use ratatui::backend::{Backend, CrosstermBackend, TestBackend};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::Terminal;
@@ -44,29 +50,36 @@ const DOCTOR_PROBE_TIMEOUT: Duration = Duration::from_millis(150);
 static TERMINATION_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
 const HELP: &str = "\
-they-work — a read-only terminal office for local agent activity
+they-work — a terminal office for local agents and their teams
 
 USAGE:
   they-work [OPTIONS]
 
 OPTIONS:
-  --project <path>         Open one project office
-  --all                    Start at the guard office
+  --project <path>         Read conversations from one project only
+  --all                    Start at the tower overview
   --demo                   Show the imaginary company; reads nothing
   --once                   Print one plain-text standup and exit
   --headless               Run the polling loop without a terminal
   --exit-after <duration>  Stop headless mode after e.g. 30s, 5m, or 1h
-  --doctor                 Print discovered stores and exit
+  --doctor                 Check selected sources and explain problems
   --view <iso|top|side>    Choose the starting camera
   --light                  Start with the light appearance
   --dark                   Start with the dark appearance
   --color <auto|true|256|none>
                            Choose terminal color handling
-  --config-dir <path>      Opt in to remembering the selected office
+  --mouse <on|off>         Enable clicks or keep terminal text selection
+  --setup                  Choose local sources and their folders
+  --sources <all|codex|claude|none>
+                           Choose which conversations may be read
+  --codex-home <path>      Use this Codex data folder
+  --claude-home <path>     Use this Claude Code data folder
+  --config-dir <path>      Override the default settings folder
+  --no-save                Keep this session temporary; save no preferences
   -h, --help               Show this help
 ";
 
-const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from ~/.codex/sqlite/state_5.sqlite and ~/.codex/sqlite/thread_history_1.sqlite. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.";
+const READ_PARAGRAPH: &str = "Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from state_5.sqlite and thread_history_1.sqlite under ~/.codex/ or ~/.codex/sqlite/. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartView {
@@ -97,7 +110,58 @@ struct Args {
     light: bool,
     dark: bool,
     color: Option<ColorMode>,
+    mouse: Option<bool>,
     config_dir: Option<PathBuf>,
+    setup: bool,
+    no_save: bool,
+    remember: Option<bool>,
+    consent_needed: bool,
+    connection_choice: Option<connections::Connections>,
+    sources: Option<String>,
+    codex_home: Option<PathBuf>,
+    claude_home: Option<PathBuf>,
+}
+
+impl Args {
+    fn may_save(&self) -> bool {
+        !self.no_save
+            && self.remember.unwrap_or(true)
+            && !self.demo
+            && !self.once
+            && !self.headless
+            && !self.doctor
+    }
+}
+
+fn parse_mouse(value: &str) -> std::result::Result<bool, String> {
+    match value {
+        "on" => Ok(true),
+        "off" => Ok(false),
+        _ => Err("--mouse must be on or off".into()),
+    }
+}
+
+/// Releases capture on every return path, including failures during a handoff.
+struct MouseCaptureGuard {
+    enabled: bool,
+}
+impl MouseCaptureGuard {
+    fn sync(&mut self, enabled: bool) -> Result<()> {
+        if self.enabled != enabled {
+            if enabled {
+                execute!(io::stdout(), EnableMouseCapture)?;
+            } else {
+                execute!(io::stdout(), DisableMouseCapture)?;
+            }
+            self.enabled = enabled;
+        }
+        Ok(())
+    }
+}
+impl Drop for MouseCaptureGuard {
+    fn drop(&mut self) {
+        let _ = execute!(io::stdout(), DisableMouseCapture);
+    }
 }
 
 fn now_ms() -> Millis {
@@ -128,6 +192,35 @@ where
                 )?)?);
             }
             "--doctor" => parsed.doctor = true,
+            "--setup" => parsed.setup = true,
+            "--no-save" => parsed.no_save = true,
+            "--sources" => parsed.sources = Some(next_value(&mut arguments, "--sources")?),
+            "--codex-home" => {
+                parsed.codex_home = Some(PathBuf::from(next_value(&mut arguments, "--codex-home")?))
+            }
+            "--claude-home" => {
+                parsed.claude_home =
+                    Some(PathBuf::from(next_value(&mut arguments, "--claude-home")?))
+            }
+            value if value.starts_with("--sources=") => {
+                parsed.sources = Some(value["--sources=".len()..].into())
+            }
+            value if value.starts_with("--codex-home=") => {
+                parsed.codex_home = Some(PathBuf::from(nonempty_option(
+                    "--codex-home",
+                    &value["--codex-home=".len()..],
+                )?))
+            }
+            value if value.starts_with("--claude-home=") => {
+                parsed.claude_home = Some(PathBuf::from(nonempty_option(
+                    "--claude-home",
+                    &value["--claude-home=".len()..],
+                )?))
+            }
+            "--mouse" => parsed.mouse = Some(parse_mouse(&next_value(&mut arguments, "--mouse")?)?),
+            value if value.starts_with("--mouse=") => {
+                parsed.mouse = Some(parse_mouse(&value["--mouse=".len()..])?)
+            }
             "--light" => parsed.light = true,
             "--dark" => parsed.dark = true,
             "--project" => {
@@ -174,6 +267,24 @@ where
         }
     }
 
+    if parsed
+        .sources
+        .as_deref()
+        .is_some_and(|value| !matches!(value, "all" | "codex" | "claude" | "none"))
+    {
+        return Err("--sources must be all, codex, claude, or none".into());
+    }
+    if parsed.setup
+        && (parsed.once
+            || parsed.doctor
+            || parsed.headless
+            || parsed.exit_after.is_some()
+            || parsed.demo)
+    {
+        return Err(
+            "--setup is interactive; use it without --once, --doctor, --headless or --demo".into(),
+        );
+    }
     if parsed.exit_after.is_some() {
         parsed.headless = true;
     }
@@ -196,7 +307,13 @@ where
         return Err("--headless needs --exit-after".to_string());
     }
     if parsed.demo
-        && (parsed.project.is_some() || parsed.all || parsed.doctor || parsed.config_dir.is_some())
+        && (parsed.project.is_some()
+            || parsed.all
+            || parsed.doctor
+            || parsed.config_dir.is_some()
+            || parsed.sources.is_some()
+            || parsed.codex_home.is_some()
+            || parsed.claude_home.is_some())
     {
         return Err("--demo cannot be combined with project discovery options".to_string());
     }
@@ -292,19 +409,16 @@ struct Runtime {
     now: Millis,
     demo: bool,
     start_guard: bool,
+    initial_project: Option<String>,
     config_dir: Option<PathBuf>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum FirstRunAction {
-    Open(String),
-    Guard,
-    Stop,
-    Quit,
+    save_preferences: bool,
 }
 
 fn main() -> Result<()> {
-    let args = match parse_args(std::env::args().skip(1)) {
+    if theywork_control::maybe_run_supervisor()? {
+        return Ok(());
+    }
+    let mut args = match parse_args(std::env::args().skip(1)) {
         Ok(args) => args,
         Err(error) => {
             eprintln!("error: {error}");
@@ -319,12 +433,31 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if !args.once && !args.headless {
+        install_termination_handlers()?;
+    }
+    args.config_dir = args.config_dir.or_else(connections::default_config_dir);
+    args.config_dir = args
+        .config_dir
+        .as_deref()
+        .map(resolve_filesystem_path)
+        .transpose()?;
+    apply_color_mode(args.color);
+    if !connections::prepare(&mut args)? {
+        return Ok(());
+    }
+
     if args.doctor {
         apply_color_mode(args.color);
-        let status = doctor();
+        let status = doctor(&args)?;
         if status != 0 {
             std::process::exit(status);
         }
+        return Ok(());
+    }
+
+    if args.consent_needed {
+        connections::print_choose_sources();
         return Ok(());
     }
 
@@ -337,21 +470,15 @@ fn main() -> Result<()> {
     if !args.once && !args.headless {
         install_termination_handlers()?;
     }
-    if let (Some(config_dir), Some(project)) = (&runtime.config_dir, args.project.as_ref()) {
-        write_selection(config_dir, &normalize_cli_path(project)?)?;
-    }
 
-    if should_show_first_run(&args, &runtime) {
-        match first_run_screen(&runtime)? {
-            FirstRunAction::Open(project) => {
-                if let Some(config_dir) = runtime.config_dir.as_deref() {
-                    write_selection(config_dir, &project)?;
-                }
-                select_project(&mut runtime, &project);
-            }
-            FirstRunAction::Guard => runtime.start_guard = true,
-            FirstRunAction::Stop | FirstRunAction::Quit => return Ok(()),
+    if !args.once && !args.headless && (!io::stdin().is_terminal() || !io::stdout().is_terminal()) {
+        if should_show_first_run(&args, &runtime) {
+            let reports = theywork_collect::inspect_selected(&runtime.config, runtime.now);
+            render_first_run(&reports, &runtime.world, runtime.now, 0, false)?;
+        } else if print_once(&runtime) {
+            std::process::exit(1);
         }
+        return Ok(());
     }
 
     if args.once {
@@ -370,6 +497,11 @@ fn main() -> Result<()> {
         );
     }
 
+    if runtime.save_preferences {
+        if let (Some(config_dir), Some(project)) = (&runtime.config_dir, args.project.as_ref()) {
+            write_selection(config_dir, &normalize_cli_path(project)?)?;
+        }
+    }
     apply_color_mode(args.color);
     let capabilities = detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT).unwrap_or_default();
     let mut terminal_guard = TerminalModeGuard::enter_alternate()?;
@@ -399,6 +531,7 @@ impl TerminalModeGuard {
         let mut guard = Self::enter_raw()?;
         execute!(io::stdout(), EnterAlternateScreen)?;
         guard.alternate = true;
+        execute!(io::stdout(), EnableBracketedPaste)?;
         Ok(guard)
     }
 
@@ -410,7 +543,14 @@ impl TerminalModeGuard {
         };
         self.raw = false;
         let screen_result = if self.alternate {
-            execute!(io::stdout(), LeaveAlternateScreen, Show).map_err(anyhow::Error::from)
+            execute!(
+                io::stdout(),
+                DisableBracketedPaste,
+                DisableMouseCapture,
+                LeaveAlternateScreen,
+                Show
+            )
+            .map_err(anyhow::Error::from)
         } else {
             Ok(())
         };
@@ -472,23 +612,78 @@ fn is_ctrl_c(input: KeyEvent) -> bool {
     input.code == KeyCode::Char('c') && input.modifiers.contains(KeyModifiers::CONTROL)
 }
 
-fn doctor() -> i32 {
-    let config = Config::discover();
-    let reports = theywork_collect::inspect(&config, now_ms());
+fn doctor(args: &Args) -> Result<i32> {
+    if args.consent_needed {
+        println!("they-work doctor\nNo sources selected yet. Only folder locations were checked.");
+        print_terminal_report();
+        let value = connections::Connections::from_args(args)?;
+        for (label, path) in [
+            ("Claude Code", value.claude_home),
+            ("Codex", value.codex_home),
+        ] {
+            println!(
+                "{}: {} ({})",
+                label,
+                plain_value(&path.to_string_lossy()),
+                connections::folder_status(&path)
+            );
+        }
+        connections::print_choose_sources();
+        return Ok(0);
+    }
+    let config = connections::Connections::from_args(args)?.config();
+    let reports = theywork_collect::inspect_selected(&config, now_ms());
 
     println!("they-work doctor");
     print_terminal_report();
     for report in &reports {
         print_store_report(report);
+        if !report.home_found || !report.readable {
+            println!("{}: run they-work --setup, select this source, and press e to choose its app data folder. Space turns off a source you do not use.", report.agent.label());
+        } else if report.active_threads == 0 {
+            println!("{}: no recent conversations found. Start a conversation in the original app, then return here. Check its folder with they-work --setup if needed.", report.agent.label());
+        }
     }
     println!("read={READ_PARAGRAPH}");
     println!("discovery_overrides={}", discovery_overrides());
+    for (provider, home) in [
+        (Agent::Codex, config.codex_home.as_ref()),
+        (Agent::Claude, config.claude_home.as_ref()),
+    ] {
+        if let Some(home) = home {
+            match theywork_control::native::NativeProvider::detect(provider, home) {
+                Ok(client) => println!(
+                    "controls provider={} version={} console={} login=official-client",
+                    provider.label(),
+                    cli_quoted_value(&client.version),
+                    if provider == Agent::Codex {
+                        "managed-app-server"
+                    } else if client.background_supported {
+                        "background-attach"
+                    } else {
+                        "foreground-only"
+                    }
+                ),
+                Err(error) => println!(
+                    "controls provider={} available=false detail={}; observation remains available",
+                    provider.label(),
+                    cli_quoted_value(&error.to_string())
+                ),
+            }
+        }
+    }
 
     let found_home = reports.iter().any(|report| report.home_found);
     let broken_home = reports
         .iter()
         .any(|report| report.home_found && !report.readable);
-    i32::from(!found_home || broken_home)
+    if reports.is_empty() {
+        println!("sources=none action=run_they-work_--setup");
+    }
+    println!("next=they-work --setup (choose sources) | they-work --once (inspect workers)");
+    Ok(i32::from(
+        !reports.is_empty() && (!found_home || broken_home),
+    ))
 }
 
 fn print_terminal_report() {
@@ -642,7 +837,7 @@ fn graphics_protocol_label(protocol: GraphicsProtocol) -> &'static str {
 
 fn terminal_action(renderer: &RendererDiagnostics) -> &'static str {
     if renderer.encoding != theywork_render::PixelEncoding::Sextants {
-        "set_THEYWORK_ENCODING=sextants"
+        "they-work --demo (press s to compare pixel encodings with your terminal font)"
     } else if renderer.color_depth != ColorDepth::TrueColor {
         "set_THEYWORK_COLOR=true"
     } else {
@@ -660,63 +855,6 @@ fn should_show_first_run(args: &Args, runtime: &Runtime) -> bool {
         && args.project.is_none()
 }
 
-fn first_run_screen(runtime: &Runtime) -> Result<FirstRunAction> {
-    let reports = theywork_collect::inspect(&runtime.config, runtime.now);
-    let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
-    if !interactive {
-        render_first_run(&reports, &runtime.world, runtime.now, 0, false)?;
-        return Ok(FirstRunAction::Stop);
-    }
-
-    let has_home = reports.iter().any(|report| report.home_found);
-    let mut terminal_guard = TerminalModeGuard::enter_raw()?;
-    let result = (|| -> Result<FirstRunAction> {
-        let mut selected = 0;
-        loop {
-            if let Some(error) = termination_error() {
-                return Err(error);
-            }
-            render_first_run(&reports, &runtime.world, runtime.now, selected, true)?;
-            if !event::poll(FRAME)? {
-                continue;
-            }
-            let input = event::read()?;
-            let TermEvent::Key(input) = input else {
-                continue;
-            };
-            if is_ctrl_c(input) {
-                return Ok(FirstRunAction::Quit);
-            }
-            let offices = first_run_offices(&runtime.world, runtime.now);
-            match input.code {
-                KeyCode::Up | KeyCode::Char('k') => {
-                    selected = selected.saturating_sub(1);
-                }
-                KeyCode::Down | KeyCode::Char('j') => {
-                    if !offices.is_empty() {
-                        selected = selected.saturating_add(1).min(offices.len() - 1);
-                    }
-                }
-                KeyCode::Home => selected = 0,
-                KeyCode::End if !offices.is_empty() => selected = offices.len() - 1,
-                KeyCode::Enter if !offices.is_empty() => {
-                    return Ok(FirstRunAction::Open(offices[selected].path.clone()));
-                }
-                KeyCode::Tab if has_home => return Ok(FirstRunAction::Guard),
-                KeyCode::Tab => return Ok(FirstRunAction::Stop),
-                KeyCode::Char('q') | KeyCode::Esc => return Ok(FirstRunAction::Quit),
-                _ => {}
-            }
-        }
-    })();
-    let restored = terminal_guard.restore();
-    match (result, restored) {
-        (Err(error), _) => Err(error),
-        (Ok(_), Err(error)) => Err(error),
-        (Ok(action), Ok(())) => Ok(action),
-    }
-}
-
 fn render_first_run(
     reports: &[StoreReport],
     world: &World,
@@ -732,7 +870,7 @@ fn render_first_run(
     writeln!(stdout, "THEY WORK — first run")?;
     writeln!(
         stdout,
-        "A read-only terminal office for the agents already running here."
+        "A terminal office for the agents and teams working here."
     )?;
     writeln!(stdout)?;
     writeln!(stdout, "WHAT WAS FOUND")?;
@@ -1014,11 +1152,13 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
             now,
             demo: true,
             start_guard: false,
-            config_dir: None,
+            initial_project: None,
+            config_dir: args.config_dir.clone(),
+            save_preferences: false,
         });
     }
 
-    let base_config = Config::discover();
+    let base_config = connections::Connections::from_args(args)?.config();
     let config_dir = args
         .config_dir
         .as_deref()
@@ -1032,8 +1172,7 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
     let remembered = if explicit.is_none() && !args.all {
         config_dir
             .as_deref()
-            .map(read_selection)
-            .transpose()?
+            .and_then(|directory| read_selection(directory).ok())
             .flatten()
     } else {
         None
@@ -1044,36 +1183,18 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
         None
     };
 
-    let (scan, start_guard) = if args.all {
-        (scan_config(&base_config, now), true)
-    } else if let Some(project) = explicit.as_deref() {
-        (scoped_scan(&base_config, project, now), false)
-    } else if let Some(project) = remembered.as_deref() {
-        let remembered_scan = scoped_scan(&base_config, project, now);
-        if remembered_scan.world.office_count() > 0 {
-            (remembered_scan, false)
-        } else if let Some(current_project) =
-            current.as_deref().filter(|candidate| *candidate != project)
-        {
-            let current_scan = scoped_scan(&base_config, current_project, now);
-            if current_scan.world.office_count() > 0 {
-                (current_scan, false)
-            } else {
-                (scan_config(&base_config, now), true)
-            }
-        } else {
-            (scan_config(&base_config, now), true)
-        }
-    } else if let Some(project) = current.as_deref() {
-        let current_scan = scoped_scan(&base_config, project, now);
-        if current_scan.world.office_count() > 0 {
-            (current_scan, false)
-        } else {
-            (scan_config(&base_config, now), true)
-        }
+    // A selected floor is a view preference. Only --project restricts the
+    // input boundary; launching inside a repository must retain the tower.
+    let scan = if let Some(project) = explicit.as_deref() {
+        scoped_scan(&base_config, project, now)
     } else {
-        (scan_config(&base_config, now), true)
+        scan_config(&base_config, now)
     };
+    let initial_project = explicit
+        .or(remembered)
+        .or(current)
+        .filter(|path| scan.world.offices().any(|office| office.path == *path));
+    let start_guard = args.all || initial_project.is_none();
 
     Ok(Runtime {
         config: scan.config,
@@ -1083,7 +1204,9 @@ fn build_runtime(args: &Args) -> Result<Runtime> {
         now,
         demo: false,
         start_guard,
+        initial_project,
         config_dir,
+        save_preferences: args.may_save(),
     })
 }
 
@@ -1100,15 +1223,6 @@ fn scoped_scan(base_config: &Config, project: &str, now: Millis) -> Scan {
     let mut config = base_config.clone();
     config.only_paths = vec![PathBuf::from(project)];
     scan_config(&config, now)
-}
-
-fn select_project(runtime: &mut Runtime, project: &str) {
-    let scan = scoped_scan(&runtime.config, project, runtime.now);
-    runtime.config = scan.config;
-    runtime.sources = scan.sources;
-    runtime.world = scan.world;
-    runtime.errors = scan.errors;
-    runtime.start_guard = false;
 }
 
 fn scan_config(config: &Config, now: Millis) -> Scan {
@@ -1139,6 +1253,12 @@ fn scan_config(config: &Config, now: Millis) -> Scan {
 
 fn resolve_filesystem_path(input: &Path) -> Result<PathBuf> {
     let spelling = input.to_string_lossy();
+    if spelling == "~" || spelling.starts_with("~/") || spelling.starts_with("~\\") {
+        let home = std::env::var_os("HOME")
+            .or_else(|| std::env::var_os("USERPROFILE"))
+            .ok_or_else(|| anyhow!("cannot expand ~: HOME or USERPROFILE is not set"))?;
+        return Ok(PathBuf::from(home).join(spelling.get(2..).unwrap_or("")));
+    }
     if input.is_absolute() || looks_absolute_spelling(&spelling) {
         Ok(PathBuf::from(spelling.replace('\\', "/")))
     } else {
@@ -1216,12 +1336,7 @@ fn read_selection(config_dir: &Path) -> Result<Option<String>> {
 }
 
 fn write_selection(config_dir: &Path, project: &str) -> Result<()> {
-    if !config_dir.is_dir() {
-        return Err(anyhow!(
-            "config directory {} is not available",
-            config_dir.display()
-        ));
-    }
+    fs::create_dir_all(config_dir)?;
 
     let temporary = config_dir.join(format!(".project.{}.tmp", std::process::id()));
     let selection_path = config_dir.join("project");
@@ -1261,31 +1376,36 @@ fn apply_color_mode(mode: Option<ColorMode>) {
     }
 }
 
-fn configure_ui(ui: &mut Ui, args: &Args, start_guard: bool) {
-    if start_guard {
-        ui.handle_key(key(KeyCode::Char('0')));
+fn configure_ui(
+    ui: &mut Ui,
+    args: &Args,
+    start_guard: bool,
+    mut preferences: theywork_render::RendererPreferences,
+) {
+    if let Some(view) = args.view {
+        preferences.projection = match view {
+            StartView::Iso => "isometric",
+            StartView::Top => "top-down",
+            StartView::Side => "side",
+        }
+        .into();
     }
-
-    let cycles = match args.view {
-        Some(StartView::Iso) => 1,
-        Some(StartView::Top) => 2,
-        Some(StartView::Side) => 3,
-        None => 0,
-    };
-    for _ in 0..cycles {
-        ui.handle_key(key(KeyCode::Char('c')));
-    }
-
     if args.light {
-        ui.handle_key(key(KeyCode::Char('s')));
-        ui.handle_key(key(KeyCode::Down));
-        ui.handle_key(key(KeyCode::Enter));
-        ui.handle_key(key(KeyCode::Char('s')));
+        preferences.light = true;
     }
-}
-
-fn key(code: KeyCode) -> KeyEvent {
-    KeyEvent::new(code, KeyModifiers::NONE)
+    if args.dark {
+        preferences.light = false;
+    }
+    if args.color == Some(ColorMode::Auto) {
+        preferences.color_depth = None;
+    }
+    if let Some(mouse) = args.mouse {
+        preferences.mouse = mouse;
+    }
+    ui.restore_preferences(&preferences);
+    if start_guard {
+        ui.open_tower();
+    }
 }
 
 struct PollResult {
@@ -1296,30 +1416,35 @@ struct PollResult {
 struct Poller {
     results: Receiver<PollResult>,
     stop: Sender<()>,
-    thread: Option<thread::JoinHandle<()>>,
+    thread: Option<thread::JoinHandle<Vec<Box<dyn Source>>>>,
 }
 
 impl Poller {
     fn start(mut sources: Vec<Box<dyn Source>>) -> Self {
         let (result_tx, result_rx) = mpsc::channel();
         let (stop_tx, stop_rx) = mpsc::channel();
-        let thread = thread::spawn(move || loop {
-            let now = now_ms();
-            let mut events = Vec::new();
-            let mut errors = Vec::new();
-            for source in &mut sources {
-                match source.poll(now) {
-                    Ok(source_events) => events.extend(source_events),
-                    Err(error) => errors.push(format!("{}: {}", error.source_name, error.message)),
+        let thread = thread::spawn(move || {
+            loop {
+                let now = now_ms();
+                let mut events = Vec::new();
+                let mut errors = Vec::new();
+                for source in &mut sources {
+                    match source.poll(now) {
+                        Ok(source_events) => events.extend(source_events),
+                        Err(error) => {
+                            errors.push(format!("{}: {}", error.source_name, error.message))
+                        }
+                    }
+                }
+                if result_tx.send(PollResult { events, errors }).is_err() {
+                    break;
+                }
+                match stop_rx.recv_timeout(POLL_INTERVAL) {
+                    Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => break,
+                    Err(mpsc::RecvTimeoutError::Timeout) => {}
                 }
             }
-            if result_tx.send(PollResult { events, errors }).is_err() {
-                break;
-            }
-            match stop_rx.recv_timeout(POLL_INTERVAL) {
-                Ok(()) | Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => {}
-            }
+            sources
         });
         Self {
             results: result_rx,
@@ -1332,11 +1457,45 @@ impl Poller {
         self.results.try_iter()
     }
 
-    fn stop(mut self) {
+    fn stop(&mut self) -> Vec<Box<dyn Source>> {
         let _ = self.stop.send(());
-        if let Some(thread) = self.thread.take() {
-            let _ = thread.join();
+        self.thread
+            .take()
+            .and_then(|thread| thread.join().ok())
+            .unwrap_or_default()
+    }
+}
+
+fn source_observation(
+    runtime: &Runtime,
+    errors: &[String],
+    checked_at: Millis,
+) -> theywork_render::observation::ObservationSummary {
+    let mut errors = errors.to_vec();
+    let configured = [
+        ("Codex", runtime.config.codex_home.as_ref()),
+        ("Claude", runtime.config.claude_home.as_ref()),
+    ];
+    for (provider, path) in configured {
+        if let Some(path) = path {
+            if !path.is_dir() {
+                let message = format!(
+                    "{provider} source folder is unavailable: {}",
+                    path.display()
+                );
+                if !errors.contains(&message) {
+                    errors.push(message);
+                }
+            }
         }
+    }
+    theywork_render::observation::ObservationSummary {
+        enabled_sources: usize::from(runtime.config.codex_home.is_some())
+            + usize::from(runtime.config.claude_home.is_some()),
+        scanning: false,
+        errors,
+        checked_at,
+        filtered: !runtime.config.only_paths.is_empty(),
     }
 }
 
@@ -1359,7 +1518,7 @@ fn run_headless(runtime: &mut Runtime, duration: Duration, rss_before: Option<u6
     let mut poll_errors = 0;
     let mut errors: HashSet<String> = runtime.errors.iter().cloned().collect();
     let rss_after_initial_scan = resident_bytes();
-    let poller = Poller::start(std::mem::take(&mut runtime.sources));
+    let mut poller = Poller::start(std::mem::take(&mut runtime.sources));
 
     loop {
         let frame_started = Instant::now();
@@ -1466,12 +1625,14 @@ fn roster_snapshot(world: &World) -> (usize, usize, HashSet<String>) {
     (world.office_count(), workers.len(), workers)
 }
 
+#[cfg(target_os = "linux")]
 fn resident_bytes() -> Option<u64> {
     let statm = fs::read_to_string("/proc/self/statm").ok()?;
     let pages = statm.split_whitespace().nth(1)?.parse::<u64>().ok()?;
     pages.checked_mul(system_page_size()?)
 }
 
+#[cfg(target_os = "linux")]
 fn system_page_size() -> Option<u64> {
     // SAFETY: sysconf reads immutable process/system configuration and does
     // not dereference pointers or mutate Rust-owned memory.
@@ -1479,6 +1640,7 @@ fn system_page_size() -> Option<u64> {
     u64::try_from(page_size).ok().filter(|value| *value > 0)
 }
 
+#[cfg(target_os = "linux")]
 fn process_cpu_ticks() -> Option<(u64, u64)> {
     let stat = fs::read_to_string("/proc/self/stat").ok()?;
     let ticks = parse_process_cpu_ticks(&stat)?;
@@ -1490,6 +1652,17 @@ fn process_cpu_ticks() -> Option<(u64, u64)> {
     Some((ticks, ticks_per_second))
 }
 
+#[cfg(not(target_os = "linux"))]
+fn resident_bytes() -> Option<u64> {
+    None
+}
+
+#[cfg(not(target_os = "linux"))]
+fn process_cpu_ticks() -> Option<(u64, u64)> {
+    None
+}
+
+#[cfg(any(target_os = "linux", test))]
 fn parse_process_cpu_ticks(stat: &str) -> Option<u64> {
     let after_name = stat.rsplit_once(')')?.1;
     let fields = after_name.split_whitespace().collect::<Vec<_>>();
@@ -1523,8 +1696,42 @@ fn run(
     capabilities: Capabilities,
 ) -> Result<()> {
     let mut ui = Ui::new();
-    configure_ui(&mut ui, args, runtime.start_guard);
+    let preferences = runtime
+        .config_dir
+        .as_deref()
+        .filter(|_| !runtime.demo)
+        .and_then(|directory| fs::read(directory.join("appearance.json")).ok())
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default();
+    configure_ui(&mut ui, args, runtime.start_guard, preferences);
+    let review_memory = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| !runtime.demo)
+        .and_then(|directory| fs::read(directory.join("notebook.json")).ok())
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default();
+    ui.restore_review_memory(review_memory);
+    if let Some(path) = &runtime.initial_project {
+        if let Some(office) = runtime.world.offices().find(|office| office.path == *path) {
+            ui.open_office(&office.id);
+        }
+    }
+    let mut mouse_capture = MouseCaptureGuard { enabled: false };
+    mouse_capture.sync(ui.mouse_enabled())?;
+    let mut active_args = args.clone();
+    let mut control = control_host::Host::start(
+        connections::Connections::from_args(args)?,
+        runtime
+            .config_dir
+            .clone()
+            .filter(|_| runtime.save_preferences),
+        !runtime.demo,
+    );
+    let mut control_cursor = theywork_control::BridgeCursor::default();
+    let mut notebook_save = Instant::now();
     let terminal_cells = terminal.size()?;
+    let mut presented_size = (terminal_cells.width, terminal_cells.height);
     let image_cell_size = capabilities
         .graphics
         .can_transmit_pixels()
@@ -1533,7 +1740,8 @@ fn run(
     ui.set_image_cell_size(image_cell_size.map(|size| (size.width, size.height)));
     let mut image_presenter =
         TerminalImagePresenter::new(capabilities, (terminal_cells.width, terminal_cells.height));
-    let poller = Poller::start(std::mem::take(&mut runtime.sources));
+    let mut poller = Poller::start(std::mem::take(&mut runtime.sources));
+    ui.set_observation_summary(source_observation(runtime, &runtime.errors, runtime.now));
     let result = (|| -> Result<()> {
         loop {
             if let Some(error) = termination_error() {
@@ -1547,6 +1755,7 @@ fn run(
                 }
             } else {
                 for result in poller.drain() {
+                    ui.set_observation_summary(source_observation(runtime, &result.errors, now));
                     for event in result.events {
                         runtime.world.apply(event);
                     }
@@ -1558,35 +1767,275 @@ fn run(
                 }
             }
 
+            let mut latest = control.latest();
+            if !runtime.config.only_paths.is_empty() {
+                let allowed: HashSet<_> =
+                    latest
+                        .snapshot
+                        .iter()
+                        .flat_map(|snapshot| snapshot.threads.values())
+                        .filter(|thread| {
+                            let raw = thread.project.to_string_lossy();
+                            let path = latest
+                                .project_aliases
+                                .get(raw.as_ref())
+                                .map_or(raw.as_ref(), String::as_str);
+                            runtime
+                                .config
+                                .only_paths
+                                .iter()
+                                .any(|selected| selected == Path::new(path))
+                        })
+                        .map(|thread| thread.identity.worker_id())
+                        .chain(runtime.world.offices().flat_map(|office| {
+                            office.workers.iter().map(|worker| worker.id.clone())
+                        }))
+                        .collect();
+                latest
+                    .status
+                    .tasks
+                    .retain(|id, _| allowed.contains(&theywork_core::WorkerId(id.clone())));
+                latest
+                    .status
+                    .requests
+                    .retain(|request| allowed.contains(&request.worker));
+            }
+            ui.set_control_status(latest.status);
+            if let Some(snapshot) = latest.snapshot {
+                let batch = theywork_control::reconcile_snapshot(&snapshot, &control_cursor);
+                for mut event in batch.events {
+                    if let Some(project) = latest.project_aliases.get(&event.office_path) {
+                        event.office_path = project.clone();
+                        event.office = theywork_core::OfficeId(project.clone());
+                    }
+                    if !runtime.config.only_paths.is_empty()
+                        && !runtime
+                            .config
+                            .only_paths
+                            .iter()
+                            .any(|path| path == Path::new(&event.office_path))
+                    {
+                        continue;
+                    }
+                    runtime.world.apply(event);
+                }
+                control_cursor = batch.next_cursor;
+            }
+            for outcome in control.drain() {
+                match outcome {
+                    control_host::Outcome::Receipt {
+                        detail,
+                        clear_draft,
+                    } => ui.complete_control(detail, clear_draft),
+                    control_host::Outcome::Console {
+                        command,
+                        clear_draft,
+                    } => {
+                        let paused_sources = poller.stop();
+                        for result in poller.drain() {
+                            for event in result.events {
+                                runtime.world.apply(event);
+                            }
+                        }
+                        persist_notebook(runtime, &ui)?;
+                        image_presenter.present(terminal.backend_mut(), None)?;
+                        ui.invalidate_pointer();
+                        mouse_capture.sync(false)?;
+                        let status = handoff_console(terminal, &command);
+                        mouse_capture.sync(ui.mouse_enabled())?;
+                        match status {
+                            Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
+                            Ok(false) => ui.complete_control("Official console exited without confirming success. Inspect its output before sending again.".into(), false),
+                            Err(error) => ui.complete_control(format!("Console could not open: {error}"), false),
+                        }
+                        poller = Poller::start(paused_sources);
+                        control = control_host::Host::start(
+                            connections::Connections::from_args(&active_args)?,
+                            runtime
+                                .config_dir
+                                .clone()
+                                .filter(|_| runtime.save_preferences),
+                            !runtime.demo,
+                        );
+                    }
+                }
+            }
+            if notebook_save.elapsed() >= Duration::from_secs(5) {
+                persist_notebook(runtime, &ui)?;
+                notebook_save = Instant::now();
+            }
             runtime.world.tick(now);
             ui.tick(now);
 
+            mouse_capture.sync(ui.mouse_enabled())?;
             let terminal_cells = terminal.size()?;
+            let current_size = (terminal_cells.width, terminal_cells.height);
+            if current_size != presented_size {
+                ui.invalidate_pointer();
+                presented_size = current_size;
+            }
             image_presenter.resize(
                 terminal.backend_mut(),
                 (terminal_cells.width, terminal_cells.height),
             )?;
             let mut pixel_frame = None;
+            let mut native_frame = None;
             terminal.draw(|frame| {
                 ui.draw(frame, &runtime.world);
                 if image_presenter.enabled() {
-                    let snapshot = ui.pixel_frame();
-                    if let Some(area) = snapshot.cell_area() {
-                        skip_image_cells(frame.buffer_mut(), area);
+                    native_frame = Some(frame.buffer_mut().clone());
+                    // Image protocols can erase their old rectangle. Paint
+                    // native text only after that operation has completed.
+                    for cell in &mut frame.buffer_mut().content {
+                        cell.set_skip(true);
                     }
-                    pixel_frame = Some(snapshot);
+                    pixel_frame = Some(ui.pixel_frame().with_text_backgrounds());
                 }
             })?;
-            image_presenter.present(terminal.backend_mut(), pixel_frame)?;
+            if ui.actions_changed_since_presented() {
+                image_presenter.next_frame = Instant::now();
+            }
+            if let Some(native_frame) = native_frame {
+                present_composed_frame(
+                    terminal.backend_mut(),
+                    &mut image_presenter,
+                    pixel_frame,
+                    &native_frame,
+                )?;
+            }
+
+            if !image_presenter.enabled() || image_presenter.current_frame_presented {
+                ui.frame_presented();
+            }
 
             if event::poll(FRAME)? {
-                if let TermEvent::Key(input) = event::read()? {
-                    if is_ctrl_c(input) {
-                        return Ok(());
-                    }
+                let input = event::read()?;
+                // Input updates must not wait for an animation pacing interval.
+                image_presenter.next_frame = Instant::now();
+                if let TermEvent::Paste(text) = input {
+                    ui.handle_paste(&text);
+                    continue;
+                }
+                {
                     let previous_view = ui.view();
-                    if ui.handle_key(input) == Some(UiCommand::Quit) {
-                        return Ok(());
+                    let command = match input {
+                        TermEvent::Key(key) => {
+                            if is_ctrl_c(key) {
+                                return Ok(());
+                            }
+                            ui.handle_key(key)
+                        }
+                        TermEvent::Mouse(mouse) => ui.handle_mouse(mouse),
+                        TermEvent::Resize(_, _) => {
+                            ui.invalidate_pointer();
+                            None
+                        }
+                        _ => None,
+                    };
+                    match command {
+                        Some(UiCommand::Quit) => return Ok(()),
+                        Some(UiCommand::Control(mut command)) => {
+                            if let theywork_render::views::control::Command::Start {
+                                project, ..
+                            } = &mut command
+                            {
+                                let absolute = match resolve_filesystem_path(Path::new(project)) {
+                                    Ok(path) => path,
+                                    Err(error) => {
+                                        ui.complete_control(error.to_string(), false);
+                                        continue;
+                                    }
+                                };
+                                *project = absolute.to_string_lossy().into_owned();
+                                let project = match normalize_cli_path(&absolute) {
+                                    Ok(path) => path,
+                                    Err(error) => {
+                                        ui.complete_control(error.to_string(), false);
+                                        continue;
+                                    }
+                                };
+                                if !runtime.config.only_paths.is_empty()
+                                    && !runtime
+                                        .config
+                                        .only_paths
+                                        .iter()
+                                        .any(|path| path == Path::new(&project))
+                                {
+                                    ui.complete_control("This view is scoped with --project. Open the full tower to create a task in another project.".into(),false);
+                                    continue;
+                                }
+                            }
+                            if let Err(error) = control.submit(command, &runtime.world) {
+                                ui.complete_control(error.to_string(), false);
+                            }
+                        }
+                        Some(UiCommand::Sources) => {
+                            let paused_sources = poller.stop();
+                            // Joining can finish an in-flight poll. Keep its events
+                            // before replacing the channel and resuming the cursors.
+                            for result in poller.drain() {
+                                for event in result.events {
+                                    runtime.world.apply(event);
+                                }
+                                for error in result.errors {
+                                    if !runtime.errors.contains(&error) {
+                                        runtime.errors.push(error);
+                                    }
+                                }
+                            }
+                            image_presenter.present(terminal.backend_mut(), None)?;
+                            let mut connection_args = active_args.clone();
+                            connection_args.setup = true;
+                            let value = connections::Connections::from_args(&connection_args)?;
+                            ui.invalidate_pointer();
+                            mouse_capture.sync(false)?;
+                            let action = connections::show(
+                                terminal,
+                                value,
+                                active_args.config_dir.as_deref(),
+                                active_args.remember.unwrap_or(true),
+                                !active_args.no_save,
+                                ui.mouse_enabled(),
+                                ui.preferences().light,
+                            )?;
+                            mouse_capture.sync(ui.mouse_enabled())?;
+                            let replaced_world = !matches!(&action, connections::Action::Cancel);
+                            match action {
+                                connections::Action::Connect { value, remember } => {
+                                    active_args.remember = Some(remember);
+                                    value.apply(&mut active_args);
+                                    active_args.demo = false;
+                                    active_args.setup = false;
+                                    *runtime = build_runtime(&active_args)?;
+                                    ui.open_tower();
+                                }
+                                connections::Action::Demo => {
+                                    active_args.demo = true;
+                                    *runtime = build_runtime(&active_args)?;
+                                    ui.open_tower();
+                                }
+                                connections::Action::Cancel => runtime.sources = paused_sources,
+                            }
+                            ui.set_observation_summary(source_observation(
+                                runtime,
+                                &runtime.errors,
+                                now,
+                            ));
+                            poller = Poller::start(std::mem::take(&mut runtime.sources));
+                            control = control_host::Host::start(
+                                connections::Connections::from_args(&active_args)?,
+                                runtime
+                                    .config_dir
+                                    .clone()
+                                    .filter(|_| runtime.save_preferences),
+                                !runtime.demo,
+                            );
+                            if replaced_world {
+                                control_cursor = theywork_control::BridgeCursor::default();
+                            }
+                            terminal.clear()?;
+                        }
+                        None => {}
                     }
                     if previous_view == View::Cameras && ui.view() == View::Office {
                         persist_selected_office(runtime, ui.selected_office(), now)?;
@@ -1596,6 +2045,64 @@ fn run(
         }
     })();
     poller.stop();
+    persist_notebook(runtime, &ui)?;
+    if let Some(directory) = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| runtime.save_preferences)
+    {
+        fs::create_dir_all(directory)?;
+        fs::write(
+            directory.join("appearance.json"),
+            serde_json::to_vec_pretty(&ui.preferences())?,
+        )?;
+        persist_selected_office(runtime, ui.selected_office(), now_ms())?;
+    }
+    result
+}
+
+fn persist_notebook(runtime: &Runtime, ui: &Ui) -> Result<()> {
+    if let Some(directory) = runtime
+        .config_dir
+        .as_ref()
+        .filter(|_| runtime.save_preferences)
+    {
+        fs::create_dir_all(directory)?;
+        let temporary = directory.join(format!(".notebook.{}.tmp", std::process::id()));
+        fs::write(&temporary, serde_json::to_vec_pretty(&ui.review_memory())?)?;
+        fs::rename(temporary, directory.join("notebook.json"))?;
+    }
+    Ok(())
+}
+
+/// A native child owns the real terminal until it exits or detaches. Restore
+/// the office even if spawning fails; never inject text into another console.
+fn handoff_console(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    command: &theywork_control::native::NativeCommand,
+) -> Result<bool> {
+    struct ReturnToOffice;
+    impl Drop for ReturnToOffice {
+        fn drop(&mut self) {
+            let _ = enable_raw_mode();
+            let _ = execute!(io::stdout(), EnterAlternateScreen, EnableBracketedPaste);
+            #[cfg(unix)]
+            TERMINATION_SIGNAL.store(0, Ordering::Relaxed);
+        }
+    }
+    disable_raw_mode()?;
+    let restore = ReturnToOffice;
+    execute!(
+        io::stdout(),
+        DisableBracketedPaste,
+        DisableMouseCapture,
+        LeaveAlternateScreen,
+        Show
+    )?;
+    println!("they-work · official provider console. Exit or detach to return to the office.");
+    let result = command.run().map(|status| status.success());
+    drop(restore);
+    terminal.clear()?;
     result
 }
 
@@ -1603,6 +2110,8 @@ struct TerminalImagePresenter {
     surface: Option<ImageSurface>,
     next_frame: Instant,
     last_area: Option<Rect>,
+    last_frame: Option<theywork_render::PixelFrame>,
+    current_frame_presented: bool,
 }
 
 impl TerminalImagePresenter {
@@ -1619,6 +2128,8 @@ impl TerminalImagePresenter {
             surface,
             next_frame: Instant::now(),
             last_area: None,
+            last_frame: None,
+            current_frame_presented: false,
         }
     }
 
@@ -1636,6 +2147,7 @@ impl TerminalImagePresenter {
             surface.resize(output, geometry)?;
             self.next_frame = Instant::now();
             self.last_area = None;
+            self.last_frame = None;
         }
         Ok(())
     }
@@ -1644,21 +2156,24 @@ impl TerminalImagePresenter {
         &mut self,
         output: &mut W,
         pixel_frame: Option<theywork_render::PixelFrame>,
-    ) -> Result<()> {
+    ) -> Result<bool> {
+        self.current_frame_presented = true;
         let Some(surface) = self.surface.as_mut() else {
-            return Ok(());
+            return Ok(false);
         };
         let Some(pixel_frame) = pixel_frame else {
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         };
         let Some(area) = pixel_frame.cell_area() else {
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         };
         let rectangle = CellRect::new(area.x, area.y, area.width, area.height);
         let frame_size = (
@@ -1666,24 +2181,44 @@ impl TerminalImagePresenter {
             u32::try_from(pixel_frame.height())?,
         );
         if surface.geometry().pixel_size(rectangle) != Some(frame_size) {
+            self.current_frame_presented = false;
             surface.clear(output)?;
             self.last_area = None;
+            self.last_frame = None;
             output.flush()?;
-            return Ok(());
+            return Ok(false);
         }
         let started = Instant::now();
-        if self.last_area == Some(area) && started < self.next_frame {
-            return Ok(());
+        if self.last_frame.as_ref() == Some(&pixel_frame) {
+            return Ok(true);
+        }
+        if self.last_area == Some(area)
+            && started < self.next_frame
+            && self
+                .last_frame
+                .as_ref()
+                .is_some_and(|previous| previous.text_cells() == pixel_frame.text_cells())
+        {
+            self.current_frame_presented = false;
+            return Ok(true);
         }
         let image = RgbaImage::new(frame_size.0, frame_size.1, pixel_frame.rgba().to_vec())?;
+        surface.clear(output)?;
+        // Remove old text from the art rectangle before replacing its pixels.
+        // ECH is bounded to a row and cannot wrap or scroll at the screen edge.
+        output.write_all(b"\x1b[0m")?;
+        for y in area.y..area.bottom() {
+            write!(output, "\x1b[{};{}H\x1b[{}X", y + 1, area.x + 1, area.width)?;
+        }
         let report = surface.draw(output, &image, rectangle)?;
         output.flush()?;
         self.last_area = Some(area);
+        self.last_frame = Some(pixel_frame);
         if surface.protocol() == theywork_terminal_image::GraphicsProtocol::Sixel {
             self.next_frame =
                 started + sixel_frame_interval(report.written_bytes, started.elapsed());
         }
-        Ok(())
+        Ok(true)
     }
 }
 
@@ -1695,19 +2230,51 @@ fn sixel_frame_interval(bytes: usize, write_time: Duration) -> Duration {
         .max(write_time.saturating_mul(2))
 }
 
-fn skip_image_cells(buffer: &mut Buffer, area: Rect) {
-    let right = area.x.saturating_add(area.width);
-    let bottom = area.y.saturating_add(area.height);
-    for y in area.y..bottom {
-        for x in area.x..right {
-            if let Some(cell) = buffer.cell_mut((x, y)) {
-                cell.set_skip(true);
-            }
+fn present_composed_frame<W: Write>(
+    output: &mut CrosstermBackend<W>,
+    presenter: &mut TerminalImagePresenter,
+    pixels: Option<theywork_render::PixelFrame>,
+    text: &Buffer,
+) -> Result<()> {
+    let area = pixels.as_ref().and_then(|frame| frame.cell_area());
+    let native_cells = pixels
+        .as_ref()
+        .map(|frame| {
+            frame
+                .text_cells()
+                .iter()
+                .map(|(x, y, _)| (*x, *y))
+                .collect::<HashSet<_>>()
+        })
+        .unwrap_or_default();
+    crossterm::queue!(output, crossterm::cursor::SavePosition)?;
+    let visible = presenter.present(output, pixels)?;
+    let mut next_column = 0;
+    output.draw(text.content.iter().enumerate().filter_map(|(index, cell)| {
+        let x = text.area.x + (index % usize::from(text.area.width)) as u16;
+        let y = text.area.y + (index / usize::from(text.area.width)) as u16;
+        if x == text.area.x {
+            next_column = x;
         }
-    }
+        if x < next_column {
+            return None;
+        }
+        next_column =
+            x.saturating_add(ratatui::text::Line::from(cell.symbol()).width().max(1) as u16);
+        (!visible
+            || !area.is_some_and(|area| area.contains((x, y).into()))
+            || native_cells.contains(&(x, y)))
+        .then_some((x, y, cell))
+    }))?;
+    crossterm::queue!(output, crossterm::cursor::RestorePosition)?;
+    Write::flush(output)?;
+    Ok(())
 }
 
 fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> Result<()> {
+    if !runtime.save_preferences {
+        return Ok(());
+    }
     let (Some(config_dir), Some(project)) = (
         runtime.config_dir.as_deref(),
         selected_office_path(&runtime.world, selected, now),
@@ -1718,19 +2285,17 @@ fn persist_selected_office(runtime: &Runtime, selected: usize, now: Millis) -> R
 }
 
 fn selected_office_path(world: &World, selected: usize, now: Millis) -> Option<String> {
-    let mut offices: Vec<_> = world.offices().collect();
-    offices.sort_by(|left, right| {
-        office_rank(left, now)
-            .cmp(&office_rank(right, now))
-            .then_with(|| left.path.cmp(&right.path))
-    });
-    offices.get(selected).map(|office| office.path.clone())
+    let _ = now;
+    world
+        .offices()
+        .nth(selected)
+        .map(|office| office.path.clone())
 }
 
 fn print_once(runtime: &Runtime) -> bool {
     let mut errors = runtime.errors.clone();
     if !runtime.demo {
-        for report in theywork_collect::inspect(&runtime.config, runtime.now) {
+        for report in theywork_collect::inspect_selected(&runtime.config, runtime.now) {
             match report.error {
                 Some(error) if report.home_found => {
                     let entry = format!("{}: {error}", report.agent.label());
@@ -1776,6 +2341,13 @@ fn print_once(runtime: &Runtime) -> bool {
         }
     }
 
+    if runtime.world.worker_count() == 0 {
+        println!(
+            "next=Start a conversation in a selected source, or run they-work --setup / --doctor."
+        );
+    } else {
+        println!("next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.");
+    }
     let has_errors = !errors.is_empty();
     for error in errors {
         println!("collector_error={}", plain_value(&error));
@@ -2003,9 +2575,89 @@ mod tests {
     }
 
     #[test]
+    fn mouse_option_overrides_saved_preference_and_rejects_ambiguous_values() {
+        for flags in [vec!["--mouse=off"], vec!["--mouse", "off"]] {
+            let args = parse(&flags).unwrap();
+            let mut ui = Ui::new();
+            configure_ui(&mut ui, &args, false, Default::default());
+            assert!(!ui.mouse_enabled());
+        }
+        let mut ui = Ui::new();
+        configure_ui(
+            &mut ui,
+            &parse(&["--mouse=on"]).unwrap(),
+            false,
+            theywork_render::RendererPreferences {
+                mouse: false,
+                ..Default::default()
+            },
+        );
+        assert!(ui.mouse_enabled());
+        assert!(parse(&["--mouse=maybe"]).is_err());
+        assert!(parse(&["--mouse"]).is_err());
+    }
+
+    #[test]
     fn accepts_demo_once_and_help() {
         assert!(parse(&["--demo", "--once"]).unwrap().demo);
         assert!(parse(&["--help"]).unwrap().help);
+    }
+
+    #[test]
+    fn explicit_camera_and_light_override_saved_preferences_absolutely() {
+        for (arguments, projection, light) in [
+            (vec!["--view", "side", "--light"], "side", true),
+            (vec!["--view", "iso", "--dark"], "isometric", false),
+            (vec!["--view", "top", "--light"], "top-down", true),
+        ] {
+            let args = parse(&arguments).unwrap();
+            let saved = theywork_render::RendererPreferences {
+                projection: "list".into(),
+                light: true,
+                ..Default::default()
+            };
+            let mut ui = Ui::new();
+            configure_ui(&mut ui, &args, false, saved);
+            assert_eq!(ui.preferences().projection, projection);
+            assert_eq!(ui.preferences().light, light);
+        }
+    }
+
+    #[test]
+    fn pausing_collectors_preserves_the_last_batch_and_does_not_replay_it() {
+        struct Once(bool);
+        impl Source for Once {
+            fn name(&self) -> &'static str {
+                "fixture"
+            }
+            fn poll(
+                &mut self,
+                now: Millis,
+            ) -> std::result::Result<Vec<Event>, theywork_core::SourceError> {
+                if self.0 {
+                    return Ok(Vec::new());
+                }
+                self.0 = true;
+                Ok(vec![Event {
+                    at: now,
+                    office: theywork_core::OfficeId("/fixture".into()),
+                    office_path: "/fixture".into(),
+                    worker: theywork_core::WorkerId("one".into()),
+                    agent: Agent::Codex,
+                    kind: theywork_core::EventKind::Seen {
+                        name: "One worker".into(),
+                        git_branch: None,
+                    },
+                }])
+            }
+        }
+        let mut poller = Poller::start(vec![Box::new(Once(false))]);
+        let sources = poller.stop();
+        let batches: Vec<_> = poller.drain().collect();
+        assert_eq!(batches.iter().map(|b| b.events.len()).sum::<usize>(), 1);
+        let mut resumed = Poller::start(sources);
+        resumed.stop();
+        assert_eq!(resumed.drain().map(|b| b.events.len()).sum::<usize>(), 0);
     }
 
     #[test]
@@ -2070,6 +2722,118 @@ mod tests {
             outcome: Some(theywork_core::Outcome::Exited(0)),
         });
         assert_eq!(worker_waiting_detail(&worker), None);
+    }
+
+    #[test]
+    fn source_summary_separates_disabled_missing_and_recovered_sources() {
+        let mut runtime = Runtime {
+            config: Config {
+                claude_home: None,
+                codex_home: None,
+                active_within: Duration::from_secs(60),
+                only_paths: vec![],
+            },
+            sources: vec![],
+            world: World::new(),
+            errors: vec!["previous failure".into()],
+            now: 0,
+            demo: false,
+            start_guard: false,
+            initial_project: None,
+            config_dir: None,
+            save_preferences: false,
+        };
+        let disabled = source_observation(&runtime, &[], 100);
+        assert_eq!(disabled.enabled_sources, 0);
+        assert!(disabled.errors.is_empty());
+        runtime.config.codex_home = Some(PathBuf::from("/nonexistent-theywork-fixture-folder"));
+        let missing = source_observation(&runtime, &[], 200);
+        assert_eq!(missing.enabled_sources, 1);
+        assert_eq!(missing.errors.len(), 1);
+        runtime.config.codex_home = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
+        runtime.config.only_paths.push(PathBuf::from("/project"));
+        let recovered = source_observation(&runtime, &[], 300);
+        assert!(
+            recovered.errors.is_empty(),
+            "old poll errors must not poison a recovered source"
+        );
+        assert!(recovered.filtered);
+        assert_eq!(recovered.checked_at, 300);
+        assert_eq!(
+            source_observation(&runtime, &["permission denied".into()], 400)
+                .errors
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn composed_frames_keep_help_above_images_and_repaint_after_erasure() {
+        let mut world = World::new();
+        for event in theywork_core::demo::events(0) {
+            world.apply(event);
+        }
+        for protocol in [
+            GraphicsProtocol::Sixel,
+            GraphicsProtocol::Iterm2,
+            GraphicsProtocol::Kitty {
+                direct_transmission: true,
+            },
+        ] {
+            let mut ui = Ui::new();
+            ui.set_image_cell_size(Some((8, 16)));
+            ui.handle_key(KeyEvent::new(KeyCode::Char('?'), KeyModifiers::NONE));
+            let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+            terminal.draw(|frame| ui.draw(frame, &world)).unwrap();
+            let pixels = ui.pixel_frame().with_text_backgrounds();
+            assert!(!pixels.text_cells().is_empty());
+            let capabilities = Capabilities {
+                graphics: protocol,
+                cell_size: Some(CellSize::new(8, 16)),
+                terminal_cells: Some((80, 24)),
+            };
+            let mut presenter = TerminalImagePresenter::new(capabilities, (80, 24));
+            let mut output = Vec::new();
+            present_composed_frame(
+                &mut CrosstermBackend::new(&mut output),
+                &mut presenter,
+                Some(pixels.clone()),
+                terminal.backend().buffer(),
+            )
+            .unwrap();
+            let help = output
+                .windows(4)
+                .position(|part| part == b"HELP")
+                .expect("native help text");
+            let image_end = match protocol {
+                GraphicsProtocol::Iterm2 => output.iter().rposition(|byte| *byte == 7).unwrap(),
+                _ => output
+                    .windows(2)
+                    .rposition(|part| part == b"\x1b\\")
+                    .unwrap(),
+            };
+            assert!(
+                help > image_end,
+                "{protocol:?}: text must follow the image and its clearing operations"
+            );
+            let original_length = output.len();
+            present_composed_frame(
+                &mut CrosstermBackend::new(&mut output),
+                &mut presenter,
+                Some(pixels),
+                terminal.backend().buffer(),
+            )
+            .unwrap();
+            let repeated = &output[original_length..];
+            assert!(repeated.windows(4).any(|part| part == b"HELP"));
+            assert!(!repeated
+                .windows(3)
+                .any(|part| part == b"\x1bPq" || part == b"\x1b_G"));
+            assert!(
+                repeated.ends_with(b"\x1b8"),
+                "restore the finder/text cursor after presentation"
+            );
+        }
     }
 
     #[test]
@@ -2140,8 +2904,47 @@ mod tests {
         let frame = diagnostic_frame(Ui::new(), capabilities, (160, 48))
             .expect("diagnostic renderer frame");
         assert_eq!(frame.mode, "graphics");
-        assert_eq!((frame.area.width, frame.area.height), (160, 43));
-        assert_eq!((frame.width, frame.height), (1_600, 860));
+        assert_eq!((frame.area.width, frame.area.height), (160, 45));
+        assert_eq!((frame.width, frame.height), (1_600, 900));
+    }
+
+    #[test]
+    fn paced_sixel_frames_do_not_acknowledge_unseen_pointer_geometry() {
+        use ratatui::style::Color;
+        use theywork_render::canvas::Canvas;
+        let mut canvas = Canvas::with_color_depth(8, 16, ColorDepth::TrueColor);
+        canvas.set_image_cell_size(Some((8, 16)));
+        let area = Rect::new(0, 0, 1, 1);
+        let mut buffer = Buffer::empty(area);
+        canvas.fill(Color::Red);
+        canvas.render(&mut buffer, area);
+        let first = canvas.pixel_frame();
+        let capabilities = Capabilities {
+            graphics: GraphicsProtocol::Sixel,
+            cell_size: Some(CellSize::new(8, 16)),
+            terminal_cells: Some((1, 1)),
+        };
+        let mut presenter = TerminalImagePresenter::new(capabilities, (1, 1));
+        let mut output = Vec::new();
+        assert!(presenter.present(&mut output, Some(first.clone())).unwrap());
+        assert!(presenter.current_frame_presented);
+        canvas.fill(Color::Blue);
+        canvas.render(&mut buffer, area);
+        let second = canvas.pixel_frame();
+        presenter.next_frame = Instant::now() + Duration::from_secs(1);
+        let bytes = output.len();
+        assert!(presenter
+            .present(&mut output, Some(second.clone()))
+            .unwrap());
+        assert!(!presenter.current_frame_presented);
+        assert_eq!(output.len(), bytes);
+        assert_eq!(presenter.last_frame, Some(first));
+        presenter.next_frame = Instant::now();
+        presenter
+            .present(&mut output, Some(second.clone()))
+            .unwrap();
+        assert!(presenter.current_frame_presented);
+        assert_eq!(presenter.last_frame, Some(second));
     }
 
     #[test]

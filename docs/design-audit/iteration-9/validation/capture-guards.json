@@ -1,0 +1,14 @@
+[
+  {
+    "case": "zero_matches",
+    "exit_code": 101,
+    "expected_error": "No capture cases matched",
+    "status": "pass"
+  },
+  {
+    "case": "wrong_color",
+    "exit_code": 101,
+    "expected_error": "Capture color override detected",
+    "status": "pass"
+  }
+]

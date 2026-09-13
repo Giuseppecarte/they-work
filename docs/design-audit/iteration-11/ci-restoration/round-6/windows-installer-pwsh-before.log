@@ -1,0 +1,7 @@
+Native macOS ARM64 PowerShell 7.6.6; simulated Windows ARM64 target selection
+Compress-Archive: /Users/gc/Documents/Programming/they-work/scripts/test-native-install.ps1:32
+Line |
+  32 |      Compress-Archive -Path $payload -DestinationPath (Join-Path $scra …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The path
+     | '/Users/gc/Documents/Programming/they-work/target/installer-tests/8de9f54a-227a-4fa4-93d5-a5c87aa49fe2/they-work.exe' either does not exist or is not a valid file system path.

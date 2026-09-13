@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work!                                    1/1 · / find · ? help
+  DESK / they-work  codex conversation · observed 4m 02s ago · read-only
+
+▄▄▄▄▄▄▄▄▄▄▄  Review the release plan for database migration and production
+▄▄▄▄▄▄▄▄▄▄▄  cutover
+▄▄▄▄▄▄▄▄▄▄▄   WAITING ON YOU
+▄▄▄▄▄▄▄▄▄▄▄   awaiting approval: deploy --project project-production-eu-west
+▄▄▄▄▄▄▄▄▄▄▄   --require-backup verified-2026-09-07 --migration
+▄▄▄▄▄▄▄▄▄▄▄   customer-account-id-index
+▄▄▄▄▄▄▄▄▄▄▄   Review this request in the original conversation.
+▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄
+┌ HISTORY · UTC · 1–8/17 · End latest ─────────────────────────────────────────┐
+│Conversation: Review the release plan for database migration and production   │
+│cutover                                                                       │
+│Thread: person-0                                                              │
+│Branch: main                                                                  │
+│                                                                              │
+│Today (UTC)                                                                   │
+│21:36 RAN      cargo test --workspace                                         │
+│               exit 0                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+ Original · w character   4.2K tokens · branch main
+  ↑↓ history  PgUp/PgDn page  ←→ desks  / find  p phone  Esc floor

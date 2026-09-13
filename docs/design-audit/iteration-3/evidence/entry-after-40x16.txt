@@ -1,0 +1,16 @@
+CONNECT YOUR TEAM
+Local messages & activity; no sign-in.
+┌ > [x] CLAUDE CODE ───────────────────┐
+│…iteration-3-entry/after-small/.claude│
+│Ready · reads after you press Enter   │
+└──────────────────────────────────────┘
+┌   [ ] CODEX ─────────────────────────┐
+│…/iteration-3-entry/after-small/.codex│
+│Off · no conversations will be read   │
+└──────────────────────────────────────┘
+  [x] Remember on this computer
+Save sources, appearance and floor.
+Use app data folders (.codex / .claude).
+Choose a source; e edits its folder.
+↑↓ choose  Space on/off  e edit folder
+Enter connect   d demo   Esc back

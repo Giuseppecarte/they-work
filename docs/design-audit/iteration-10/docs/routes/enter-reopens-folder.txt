@@ -1,0 +1,24 @@
+Connections / Sources
+Choose the conversations visible in your tower.
+Reads titles, messages and activity from local app data folders.
+No they-work account. Provider controls require a verified connection.
+  [x] Claude Code
+· …hey-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/claude
+  Ready · reads after Connect
+
+  [x] Codex
+> ‹hey-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/codex
+  Editing folder
+
+  [x] Remember on this computer
+Save sources and local appearance.
+App data folder: .codex / .claude
+
+
+
+
+
+
+←→ move · Ctrl+U clear
+[ Apply ] [ Cancel ]
+Enter applies · Esc cancels

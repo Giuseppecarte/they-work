@@ -1,0 +1,114 @@
+[
+  {
+    "action": "Key(Char('f'))",
+    "height": 1,
+    "width": 14,
+    "x": 0,
+    "y": 3
+  },
+  {
+    "action": "Key(Char('i'))",
+    "height": 1,
+    "width": 95,
+    "x": 15,
+    "y": 3
+  },
+  {
+    "action": "Key(Char('1'))",
+    "height": 1,
+    "width": 12,
+    "x": 0,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('2'))",
+    "height": 1,
+    "width": 13,
+    "x": 12,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('3'))",
+    "height": 1,
+    "width": 19,
+    "x": 25,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('4'))",
+    "height": 1,
+    "width": 7,
+    "x": 44,
+    "y": 4
+  },
+  {
+    "action": "NotebookSelect(\"17:floor-00-person-0:fixture-result\")",
+    "height": 1,
+    "width": 108,
+    "x": 1,
+    "y": 6
+  },
+  {
+    "action": "InspectRecord(WorkerId(\"floor-00-person-0\"), \"event:17:floor-00-person-0:fixture-result\")",
+    "height": 1,
+    "width": 16,
+    "x": 93,
+    "y": 7
+  },
+  {
+    "action": "Mark(\"17:floor-00-person-0:fixture-result\")",
+    "height": 1,
+    "width": 14,
+    "x": 1,
+    "y": 7
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 79
+  }
+]

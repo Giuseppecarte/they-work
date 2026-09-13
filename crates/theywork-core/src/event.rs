@@ -20,6 +20,15 @@ pub struct Event {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EventKind {
+    Identity {
+        identity: crate::ThreadIdentity,
+        role: crate::WorkerRole,
+    },
+    Relationship(crate::Relationship),
+    Collaboration(crate::CollaborationEvent),
+    Lifecycle(crate::WorkerLifecycle),
+    Coverage(crate::SourceCoverage),
+    Wait(Option<crate::WaitReason>),
     /// A worker exists, with this display name. Safe to emit repeatedly.
     Seen {
         name: String,
@@ -35,10 +44,14 @@ pub enum EventKind {
     /// Sets the current activity *and* appends to the timeline, so a collector
     /// never has to emit the same moment twice.
     Did(Beat),
+    /// Recovered historical evidence; never changes current state or freshness.
+    HistoricalBeat(Beat),
     /// Cumulative token count for this worker.
     Tokens(u64),
     /// A request/response turn started or finished.
-    Turn { in_flight: bool },
+    Turn {
+        in_flight: bool,
+    },
     /// The worker's session ended.
     Left,
 }

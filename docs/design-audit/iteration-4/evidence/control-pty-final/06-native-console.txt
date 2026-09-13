@@ -1,0 +1,41 @@
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-ijhe22do/vertical-project▏
+
+
+ native return; literal $(text)▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Sending to claude / /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-ijhe22do/vertical-t
+hey-work · official provider console. Exit or detach to return to the office.
+NATIVE_FIXTURE_READY: press Enter to return

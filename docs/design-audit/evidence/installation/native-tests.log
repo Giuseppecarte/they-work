@@ -1,0 +1,134 @@
+   Compiling cfg-if v1.0.4
+   Compiling smallvec v1.15.2
+   Compiling bitflags v2.13.1
+   Compiling libc v0.2.189
+   Compiling serde_core v1.0.229
+   Compiling log v0.4.34
+   Compiling scopeguard v1.2.0
+   Compiling itoa v1.0.18
+   Compiling simd-adler32 v0.3.10
+   Compiling zerocopy v0.8.56
+   Compiling allocator-api2 v0.2.21
+   Compiling lock_api v0.4.14
+   Compiling foldhash v0.1.5
+   Compiling adler2 v2.0.1
+   Compiling once_cell v1.21.4
+   Compiling equivalent v1.0.2
+   Compiling either v1.18.0
+   Compiling castaway v0.2.4
+   Compiling static_assertions v1.1.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling unicode-width v0.1.14
+   Compiling ryu v1.0.23
+   Compiling strum v0.26.3
+   Compiling crc32fast v1.5.1
+   Compiling miniz_oxide v0.9.1
+   Compiling itertools v0.13.0
+   Compiling compact_str v0.8.2
+   Compiling hashbrown v0.15.5
+   Compiling cassowary v0.3.0
+   Compiling unicode-width v0.2.0
+   Compiling libsqlite3-sys v0.30.1
+   Compiling zmij v1.0.23
+   Compiling miniz_oxide v0.8.9
+   Compiling flate2 v1.1.10
+   Compiling lru v0.12.5
+   Compiling fdeflate v0.3.7
+   Compiling bitflags v1.3.2
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling fallible-iterator v0.3.0
+   Compiling memchr v2.8.3
+   Compiling anyhow v1.0.104
+   Compiling errno v0.3.14
+   Compiling mio v1.2.2
+   Compiling parking_lot_core v0.9.12
+   Compiling png v0.17.16
+   Compiling signal-hook-registry v1.4.8
+   Compiling rustix v0.38.44
+   Compiling signal-hook v0.3.18
+   Compiling parking_lot v0.12.5
+   Compiling signal-hook-mio v0.2.5
+   Compiling crossterm v0.28.1
+   Compiling unicode-truncate v1.1.0
+   Compiling ratatui v0.29.0
+   Compiling theywork-terminal-image v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-terminal-image)
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling ahash v0.8.12
+   Compiling hashbrown v0.14.5
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling hashlink v0.9.1
+   Compiling rusqlite v0.32.1
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.30s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-f81342928e821f0f)
+
+running 12 tests
+test util::tests::normalizes_and_caps_details ... ok
+test util::tests::normalizes_real_office_path_spellings ... ok
+test util::tests::project_key_finds_unmounted_repository_root ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test tests::windows_profile_spellings_map_to_wsl_mounts ... ok
+test codex_source::tests::ended_threads_leave_every_codex_runtime_map ... ok
+test util::tests::parses_utc_timestamp_to_epoch_millis ... ok
+test util::tests::terminal_controls_are_visible_and_inert_before_truncation ... ok
+test tests::recent_populated_candidate_wins_over_stale_candidate ... ok
+test util::tests::unknown_paths_share_a_non_project_bucket ... ok
+test util::tests::project_hint_cannot_promote_home_or_codex_conversation ... ok
+test util::tests::codex_recorded_project_survives_a_store_only_mount ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/collectors.rs (target/native-macos/debug/deps/collectors-092e2e69a8f21c61)
+
+running 23 tests
+test claude_keeps_one_worker_in_one_office_across_path_spellings ... FAILED
+test claude_uses_file_mtime_for_all_untimestamped_lines_and_honors_recency ... ok
+test claude_carries_real_timestamps_and_accumulates_usage ... ok
+test claude_uses_project_key_when_repository_is_unmounted ... ok
+test claude_collapses_nested_workdirs_to_the_nearest_git_root ... ok
+test claude_tails_incrementally_rotates_and_discovers_sessions ... ok
+test claude_recovers_from_home_gap_deletion_and_same_size_replacement ... ok
+test claude_maps_tools_text_turns_and_names ... ok
+test collector_acceptance_live_when_homes_exist ... ignored, requires the live ~/.claude and ~/.codex stores
+test codex_applies_configured_recency_bound ... ok
+test codex_reads_roster_items_and_turn_state_incrementally ... ok
+test codex_hides_assessors_and_correlates_waiting_developers ... ok
+test collector_acceptance_fixtures ... ok
+test sources_wires_existing_homes_and_skips_missing_ones ... ok
+test codex_recovers_after_replacement_schema_loss_and_wal_lock ... ok
+test codex_groups_home_and_conversation_cwds_under_one_non_project_office ... ok
+test inspect_rejects_an_incomplete_codex_store ... ok
+test clean_wal_database_is_rejected_without_recreating_sidecars ... ok
+test codex_database_symlinks_cannot_escape_the_configured_home ... ok
+test cold_wal_snapshots_are_rejected_without_creating_shm ... ok
+test real_machine_smoke_when_homes_exist ... FAILED
+test collectors_soak_for_hours_with_changing_stores ... ok
+test inspect_distinguishes_empty_homes_from_unreadable_stores ... ok
+
+failures:
+
+---- claude_keeps_one_worker_in_one_office_across_path_spellings stdout ----
+
+thread 'claude_keeps_one_worker_in_one_office_across_path_spellings' panicked at crates/theywork-collect/tests/collectors.rs:614:5:
+assertion `left == right` failed
+  left: "/users/gc/documents/programming/they-work/docs/design-audit/tmp/theywork-collect-1788810941149084000-21778-4/repo"
+ right: "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/theywork-collect-1788810941149084000-21778-4/repo"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- real_machine_smoke_when_homes_exist stdout ----
+real-machine smoke: live source identifier and timestamps redacted
+
+thread 'real_machine_smoke_when_homes_exist' panicked at crates/theywork-collect/tests/collectors.rs:2940:9:
+Claude home exists but no active workers were collected
+
+
+failures:
+    claude_keeps_one_worker_in_one_office_across_path_spellings
+    real_machine_smoke_when_homes_exist
+
+test result: FAILED. 20 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.67s
+
+error: test failed, to rerun pass `-p theywork-collect --test collectors`

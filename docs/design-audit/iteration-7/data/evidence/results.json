@@ -1,0 +1,315 @@
+{
+  "boundaries": [
+    "real control supervisor and loopback IPC",
+    "public snapshot_events adapter",
+    "core World",
+    "public WorkBrief and Workboard"
+  ],
+  "excluded": [
+    "live provider",
+    "personal stores",
+    "terminal screenshot or usability test",
+    "long-running soak",
+    "collector transcript recovery"
+  ],
+  "kind": "bounded offline discovery; not a production acceptance pass",
+  "ordering_and_identity": [
+    {
+      "actual": [
+        {
+          "actor": "parent",
+          "at": 9990,
+          "id": "audit-turn:same-result:final",
+          "kind": "Result",
+          "recipient": null,
+          "text": "One result"
+        }
+      ],
+      "case": "duplicate_event_and_replayed_snapshot",
+      "finding": "pass: one semantic result after duplicate arrival and replay",
+      "oracle": {
+        "result_count": 1
+      }
+    },
+    {
+      "actual": [
+        {
+          "actor": "parent",
+          "at": 10000,
+          "id": "audit-turn:updated:final",
+          "kind": "Result",
+          "recipient": null,
+          "text": "new"
+        }
+      ],
+      "case": "newer_then_older_same_native_item",
+      "finding": "pass: older duplicate does not replace newer collaboration evidence",
+      "oracle": {
+        "result_count": 1,
+        "text": "new"
+      }
+    },
+    {
+      "actual": {
+        "edges": [
+          {
+            "at": 9980,
+            "child": "codex:23:/audit/synthetic-source:0::5:child",
+            "correlation_id": "spawn",
+            "evidence": "NativeEvent",
+            "kind": "Delegation",
+            "parent": "codex:23:/audit/synthetic-source:0::6:parent"
+          }
+        ],
+        "records": [
+          {
+            "actor": "parent",
+            "at": 9980,
+            "id": "audit-turn:spawn:child",
+            "kind": "Delegated",
+            "recipient": "child",
+            "text": null
+          }
+        ]
+      },
+      "case": "duplicate_recipients_and_self_recipient",
+      "finding": "pass: duplicate recipients and self edge do not fabricate extra workers/links",
+      "oracle": {
+        "edge_count": 1
+      }
+    },
+    {
+      "actual": {
+        "edge_count": 0
+      },
+      "case": "sender_mismatch",
+      "finding": "pass: mismatched sender is rejected",
+      "oracle": {
+        "edge_count": 0
+      }
+    },
+    {
+      "actual": {
+        "explicit_retained_event_replay": [
+          "before-roster"
+        ],
+        "roster_added_after_cursor_advanced": [],
+        "without_roster": []
+      },
+      "case": "result_before_actor_roster",
+      "finding": "reproduced at bridge boundary: event skipped without actor is not retried when roster appears after cursor advances; replay recovers it",
+      "oracle": {
+        "fabricated_actor_before_roster": false,
+        "result_ids_after_actor_known": [
+          "before-roster"
+        ]
+      },
+      "scope": "public bridge API scenario; not a claim that every provider emits this ordering"
+    }
+  ],
+  "retention": {
+    "actual": {
+      "after_changes": {
+        "coverage": "Local history · 1 partial · older changes may be missing",
+        "rows": [],
+        "scope": "project-b"
+      },
+      "after_deliveries": {
+        "coverage": "Local history · 1 partial",
+        "rows": [],
+        "scope": "project-b"
+      },
+      "before_deliveries": {
+        "coverage": "Local history · 1 partial",
+        "rows": [
+          {
+            "detail": "Charlie P. · Synthetic b delivered a result.\nUnread delivery in quiet project B\n\nFrom: Synthetic b\nTo: Not recorded\n\nPartial local history\nLive managed connection; relationship coverage depends on provider events\n\nRECORDED IDS\nTurn: audit-turn\nItem: unread-b\nEvidence: NativeEvent",
+            "key": "39:codex:23:/audit/synthetic-source:0::1:b:audit-turn:unread-b:final",
+            "label": "Result delivered · 1s ago",
+            "reviewed": false,
+            "title": "Synthetic b"
+          }
+        ],
+        "scope": "project-b"
+      },
+      "project_b_history_beats": 1,
+      "project_b_present": true,
+      "retained_collaboration": 512,
+      "review_markers_written": 0,
+      "work_brief": {
+        "coverage": "Partial local history\nLive managed connection; relationship coverage depends on provider events",
+        "remaining_records": [
+          {
+            "result": false,
+            "text": "Text update: Unread delivery in quiet project B"
+          }
+        ],
+        "result_records": 0
+      }
+    },
+    "case": "quiet_project_unread_delivery_evicted_by_other_project",
+    "finding": "reproduced: B remains present and its text beat may remain, but its unread delivery/result classification is evicted by A; generic history warning has no per-project eviction interval",
+    "oracle": {
+      "project_a_events": 513,
+      "project_b_unread_results": [
+        "unread-b"
+      ],
+      "total_evidence_events": 514
+    }
+  },
+  "schema_version": 1,
+  "supervisor_gaps": [
+    {
+      "actual": {
+        "automatic_replies": 0,
+        "changes": {
+          "coverage": "Local history · 2 partial · older changes may be missing",
+          "rows": [
+            {
+              "detail": "Rene J. · Synthetic audit only recorded a question or approval request.\necho fixture-only\n\nFrom: Synthetic audit only\nTo: Not recorded\n\nPartial local history\nLive managed connection; relationship coverage depends on provider events\n\nRECORDED IDS\nTurn: audit-turn\nItem: audit-command\nEvidence: NativeEvent",
+              "key": "131:codex:109:/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-data/20260908T212314/gap-300/home:0::6:parent:audit-turn:audit-command:request",
+              "label": "Request recorded · 0s ago",
+              "reviewed": false,
+              "title": "project / Synthetic audit only"
+            }
+          ],
+          "scope": "All floors"
+        },
+        "collaboration": [
+          {
+            "actor": "parent",
+            "at": 1788902595749,
+            "id": "audit-turn:audit-command:request",
+            "kind": "HumanRequest",
+            "recipient": null,
+            "text": "echo fixture-only"
+          }
+        ],
+        "core_wait": "HumanApproval",
+        "coverage": {
+          "available": true,
+          "detail": "Live managed connection; relationship coverage depends on provider events",
+          "incomplete": true,
+          "lifecycle": "Supported",
+          "messages": "Partial",
+          "observed_at": 1788902595767,
+          "relationships": "Partial"
+        },
+        "cursor_before": 1,
+        "deliveries": {
+          "coverage": "Local history · 2 partial",
+          "rows": [],
+          "scope": "All floors"
+        },
+        "first_retained_sequence": 46,
+        "last_sequence": 301,
+        "missing_sequence_count": 44,
+        "pending_requests": 1,
+        "relationships": 0,
+        "result_ids": [],
+        "retained_events": 256,
+        "roster_threads": 2,
+        "turn_start_calls": 1,
+        "work_brief": {
+          "coverage": "Partial local history\nLive managed connection; relationship coverage depends on provider events",
+          "result_records": 0,
+          "state": "Approval needed",
+          "team_members": 0
+        }
+      },
+      "case": "supervisor_paused_300",
+      "execution": "real supervisor and authenticated local IPC; fake Python provider",
+      "finding": "reproduced: bounded event ring loses early results/delegation for paused consumer; current roster and pending request survive; generic partial coverage does not identify the sequence gap",
+      "oracle": {
+        "emitted_after_cursor": 300,
+        "pending_request": "audit-approval",
+        "relationship_edges": [
+          [
+            "parent",
+            "child"
+          ]
+        ],
+        "result_ids": [
+          "early-child-result",
+          "early-parent-result"
+        ]
+      }
+    },
+    {
+      "actual": {
+        "automatic_replies": 0,
+        "changes": {
+          "coverage": "Local history · 2 partial · older changes may be missing",
+          "rows": [
+            {
+              "detail": "Alex A. · Synthetic audit only recorded a question or approval request.\necho fixture-only\n\nFrom: Synthetic audit only\nTo: Not recorded\n\nPartial local history\nLive managed connection; relationship coverage depends on provider events\n\nRECORDED IDS\nTurn: audit-turn\nItem: audit-command\nEvidence: NativeEvent",
+              "key": "132:codex:110:/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-data/20260908T212314/gap-3000/home:0::6:parent:audit-turn:audit-command:request",
+              "label": "Request recorded · 0s ago",
+              "reviewed": false,
+              "title": "project / Synthetic audit only"
+            }
+          ],
+          "scope": "All floors"
+        },
+        "collaboration": [
+          {
+            "actor": "parent",
+            "at": 1788902595958,
+            "id": "audit-turn:audit-command:request",
+            "kind": "HumanRequest",
+            "recipient": null,
+            "text": "echo fixture-only"
+          }
+        ],
+        "core_wait": "HumanApproval",
+        "coverage": {
+          "available": true,
+          "detail": "Live managed connection; relationship coverage depends on provider events",
+          "incomplete": true,
+          "lifecycle": "Supported",
+          "messages": "Partial",
+          "observed_at": 1788902596039,
+          "relationships": "Partial"
+        },
+        "cursor_before": 1,
+        "deliveries": {
+          "coverage": "Local history · 2 partial",
+          "rows": [],
+          "scope": "All floors"
+        },
+        "first_retained_sequence": 2746,
+        "last_sequence": 3001,
+        "missing_sequence_count": 2744,
+        "pending_requests": 1,
+        "relationships": 0,
+        "result_ids": [],
+        "retained_events": 256,
+        "roster_threads": 2,
+        "turn_start_calls": 1,
+        "work_brief": {
+          "coverage": "Partial local history\nLive managed connection; relationship coverage depends on provider events",
+          "result_records": 0,
+          "state": "Approval needed",
+          "team_members": 0
+        }
+      },
+      "case": "supervisor_paused_3000",
+      "execution": "real supervisor and authenticated local IPC; fake Python provider",
+      "finding": "reproduced: bounded event ring loses early results/delegation for paused consumer; current roster and pending request survive; generic partial coverage does not identify the sequence gap",
+      "oracle": {
+        "emitted_after_cursor": 3000,
+        "pending_request": "audit-approval",
+        "relationship_edges": [
+          [
+            "parent",
+            "child"
+          ]
+        ],
+        "result_ids": [
+          "early-child-result",
+          "early-parent-result"
+        ]
+      }
+    }
+  ]
+}

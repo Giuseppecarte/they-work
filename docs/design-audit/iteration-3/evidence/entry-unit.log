@@ -1,0 +1,28 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.21s
+     Running unittests src/main.rs (target/native-macos/debug/deps/they_work-8f65201c07ce41f3)
+
+running 20 tests
+test connections::tests::config_location_respects_platform_and_ignores_relative_environment ... ok
+test connections::tests::disabled_sources_have_no_collector_paths ... ok
+test tests::accepts_demo_once_and_help ... ok
+test connections::tests::editor_preserves_unicode_and_edits_at_cursor ... ok
+test connections::tests::long_path_editor_keeps_cursor_visible ... ok
+test tests::blocked_output_does_not_relabel_old_history_as_pending ... ok
+test tests::cli_details_are_one_bounded_line ... ok
+test tests::formats_plain_text_ages_and_quotes ... ok
+test tests::image_presenter_falls_back_to_cells_without_pixel_geometry ... ok
+test tests::image_presenter_is_a_noop_without_graphics_support ... ok
+test tests::parses_bounded_headless_mode ... ok
+test tests::parses_linux_process_cpu_ticks_and_computes_average ... ok
+test tests::explicit_camera_and_light_override_saved_preferences_absolutely ... ok
+test tests::parses_the_real_command_surface ... ok
+test tests::rejects_invalid_values_and_conflicts ... ok
+test tests::pausing_collectors_preserves_the_last_batch_and_does_not_replay_it ... ok
+test tests::sixel_pacing_limits_rate_bytes_and_slow_writes ... ok
+test connections::tests::setup_actions_and_memory_choice_remain_visible ... ok
+test tests::image_presenter_encodes_the_renderer_snapshot_when_supported ... ok
+test tests::doctor_frame_uses_the_real_renderer_destination ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s

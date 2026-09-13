@@ -1,0 +1,418 @@
+{
+  "idle-half-blocks-top-192x58-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      268,
+      685,
+      1097,
+      1505,
+      1936,
+      2347,
+      2754,
+      3168,
+      3578,
+      3981,
+      4389,
+      4796
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 16560,
+    "max_clothing_pixels": 17370,
+    "motion_enabled": true,
+    "terminal_environment": "apple256",
+    "requested_projection": "top",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 top-down",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-half-blocks-top-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-half-blocks-top-192x58-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      268,
+      680,
+      1091,
+      1501,
+      1906,
+      2317,
+      2729,
+      3148,
+      3570,
+      4000,
+      4410,
+      4820
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 16830,
+    "max_clothing_pixels": 16830,
+    "motion_enabled": false,
+    "terminal_environment": "apple256",
+    "requested_projection": "top",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 top-down",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-half-blocks-top-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-half-blocks-side-192x58-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      273,
+      696,
+      1134,
+      1549,
+      1980,
+      2416,
+      2837,
+      3262,
+      3674,
+      4102,
+      4556,
+      4989
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 39420,
+    "max_clothing_pixels": 41040,
+    "motion_enabled": true,
+    "terminal_environment": "apple256",
+    "requested_projection": "side",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 side",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-half-blocks-side-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-half-blocks-side-192x58-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      271,
+      693,
+      1114,
+      1534,
+      1953,
+      2367,
+      2784,
+      3196,
+      3618,
+      4024,
+      4439,
+      4850
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 50850,
+    "max_clothing_pixels": 50850,
+    "motion_enabled": false,
+    "terminal_environment": "apple256",
+    "requested_projection": "side",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 side",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-half-blocks-side-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-top-192x58-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      282,
+      701,
+      1122,
+      1539,
+      1958,
+      2385,
+      2813,
+      3233,
+      3661,
+      4105,
+      4537,
+      4966
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 16515,
+    "max_clothing_pixels": 17325,
+    "motion_enabled": true,
+    "terminal_environment": "apple256",
+    "requested_projection": "top",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 top-down",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-quadrants-top-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-top-192x58-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      278,
+      699,
+      1112,
+      1534,
+      1964,
+      2383,
+      2800,
+      3216,
+      3636,
+      4074,
+      4496,
+      4916
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 16875,
+    "max_clothing_pixels": 16875,
+    "motion_enabled": false,
+    "terminal_environment": "apple256",
+    "requested_projection": "top",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 top-down",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-quadrants-top-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-side-192x58-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      282,
+      732,
+      1159,
+      1579,
+      1994,
+      2415,
+      2833,
+      3248,
+      3674,
+      4087,
+      4505,
+      4915
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 48690,
+    "max_clothing_pixels": 49590,
+    "motion_enabled": true,
+    "terminal_environment": "apple256",
+    "requested_projection": "side",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 side",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-quadrants-side-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-side-192x58-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      281,
+      750,
+      1181,
+      1603,
+      2030,
+      2460,
+      2910,
+      3391,
+      3816,
+      4234,
+      4656,
+      5092
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 50265,
+    "max_clothing_pixels": 50265,
+    "motion_enabled": false,
+    "terminal_environment": "apple256",
+    "requested_projection": "side",
+    "clothing_rgb_lookup": [
+      [
+        0,
+        95,
+        175
+      ],
+      [
+        95,
+        175,
+        215
+      ],
+      [
+        135,
+        175,
+        255
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 idle \u2022 floor quiet \u2022 side",
+    "skin_adjacent_clothing_only": true,
+    "indexed_ansi_observed": true,
+    "passed": true
+  },
+  "idle-quadrants-side-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

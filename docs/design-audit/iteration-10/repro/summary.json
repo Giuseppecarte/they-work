@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "status": "verified",
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "scope": "One complete compositor frame and one synthetic collector fixture per independent clean checkout",
+  "platforms": {
+    "macos": {
+      "status": "verified",
+      "metadata": "macos/metadata.json",
+      "runner_tests_executed": 13,
+      "collector_tests_executed": 1,
+      "captures": 1,
+      "tracked_files_unchanged": true,
+      "status_before": "",
+      "status_after": "",
+      "source_hashes_match_candidate": true,
+      "png_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+      "image": {
+        "width": 640,
+        "height": 384,
+        "sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+        "rgb_sha256": "265f19198c1ff114bdff3cfedb4fa9e2f15c65f8d13dbffff6c6cd04a616b90e",
+        "zlib": "1.3.1.zlib-ng",
+        "pillow": "12.3.0",
+        "freetype": "2.14.3",
+        "layout_engine": "BASIC",
+        "font_size": 13,
+        "fonts": {
+          "family": "DejaVu Sans Mono",
+          "version": "2.37",
+          "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+          "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+          "license": "LICENSE.txt",
+          "unmodified": true,
+          "files": {
+            "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+            "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+            "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+          }
+        },
+        "native_cells": 668,
+        "visual_review": "not-tested",
+        "terminal_transport": "not-tested"
+      },
+      "native_hit_regions": 48,
+      "network_disabled_at_transport": false,
+      "full_frame_visual_review": {
+        "status": "pass",
+        "png_sha256": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+        "scope": "Complete 640\u00d7384 viewport; both populated floors, native toolbar/footer and labels, image/native alignment, readable glyphs",
+        "terminal_transport": "not tested"
+      }
+    },
+    "linux": {
+      "status": "verified",
+      "metadata": "linux/metadata.json",
+      "runner_tests_executed": 13,
+      "collector_tests_executed": 1,
+      "captures": 1,
+      "tracked_files_unchanged": true,
+      "status_before": "",
+      "status_after": "",
+      "source_hashes_match_candidate": true,
+      "png_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+      "image": {
+        "width": 640,
+        "height": 384,
+        "sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+        "rgb_sha256": "265f19198c1ff114bdff3cfedb4fa9e2f15c65f8d13dbffff6c6cd04a616b90e",
+        "zlib": "1.2.13",
+        "pillow": "12.3.0",
+        "freetype": "2.14.3",
+        "layout_engine": "BASIC",
+        "font_size": 13,
+        "fonts": {
+          "family": "DejaVu Sans Mono",
+          "version": "2.37",
+          "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+          "source_archive_sha256": "fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7",
+          "license": "LICENSE.txt",
+          "unmodified": true,
+          "files": {
+            "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+            "DejaVuSansMono-Bold.ttf": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769",
+            "LICENSE.txt": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+          }
+        },
+        "native_cells": 668,
+        "visual_review": "not-tested",
+        "terminal_transport": "not-tested"
+      },
+      "native_hit_regions": 48,
+      "network_disabled_at_transport": true,
+      "full_frame_visual_review": {
+        "status": "pass",
+        "png_sha256": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+        "scope": "Complete 640\u00d7384 viewport; both populated floors, native toolbar/footer and labels, image/native alignment, readable glyphs",
+        "terminal_transport": "not tested"
+      }
+    }
+  },
+  "linux_image": {
+    "id": "sha256:8ae3f2e3f39a356975b296a8f80d5c17a338b0a9779465ac3cf38e11b7b2f252",
+    "os": "linux",
+    "architecture": "arm64"
+  },
+  "limitations": [
+    "Linux ARM64 Docker on macOS; not a physical Linux terminal",
+    "macOS Rust toolchain/cache explicitly supplied; bootstrap still fetched locked dependencies",
+    "macOS smoke is Cargo-offline but not disconnected at transport; Linux additionally --network none",
+    "No physical-terminal transport, input latency or authenticated provider evidence"
+  ],
+  "cross_platform_raw_identical": {
+    "inventory.json": true,
+    "tower-image-80x24.cells.json": true,
+    "tower-image-80x24.hits.json": true,
+    "tower-image-80x24.rgba": true,
+    "tower-image-80x24.txt": true
+  },
+  "cross_platform_rgb_identical": true,
+  "files_sha256": {
+    "REPRO.md": "61ac75121c0f3b294b3e6bfbb17f97c710f8bc7e8ae487ec2a35416c7342bba6",
+    "baseline-summary.json": "6da5b2fcc4377ff3c4b329a58b237acc5aba1ce24da97d3f577dcacfcdae1635",
+    "linux/bootstrap-cargo.log": "efec218dda816d5849f21b022242c96e7dfcabc017c64048770be1fa16f6d2e4",
+    "linux/bootstrap-pillow.log": "8073f2f37ef80e4855531dff3608d7cb06e48aac5d066fedb63983b6dc4f46b9",
+    "linux/bootstrap-venv.log": "0dcb5d658a373cea3337f9fc4b41583caf99fffc7968f70d4aee050d136fb932",
+    "linux/bootstrap.json": "a0a4610cfead245f3d55806e8167abfb75b3d821d69dc33ef93942a483ab0da3",
+    "linux/index.html": "42605b57d65ceffe1d709e5d9cdb76ef423f8144a3beb024ec2ee00e66b19a69",
+    "linux/logs/capture.log": "3f6c3c68261386cc988e012a2aa36837515f0c63d8b7e1226d882009b890a003",
+    "linux/logs/cargo-build.log": "6d1f0541691bdd50c22899218e1dc86e877e686792cafc021393bce8c1e6bab1",
+    "linux/logs/fixture.log": "03d92cf9d9ec5f6264e45c60d552e3b62e223828ac2f808348020d68dcb8b458",
+    "linux/logs/replay.log": "efca8cec63fedcbd2b3ecc6d7b1a79a13a296f004cbd1b68288d0f70b4714943",
+    "linux/metadata.json": "7b4a9d432154c53a6177cecc411cceae3bf7d4079cec89c54ee18c151edd63b9",
+    "linux/raw/inventory.json": "f174c12bb1a04cae965e2b8f23e44a4500db5708f8244e807d9600dd2d5b299a",
+    "linux/raw/tower-image-80x24.cells.json": "c835b9e38bfea9dbed4180bcf634dde8c0082272fa6e10de252ecbe25fa76456",
+    "linux/raw/tower-image-80x24.hits.json": "64a7b361dd5e04e96d877a6c5e65110a544380d74ea252261e403cbc0b06e108",
+    "linux/raw/tower-image-80x24.rgba": "439c98bec62e3b0b23cbf89f5bde7a5ef3c53249b2db9361743ee729c23a5115",
+    "linux/raw/tower-image-80x24.txt": "eb6f2c854c7019db58693d1bad4444ee88b0c51847ca04483413614254cffb28",
+    "linux/tower-image-80x24.png": "9893f9f3fbf75ebf0f09bac65c1fac579baf886e94eabe2317d37314e907dcc5",
+    "linux-baseline-metadata.json": "aef6f0f7614338592ff6b8e4f4224a09cdcae5a246e8944a5cbdc2cdfee55d50",
+    "linux-bootstrap.log": "05ec49bc7147c9c61d8a83b06111f9cc36e5a342315a0a7b2dd4b49080fa1ffa",
+    "linux-final-runner-tests.log": "745467cb52b0b25840fec42224b4b99fca5ac312e6a624f290629c9acf3eb6af",
+    "linux-final-smoke.log": "80435c1b36e391a2aea1bc1fc908a9313e021836cfb576ac6e27121c17972a92",
+    "linux-image.json": "5f084ecae81cda13c426847f96f6c0366724367b2b58249168a9ebad66bd80ef",
+    "linux-runner-tests.log": "cad1c72d6de025511534bdbee659efc3d955a79720982c0bf443cd397b34b432",
+    "linux-smoke.log": "048bda49dc0e042fabb2634f6f49b2c9e08e7f229c9df8d5ea6ba79a404ac1e9",
+    "macos/bootstrap-cargo.log": "1a946b6884c489f770314522057f2670e777b6be09e9991e3102dccc1b1036ea",
+    "macos/bootstrap-pillow.log": "e006f6a264e60b42080e746b931a350f81ab315e998739121553e5f0a8bb2dbf",
+    "macos/bootstrap-venv.log": "633bb9325e63f7d6bddd182184bdb51e8030d27eb9b3b95423f75e2490b82c37",
+    "macos/bootstrap.json": "26bfdf07c803d2fba13baa05e0623865d1f7ceb59d2bde933cba80816c1cd084",
+    "macos/index.html": "42605b57d65ceffe1d709e5d9cdb76ef423f8144a3beb024ec2ee00e66b19a69",
+    "macos/logs/capture.log": "c5c1a41a52220af845e45a03ff3d92ca3ea9f0f8f4ca2e717f73cac7ec1cb2a1",
+    "macos/logs/cargo-build.log": "d68cd5d0e126c7a0750537fbb33598f4a17215666a6ee6c2f386c4100749bb84",
+    "macos/logs/fixture.log": "971092694bd0a31292e52dd509fe217f5dd45131aeeca6428eeccc174fbe871e",
+    "macos/logs/replay.log": "1848225c8c0de5f5a33dc08791e740e5b16188ba46501ae335c029e5f7aa674f",
+    "macos/metadata.json": "2033261e8c8ecbe00920bb280bd65f84c79e80fc95e4b7a0e0f0deaeaa4bf961",
+    "macos/raw/inventory.json": "f174c12bb1a04cae965e2b8f23e44a4500db5708f8244e807d9600dd2d5b299a",
+    "macos/raw/tower-image-80x24.cells.json": "c835b9e38bfea9dbed4180bcf634dde8c0082272fa6e10de252ecbe25fa76456",
+    "macos/raw/tower-image-80x24.hits.json": "64a7b361dd5e04e96d877a6c5e65110a544380d74ea252261e403cbc0b06e108",
+    "macos/raw/tower-image-80x24.rgba": "439c98bec62e3b0b23cbf89f5bde7a5ef3c53249b2db9361743ee729c23a5115",
+    "macos/raw/tower-image-80x24.txt": "eb6f2c854c7019db58693d1bad4444ee88b0c51847ca04483413614254cffb28",
+    "macos/tower-image-80x24.png": "0acf49a84dd45bf8d7ae1cfe19813c1ec0f730104e32b5dfb7e69efdba78557e",
+    "macos-baseline-metadata.json": "542b43d0b301a51eda482a98885a9cb0fec187db098eef892db607dea37588d2",
+    "macos-bootstrap-network.log": "70bec74f547b0c2306bd3085332e8db786844a48fc0b3b358be7e8518ae79143",
+    "macos-bootstrap.log": "ce4a9d24bad4bdfd45065785d419eb386b88c17cd625b6638c1c24fb41255496",
+    "macos-final-runner-tests.log": "589321c48fc5ecfa756079c8cb772d3656c02fe5038aecc5b5b7e0f320bf3b48",
+    "macos-final-smoke.log": "171d4ce977780ded6943b2dc5892d6de161b13a6825f81109be5f9bc9a4967e7",
+    "macos-runner-tests.log": "bdca544007cfee9a360bf40c2f001d1d5305b11d16d5acf4ece2eb2e7d49c9b8",
+    "macos-smoke.log": "994532967b7190f7c1fb8e23a6bb3f96018fd57d9bf81aaa3ed88ff797429156"
+  }
+}

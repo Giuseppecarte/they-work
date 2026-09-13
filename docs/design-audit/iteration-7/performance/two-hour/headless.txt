@@ -1,0 +1,7 @@
+they-work --headless
+target_fps=10 effective_fps=9.44 frame_ms=100 poll_interval_ms=1000 exit_after_ms=7200000 elapsed_ms=7200019 frames=67937 polls=7039 events=874400 poll_errors=0
+roster initial_offices=20 final_offices=20 office_min=20 office_max=20 initial_workers=50 final_workers=50 worker_min=50 worker_max=50 changes=0 joined=0 left=0 unique_workers=50
+rss_before_bytes=unavailable
+rss_after_initial_scan_bytes=unavailable
+rss_after_bytes=unavailable
+cpu_seconds=unavailable cpu_average_percent=unavailable

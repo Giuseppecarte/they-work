@@ -1,0 +1,41 @@
+ 0 TOWER >1 vertical-project!                                                                     1/1 · / find · c sources · ? help
+
+ NEW TASK
+
+   Provider: codex  ←/→ change
+   Project: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-0x4axde5/vertical-project▏
+
+
+ ▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Confirmed: Instruction accepted · operation a78f5e58130cf131aa9417c1967c15be15568cfec558988d8073ff185778e310
+ F5 send · F2 stop · F3 console · F4 requests · F6 reconnect · Esc back

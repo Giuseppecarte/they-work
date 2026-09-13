@@ -1,0 +1,175 @@
+[
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "working",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "shared",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/concurrent/project with spaces",
+        "prompt": "different",
+        "operation_id": "shared"
+      }
+    },
+    "response": {
+      "value": null,
+      "error": "Operation ID was reused for a different action"
+    }
+  }
+]

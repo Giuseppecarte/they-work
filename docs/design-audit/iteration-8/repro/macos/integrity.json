@@ -1,0 +1,28 @@
+{
+  "method": "Compare tracked diff and status before/after final bounded smoke, after applying final candidate sources",
+  "before_status": " M .github/workflows/ci.yml\n M .github/workflows/native.yml\n M .github/workflows/release.yml\n M CONTRIBUTING.md\n M INSTALL.md\n M crates/theywork-core/src/source.rs\n M crates/theywork-render/src/views/control.rs\n M docs/CONTROLS.md\n M docs/project-selection.md\n M scripts/test-published-image.py\n?? docs/AUDIT.md\n?? scripts/audit.py\n?? scripts/audit_assets/\n?? scripts/audit_replay.py\n?? scripts/test-audit.py\n",
+  "before_diff_sha256": "d5ef2fe09c9439d57259c73cc5e1803ef063c8c35b68042c9317958f430e0090",
+  "after_status": " M .github/workflows/ci.yml\n M .github/workflows/native.yml\n M .github/workflows/release.yml\n M CONTRIBUTING.md\n M INSTALL.md\n M crates/theywork-core/src/source.rs\n M crates/theywork-render/src/views/control.rs\n M docs/CONTROLS.md\n M docs/project-selection.md\n M scripts/test-published-image.py\n?? docs/AUDIT.md\n?? scripts/audit.py\n?? scripts/audit_assets/\n?? scripts/audit_replay.py\n?? scripts/test-audit.py\n",
+  "after_diff_sha256": "d5ef2fe09c9439d57259c73cc5e1803ef063c8c35b68042c9317958f430e0090",
+  "unchanged": true,
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "scripts/audit.py",
+        "smoke",
+        "--output",
+        "target/audit/smoke/integrated-final"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "target/audit/venv/bin/python",
+        "-B",
+        "scripts/test-audit.py"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

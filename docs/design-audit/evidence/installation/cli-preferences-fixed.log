@@ -1,0 +1,4 @@
+{"args": ["--light"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "top-down", "light": true}}
+{"args": ["--dark"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "top-down", "light": false}}
+{"args": ["--view", "side"], "exit": 0, "before": {"projection": "top-down", "light": true}, "after": {"projection": "side", "light": true}}
+PASS: explicit CLI settings override remembered appearance without toggling.

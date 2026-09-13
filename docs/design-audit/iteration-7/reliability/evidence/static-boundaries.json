@@ -1,0 +1,54 @@
+{
+  "windows_state_replace": {
+    "code_observation": {
+      "path": "crates/theywork-control/src/security.rs",
+      "sha256": "0cf7e124202f353af613b18aba205b9d63a77cb8a45944d27946dcc0ffed48b4",
+      "first_line": 79,
+      "second_line": 81,
+      "first_precedes_second": true
+    },
+    "runtime_status": "not-tested",
+    "known": "The Windows branch removes the previous state file before renaming the replacement.",
+    "hypothesis": "A process or machine failure in that interval can leave no state file and lose saved ownership/receipts.",
+    "next_experiment": "On a Windows VM, stop at that exact interval and restart; inspect ownership and same-ID behavior without provider tasks."
+  },
+  "publish_before_verify": {
+    "code_observation": {
+      "path": ".github/workflows/release.yml",
+      "sha256": "dc0a3c7c18d5aa8fad562c683212c8cbddfc7aa4c1efd107404d54e943b6b3aa",
+      "first_line": 52,
+      "second_line": 57,
+      "first_precedes_second": true
+    },
+    "runtime_status": "not-tested",
+    "known": "The workflow pushes the version and latest container tags before the published-image smoke check; native release assets depend on that check.",
+    "hypothesis": "A failed post-push check leaves newly advanced container tags without a completed native release.",
+    "next_experiment": "Rehearse failure after push in a disposable registry/workflow stub; inspect tags and release state. Do not publish public artifacts."
+  },
+  "remaining_execution_gaps": [
+    {
+      "case": "Windows installer, user PATH and running executable replacement",
+      "status": "not-tested"
+    },
+    {
+      "case": "Windows control DACL, console and detached host runtime",
+      "status": "not-tested"
+    },
+    {
+      "case": "Real HTTP redirects, release download, signing/notarization and OS launch prompts",
+      "status": "not-tested"
+    },
+    {
+      "case": "Cross-version preference/control-state migration",
+      "status": "not-tested"
+    },
+    {
+      "case": "Actual ENOSPC disk exhaustion and physical power loss",
+      "status": "not-tested"
+    },
+    {
+      "case": "Authenticated providers and provider task side effects",
+      "status": "not-tested"
+    }
+  ]
+}

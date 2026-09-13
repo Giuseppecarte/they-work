@@ -1,0 +1,40 @@
+{
+  "terminal_cells": [
+    80,
+    24
+  ],
+  "cell_pixels": [
+    8,
+    16
+  ],
+  "probe": "controlled Kitty direct OK response",
+  "binary_sha256": "01ea1eb2fbf1bdedd166b4379dcc1bd8889f5278c5c6c1bc4e2fd549ea06cb94",
+  "help": {
+    "bytes": 1062090,
+    "sha256": "9ffb3e6b618fea09cd483bc23449fc4238a6e50e6340ff7ff59da457738e7637",
+    "complete_image_frames": 1,
+    "native_heading_after_every_image": true,
+    "unchanged_frames_with_native_heading": 4,
+    "sample_order": {
+      "image_end_byte": 1040257,
+      "heading_byte": 1040658,
+      "after_image": true
+    }
+  },
+  "finder": {
+    "bytes": 1060825,
+    "sha256": "504a02d731f909741f6c6ea30b89912b6e1277be1d7b24e83610b7f41e664f88",
+    "complete_image_frames": 1,
+    "native_heading_after_every_image": true,
+    "unchanged_frames_with_native_heading": 4,
+    "sample_order": {
+      "image_end_byte": 1040263,
+      "heading_byte": 1040828,
+      "after_image": true
+    }
+  },
+  "exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

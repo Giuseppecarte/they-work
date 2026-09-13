@@ -1,0 +1,129 @@
+{
+  "run_id": 34780785335,
+  "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+  "kind": "windows",
+  "artifacts": [
+    {
+      "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+      "artifact_id": 10324968163,
+      "artifact_name": "windows-storage-aarch64-pc-windows-msvc",
+      "artifact_digest": "8ee6480e9a4751646785c6b91189b77203f32c6d301fafbbefb4457da42e49c2",
+      "job_id": 103787295508,
+      "job_conclusion": null,
+      "kind": "windows",
+      "storage_step": {
+        "name": "Verify Windows state replacement and recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-09-13T20:37:32Z",
+        "completed_at": "2026-09-13T20:38:01Z"
+      },
+      "scope": "Windows storage only; native packaging not validated",
+      "environment": {
+        "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "os": "Microsoft Windows NT 10.0.26200.0",
+        "filesystem": "NTFS",
+        "architecture": "Arm64",
+        "runner": "windows-11-arm",
+        "target": "aarch64-pc-windows-msvc"
+      },
+      "executed_unit_counts": {
+        "replacement.log": 6,
+        "recovery.log": 4,
+        "live-fault.log": 1
+      },
+      "process_cases": [
+        {
+          "name": "durable_receipt_and_fingerprint",
+          "status": "pass"
+        },
+        {
+          "name": "interrupted_send_never_replays",
+          "status": "pass"
+        },
+        {
+          "name": "missing_established_state_blocks_startup",
+          "status": "pass"
+        },
+        {
+          "name": "sharing_violation_preserves_state_and_rejects_unsent",
+          "status": "pass"
+        }
+      ],
+      "raw_process_matches_structured": true,
+      "evidence_directory": "/Users/gc/Documents/Programming/they-work/target/audit/ci-preview-a320398/windows-storage-aarch64-pc-windows-msvc",
+      "files": {
+        "environment.json": "7b1f116003eee01f761f42cfe82b408186350db8451825eaf00309b9d19511cc",
+        "replacement.log": "1876de83e9d1e87a479750349467da6728bc33cb8e747f39faf8bcdbecfad71d",
+        "recovery.log": "ac8e53fbe0a31efb743474eddce51e430e1621f1a6978a1c8ebeaae91bebce5f",
+        "live-fault.log": "280468b85984fe113526dcfa51fd869b404f236afecba0fe6037d21f5a181cf2",
+        "process.log": "71905061fec82b436b02f23591ea786a6bb49ec5c4fc5a6dce9ddbc4874703bf",
+        "process-results.json": "32e4ed4dd68f87bef05448399ec09878da486dec0701ee44a614819db7489f75"
+      },
+      "native_execution": "verified by hosted CI artifacts",
+      "physical_terminal": "not tested"
+    },
+    {
+      "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+      "artifact_id": 10324702347,
+      "artifact_name": "windows-storage-x86_64-pc-windows-msvc",
+      "artifact_digest": "a62b7afc3e3b8efa2b04bc3bf72ec3f9af6433117598ede49b2be4112a89702f",
+      "job_id": 103787295533,
+      "job_conclusion": null,
+      "kind": "windows",
+      "storage_step": {
+        "name": "Verify Windows state replacement and recovery",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-09-13T20:37:25Z",
+        "completed_at": "2026-09-13T20:37:53Z"
+      },
+      "scope": "Windows storage only; native packaging not validated",
+      "environment": {
+        "filesystem": "NTFS",
+        "runner": "windows-2022",
+        "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "target": "x86_64-pc-windows-msvc",
+        "architecture": "X64",
+        "os": "Microsoft Windows NT 10.0.20348.0"
+      },
+      "executed_unit_counts": {
+        "replacement.log": 6,
+        "recovery.log": 4,
+        "live-fault.log": 1
+      },
+      "process_cases": [
+        {
+          "name": "durable_receipt_and_fingerprint",
+          "status": "pass"
+        },
+        {
+          "name": "interrupted_send_never_replays",
+          "status": "pass"
+        },
+        {
+          "name": "missing_established_state_blocks_startup",
+          "status": "pass"
+        },
+        {
+          "name": "sharing_violation_preserves_state_and_rejects_unsent",
+          "status": "pass"
+        }
+      ],
+      "raw_process_matches_structured": true,
+      "evidence_directory": "/Users/gc/Documents/Programming/they-work/target/audit/ci-preview-a320398/windows-storage-x86_64-pc-windows-msvc",
+      "files": {
+        "environment.json": "7d3ca1cda6febfbbf3eeddc32c421b7faf60bd21f2f94cf4928e5376c917688b",
+        "replacement.log": "d7bb070b031d65cba3d616bed704ec6203951f0e619b18e2909e16af612d3d8f",
+        "recovery.log": "31d602bf24b9b3b103b552154539a0e66ae9f76ac84352cdb6f98c2dd33c25e3",
+        "live-fault.log": "ca4a3c36501e73328b1386a640c8b7a6f6315c54ee614546a6c7f4511b5ddabd",
+        "process.log": "abbc07a1c2c3a4fba53f9f339157dc03e32b25e58ddbfc39c3ce7635f03fc334",
+        "process-results.json": "3e5a811b658eb4fc09d554a65400ca78afe8b8358aef9a9d5940165dbaf22bee"
+      },
+      "native_execution": "verified by hosted CI artifacts",
+      "physical_terminal": "not tested"
+    }
+  ]
+}

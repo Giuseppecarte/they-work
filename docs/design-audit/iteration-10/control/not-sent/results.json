@@ -1,0 +1,50 @@
+{
+  "binary_sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "cells": [
+    80,
+    24
+  ],
+  "keyboard_only": true,
+  "fixture": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/not-sent-0r195wjj",
+  "real_provider_calls": 0,
+  "participant_sessions": 0,
+  "method": "Executable PTY + ANSI replay; no physical terminal or account",
+  "status": "pass",
+  "exact_recipient": "managed-1",
+  "rejected_provider_calls": 0,
+  "automatic_resends": 0,
+  "explicit_resubmit_calls": 1,
+  "rejected_receipt": {
+    "id": "b6d568c27d858def0285b204aa3de27cad0f4d25f15c35b6dba32af52dc2b238",
+    "status": "Rejected",
+    "thread_id": "managed-1",
+    "turn_id": null,
+    "detail": "Not sent: local state could not be saved. Restore storage access and submit again.",
+    "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"Keep this draft; retry only after storage is restored.\",\"expected_turn_id\":\"turn-1\",\"operation_id\":\"b6d568c27d858def0285b204aa3de27cad0f4d25f15c35b6dba32af52dc2b238\"}}"
+  },
+  "confirmed_receipts": [
+    {
+      "id": "24dec728cbb5e87912ebd8a410cebb677f4cfe48c8f080d9cbbf909e51c2c067",
+      "status": "Confirmed",
+      "thread_id": "managed-1",
+      "turn_id": "turn-1",
+      "detail": "Instruction accepted",
+      "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/not-sent-0r195wjj/vertical-project\",\"prompt\":\"working\",\"operation_id\":\"24dec728cbb5e87912ebd8a410cebb677f4cfe48c8f080d9cbbf909e51c2c067\"}}"
+    },
+    {
+      "id": "879c52c249b47a2210b84a63e0dc1153523201475c4a79f59ca5b2acd317b551",
+      "status": "Confirmed",
+      "thread_id": "managed-1",
+      "turn_id": "turn-1",
+      "detail": "Instruction accepted",
+      "request_key": "{\"Send\":{\"thread_id\":\"managed-1\",\"prompt\":\"Keep this draft; retry only after storage is restored.\",\"expected_turn_id\":\"turn-1\",\"operation_id\":\"879c52c249b47a2210b84a63e0dc1153523201475c4a79f59ca5b2acd317b551\"}}"
+    }
+  ],
+  "original_error": "Could not save instruction intent: Permission denied (os error 13). Rejection is recorded only in this running host: Permission denied (os error 13)",
+  "draft_preserved": true,
+  "rejection_visible": "[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  \nvertical-project / Work brief                                                   \n                                                                                \n Remy M.                                                                        \n working                                                                        \n codex \u00b7 Working \u00b7 1s                                                           \n Partial local history                                                          \n [ Now ][ Activity ][ Team ][ Details ]                                         \n                                                                                \n OBSERVED \u00b7 1s ago                                                              \n No current activity reported                                                   \n                                                                                \n RECORDED UPDATES                                                               \n No retained activity or result from this source yet.                           \n [ Instruct ] [ Expand ]                                                        \n PgUp/Dn \u00b7 line 1/6 \u00b7 Esc                                                       \n                                                                                \n INSTRUCTION TO vertical-project / working                                      \n Keep this draft; retry only after storage is restored.\u258f                        \n Rejected: Not sent: local state could not be saved. Restore storage access     \n and submit again. \u00b7 operation                                                  \n b6d568c27d858def0285b204aa3de27cad0f4d25f15c35b6dba32af52dc2b238               \n [ Send instruction ] [ Back ]                                                  \n Tab/Enter \u00b7 F7 expand \u00b7 Esc cancel                                             ",
+  "terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

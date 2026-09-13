@@ -1,0 +1,94 @@
+{
+  "binary_sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "keyboard_only": true,
+  "cells": [
+    80,
+    24
+  ],
+  "fixture_root": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk",
+  "real_provider_calls": 0,
+  "participant_sessions": 0,
+  "capture_method": "Native executable PTY; Menlo/Pillow ANSI replay, not a physical terminal",
+  "cases": {
+    "first_run": {
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "default_settings_path": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/xdg/they-work",
+      "no_explicit_config_dir": true,
+      "saved_only_after_connect": true,
+      "enter_reopened_editor": true,
+      "f5_connected": true,
+      "selected_project_saved": true
+    },
+    "navigation": {
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "reopen_restored_floor": true,
+      "modal_routes": true,
+      "keyboard_only": true,
+      "sources_cancelled_without_save": true,
+      "office_page_keys_changed_floors": true
+    },
+    "aliases": [
+      {
+        "keys": "wo",
+        "wardrobe": {
+          "codex:108:/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/codex:0::14:alpha-checkout": 0
+        },
+        "office_palettes": {
+          "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/alpha-shop": 0
+        },
+        "exit": {
+          "exit": 0,
+          "terminal_restored": true
+        }
+      },
+      {
+        "keys": "wo",
+        "wardrobe": {
+          "codex:108:/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/codex:0::14:alpha-checkout": 1
+        },
+        "office_palettes": {
+          "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-docs/routes-e7z48znk/saved/alpha-shop": 1
+        },
+        "exit": {
+          "exit": 0,
+          "terminal_restored": true
+        }
+      },
+      {
+        "keys": "WO",
+        "wardrobe": {},
+        "office_palettes": {},
+        "exit": {
+          "exit": 0,
+          "terminal_restored": true
+        }
+      }
+    ],
+    "no_save": {
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "all_existing_setting_hashes_unchanged": true,
+      "file_count": 4
+    },
+    "temporary_and_demo": {
+      "exit": {
+        "exit": 0,
+        "terminal_restored": true
+      },
+      "settings_created": false,
+      "reopen_asks_again": true,
+      "demo_exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 7 tests
+test views::phone::tests::channels_cycle_in_both_directions ... ok
+test views::phone::tests::channels_include_live_status_and_core_beat_history ... ok
+test views::phone::tests::phone_tabs_fit_the_smallest_supported_panel ... ok
+test views::phone::tests::current_message_identity_survives_new_activity_and_reordering ... ok
+test views::phone::tests::recorded_events_are_newest_first_across_workers ... ok
+test views::phone::tests::attention_precedes_idle_and_errors_are_included_without_old_prompts ... ok
+test views::phone::tests::historical_edit_keeps_its_evidence_when_worker_later_needs_approval ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 131 filtered out; finished in 0.00s

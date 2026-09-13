@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-8/study/preflight.py", line 19, in <module>
+    r = importlib.util.module_from_spec(spec); spec.loader.exec_module(r)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-8/docs/check_routes.py", line 20, in <module>
+    spec.loader.exec_module(w)
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-7/workflows/walkthrough.py", line 26, in <module>
+    spec.loader.exec_module(control)
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-6/review_control_pty.py", line 31, in <module>
+    spec.loader.exec_module(base)
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-2/review_pty.py", line 8, in <module>
+    import pyte
+ModuleNotFoundError: No module named 'pyte'

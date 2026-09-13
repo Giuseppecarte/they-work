@@ -1,0 +1,15 @@
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.37s
+     Running tests/coverage_retention.rs (target/native-macos/debug/deps/coverage_retention-8847fa21d213b3c3)
+
+running 7 tests
+test busy_project_cannot_displace_quiet_project_delivery ... ok
+test duplicate_and_older_upserts_do_not_consume_retention_or_ordinals ... ok
+test historical_beats_never_clear_a_live_request_or_rehire_worker ... ok
+test independent_coverage_producers_preserve_losses_and_epochs ... ok
+test project_metadata_is_bounded_and_returned_projects_disclose_unknown_counts ... ok
+test recorded_project_survives_actor_move_and_missing_participants ... ok
+test twenty_projects_share_capacity_and_ties_are_reproducible ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+

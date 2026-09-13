@@ -1,0 +1,26 @@
+test_dependency_cache_contains_explicit_cargo_targets (__main__.DockerCacheContextTests.test_dependency_cache_contains_explicit_cargo_targets) ... ok
+test_already_promoted_latest_after_crash_is_a_noop (__main__.PromotionTests.test_already_promoted_latest_after_crash_is_a_noop) ... ok
+test_authentication_and_network_errors_are_not_absence (__main__.PromotionTests.test_authentication_and_network_errors_are_not_absence) ... ok
+test_checksum_failure_before_prepare_and_after_intent_does_not_change_tags (__main__.PromotionTests.test_checksum_failure_before_prepare_and_after_intent_does_not_change_tags) ... ok
+test_failed_smoke_never_prepares_or_promotes (__main__.PromotionTests.test_failed_smoke_never_prepares_or_promotes) ... ok
+test_failure_before_version_leaves_both_tags (__main__.PromotionTests.test_failure_before_version_leaves_both_tags) ... ok
+test_failure_between_tags_records_partial_and_retries_only_latest (__main__.PromotionTests.test_failure_between_tags_records_partial_and_retries_only_latest) ... ok
+test_intent_is_never_overwritten (__main__.PromotionTests.test_intent_is_never_overwritten) ... ok
+test_later_latest_blocks_even_an_absent_version (__main__.PromotionTests.test_later_latest_blocks_even_an_absent_version) ... ok
+test_lost_acknowledgements_are_read_back_as_success (__main__.PromotionTests.test_lost_acknowledgements_are_read_back_as_success) ... ok
+test_missing_architecture_and_missing_mode_are_rejected (__main__.PromotionTests.test_missing_architecture_and_missing_mode_are_rejected) ... ok
+test_missing_native_target_is_not_a_successful_subset (__main__.PromotionTests.test_missing_native_target_is_not_a_successful_subset) ... ok
+test_only_explicit_registry_manifest_absence_is_accepted (__main__.PromotionTests.test_only_explicit_registry_manifest_absence_is_accepted) ... ok
+test_prepare_cannot_rebase_a_previous_release_on_new_latest (__main__.PromotionTests.test_prepare_cannot_rebase_a_previous_release_on_new_latest) ... ok
+test_report_or_commit_or_descriptor_change_blocks_publication (__main__.PromotionTests.test_report_or_commit_or_descriptor_change_blocks_publication) ... ok
+test_success_copies_exact_index_including_attestations_and_retries_without_writes (__main__.PromotionTests.test_success_copies_exact_index_including_attestations_and_retries_without_writes) ... ok
+test_version_conflict_blocks_even_latest (__main__.PromotionTests.test_version_conflict_blocks_even_latest) ... ok
+test_wrong_written_digest_fails_and_never_rolls_back (__main__.PromotionTests.test_wrong_written_digest_fails_and_never_rolls_back) ... ok
+test_each_platform_is_passed_to_pull_environment_and_every_pty (__main__.VerifierTests.test_each_platform_is_passed_to_pull_environment_and_every_pty) ... ok
+test_fallback_must_not_transmit_graphics (__main__.VerifierTests.test_fallback_must_not_transmit_graphics) ... ok
+test_graphics_then_crash_or_forced_cleanup_is_a_failure (__main__.VerifierTests.test_graphics_then_crash_or_forced_cleanup_is_a_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.087s
+
+OK

@@ -1,0 +1,23 @@
+{
+  "generated_at_utc": "2026-09-08T21:31:01.459978+00:00",
+  "source_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
+  "binary_sha256": "be28157e154e4172dff7f00f4c7bceabd27287b2a00d99917323ed29555467f6",
+  "runner_sha256": "2a556b8eaf7164d09d94fffeaec9a33205e8188da607b71127d456460f4c504e",
+  "source_sha256": {
+    "crates/theywork-collect/src/codex_source.rs": "a95e3ef5aa5222812cfbc726fd3786d72d8cc7185501de9d724857e7d703579a",
+    "crates/theywork-collect/src/util.rs": "62b4a4ae9d235c74a85fa8e31f8094c8d4623610fcb9452bfa89018cb7376ab0",
+    "crates/theywork-control/src/bridge.rs": "11b29efe341aea53e9344185c07dd33d6e3c030b68975859242f78f308f8f0e6",
+    "crates/theywork-core/src/world.rs": "af0b17082f8d616ee636cc99a67004a58acdf55e65b3f888ad9e79b8f3d55cdc",
+    "crates/theywork-tui/src/main.rs": "1162ea0d04c28b054c50d19da2341657cf7bbd0c676277150072e55f4fec3fd7",
+    "crates/theywork-render/src/views/workboard.rs": "96b28b46ace163601fa57dc2d9bcc8ca6f13f7b2fc02f0fe41516471cf8b92c2"
+  },
+  "evidence_sha256": {
+    "run.log": "abbfa87cfa468991d218beb2ad78b2a73fdbceddddbda735d7d63ee31942bf7f",
+    "results.json": "5f195a17b1397b316d189193e697a0bd15609e0cd937f86db2bb775486d3d3f8",
+    "build.log": "436b525430264ce5c4d49e8ee26aa5d342f9b4be62b9675fe15a8a461403d96d"
+  },
+  "prior_eight_case_evidence_unchanged": true,
+  "scratch": "docs/design-audit/tmp/iteration-7-data/dual-20260908T213100",
+  "platform": "Darwin arm64",
+  "measurement_limit": "Concurrent with a lightweight soak/other history probes; no timing claim."
+}

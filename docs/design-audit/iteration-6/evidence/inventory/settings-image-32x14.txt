@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+Software tower · 20 projects    
+                                
+ Settings · appearance & input  
+ > Theme          Dark          
+   Color          truecolor     
+   Motion         Reduced       
+   Nameplates     All workers   
+   Mouse          Click to insp 
+   Advanced       Cameras & tex 
+ Changes apply now. Decor has   
+ Apply / Cancel.                
+                                
+[ Back ] ↑↓ select · ←→ edit    

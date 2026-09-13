@@ -1,0 +1,50 @@
+warning: methods `scale_width`, `scale_image_sprite_width`, and `scale_image_sprite_height` are never used
+   --> crates/theywork-render/src/canvas.rs:497:19
+    |
+368 | impl Canvas {
+    | ----------- methods in this implementation
+...
+497 |     pub(crate) fn scale_width(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^
+...
+513 |     pub(crate) fn scale_image_sprite_width(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+518 |     pub(crate) fn scale_image_sprite_height(&self, value: usize) -> usize {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: function `office_dot_color` is never used
+   --> crates/theywork-render/src/views/mod.rs:155:15
+    |
+155 | pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
+    |               ^^^^^^^^^^^^^^^^
+
+warning: function `draw_tab_bar` is never used
+   --> crates/theywork-render/src/views/mod.rs:181:15
+    |
+181 | pub(crate) fn draw_tab_bar(
+    |               ^^^^^^^^^^^^
+
+warning: function `fill_office_background` is never used
+   --> crates/theywork-render/src/views/mod.rs:375:15
+    |
+375 | pub(crate) fn fill_office_background(canvas: &mut Canvas, sprites: &SpriteSet) -> usize {
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `theywork-render` (lib test) generated 4 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 7 tests
+test views::cameras::tests::compact_team_preview_reports_the_unlisted_conversations ... ok
+test views::cameras::tests::directory_attention_survives_a_narrow_row ... ok
+test views::cameras::tests::empty_states_explain_the_cause_and_keep_a_visible_next_action ... ok
+test views::cameras::tests::floor_numbers_do_not_change_when_a_worker_needs_attention ... ok
+test views::cameras::tests::project_paths_preserve_the_distinguishing_end_at_small_widths ... ok
+test views::cameras::tests::tower_directory_stacks_projects_in_one_column ... ok
+test views::cameras::tests::tower_exposes_attention_and_last_floor_without_changing_identity ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 222 filtered out; finished in 0.06s
+

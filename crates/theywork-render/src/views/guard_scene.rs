@@ -1,41 +1,12 @@
-//! Compact rooms for the guard wall, with geometry sized for miniature staff.
+//! Furnished cross-section of the selected tower floor.
 
 use ratatui::style::Color;
 use theywork_core::{Millis, Office};
 
 use crate::canvas::Canvas;
-use crate::sprite::{worker_looks, SpriteSet};
+use crate::sprite::SpriteSet;
 
-fn polygon(canvas: &mut Canvas, points: &[(i32, i32)], color: Color) {
-    let min_y = points.iter().map(|point| point.1).min().unwrap_or(0).max(0);
-    let max_y = points
-        .iter()
-        .map(|point| point.1)
-        .max()
-        .unwrap_or(0)
-        .min(canvas.height() as i32 - 1);
-    for y in min_y..=max_y {
-        let mut crossings = Vec::with_capacity(points.len());
-        for index in 0..points.len() {
-            let (x0, y0) = points[index];
-            let (x1, y1) = points[(index + 1) % points.len()];
-            if (y0 <= y && y < y1) || (y1 <= y && y < y0) {
-                crossings.push(x0 + (y - y0) * (x1 - x0) / (y1 - y0));
-            }
-        }
-        crossings.sort_unstable();
-        for pair in crossings.chunks_exact(2) {
-            for x in pair[0].max(0)..=pair[1].min(canvas.width() as i32 - 1) {
-                canvas.set(x as usize, y as usize, color);
-            }
-        }
-    }
-}
-
-fn palette(office: &Office, light: bool) -> [Color; 4] {
-    let theme = office.id.0.bytes().fold(0usize, |hash, byte| {
-        hash.wrapping_mul(31).wrapping_add(byte as usize)
-    }) % 4;
+pub(super) fn palette(theme: usize, light: bool) -> [Color; 4] {
     if light {
         let colors = match theme {
             0 => [
@@ -74,107 +45,157 @@ fn palette(office: &Office, light: bool) -> [Color; 4] {
     colors.map(|(r, g, b)| Color::Rgb(r, g, b))
 }
 
+/// Attention is visible first without changing project or conversation identity.
+pub(super) fn ranked_workers(office: &Office, now: Millis) -> Vec<&theywork_core::Worker> {
+    let mut workers = office.workers.iter().collect::<Vec<_>>();
+    workers.sort_by_key(|worker| match super::worker_status(worker, now) {
+        theywork_core::WorkerStatus::Blocked => 0,
+        theywork_core::WorkerStatus::Failed => 1,
+        theywork_core::WorkerStatus::Running => 2,
+        theywork_core::WorkerStatus::Idle => 3,
+    });
+    workers
+}
+
+fn rect(canvas: &mut Canvas, x: usize, y: usize, w: usize, h: usize, color: Color) {
+    for yy in y..y.saturating_add(h).min(canvas.height()) {
+        for xx in x..x.saturating_add(w).min(canvas.width()) {
+            canvas.set(xx, yy, color);
+        }
+    }
+}
+
 pub(super) fn draw(
     canvas: &mut Canvas,
     office: &Office,
     sprites: &SpriteSet,
     now: Millis,
 ) -> Vec<(i32, i32)> {
-    canvas.fill(super::BACKGROUND);
-    let w = canvas.width() as i32;
-    let h = canvas.height() as i32;
+    let (w, h) = (canvas.width(), canvas.height());
     if w == 0 || h == 0 {
         return Vec::new();
     }
-    let point = |x: i32, y: i32| {
-        (
-            w * (50 + (x - 50) * 2 / 3) / 100,
-            h * (50 + (y - 50) * 3 / 5) / 100,
-        )
-    };
-    let [left_wall, right_wall, floor, wood] = palette(office, canvas.is_light_mode());
-    let back = point(50, 25);
-    let right = point(86, 55);
-    let front = point(50, 88);
-    let left = point(14, 55);
-    let wall_height = (h / 10).max(1);
-    polygon(
-        canvas,
-        &[
-            back,
-            left,
-            (left.0, left.1 - wall_height),
-            (back.0, back.1 - wall_height),
-        ],
-        left_wall,
-    );
-    polygon(
-        canvas,
-        &[
-            back,
-            right,
-            (right.0, right.1 - wall_height),
-            (back.0, back.1 - wall_height),
-        ],
-        right_wall,
-    );
-    polygon(canvas, &[back, right, front, left], floor);
-
-    let count = office.workers.len();
-    let positions = if count <= 5 {
-        [(48, 35), (61, 46), (72, 59), (33, 49), (47, 67)]
-            .into_iter()
-            .take(count)
-            .map(|(x, y)| point(x, y))
-            .collect::<Vec<_>>()
-    } else {
-        let columns = count.isqrt().max(1);
-        let rows = count.div_ceil(columns);
-        (0..count)
-            .map(|index| {
-                let u = (index % columns + 1) as i32 * 100 / (columns + 1) as i32;
-                let v = (index / columns + 1) as i32 * 100 / (rows + 1) as i32;
-                point(50 + (u - v) * 32 / 100, 27 + (u + v) * 28 / 100)
-            })
-            .collect()
-    };
-    let looks = worker_looks(&office.workers);
-    let mut order = (0..count).collect::<Vec<_>>();
-    order.sort_by_key(|&index| positions[index].1);
-    let desk_half_width = (w / 18).max(2);
-    let desk_half_height = (h / 32).max(1);
-    for index in order {
-        let (x, y) = positions[index];
-        polygon(
+    let (px, py) = canvas.pixels_per_cell();
+    let [_, wall, floor, wood] =
+        palette(sprites.office_palette_index(office), canvas.is_light_mode());
+    canvas.fill(wall);
+    let ground = h.saturating_sub((py * 2).max(h / 7));
+    rect(canvas, 0, ground, w, h - ground, floor);
+    let seam = super::INK;
+    rect(canvas, 0, ground, w, 1, seam);
+    let capacity = (w / px / 18).clamp(1, 5);
+    let workers = ranked_workers(office, now);
+    let shown = workers.len().min(capacity);
+    let slots = shown.max(1);
+    let slot_width = w / slots;
+    let mut markers = Vec::with_capacity(shown);
+    for (slot, worker) in workers.into_iter().take(shown).enumerate() {
+        let center = slot_width * slot + slot_width / 2;
+        let available_height = ground.saturating_sub(py * 3).max(1);
+        let stretch = super::sprite_pixel_width(canvas);
+        let budget_width = (slot_width * 3 / 5).max(1);
+        let source = sprites.worker_frame_fitting(
+            worker,
+            crate::sprite::look_for_worker(&office.workers, worker),
+            now,
+            budget_width / stretch,
+            available_height,
+        );
+        let scale = (budget_width / (source.width() * stretch))
+            .min(available_height / source.height())
+            .max(1);
+        let figure_w = source.width() * stretch * scale;
+        let figure_h = source.height() * scale;
+        let desk_w = (figure_w * 2)
+            .min(slot_width.saturating_sub(px * 2))
+            .max(px * 4);
+        let desk_h = (figure_h / 3).max(py * 2);
+        let desk_y = ground.saturating_sub(desk_h);
+        let worker_y = desk_y.saturating_sub(figure_h * 2 / 3);
+        let window_y = py;
+        let window_h = (ground * 2 / 5).clamp(py * 3, py * 7);
+        let window_w = (slot_width * 3 / 5).min(window_h * 3);
+        let window_x = center.saturating_sub(window_w / 2);
+        if ground > py * 7 {
+            rect(
+                canvas,
+                window_x,
+                window_y,
+                window_w,
+                window_h,
+                super::BACKGROUND,
+            );
+            rect(
+                canvas,
+                window_x + px,
+                window_y + 1,
+                window_w.saturating_sub(px * 2),
+                window_h.saturating_sub(2),
+                Color::Rgb(71, 136, 168),
+            );
+            rect(
+                canvas,
+                window_x + window_w / 2,
+                window_y,
+                px,
+                window_h,
+                wall,
+            );
+            rect(canvas, window_x, window_y + window_h / 2, window_w, 1, wall);
+        }
+        let chair_x = center.saturating_sub(figure_w / 2);
+        rect(
             canvas,
-            &[
-                (x, y - desk_half_height),
-                (x + desk_half_width, y),
-                (x, y + desk_half_height),
-                (x - desk_half_width, y),
-            ],
-            wood,
+            chair_x,
+            worker_y + figure_h / 3,
+            figure_w,
+            figure_h * 2 / 3,
+            super::PANEL_HIGHLIGHT,
         );
-        let sprite = sprites.worker_frame(&office.workers[index], looks[index], now);
-        let width = (w / 14).max(3) as usize;
-        let height = (h / 5).max(3) as usize;
-        canvas.blit_scaled(
-            &sprite,
-            (x - width as i32 / 2).max(0) as usize,
-            (y - height as i32).max(0) as usize,
-            width,
-            height,
+        canvas.blit_scaled(&source, chair_x, worker_y, figure_w, figure_h);
+        let desk_x = center.saturating_sub(desk_w / 2);
+        rect(canvas, desk_x, desk_y, desk_w, (desk_h / 3).max(1), wood);
+        for x in [desk_x + px, desk_x + desk_w.saturating_sub(px * 2)] {
+            rect(canvas, x, desk_y, px.max(1), desk_h, wood);
+        }
+        let mw = (figure_w * 3 / 4).max(px * 3);
+        let mh = (figure_h / 4).max(py);
+        rect(
+            canvas,
+            desk_x + px,
+            desk_y.saturating_sub(mh),
+            mw,
+            mh,
+            super::BACKGROUND,
         );
+        rect(
+            canvas,
+            desk_x + px * 2,
+            desk_y.saturating_sub(mh) + 1,
+            mw.saturating_sub(px * 2),
+            mh.saturating_sub(2),
+            Color::Rgb(107, 190, 204),
+        );
+        rect(
+            canvas,
+            center + desk_w / 4,
+            desk_y.saturating_sub(py),
+            px,
+            py,
+            super::INK,
+        );
+        markers.push((
+            (center / px).min(w / px - 1) as i32,
+            (ground / py).min(h / py - 1) as i32,
+        ));
     }
-    positions
-        .into_iter()
-        .map(|(x, y)| {
-            (
-                x / canvas.encoding().width_per_cell() as i32,
-                y / canvas.encoding().height_per_cell() as i32,
-            )
-        })
-        .collect()
+    // The room also reads as a room without staff: a shared floor and windows,
+    // never silhouettes standing on bare diamonds.
+    if shown == 0 && w >= px * 10 && h >= py * 6 {
+        rect(canvas, w / 3, py, w / 3, h / 3, Color::Rgb(71, 136, 168));
+        rect(canvas, w / 2, py, px, h / 3, wall);
+    }
+    markers
 }
 
 #[cfg(test)]
@@ -182,6 +203,51 @@ mod tests {
     use super::*;
     use crate::canvas::{ColorDepth, PixelEncoding};
     use theywork_core::{Agent, OfficeId, Worker, WorkerId};
+
+    #[test]
+    fn room_representatives_prioritize_attention_without_reordering_the_office() {
+        let id = OfficeId("/project".into());
+        let mut office = Office::new(id.clone(), id.0.clone());
+        office.workers = (0..10)
+            .map(|index| {
+                Worker::new(
+                    WorkerId(index.to_string()),
+                    id.clone(),
+                    Agent::Codex,
+                    index.to_string(),
+                    0,
+                )
+            })
+            .collect();
+        office.workers[8].activity = theywork_core::Activity::Error {
+            detail: "test failed".into(),
+        };
+        office.workers[9].activity = theywork_core::Activity::Waiting {
+            detail: "approve command".into(),
+        };
+        office.workers[9].turn_in_flight = true;
+        let ranked = ranked_workers(&office, 0);
+        assert_eq!(ranked[0].id.0, "9");
+        assert_eq!(ranked[1].id.0, "8");
+        assert_eq!(office.workers[0].id.0, "0");
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            ColorDepth::TrueColor,
+            PixelEncoding::Quadrants,
+        );
+        canvas.resize_for_cells(80, 16);
+        let sprites = SpriteSet::new();
+        sprites.set_animation_time(Some(0));
+        assert_eq!(draw(&mut canvas, &office, &sprites, 0).len(), 4);
+        let before = canvas.pixel_frame().rgba().to_vec();
+        draw(&mut canvas, &office, &sprites, 1000);
+        assert_eq!(
+            before,
+            canvas.pixel_frame().rgba(),
+            "reduced motion must freeze the furnished room"
+        );
+    }
 
     #[test]
     fn dense_guard_rooms_keep_markers_bounded_and_edges_opaque() {
@@ -205,7 +271,10 @@ mod tests {
                     Canvas::with_color_depth_and_encoding(0, 0, ColorDepth::TrueColor, encoding);
                 canvas.resize_for_cells(width, height);
                 let markers = draw(&mut canvas, &office, &sprites, 0);
-                assert_eq!(markers.len(), office.workers.len());
+                assert_eq!(
+                    markers.len(),
+                    office.workers.len().min((width / 18).clamp(1, 5))
+                );
                 assert!(markers
                     .iter()
                     .all(|&(x, y)| x >= 0 && y >= 0 && x < width as i32 && y < height as i32));
@@ -216,5 +285,31 @@ mod tests {
                     .all(|pixel| pixel[3] == 255));
             }
         }
+    }
+
+    #[test]
+    fn native_image_markers_stay_in_terminal_cell_coordinates() {
+        let id = OfficeId("/native-project".into());
+        let mut office = Office::new(id.clone(), id.0.clone());
+        office.workers.push(Worker::new(
+            WorkerId("worker".into()),
+            id,
+            Agent::Codex,
+            "worker".into(),
+            0,
+        ));
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            0,
+            0,
+            ColorDepth::TrueColor,
+            PixelEncoding::Sextants,
+        );
+        canvas.set_cell_pixel_size(Some((10, 20)));
+        canvas.resize_for_cells(53, 19);
+        let markers = draw(&mut canvas, &office, &SpriteSet::new(), 0);
+        assert_eq!(markers.len(), 1);
+        assert!(markers
+            .iter()
+            .all(|&(x, y)| (0..53).contains(&x) && (0..19).contains(&y)));
     }
 }

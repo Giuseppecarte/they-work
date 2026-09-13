@@ -1,0 +1,35 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 1 project
+
+ REVIEW REQUEST
+
+ PENDING REQUEST 1/1 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-workflows/run-r80zdeez/managed/vertical-pr
+ oject / approval · managed-1
+ Approval requested
+
+ command: test-only-command
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ [ 1 Allow this request ] [ 2 Decline ] [ 3 Cancel ] [ Back ]
+
+
+ Tab focus · Enter choose · PgUp/Dn read · Esc back

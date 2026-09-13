@@ -1,0 +1,65 @@
+[
+  {
+    "name": "format",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.633
+  },
+  {
+    "name": "workspace",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "test",
+      "--locked",
+      "--workspace",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 139.959
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.438
+  },
+  {
+    "name": "optimized-timing",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "theywork-render",
+      "--lib",
+      "m3_tests::encoding_frame_cost_stays_within_ten_fps_budget",
+      "--",
+      "--exact",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 24.863
+  }
+]

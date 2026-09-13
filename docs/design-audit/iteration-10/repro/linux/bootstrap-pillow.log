@@ -1,0 +1,6 @@
+$ ["/repo/target/audit/venv/bin/python", "-m", "pip", "--isolated", "install", "--disable-pip-version-check", "--require-hashes", "--only-binary=:all:", "--no-deps", "-r", "/repo/scripts/audit_assets/requirements.lock"]
+Collecting Pillow==12.3.0 (from -r /repo/scripts/audit_assets/requirements.lock (line 2))
+  Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (6.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 30.5 MB/s eta 0:00:00
+Installing collected packages: Pillow
+Successfully installed Pillow-12.3.0

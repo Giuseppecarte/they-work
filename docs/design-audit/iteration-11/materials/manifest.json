@@ -1,0 +1,30 @@
+{
+  "baseline_commit": "282722294b8b372d7e20bda4a3705f3e19b62b1b",
+  "source_hashes": {
+    "crates/theywork-render/src/living_office.rs": "31c94c070a4d76a6fa0555bb300ac9d93f959f69e91a9fde8db1b3b24190c6f0",
+    "crates/theywork-render/src/living_office/materials.rs": "317e58ca2daedd668bcb0ad49a600a51585f99c84d8f34dad9c076010e6ef409",
+    "crates/theywork-render/src/living_office/simulation.rs": "2d2f5ccf7f77a5719049f47ed37a181b98e7b773f4bd32ebb85975446c9507f3",
+    "crates/theywork-render/src/living_office/rooms.rs": "89b9d72b45b1e20a0b924716419d3c97a18464e0f660ea35d4e8683fc4f68bdd",
+    "crates/theywork-render/src/living_office/art.rs": "2e5fe508dc51ac8c835295821c1c802ef5d8c10088757a1b89edc637da3ecd42",
+    "crates/theywork-render/src/living_office/overview.rs": "bd0d73df392a568096f5687c27877b386c92c81e5ebe66ffc758a63f813f91dd",
+    "crates/theywork-render/src/living_office/workstation.rs": "3d1308db8e236c88b09e11c0c2ef0767554d4849a1b7faa3cf2ae01aa8ed875a"
+  },
+  "evidence_hashes": {
+    "cast-shared-detail.png": "f71387d5689b92477976824deb6a566c2f82a3eeed0653f4c3d362992ecd006c",
+    "cast-individual-overview.png": "0e9c64940f9b08d5c4e0f52dc113fcf7a72c0209bc1d0b5dda0b833c267a73f3",
+    "pilot-individual-detail-0.png": "6eaea1f6c940c3284d6876d85eee7665dbf13b1d71d5fb65aa232eec2afc4b39",
+    "materials-final-palette-test.log": "d6bc19358f2dee4d45bbab470732d3064f0b253734e51363a5931b54c2a2d70d",
+    "pilot-geometry.txt": "f434c4fa6ab3ff02092410882734deddcfc7251dc960130a9780469e332cf8c3",
+    "materials-tests.log": "135152aead1f175a3a4d000dbfd6e2429a72951bac7365b008043b91c425fdf5",
+    "pilot-shared-detail-0.png": "a24412d5f5bc28102a78ba0c51487e718542d0aa87912a77739f033f528c1670",
+    "before-shared-detail-0.png": "1a160951fe90f45b971aab189ce120472a806a3ed04a2ac396017daa5f1c7e76",
+    "materials-studio-light.png": "b8631cb8d6c0a4b253758900565afac7d3d16fefe2b488120061f4503c0d7e5e",
+    "before-individual-detail-0.png": "a77d23600710b179aff12a7426a5dcd70f0b3979f061d747d5f2e87a70561959",
+    "materials-laboratory-dark.png": "8c92e095549da85aa4d2c82cd91cfc1912c033a5be40cab26392b5fd9da4e09e",
+    "before-geometry.txt": "f434c4fa6ab3ff02092410882734deddcfc7251dc960130a9780469e332cf8c3",
+    "materials-workshop-dark.png": "65d11dbe9323797164da65c7bbaaefee733f2b5fb0901a3c7c312cc03df4bf50"
+  },
+  "geometry_equal": true,
+  "normalization": "env -u NO_COLOR TERM=xterm-256color COLORTERM=truecolor",
+  "kind": "authored compositor specimens; no native UI, terminal protocol, or WSL execution claimed"
+}

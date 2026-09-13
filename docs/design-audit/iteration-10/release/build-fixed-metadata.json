@@ -1,0 +1,10 @@
+{
+  "buildx.build.ref": "desktop-linux/desktop-linux/prygmlv9kjdvy08v4gc2cnep3",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+    "size": 1607
+  },
+  "containerimage.digest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+  "image.name": "localhost:5060/they-work:candidate-audit10-7cb26e4"
+}

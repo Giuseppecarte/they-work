@@ -1,0 +1,14 @@
+{
+  "binary_sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "cells": [
+    80,
+    24
+  ],
+  "keyboard_only": true,
+  "authenticated_provider": false,
+  "participant_sessions": 0,
+  "physical_terminal": "not tested",
+  "cases": {},
+  "status": "fail",
+  "failure": "Traceback (most recent call last):\n  File \"/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py\", line 151, in main\n    result[\"cases\"][\"coverage\"] = coverage(binary, folder / \"coverage\", output)\n                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py\", line 44, in coverage\n    assert \"COVERAGE\" in s.text(), s.text()\n           ^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: [ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  \nSoftware tower \u00b7 3 projects                                                     \n PROJECT NOTEBOOK  /  All floors                                                \nf All floors \u00b7 i Show IDs                                                       \n1 Attention 2 Deliveries 3 Since your visit 4 Team                              \n                                                                                \n history is unknown.                                                            \n Stream counts cover each whole source; absent events cannot be attributed to   \n a particular floor.                                                            \n                                                                                \n PROJECT                                                                        \n /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/docs/fixtu \n res/coverage-recovery-lpki54vg/coverage/alpha-shop                             \n LOCAL PROJECT WINDOW                                                           \n 2 collaboration records retained; 0 local retention evictions.                 \n Oldest retained source timestamp: 1789057208439                                \n Last eviction observation: none recorded (record source timestamp:             \n unavailable).                                                                  \n The shared limit is 512 records, retired from the largest project partition    \n first. Evictions are retention actions, not unique missing deliveries.         \n History before this observer's retained window is unknown.                     \n                                                                                \nh coverage \u00b7 Local history \u00b7 6 partial                                          \n[ Back ] \u2191\u2193 / PgUp/PgDn read \u00b7 h back                                           \n"
+}

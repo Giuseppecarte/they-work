@@ -1,0 +1,57 @@
+{
+  "run_id": 34777496710,
+  "artifacts": [
+    {
+      "source": "b202913b40c2b6e386892a8a259a72e7ee0f9b7b",
+      "artifact_id": 10324212815,
+      "artifact_name": "native-aarch64-unknown-linux-musl",
+      "artifact_digest": "34b21014b13389132769f630e86cfbc5c18335ae96288c7b2eeceed90ce81413",
+      "job_id": 103778170421,
+      "job_conclusion": "success",
+      "filename": "they-work-aarch64-unknown-linux-musl.tar.gz",
+      "archive_sha256": "b2c160f9bf24b2439c1025192ad0ee5b54395cc32cfc26f7b71cc37055858e64",
+      "archive_bytes": 2886642,
+      "checksum_verified": true,
+      "archive_members": [
+        "they-work",
+        "LICENSE"
+      ],
+      "elf": {
+        "machine": 183,
+        "interpreter": [],
+        "dynamic_needed_entries": [],
+        "static": true,
+        "binary_sha256": "f6a41a4ec697f885927a56465094f27bdc40689d7bce91b2bd34d9a8d76bf382",
+        "binary_bytes": 5590240
+      },
+      "local_execution": "not tested",
+      "physical_wsl": "not tested"
+    },
+    {
+      "source": "b202913b40c2b6e386892a8a259a72e7ee0f9b7b",
+      "artifact_id": 10323629684,
+      "artifact_name": "native-x86_64-unknown-linux-musl",
+      "artifact_digest": "b708c75bb5569fbf2ad02094c40b7d79afef86d39df682a781fbb62159e11fd5",
+      "job_id": 103778170427,
+      "job_conclusion": "success",
+      "filename": "they-work-x86_64-unknown-linux-musl.tar.gz",
+      "archive_sha256": "7ff2931a7a5abf44b20d2fb7ccfb20e293e9d94d4a7987ba482cfac306bf4ad6",
+      "archive_bytes": 3110651,
+      "checksum_verified": true,
+      "archive_members": [
+        "they-work",
+        "LICENSE"
+      ],
+      "elf": {
+        "machine": 62,
+        "interpreter": [],
+        "dynamic_needed_entries": [],
+        "static": true,
+        "binary_sha256": "ee07383758c718cddb87206bbf5a5c0f4a95bfc861c6a6f17095bed8b9f1773e",
+        "binary_bytes": 6560992
+      },
+      "local_execution": "not tested",
+      "physical_wsl": "not tested"
+    }
+  ]
+}

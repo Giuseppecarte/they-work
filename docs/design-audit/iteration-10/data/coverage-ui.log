@@ -1,0 +1,23 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.44s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 3 tests
+test views::workboard::tests::coverage_back_button_matches_escape_and_restores_record_reading_position ... ok
+test views::workboard::tests::coverage_counts_distinct_streams_and_is_safe_to_read_at_all_sizes ... ok
+test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 259 filtered out; finished in 0.29s
+
+     Running tests/image_layers.rs (target/native-macos/debug/deps/image_layers-f8958eb30fff12c2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/pixel_frame.rs (target/native-macos/debug/deps/pixel_frame-12d6af3d41896bd6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

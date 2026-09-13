@@ -1,0 +1,27 @@
+2026-09-13T19:58:58.4822189Z 
+2026-09-13T19:58:58.4822565Z ---- security::windows_tests::concurrent_readers_never_see_missing_or_partial_state stdout ----
+2026-09-13T19:58:58.4823192Z 
+2026-09-13T19:58:58.4823768Z thread 'security::windows_tests::concurrent_readers_never_see_missing_or_partial_state' panicked at crates\theywork-control\src\security_windows_tests.rs:154:68:
+2026-09-13T19:58:58.4824776Z called `Result::unwrap()` on an `Err` value: Access is denied. (os error 5)
+2026-09-13T19:58:58.4825458Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:58:58.4825812Z 
+2026-09-13T19:58:58.4826180Z thread '<unnamed>' panicked at crates\theywork-control\src\security_windows_tests.rs:141:48:
+2026-09-13T19:58:58.4827038Z Established state must remain readable: Os { code: 3, kind: NotFound, message: "The system cannot find the path specified." }
+2026-09-13T19:58:58.4827614Z 
+2026-09-13T19:58:58.4827619Z 
+2026-09-13T19:58:58.4827711Z failures:
+2026-09-13T19:58:58.4828158Z     security::windows_tests::concurrent_readers_never_see_missing_or_partial_state
+2026-09-13T19:58:58.4828507Z 
+2026-09-13T19:58:58.4828788Z test result: FAILED. 18 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+2026-09-13T19:58:58.4829239Z 
+2026-09-13T19:58:58.4834562Z error: test failed, to rerun pass `-p theywork-control --lib`
+2026-09-13T19:58:58.4836118Z      Running tests\control.rs (target\x86_64-pc-windows-msvc\debug\deps\control-74cd8d2e02f219df.exe)
+2026-09-13T19:58:58.4894480Z 
+2026-09-13T19:58:58.4894733Z running 0 tests
+2026-09-13T19:58:58.4894933Z 
+2026-09-13T19:58:58.4895163Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-13T19:58:58.4895475Z 
+2026-09-13T19:58:58.4905954Z      Running tests\data_stream.rs (target\x86_64-pc-windows-msvc\debug\deps\data_stream-12b0e9414543f8af.exe)
+2026-09-13T19:58:58.4962122Z 
+2026-09-13T19:58:58.4962332Z running 9 tests
+2026-09-13T19:58:58.6294961Z test cold_collector_and_managed_stream_keep_recovered_facts_without_claiming_backfill ... ok

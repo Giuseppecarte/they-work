@@ -1,0 +1,34 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling syn v3.0.4
+   Compiling serde_derive v1.0.229
+   Compiling serde v1.0.229
+   Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+   Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.37s
+     Running unittests src/lib.rs (target/debug/deps/theywork_collect-1f401cd0fc0d2373)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/collectors.rs (target/debug/deps/collectors-ed3b06ac8c562877)
+
+running 1 test
+before mtime=Ok(SystemTime { tv_sec: 1788810671, tv_nsec: 0 }) expected=1788810671752
+after mtime=Ok(SystemTime { tv_sec: 1788810671, tv_nsec: 0 }) expected=1788810671753
+
+thread 'claude_recovers_from_home_gap_deletion_and_same_size_replacement' panicked at crates/theywork-collect/tests/collectors.rs:2364:5:
+assertion failed: has_activity(&source.poll(initial_now + 1).unwrap(),
+    &Activity::Talking { detail: "after!".into() })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test claude_recovers_from_home_gap_deletion_and_same_size_replacement ... FAILED
+
+failures:
+
+failures:
+    claude_recovers_from_home_gap_deletion_and_same_size_replacement
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p theywork-collect --test collectors`

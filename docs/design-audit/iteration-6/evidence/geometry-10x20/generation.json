@@ -1,0 +1,22 @@
+{
+  "kind": "Actual Ui compositor and native cells, not a terminal-window screenshot",
+  "cell_pixels": [
+    10,
+    20
+  ],
+  "cases": 9,
+  "surfaces": [
+    "tower",
+    "office-auto",
+    "inspector-now"
+  ],
+  "sizes": [
+    "80x24",
+    "120x36",
+    "192x58"
+  ],
+  "generated_at_utc": "2026-09-08T19:50:39.492761+00:00",
+  "binary_sha256": "1f2331cd528861205f597a9f0c20c08c3ce0f3684024816e4146c46e1f5ae697",
+  "built_they_work_sha256": "56b8d1f93738f6a5cca1cc9097026874d46ff4e800f54ed90baabfca72fd9f01",
+  "command": "PYTHONPATH=docs/design-audit/tmp/python python3 docs/design-audit/iteration-6/capture_geometry.py"
+}

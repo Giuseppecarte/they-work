@@ -1,0 +1,582 @@
+{
+  "no-sources-image-80x24": {
+    "sha256": "05db64e3544770b7ec39fcc93fa056cda2cff869813dcd265e5757ca7dab0cd2",
+    "status": "pass",
+    "note": "Inspected native heading, cause, action placement and 80-column wrapping. The action describes the actual scope; no unavailable source is presented as an empty team."
+  },
+  "scanning-image-80x24": {
+    "sha256": "07c8126234d7241d23b9a152b97beb6522844c8e2c78e9d6dc746100c98cebb5",
+    "status": "pass",
+    "note": "Inspected native heading, cause, action placement and 80-column wrapping. The action describes the actual scope; no unavailable source is presented as an empty team."
+  },
+  "source-error-image-80x24": {
+    "sha256": "9c18baf5f1ff71683f028b29380d3e2694e90df27e94c5f42d7b087f35a2f25b",
+    "status": "pass",
+    "note": "Inspected native heading, cause, action placement and 80-column wrapping. The action describes the actual scope; no unavailable source is presented as an empty team."
+  },
+  "filtered-empty-image-80x24": {
+    "sha256": "57312729e7ccbf269b816e44595051ff42f8974bc3bd819efe3781b90da08025",
+    "status": "pass",
+    "note": "Inspected native heading, cause, action placement and 80-column wrapping. The action describes the actual scope; no unavailable source is presented as an empty team."
+  },
+  "empty-image-80x24": {
+    "sha256": "bf8824c75890f8f3a38c996f57df214b6a3e9ccbf73b5f29b761b22a4bc00968",
+    "status": "pass",
+    "note": "Inspected native heading, cause, action placement and 80-column wrapping. The action describes the actual scope; no unavailable source is presented as an empty team."
+  },
+  "tower-image-80x24": {
+    "sha256": "de306141561078188ea65dde5a6c28a298779a77d81cdbc10f84a82b7b7eccf4",
+    "status": "pass",
+    "note": "Inspected stacked floor count, room membership, worker scale, native plates, floor boundaries and current request counts. No label overlaps a face, hand or workstation."
+  },
+  "tower-image-120x36": {
+    "sha256": "e1ca2e4402d75226425c4937f74efd34288c4b977a36f7183aab89946325e09d",
+    "status": "pass",
+    "note": "Inspected stacked floor count, room membership, worker scale, native plates, floor boundaries and current request counts. No label overlaps a face, hand or workstation."
+  },
+  "tower-image-192x58": {
+    "sha256": "31d714a827fd7661fb67ced8470348731a25abb248b3c3506cb38914fa56ca72",
+    "status": "pass",
+    "note": "Inspected stacked floor count, room membership, worker scale, native plates, floor boundaries and current request counts. No label overlaps a face, hand or workstation."
+  },
+  "tower-image-110x80": {
+    "sha256": "9ae2d0fc42140ad2127c30f8ae65b425cf1c82354c3925e7149f903bf29ca2aa",
+    "status": "pass",
+    "note": "Inspected stacked floor count, room membership, worker scale, native plates, floor boundaries and current request counts. No label overlaps a face, hand or workstation."
+  },
+  "tower-no-color-80x24": {
+    "sha256": "971250601510e5f84beed435b78c56b45b4d28e896cb4f1742d42241002611db",
+    "status": "pass",
+    "note": "Inspected shape-based selection independently of status, real family scope, visible-person paging and source coverage; no colour-only action is needed."
+  },
+  "tower-native-80x24": {
+    "sha256": "07064352d652755ffd7cdabb496bc5a097c7c528a80cb467810294744c3eb8d8",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "tower-light-80x24": {
+    "sha256": "c5db90a2f879c6eabf40476d12c1a570a3e90e3652ee6f5e7d45aa1e971e61b6",
+    "status": "pass",
+    "note": "Rechecked the contrast correction: semantic light native plates and signs have readable dark text; image figures remain unobscured."
+  },
+  "office-auto-light-80x24": {
+    "sha256": "81f92685bffaa54a14c4760714c51186468e595ad3d2647bf33ad14fbc2f03a4",
+    "status": "pass",
+    "note": "Rechecked the contrast correction: semantic light native plates and signs have readable dark text; image figures remain unobscured."
+  },
+  "office-auto-image-80x24": {
+    "sha256": "327b67e8ad3711d0736c467a693d13f4635e7303f2724b6ea1499a42ed8d88cb",
+    "status": "pass",
+    "note": "Inspected detail scale, plates below figures, selected Team/People scope, split rooms when they fit and the native Latest list in tall areas."
+  },
+  "office-auto-image-120x36": {
+    "sha256": "ed7df86e304e68bbef3dd6ff7c6b4a896c17a19df98abafac890ee55ce905ac1",
+    "status": "pass",
+    "note": "Inspected detail scale, plates below figures, selected Team/People scope, split rooms when they fit and the native Latest list in tall areas."
+  },
+  "office-auto-image-192x58": {
+    "sha256": "6d4efce5b02ccd65b400bff16953c444eaa6976a7c792e02e33da9ac9404cac2",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "office-auto-image-110x80": {
+    "sha256": "4fbbe7eebeeb8ec74fffe847aeefacc9b9a93cc1036973783dfc1c92efe1438a",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-source-offline-80x24": {
+    "sha256": "bdc64a1f166ba4d39f33740a3ce9664362a400379c046c76c8c78e19a5df1819",
+    "status": "pass",
+    "note": "Inspected offline/stale counters and markers; old observations are excluded from current working/request counts."
+  },
+  "directed-source-stale-80x24": {
+    "sha256": "cd20724ac1a7bd8d10ec4814bd39f2d0af6c945728d9e5d4d3b2003b22b3ea6a",
+    "status": "pass",
+    "note": "Inspected offline/stale counters and markers; old observations are excluded from current working/request counts."
+  },
+  "directed-names-off-80x24": {
+    "sha256": "b5a8a35f0f238fa704a75769623ad2573870391c0e7035c1e906a098dbdfca7e",
+    "status": "pass",
+    "note": "Inspected names-off: selected identity and human requests stay named, optional peers become status-only plates."
+  },
+  "directed-single-worker-110x80": {
+    "sha256": "ac659b5c036f73459dbaf70cf0ff153887e66853c320d6a4e19a83bc74ce63d9",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-last-person-80x24": {
+    "sha256": "f905f2e30a7b6d935c1d2aa8b2632735beea3191530f7724015f1b7584e1de4e",
+    "status": "pass",
+    "note": "Inspected the actual selected last identity after navigation; project/person labels, native selection marker and Floor/Team/People scope agree."
+  },
+  "directed-last-floor-80x24": {
+    "sha256": "3ac5b5ebdc2506d4dae3246e759faadee45e9a559a0faf2c0bb7d794039536a5",
+    "status": "pass",
+    "note": "Inspected the actual selected last identity after navigation; project/person labels, native selection marker and Floor/Team/People scope agree."
+  },
+  "phone-attention-image-80x24": {
+    "sha256": "f3060ad4a22ea27f63ccc051a1f190b2b6993d9ee28ea79e3c287684bda0f554",
+    "status": "pass",
+    "note": "Inspected two distinct human waits, truthful explicit-request explanations, source coverage, channel buttons and actual selected-record target."
+  },
+  "request-image-80x24": {
+    "sha256": "b8e317678166cf157d90eb8a9cf181d0b40e8bff1b4e7e6c75fcf1238bccb770",
+    "status": "pass",
+    "note": "Inspected actual REVIEW REQUEST heading, exact fixture command/project, bounded Allow once/Decline buttons and Back. No response was submitted."
+  },
+  "directed-long-names-80x24": {
+    "sha256": "d4af96f44aff9bf3634268540b56ffa777313d64441ec15a2aed0129672cb1f6",
+    "status": "not-tested",
+    "note": "Layout and explicit truncation inspected; the Menlo reconstruction lacks the Tokyo CJK glyphs and displays missing-glyph boxes. Actual terminal font fallback is not verified."
+  },
+  "phone-now-image-32x14": {
+    "sha256": "536ba7f520691f1e060f019652af17dbb5fc5faccade3c65ddcaab9e3c8632fd",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-image-80x24": {
+    "sha256": "e9287477c91684aeeabba93a90bcf0a39266fc5bec9fa46ac63909de84045950",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-image-120x36": {
+    "sha256": "442558cf9e3d67976b6ea26f34daa6d9c50d391aef7cd865c953b3d40cb6d70c",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-image-192x58": {
+    "sha256": "94c16ff1cb4c5b90544773d5e379ab3c97e586d750dce9361cc19f672c32f599",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-image-110x80": {
+    "sha256": "fbbcd9cb4e58b243fa7f4a4dfb7625bbcc917cef7b5a7fa8dc88d6bb3277a19d",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-image-240x70": {
+    "sha256": "9ba185a74fbbc3a78f18424dfcdc7a5e11193e00e49cf576c68df59c4dcafba2",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-light-80x24": {
+    "sha256": "a976740c2abf482dd18317a00c0bef884d2b7435ae009fe269b38aa8e72177e2",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-now-no-color-80x24": {
+    "sha256": "9df7599db3ccb7dd1fc4048b520106a0d0e1670ca91e2d5c933d2791c1a7b9e0",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-attention-image-32x14": {
+    "sha256": "08a341bd1307c2d94642a9a9c4e9c9463fd23b06a05426e9bd109d1d3e44abfc",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-edits-image-80x24": {
+    "sha256": "929297898cdf6ec7d5377845b75bee6e57f2b30edc3b95195b60aa73db677c16",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-messages-image-80x24": {
+    "sha256": "6e8d878fbf743bd475d91fb60896f997529cf701cc8ce9f2370de77642f093fc",
+    "status": "pass",
+    "note": "Inspected native channels, selected-record identity, truthful state/history wording, coverage, exact wrapping/ellipsis and viewport bounds. Empty Messages states no recorded history; it does not invent conversation content."
+  },
+  "phone-attention-light-80x24": {
+    "sha256": "8f112da7d40aeb00320afae579cec71dd768c6217c3495e87d8fe968437fab44",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-attention-no-color-80x24": {
+    "sha256": "415decae1680fe7e345eb3697768cd4cace0ab137bcd49ef2ce381e0ec1e79b4",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-attention-image-120x36": {
+    "sha256": "ae3c06991b5b75f23fd9799f1a5bb8650eb6312cde2ba723d81330271f01d9e4",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-attention-image-192x58": {
+    "sha256": "0e285ab43c9c73882d659a90bd2dc4d4ecfba7cd9724cf404c034987e4134d82",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-attention-image-110x80": {
+    "sha256": "b3bd7abc57762e80da8916acccc6fc846758a02a7de8b9334467ba2e9531bcef",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-attention-image-240x70": {
+    "sha256": "699a07ffbe2735bd19d0e23eb54ac60f0d0d43a49e6e4c0da8fae22634f16b91",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-image-32x14": {
+    "sha256": "366fc72132e049df12f1289a62769b32c49918f6d18ad746638d08a4d8883f2b",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-light-80x24": {
+    "sha256": "437a875f9954e0ee9e3f39221e2e86e41d388bcb821637db75828ed791a10dbd",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-no-color-80x24": {
+    "sha256": "c9a76add0b6cf00a1b6420d98cf99ea9358a4f8a3be077c30e6e589d0c0b9ce5",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-image-120x36": {
+    "sha256": "a3d17e5ce10a804f655aaad373dec759abdd9e20815fb388853e6d23e2d36d1e",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-image-192x58": {
+    "sha256": "591cb39f714eb1985465778e4125ded9dd0fdbc37e189682212fc6ed7b33937a",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-image-110x80": {
+    "sha256": "a5b4d2b7cf9efa515c5adaa5f2d8f1427bd57462d48d0fddbd79aad60ba8edec",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-edits-image-240x70": {
+    "sha256": "fc4a1c8d7f2a9bbe573a844e4366388640ca15877bec8c7fc234a860b9156319",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-image-32x14": {
+    "sha256": "35caf03fb45934f0fbae8098c45b6204dfa33d7ab1fed12d338797375aad3a3c",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-light-80x24": {
+    "sha256": "36929c215502fa61ba9180ae39ee1579a86bdddc54f2ea9a812a32f57a8e8cdf",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-no-color-80x24": {
+    "sha256": "bc27d39415d052cef433d4294cb9f89ee769156556df121f176c672e71f24726",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-image-120x36": {
+    "sha256": "01dac842e07e2b6954582873883a9d1e370ca3c69d140f42ec315a5800951f1f",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-image-192x58": {
+    "sha256": "341c4f562a32020ceb542733034115883eb04a361b3cf78b29a14a0a8bf4e59d",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-image-110x80": {
+    "sha256": "e9b44b4b600cd441b016c6af8fc2dd98fdf079ecd92d80dc9662e9180e8fbb87",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "phone-messages-image-240x70": {
+    "sha256": "461cca23d62a6522eef90f3daa362622f2f8daae7e00c4e04a942bf150915ada",
+    "status": "pass",
+    "note": "Individually inspected remaining channel/theme/size frame: selected tab and record are readable, explicit wait/history semantics and coverage agree, clipping uses ellipses, and empty Messages describes the absence of recorded history. Wide/tall panels retain bounded reading width."
+  },
+  "tower-image-240x70": {
+    "sha256": "df98c2ad91983d0586fb395e5db48abcc929473564d2ac4ea60e99ebaab9b17b",
+    "status": "pass",
+    "note": "Five capped floors remain readable at wide size, with native project hierarchy and distinct selection/status. Exterior space does not enlarge people."
+  },
+  "office-auto-native-80x24": {
+    "sha256": "3384798195341210f8a791e66c725a4e86657caa1625afa3138be69934455a0e",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "office-auto-no-color-80x24": {
+    "sha256": "81bf4f384537b9e0ffd7ef19367ea8d8ebb7c712dd728cc8f11bb9fecced1e7f",
+    "status": "pass",
+    "note": "Monochrome office retains selection and state text independently; visible names and equipment remain distinguishable."
+  },
+  "office-auto-image-240x70": {
+    "sha256": "51f9c7385da98599958b6d082bdfbbc9b0e9d0eb8740b4f0221ca1995c5198d6",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-single-project-80x24": {
+    "sha256": "6cebbb2a535f562a1427f269f76463c51ef47dca60adc6706cb9f3d1c99a9401",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-project-120x36": {
+    "sha256": "2e9303da00b97ca0f158177827767917b442ea36d8eacb454cb4e66c41580484",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-project-192x58": {
+    "sha256": "af0807d27ea9df845acbbae506c71ed7833718c126d4b05fa20736e55275a606",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-project-110x80": {
+    "sha256": "815ec967029a939d5c92f426b025a538d5c4011a4adaf2a5ea097085b784ccc4",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-project-240x70": {
+    "sha256": "96d47c2a312d52a8e908aa3c769acb8e95cc24f63ff51aa6f76865183e4b6bea",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-worker-80x24": {
+    "sha256": "919e2d1628a917db81774fbf42bd9b0ca89fa800b968ac053e0609c8bbc5c5ca",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-worker-120x36": {
+    "sha256": "7dd4ece07ee110395ff12bfb456b9fa21f01b5dbe3b2db20289a4c9a195c8d84",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-worker-192x58": {
+    "sha256": "8ab25fbf2e679399bf679a7a537b7f73ff77800e3ea0d05ee3df5b1b35a985b7",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-worker-240x70": {
+    "sha256": "ecf672844e23f539ed1c04fcbaf74bb208d6216d84c9a0ba7903fb0ade34683d",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-last-floor-120x36": {
+    "sha256": "01c95f52b39d6c80b630d3dd754b1201e27fc5f453685434bacedf3ca22f87b5",
+    "status": "pass",
+    "note": "Final tower page keeps floor 20 visibly selected, with exact 20/20 scope and real people counts. Capped floors, labels and Visit actions do not collide with chrome."
+  },
+  "directed-last-floor-192x58": {
+    "sha256": "053a580e2697b640422fdca29c296ee75c054d1fa7c77710e89ee296e1f8a81a",
+    "status": "pass",
+    "note": "Final tower page keeps floor 20 visibly selected, with exact 20/20 scope and real people counts. Capped floors, labels and Visit actions do not collide with chrome."
+  },
+  "directed-last-floor-110x80": {
+    "sha256": "e50121adfc30283117998836f0d12e574cf4874fab144bed7fd8b8db938cbfa1",
+    "status": "pass",
+    "note": "Final tower page keeps floor 20 visibly selected, with exact 20/20 scope and real people counts. Capped floors, labels and Visit actions do not collide with chrome."
+  },
+  "directed-last-floor-240x70": {
+    "sha256": "e4cd0891fba9d2b78a4bd6eb92ca85c3ff86b1fbe5ee958c382913fc545bc5b7",
+    "status": "pass",
+    "note": "Final tower page keeps floor 20 visibly selected, with exact 20/20 scope and real people counts. Capped floors, labels and Visit actions do not collide with chrome."
+  },
+  "directed-last-person-120x36": {
+    "sha256": "66ef3e87d35aadc6c76fb59cdfbc83993e65849b974ceb57af33d5be0fa601af",
+    "status": "pass",
+    "note": "Final selected person is the real independent desk, not a fabricated team member. Floor/Desks/People scopes are explicit; taller layouts retain the selected identity in Latest on this floor."
+  },
+  "directed-last-person-192x58": {
+    "sha256": "9f83c9d5e3a060004f06a9ac3a65dbb3aaa138460cf0b5575b3b97e8d130f03f",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-last-person-110x80": {
+    "sha256": "0c1bebe38bf2ce828ea625a7eb1c983a16cda66b0e999f32f098617534f2d907",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-last-person-240x70": {
+    "sha256": "1458213b012965ad099b534446b37bc9a8faf85cf2368cf5c3e90ed2d2134579",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-names-off-120x36": {
+    "sha256": "f37aa32f9cd4a4af90e0af20ee59e973cd1b1e0c09813083fa50cdc638b597f5",
+    "status": "pass",
+    "note": "Names-off hides ordinary aliases while preserving the selected person and both explicit human requests. State symbols remain independent from selection and readable under every visible workstation."
+  },
+  "directed-names-off-192x58": {
+    "sha256": "c3e12ef3355f6fa4dd00e08735f4e9fc8ca66c6c249adfe4ad563c617ea13cf0",
+    "status": "pass",
+    "note": "Names-off hides ordinary aliases while preserving the selected person and both explicit human requests. State symbols remain independent from selection and readable under every visible workstation."
+  },
+  "directed-names-off-110x80": {
+    "sha256": "408b16ee522fdf8c05221ee8445752ce71063bd9e9cee8d46b61e227f56248c3",
+    "status": "pass",
+    "note": "Names-off hides ordinary aliases while preserving the selected person and both explicit human requests. State symbols remain independent from selection and readable under every visible workstation."
+  },
+  "directed-names-off-240x70": {
+    "sha256": "23812d8d18440841ede25ede1d7f07393008cd4c8692847d58486fbfc3126d57",
+    "status": "pass",
+    "note": "Names-off hides ordinary aliases while preserving the selected person and both explicit human requests. State symbols remain independent from selection and readable under every visible workstation."
+  },
+  "directed-source-stale-120x36": {
+    "sha256": "4eab92c89de327781230281154cc2956f7abd7dc0213d461ff138873796e1f02",
+    "status": "pass",
+    "note": "Stale source counts replace current working/attention counts. Every affected person has a tilde marker and neutral pose; identities and floor actions remain available."
+  },
+  "directed-source-stale-192x58": {
+    "sha256": "4a6dee76368737de07bda2b9c2a02cccb7bc015bc4f2013e387d7c1d8145cf76",
+    "status": "pass",
+    "note": "Stale source counts replace current working/attention counts. Every affected person has a tilde marker and neutral pose; identities and floor actions remain available."
+  },
+  "directed-source-stale-110x80": {
+    "sha256": "d92b032b989b793d2eb609a29e855f111b49edb1d9e0188e88823444b7501f31",
+    "status": "pass",
+    "note": "Stale source counts replace current working/attention counts. Every affected person has a tilde marker and neutral pose; identities and floor actions remain available."
+  },
+  "directed-source-stale-240x70": {
+    "sha256": "48ad79b1b29617360aa1bfb289a4ddcb39fb2670e40c569f112b1b98b0fdb4f0",
+    "status": "pass",
+    "note": "Stale source counts replace current working/attention counts. Every affected person has a tilde marker and neutral pose; identities and floor actions remain available."
+  },
+  "directed-source-offline-120x36": {
+    "sha256": "1e0ac53ef539ee20a014f6b966a63e80b0d278d9333eb4c5a7c0c7e740321d51",
+    "status": "pass",
+    "note": "Only the unavailable project is labelled seven offline with neutral people/monitor cues. Other observed projects preserve their current work counts; selection stays separate from unavailable markers."
+  },
+  "directed-source-offline-192x58": {
+    "sha256": "44d461ca9165876f4720c9702a2021ad71073bb21893c9f03e6eaea20af805e3",
+    "status": "pass",
+    "note": "Only the unavailable project is labelled seven offline with neutral people/monitor cues. Other observed projects preserve their current work counts; selection stays separate from unavailable markers."
+  },
+  "directed-source-offline-110x80": {
+    "sha256": "5fb99dca514ffa34cbc1f44af84ae20ff6e6bd0ab1160545fa0103a9e54496ef",
+    "status": "pass",
+    "note": "Only the unavailable project is labelled seven offline with neutral people/monitor cues. Other observed projects preserve their current work counts; selection stays separate from unavailable markers."
+  },
+  "directed-source-offline-240x70": {
+    "sha256": "62a091a231d16b889aa079139a463dc5cf7ed151b8f86945f7d7ad6de433f20b",
+    "status": "pass",
+    "note": "Only the unavailable project is labelled seven offline with neutral people/monitor cues. Other observed projects preserve their current work counts; selection stays separate from unavailable markers."
+  },
+  "directed-mixed-waits-80x24": {
+    "sha256": "23484bea486625cbc6ec4bea23602d370444651809ae5ad0ade44cafde0b0d81",
+    "status": "pass",
+    "note": "Mixed explicit human and provider/tool waits keep distinct symbols and counted categories. Selected identity, real team membership and ordinary neighboring floors remain readable."
+  },
+  "directed-mixed-waits-120x36": {
+    "sha256": "c343695b20809c3547927c8ea898dbce3703831398cb297cc1f900567e79b578",
+    "status": "pass",
+    "note": "Mixed explicit human and provider/tool waits keep distinct symbols and counted categories. Selected identity, real team membership and ordinary neighboring floors remain readable."
+  },
+  "directed-mixed-waits-192x58": {
+    "sha256": "c93c15f9dfd3b430d6da379daa6ca87460020dde83cf6e7568678f9d44e609c3",
+    "status": "pass",
+    "note": "Mixed explicit human and provider/tool waits keep distinct symbols and counted categories. Selected identity, real team membership and ordinary neighboring floors remain readable."
+  },
+  "directed-mixed-waits-110x80": {
+    "sha256": "63698273c029de18557435dbe438789daa0d0e92768e3bbb7feabf4eb8fb4836",
+    "status": "pass",
+    "note": "Mixed explicit human and provider/tool waits keep distinct symbols and counted categories. Selected identity, real team membership and ordinary neighboring floors remain readable."
+  },
+  "directed-mixed-waits-240x70": {
+    "sha256": "cd83b630d067a9dc1d1a777ef99efdb8e06bb5ae657da08f93cf0a527c3c9916",
+    "status": "pass",
+    "note": "Mixed explicit human and provider/tool waits keep distinct symbols and counted categories. Selected identity, real team membership and ordinary neighboring floors remain readable."
+  },
+  "directed-finder-none-80x24": {
+    "sha256": "2ee47e97652dda26b328df2afc542cb3c63f3513bdabe7ae615aa5f4ff9b19a3",
+    "status": "pass",
+    "note": "No-results Finder retains the exact query, zero count, concrete search suggestions and clear/back controls. The opaque overlay stays within viewport while retaining floor context."
+  },
+  "directed-finder-none-120x36": {
+    "sha256": "5fc1dfdb15b0a8fcaf628212a0928a1d251cd4d0e10e9e7068f88a636be380a1",
+    "status": "pass",
+    "note": "No-results Finder retains the exact query, zero count, concrete search suggestions and clear/back controls. The opaque overlay stays within viewport while retaining floor context."
+  },
+  "directed-finder-none-192x58": {
+    "sha256": "429180887bcc26442cf72efa88b9730344fea02b8aac2f4e97a96008bbfcd597",
+    "status": "pass",
+    "note": "No-results Finder retains the exact query, zero count, concrete search suggestions and clear/back controls. The opaque overlay stays within viewport while retaining floor context."
+  },
+  "directed-finder-none-110x80": {
+    "sha256": "028165c3ad0631d2288281f5bc8be3358e27aa1019c08ad4f330021c070c60d3",
+    "status": "pass",
+    "note": "No-results Finder retains the exact query, zero count, concrete search suggestions and clear/back controls. The opaque overlay stays within viewport while retaining floor context."
+  },
+  "directed-finder-none-240x70": {
+    "sha256": "46f65f950725ea68c7eda7a6060cdc3155e1ce38e10eb912bf9dc7d214780a19",
+    "status": "pass",
+    "note": "No-results Finder retains the exact query, zero count, concrete search suggestions and clear/back controls. The opaque overlay stays within viewport while retaining floor context."
+  },
+  "directed-long-names-120x36": {
+    "sha256": "11ec6835a6f72f0a3e0e407af6e40ecfd92375660a07d9084e181f788dacfad7",
+    "status": "not-tested",
+    "note": "Layout and ellipsis visually inspected: long native task text stays in its fascia, separate aliases identify people, no collision. CJK glyph appearance remains unverified because this Menlo reconstruction renders the CJK prefix as missing glyph boxes; terminal-font validation is required."
+  },
+  "directed-long-names-192x58": {
+    "sha256": "03832f23bb541f5256ad07df897cf1da4f975eb27a46fb5c39c53797526e03e2",
+    "status": "not-tested",
+    "note": "Layout and ellipsis visually inspected: long native task text stays in its fascia, separate aliases identify people, no collision. CJK glyph appearance remains unverified because this Menlo reconstruction renders the CJK prefix as missing glyph boxes; terminal-font validation is required."
+  },
+  "directed-long-names-110x80": {
+    "sha256": "af698db29d297d1bdfc4a6802fc729ab09dcf09b9bb7a0ae14afd356f528b2de",
+    "status": "not-tested",
+    "note": "Layout and ellipsis visually inspected: long native task text stays in its fascia, separate aliases identify people, no collision. CJK glyph appearance remains unverified because this Menlo reconstruction renders the CJK prefix as missing glyph boxes; terminal-font validation is required."
+  },
+  "directed-long-names-240x70": {
+    "sha256": "64f1fc193e11650723e0b7481625938d0645711a0114edc22f160e5e546ecab8",
+    "status": "not-tested",
+    "note": "Layout and ellipsis visually inspected: long native task text stays in its fascia, separate aliases identify people, no collision. CJK glyph appearance remains unverified because this Menlo reconstruction renders the CJK prefix as missing glyph boxes; terminal-font validation is required."
+  },
+  "tower-image-32x14": {
+    "sha256": "38099f37ea9318f86ef407c229b21497eca6461d07f8502994c23fad43de442f",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "office-auto-image-32x14": {
+    "sha256": "5cc144ff4d498ee5423ef654464e83eed9701c80b7f203f24bc8b87d28e275cb",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-single-project-32x14": {
+    "sha256": "f7de440b960316950c793b23b1640cde4ead4b4665be582448cdedf652d884af",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-single-worker-32x14": {
+    "sha256": "4692cbde4d7bd69e04f810dd1f5fdb66a03af8d31e0844fa2110b46d614da1fc",
+    "status": "pass",
+    "note": "Final complete PNG reopened after singular-count correction: context reads 1 project; one-floor composition, real identities, selection, state and actions remain readable. At 32 columns the compact roster retains observation age; larger frames deliberately preserve overview scale."
+  },
+  "directed-last-floor-32x14": {
+    "sha256": "3373024beb67423202820018c4fd840f6e58f96265ad509b251d39f86c85a3ae",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-last-person-32x14": {
+    "sha256": "65a6dc6838b18a4f3a31fc1084bc049c3ea52b26e5685c8ed4dc9f28632e140c",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-names-off-32x14": {
+    "sha256": "63b2ec7cdca5054f0b50df1082781bde95dbf88bd8542195bf2f8283142a1837",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-source-stale-32x14": {
+    "sha256": "5c9154a672a0960578162ec44b1ef7aa09ef59375ae55b5894408afeecb0c627",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide. Stale observation shows Last known and 3m ago rather than claiming current work."
+  },
+  "directed-source-offline-32x14": {
+    "sha256": "f8364d9469a03f0c3ca73b66720843fc9e4f65d1a99765487e70f84a1710fc3b",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide. Unavailable source stays explicit even when its observation is recent."
+  },
+  "directed-mixed-waits-32x14": {
+    "sha256": "fd0719b7d64e8bc4c8f2d975d86a2f560219b308b223b729ececb6edaa801840",
+    "status": "pass",
+    "note": "Final frame reopened after reserved observation columns: state and source age remain legible, selected identity and task title keep separate lines, and row/scene labels do not collide."
+  },
+  "directed-finder-none-32x14": {
+    "sha256": "97e28467895e62cdf6107f7ee4bfc31c3ec0a6b0b0d2fb1fbade6c22bc427624",
+    "status": "pass",
+    "note": "Final compact empty Finder reopened; zero results, retained query, clear suggestions and bounded modal remain readable over the updated compact source rows."
+  },
+  "directed-long-names-32x14": {
+    "sha256": "ca66248e333c515e28749f7613369f571d117d24662d9a00904e97c2c0fa3dea",
+    "status": "not-tested",
+    "note": "Final compact layout reopened: reserved approval/state and age remain legible beside bounded task text. CJK glyph appearance cannot be certified by this Menlo-only replay, which shows missing glyph boxes; no visual glyph pass is claimed."
+  }
+}

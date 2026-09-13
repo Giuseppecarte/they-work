@@ -1,0 +1,10 @@
+{
+  "command": "make check",
+  "seconds": 128.561047332998,
+  "exit": 0,
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "source_commit": "748d371f9769e83798f29a52fffeb90410afc3bd",
+  "setup": "Pinned native Rust 1.90; independent clean checkout/build target; preexisting dependency cache, not an empty download cache.",
+  "offline": false,
+  "checkout_tracked_changes": ""
+}

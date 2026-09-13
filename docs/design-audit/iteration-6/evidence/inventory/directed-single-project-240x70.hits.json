@@ -1,0 +1,233 @@
+[
+  {
+    "action": "SelectFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 11,
+    "width": 140,
+    "x": 50,
+    "y": 30
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 1,
+    "width": 9,
+    "x": 181,
+    "y": 30
+  },
+  {
+    "action": "SelectDesks(OfficeId(\"/projects/00-checkout\"), WorkerId(\"floor-00-person-6\"))",
+    "height": 1,
+    "width": 23,
+    "x": 50,
+    "y": 31
+  },
+  {
+    "action": "SelectTeam(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 23,
+    "x": 73,
+    "y": 31
+  },
+  {
+    "action": "SelectTeam(WorkerId(\"floor-00-person-3\"))",
+    "height": 1,
+    "width": 23,
+    "x": 96,
+    "y": 31
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 6,
+    "width": 7,
+    "x": 51,
+    "y": 34
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 5,
+    "width": 7,
+    "x": 102,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 5,
+    "width": 11,
+    "x": 102,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 3,
+    "width": 5,
+    "x": 103,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 2,
+    "width": 5,
+    "x": 108,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 6,
+    "x": 106,
+    "y": 38
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 10,
+    "x": 102,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 5,
+    "width": 7,
+    "x": 113,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 5,
+    "width": 11,
+    "x": 113,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 3,
+    "width": 5,
+    "x": 114,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 2,
+    "width": 5,
+    "x": 119,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 1,
+    "width": 6,
+    "x": 117,
+    "y": 38
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 1,
+    "width": 10,
+    "x": 113,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 5,
+    "width": 7,
+    "x": 124,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 5,
+    "width": 11,
+    "x": 124,
+    "y": 35
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 3,
+    "width": 5,
+    "x": 125,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 2,
+    "width": 5,
+    "x": 130,
+    "y": 37
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 1,
+    "width": 6,
+    "x": 128,
+    "y": 38
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 1,
+    "width": 10,
+    "x": 124,
+    "y": 40
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 69
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 12,
+    "x": 9,
+    "y": 69
+  },
+  {
+    "action": "Decorate(OfficeId(\"/projects/00-checkout\"))",
+    "height": 1,
+    "width": 10,
+    "x": 22,
+    "y": 69
+  }
+]

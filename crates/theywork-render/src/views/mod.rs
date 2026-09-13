@@ -1,12 +1,18 @@
 //! The presentation screens rendered by this crate.
 
 pub mod cameras;
+pub mod control;
+pub mod customize;
 pub mod desk;
+pub(crate) mod finder;
 mod guard_scene;
 pub mod help;
+pub mod inspector;
 pub mod office;
 pub mod phone;
 pub mod settings;
+pub(crate) mod tower;
+pub mod workboard;
 
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -14,37 +20,44 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 use ratatui::Frame;
-use theywork_core::{Millis, Office, Worker, WorkerStatus};
+use theywork_core::{Millis, Worker, WorkerStatus};
 
 use crate::canvas::Canvas;
-use crate::sprite::{Sprite, SpriteSet, WorkerLook, WORKER_HEAD_HEIGHT};
+#[cfg(test)]
+use crate::sprite::WORKER_HEAD_HEIGHT;
+#[cfg(test)]
+use crate::sprite::{Sprite, SpriteSet, WorkerLook};
 
-pub(crate) const BACKGROUND: Color = Color::Rgb(13, 11, 20);
+pub(crate) const BACKGROUND: Color = Color::Rgb(13, 24, 40);
 pub(crate) const WALL: Color = Color::Rgb(58, 51, 88);
 pub(crate) const FLOOR: Color = Color::Rgb(220, 201, 164);
-pub(crate) const PANEL: Color = Color::Rgb(23, 20, 37);
-pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(42, 36, 64);
-pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(46, 36, 16);
-pub(crate) const INK: Color = Color::Rgb(232, 226, 214);
-pub(crate) const MUTED: Color = Color::Rgb(138, 130, 153);
-pub(crate) const ACCENT: Color = Color::Rgb(88, 214, 232);
-pub(crate) const HOT: Color = Color::Rgb(232, 52, 44);
-pub(crate) const WARNING: Color = Color::Rgb(240, 180, 41);
-pub(crate) const GOOD: Color = Color::Rgb(86, 194, 106);
-pub(crate) const SCANLINE: Color = Color::Rgb(42, 36, 64);
+pub(crate) const PANEL: Color = Color::Rgb(22, 38, 58);
+pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(34, 53, 77);
+pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(53, 39, 24);
+pub(crate) const INK: Color = Color::Rgb(255, 244, 222);
+pub(crate) const MUTED: Color = Color::Rgb(178, 191, 210);
+pub(crate) const ACCENT: Color = Color::Rgb(91, 222, 205);
+pub(crate) const SECONDARY: Color = Color::Rgb(197, 174, 242);
+pub(crate) const HOT: Color = Color::Rgb(255, 126, 130);
+pub(crate) const WARNING: Color = Color::Rgb(255, 199, 99);
+pub(crate) const GOOD: Color = Color::Rgb(129, 219, 155);
+pub(crate) const SCANLINE: Color = PANEL_HIGHLIGHT;
 
-pub(crate) const LIGHT_BACKGROUND: Color = Color::Rgb(244, 239, 228);
-pub(crate) const LIGHT_PANEL: Color = Color::Rgb(230, 223, 208);
-pub(crate) const LIGHT_LINE: Color = Color::Rgb(203, 192, 170);
-pub(crate) const LIGHT_INK: Color = Color::Rgb(58, 53, 44);
+pub(crate) const LIGHT_BACKGROUND: Color = Color::Rgb(255, 249, 235);
+pub(crate) const LIGHT_PANEL: Color = Color::Rgb(248, 239, 222);
+pub(crate) const LIGHT_LINE: Color = Color::Rgb(222, 212, 191);
+pub(crate) const LIGHT_INK: Color = Color::Rgb(35, 48, 64);
 pub(crate) const LIGHT_WALL: Color = Color::Rgb(207, 198, 224);
 pub(crate) const LIGHT_WALL_DARK: Color = Color::Rgb(189, 178, 212);
 pub(crate) const LIGHT_FLOOR: Color = Color::Rgb(230, 217, 184);
 pub(crate) const LIGHT_WOOD: Color = Color::Rgb(162, 112, 63);
 pub(crate) const LIGHT_WOOD_DARK: Color = Color::Rgb(131, 87, 41);
-pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(47, 140, 66);
-pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(201, 138, 0);
-pub(crate) const LIGHT_FAILED: Color = Color::Rgb(192, 38, 31);
+pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(34, 91, 59);
+pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(113, 69, 6);
+pub(crate) const LIGHT_FAILED: Color = Color::Rgb(152, 38, 49);
+pub(crate) const LIGHT_ACCENT: Color = Color::Rgb(12, 91, 90);
+pub(crate) const LIGHT_SECONDARY: Color = Color::Rgb(105, 45, 138);
+pub(crate) const LIGHT_MUTED: Color = Color::Rgb(91, 82, 88);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum UiTheme {
@@ -62,6 +75,12 @@ pub(crate) fn light_color(color: Color) -> Color {
         LIGHT_LINE
     } else if color == INK {
         LIGHT_INK
+    } else if color == ACCENT {
+        LIGHT_ACCENT
+    } else if color == SECONDARY {
+        LIGHT_SECONDARY
+    } else if color == MUTED {
+        LIGHT_MUTED
     } else if color == WALL {
         LIGHT_WALL
     } else if color == Color::Rgb(43, 37, 66) {
@@ -85,6 +104,14 @@ pub(crate) fn light_color(color: Color) -> Color {
         color
     }
 }
+
+/// Filled selection stays distinct from request and error colors.
+pub(crate) fn selection_style() -> Style {
+    Style::default()
+        .fg(BACKGROUND)
+        .bg(ACCENT)
+        .add_modifier(Modifier::BOLD)
+}
 pub(crate) fn remap_buffer_theme(buffer: &mut Buffer, theme: UiTheme) {
     if theme != UiTheme::Light {
         return;
@@ -98,13 +125,27 @@ pub(crate) fn remap_buffer_theme(buffer: &mut Buffer, theme: UiTheme) {
 pub(crate) fn below_tab_bar(area: Rect) -> Rect {
     Rect::new(
         area.x,
-        area.y.saturating_add(1),
+        area.y.saturating_add(2),
         area.width,
-        area.height.saturating_sub(1),
+        area.height.saturating_sub(2),
     )
 }
 pub(crate) fn has_area(area: Rect) -> bool {
     area.width > 0 && area.height > 0
+}
+
+/// Preserve explicit lines while removing terminal control sequences from records.
+pub(crate) fn safe_multiline(text: &str) -> String {
+    text.split('\n')
+        .map(safe_display)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+pub(crate) fn wrap_text(text: &str, width: u16) -> Vec<String> {
+    text.split('\n')
+        .flat_map(|line| desk::wrapped_lines(line, usize::from(width).max(1)))
+        .collect()
 }
 
 /// Clear an area to spaces before painting a widget over a previous view.
@@ -115,98 +156,15 @@ pub(crate) fn paint_opaque(frame: &mut Frame, area: Rect, style: Style) {
         return;
     }
     let buffer = frame.buffer_mut();
-    buffer.set_style(area, style);
     for row in 0..area.height {
         for column in 0..area.width {
             if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
-                cell.set_symbol(" ");
+                cell.reset();
+                cell.set_symbol(" ").set_style(style).set_skip(false);
             }
         }
     }
 }
-pub(crate) fn office_dot_color(office: &Office, now: Millis) -> Color {
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Blocked)
-    {
-        return WARNING;
-    }
-    if office
-        .workers
-        .iter()
-        .any(|worker| worker_status(worker, now) == WorkerStatus::Failed)
-    {
-        return HOT;
-    }
-    GOOD
-}
-
-pub(crate) fn draw_tab_bar(
-    frame: &mut Frame,
-    offices: &[&Office],
-    selected: usize,
-    all_selected: bool,
-    now: Millis,
-) {
-    let area = frame.area();
-    if area.width == 0 || area.height == 0 {
-        return;
-    }
-    let mut spans = Vec::with_capacity(offices.len().saturating_add(1).saturating_mul(3));
-    let all_dot = if offices
-        .iter()
-        .any(|office| office_dot_color(office, now) == WARNING)
-    {
-        WARNING
-    } else if offices
-        .iter()
-        .any(|office| office_dot_color(office, now) == HOT)
-    {
-        HOT
-    } else {
-        GOOD
-    };
-    let all_style = if all_selected {
-        Style::default()
-            .fg(INK)
-            .bg(PANEL_HIGHLIGHT)
-            .add_modifier(Modifier::BOLD)
-    } else {
-        Style::default().fg(MUTED).bg(PANEL)
-    };
-    spans.push(Span::styled("  0 ALL ", all_style));
-    spans.push(Span::styled("●", all_style.fg(all_dot)));
-    spans.push(Span::styled(" ", all_style));
-    for (index, office) in offices.iter().enumerate() {
-        let number = if index < 9 {
-            (b'1' + index as u8) as char
-        } else {
-            '+'
-        };
-        let style = if !all_selected && index == selected {
-            Style::default()
-                .fg(INK)
-                .bg(PANEL_HIGHLIGHT)
-                .add_modifier(Modifier::BOLD)
-        } else {
-            Style::default().fg(MUTED).bg(PANEL)
-        };
-        spans.push(Span::styled(
-            format!(" {number} {} ", short_path(&office.name, 16)),
-            style,
-        ));
-        spans.push(Span::styled("●", style.fg(office_dot_color(office, now))));
-        spans.push(Span::styled(" ", style));
-    }
-    Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(BACKGROUND))
-        .render(
-            Rect::new(frame.area().x, frame.area().y, frame.area().width, 1),
-            frame.buffer_mut(),
-        );
-}
-
 pub(crate) fn inset(area: Rect, amount: u16) -> Rect {
     let horizontal = amount.saturating_mul(2).min(area.width);
     let vertical = amount.saturating_mul(2).min(area.height);
@@ -274,6 +232,15 @@ pub(crate) fn draw_footer(frame: &mut Frame, area: Rect, text: &str) {
     if !has_area(area) {
         return;
     }
+    let text = if area.width < 28 {
+        "? help · q quit"
+    } else if area.width < 50 {
+        "Enter open · Esc back · ? help"
+    } else if area.width < 76 {
+        "arrows move · Enter open · Esc back · ? help"
+    } else {
+        text
+    };
     Paragraph::new(Line::from(vec![
         Span::styled("  ", Style::default()),
         Span::styled(text.to_string(), Style::default().fg(MUTED)),
@@ -300,34 +267,8 @@ pub(crate) fn draw_panel(frame: &mut Frame, area: Rect, title: &str, selected: b
     inset(area, 1)
 }
 
-pub(crate) fn fill_office_background(canvas: &mut Canvas, sprites: &SpriteSet) -> usize {
-    canvas.fill(WALL);
-    let wall_height = canvas.height().saturating_mul(2) / 3;
-    let floor_start = wall_height.min(canvas.height());
-    for y in floor_start..canvas.height() {
-        for x in 0..canvas.width() {
-            canvas.set(x, y, FLOOR);
-        }
-    }
-    let wall_width = canvas.scale_width(sprites.wall_tile.width().max(1));
-    let wall_height_tile = canvas.scale_half_height(sprites.wall_tile.height().max(1));
-    for y in (0..floor_start).step_by(wall_height_tile) {
-        for x in (0..canvas.width()).step_by(wall_width) {
-            canvas.blit_scaled(&sprites.wall_tile, x, y, wall_width, wall_height_tile);
-        }
-    }
-
-    let floor_width = canvas.scale_width(sprites.floor_tile.width().max(1));
-    let floor_height = canvas.scale_half_height(sprites.floor_tile.height().max(1));
-    for y in (floor_start..canvas.height()).step_by(floor_height) {
-        for x in (0..canvas.width()).step_by(floor_width) {
-            canvas.blit_scaled(&sprites.floor_tile, x, y, floor_width, floor_height);
-        }
-    }
-    floor_start
-}
-
 #[derive(Clone, Copy)]
+#[cfg(test)]
 pub(crate) struct PixelRect {
     pub(crate) x: usize,
     pub(crate) y: usize,
@@ -335,6 +276,7 @@ pub(crate) struct PixelRect {
     pub(crate) height: usize,
 }
 
+#[cfg(test)]
 pub(crate) fn render_worker_with_look(
     canvas: &mut Canvas,
     sprites: &SpriteSet,
@@ -343,7 +285,18 @@ pub(crate) fn render_worker_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let sprite = sprites.worker_frame(worker, *look, now);
+    let horizontal_scale = sprite_pixel_width(canvas);
+    let sprite = if placement.width / horizontal_scale >= 24 && placement.height >= 34 {
+        sprites.worker_frame(worker, *look, now)
+    } else {
+        sprites.worker_frame_fitting(
+            worker,
+            *look,
+            now,
+            placement.width / horizontal_scale,
+            placement.height,
+        )
+    };
     render_sprite_region(
         canvas,
         &sprite,
@@ -352,6 +305,7 @@ pub(crate) fn render_worker_with_look(
     );
 }
 
+#[cfg(test)]
 pub(crate) fn render_worker_head_with_look(
     canvas: &mut Canvas,
     sprites: &SpriteSet,
@@ -360,20 +314,20 @@ pub(crate) fn render_worker_head_with_look(
     now: i64,
     placement: PixelRect,
 ) {
-    let sprite = sprites.worker_frame(worker, *look, now);
-    render_sprite_region(
-        canvas,
-        &sprite,
-        (
-            0,
-            0,
-            sprite.width(),
-            WORKER_HEAD_HEIGHT.min(sprite.height()),
-        ),
-        placement,
-    );
+    let width = placement.width / sprite_pixel_width(canvas);
+    let (sprite, source) = sprites.worker_head_fitting(worker, *look, now, width, placement.height);
+    render_sprite_region(canvas, &sprite, source, placement);
 }
 
+fn sprite_pixel_width(canvas: &Canvas) -> usize {
+    if canvas.encoding() == crate::canvas::PixelEncoding::Quadrants && !canvas.has_image_density() {
+        2
+    } else {
+        1
+    }
+}
+
+#[cfg(test)]
 fn render_sprite_region(
     canvas: &mut Canvas,
     sprite: &Sprite,
@@ -390,72 +344,25 @@ fn render_sprite_region(
     if width == 0 || height == 0 || source_width == 0 || source_height == 0 {
         return;
     }
-    let integer_scale = (width / source_width).min(height / source_height);
-    let (draw_width, draw_height) = if integer_scale > 0 {
-        (
-            source_width.saturating_mul(integer_scale),
-            source_height.saturating_mul(integer_scale),
-        )
-    } else {
-        let draw_width = width
-            .min(height.saturating_mul(source_width) / source_height)
-            .max(1);
-        let draw_height = height
-            .min(width.saturating_mul(source_height) / source_width)
-            .max(1);
-        (draw_width, draw_height)
-    };
+    let pixel_width = sprite_pixel_width(canvas);
+    let integer_scale = (width / source_width / pixel_width)
+        .min(height / source_height)
+        .max(1);
+    let draw_width = source_width
+        .saturating_mul(integer_scale)
+        .saturating_mul(pixel_width);
+    let draw_height = source_height.saturating_mul(integer_scale);
     let draw_x = x.saturating_add(width.saturating_sub(draw_width) / 2);
     let draw_y = y.saturating_add(height.saturating_sub(draw_height) / 2);
-    for target_y in 0..draw_height {
+    for target_y in 0..draw_height.min(height) {
         let sample_y = source_y + target_y.saturating_mul(source_height) / draw_height;
-        for target_x in 0..draw_width {
+        for target_x in 0..draw_width.min(width) {
             let sample_x = source_x + target_x.saturating_mul(source_width) / draw_width;
             if let Some(color) = sprite.pixel(sample_x, sample_y) {
                 canvas.set(draw_x + target_x, draw_y + target_y, color);
             }
         }
     }
-}
-
-pub(crate) fn paint_scanlines(buffer: &mut Buffer, area: Rect, now: i64) {
-    if area.width == 0 || area.height == 0 {
-        return;
-    }
-    let phase = now.div_euclid(140).rem_euclid(3) as u16;
-    for row in 0..area.height {
-        if row % 3 != phase {
-            continue;
-        }
-        for column in 0..area.width {
-            if let Some(cell) = buffer.cell_mut((area.x + column, area.y + row)) {
-                if cell.symbol() == " " {
-                    cell.set_bg(SCANLINE);
-                }
-            }
-        }
-    }
-}
-
-pub(crate) fn grid_rect(area: Rect, index: usize, columns: usize, rows: usize) -> Rect {
-    if columns == 0 || rows == 0 {
-        return Rect::new(area.x, area.y, 0, 0);
-    }
-    let column = index % columns;
-    let row = index / columns;
-    if row >= rows {
-        return Rect::new(area.x, area.y, 0, 0);
-    }
-    let x0 = area.x as u32 + (area.width as u32 * column as u32 / columns as u32);
-    let x1 = area.x as u32 + (area.width as u32 * (column + 1) as u32 / columns as u32);
-    let y0 = area.y as u32 + (area.height as u32 * row as u32 / rows as u32);
-    let y1 = area.y as u32 + (area.height as u32 * (row + 1) as u32 / rows as u32);
-    Rect::new(
-        x0.min(u16::MAX as u32) as u16,
-        y0.min(u16::MAX as u32) as u16,
-        x1.saturating_sub(x0).min(u16::MAX as u32) as u16,
-        y1.saturating_sub(y0).min(u16::MAX as u32) as u16,
-    )
 }
 
 pub(crate) fn worker_status(worker: &Worker, now: Millis) -> WorkerStatus {
@@ -468,18 +375,6 @@ pub(crate) fn status_color(status: WorkerStatus) -> Color {
         WorkerStatus::Idle => MUTED,
         WorkerStatus::Blocked => WARNING,
         WorkerStatus::Failed => HOT,
-    }
-}
-
-pub(crate) fn status_style(status: WorkerStatus) -> Style {
-    Style::default().fg(status_color(status))
-}
-
-pub(crate) fn status_marker(status: WorkerStatus) -> Option<&'static str> {
-    match status {
-        WorkerStatus::Blocked => Some("!"),
-        WorkerStatus::Failed => Some("×"),
-        WorkerStatus::Running | WorkerStatus::Idle => None,
     }
 }
 
@@ -520,10 +415,6 @@ pub(crate) fn human_tokens(tokens: u64) -> String {
     }
 }
 
-pub(crate) fn timestamp(now: i64) -> String {
-    format!("t+{:06}s", now.max(0).div_euclid(1_000) % 1_000_000)
-}
-
 pub(crate) fn safe_display(text: &str) -> String {
     let mut output = String::with_capacity(text.len());
     for character in text.chars() {
@@ -545,18 +436,55 @@ pub(crate) fn short_path(path: &str, max_chars: usize) -> String {
         return String::new();
     }
     let safe = safe_display(path);
-    let chars: Vec<char> = safe.chars().collect();
-    if chars.len() <= max_chars {
+    if Line::from(safe.as_str()).width() <= max_chars {
         return safe;
     }
-    if max_chars == 1 {
-        return "…".to_string();
+    let mut head = String::new();
+    let mut width = 0;
+    for character in safe.chars() {
+        let cell_width = Line::from(character.to_string()).width();
+        if width + cell_width > max_chars - 1 {
+            break;
+        }
+        head.push(character);
+        width += cell_width;
     }
-    let head: String = chars.iter().take(max_chars - 1).copied().collect();
     format!("{head}…")
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn light_text_and_statuses_remain_legible_on_selected_and_attention_panels() {
+        use super::*;
+        let luminance = |color: Color| {
+            let Color::Rgb(r, g, b) = color else {
+                panic!("expected RGB token")
+            };
+            [r, g, b]
+                .into_iter()
+                .zip([0.2126, 0.7152, 0.0722])
+                .map(|(channel, weight)| {
+                    let value = f64::from(channel) / 255.0;
+                    weight
+                        * if value <= 0.04045 {
+                            value / 12.92
+                        } else {
+                            ((value + 0.055) / 1.055).powf(2.4)
+                        }
+                })
+                .sum::<f64>()
+        };
+        for text in [INK, MUTED, ACCENT, GOOD, WARNING, HOT] {
+            for panel in [BACKGROUND, PANEL, PANEL_HIGHLIGHT, ATTENTION_PANEL] {
+                let ratio =
+                    (luminance(light_color(panel)) + 0.05) / (luminance(light_color(text)) + 0.05);
+                assert!(
+                    ratio >= 4.5,
+                    "{text:?} on {panel:?} has contrast {ratio:.2}"
+                );
+            }
+        }
+    }
     use ratatui::backend::TestBackend;
     use ratatui::layout::Rect;
     use ratatui::style::Color;
@@ -572,6 +500,7 @@ mod tests {
                 for cell in &mut frame.buffer_mut().content {
                     cell.set_symbol("X");
                     cell.set_bg(Color::Blue);
+                    cell.set_style(Style::default().add_modifier(Modifier::BOLD));
                 }
                 paint_opaque(frame, area, Style::default().bg(PANEL));
             })
@@ -582,6 +511,7 @@ mod tests {
                 let cell = &buffer.content[usize::from(row) * 12 + usize::from(column)];
                 assert_eq!(cell.symbol(), " ");
                 assert_eq!(cell.bg, PANEL);
+                assert!(!cell.modifier.contains(Modifier::BOLD));
             }
         }
     }
@@ -604,12 +534,12 @@ mod tests {
         let unicode = "界🛠️é".repeat(80);
         for width in 0..=16 {
             assert!(
-                short_path(&unicode, width).chars().count() <= width,
+                Line::from(short_path(&unicode, width)).width() <= width,
                 "elided text exceeded width {width}"
             );
         }
         assert_eq!(short_path(&unicode, 1), "…");
-        assert_eq!(short_path(&unicode, 2).chars().count(), 2);
+        assert_eq!(short_path(&unicode, 2), "…");
     }
     #[test]
     fn safe_display_replaces_controls_and_emoji() {
@@ -625,7 +555,54 @@ mod tests {
     }
 
     #[test]
+    fn full_portrait_keeps_its_aspect_ratio_in_quadrant_cells() {
+        use crate::canvas::{ColorDepth, PixelEncoding};
+        use theywork_core::{Agent, OfficeId, WorkerId};
+
+        let worker = Worker::new(
+            WorkerId("portrait-aspect".into()),
+            OfficeId("office".into()),
+            Agent::Codex,
+            "Portrait".into(),
+            0,
+        );
+        let look = crate::sprite::worker_look(&worker);
+        let sprites = SpriteSet::new();
+        let mut half = Canvas::with_color_depth(24, 34, ColorDepth::TrueColor);
+        let mut quadrants = Canvas::with_color_depth_and_encoding(
+            48,
+            34,
+            ColorDepth::TrueColor,
+            PixelEncoding::Quadrants,
+        );
+        for (canvas, width) in [(&mut half, 24), (&mut quadrants, 48)] {
+            render_worker_with_look(
+                canvas,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: 34,
+                },
+            );
+        }
+        // Both buffers cover the same physical area in typical 1:2 terminal
+        // cells. Full portraits must obey the same aspect rule as miniatures.
+        for y in 0..34 {
+            for x in 0..24 {
+                assert_eq!(half.pixel(x, y), quadrants.pixel(x * 2, y));
+                assert_eq!(half.pixel(x, y), quadrants.pixel(x * 2 + 1, y));
+            }
+        }
+    }
+
+    #[test]
     fn phone_avatar_is_the_head_crop_of_the_office_sprite() {
+        use crate::canvas::{ColorDepth, PixelEncoding};
         use theywork_core::{Agent, OfficeId, WorkerId};
 
         let worker = Worker::new(
@@ -637,41 +614,58 @@ mod tests {
         );
         let look = crate::sprite::worker_look(&worker);
         let sprites = SpriteSet::new();
-        let mut full = Canvas::new(24, 34);
-        render_worker_with_look(
-            &mut full,
-            &sprites,
-            &worker,
-            &look,
-            0,
-            PixelRect {
-                x: 0,
-                y: 0,
-                width: 24,
-                height: 34,
-            },
-        );
-        let mut head = Canvas::new(24, WORKER_HEAD_HEIGHT);
-        render_worker_head_with_look(
-            &mut head,
-            &sprites,
-            &worker,
-            &look,
-            0,
-            PixelRect {
-                x: 0,
-                y: 0,
-                width: 24,
-                height: WORKER_HEAD_HEIGHT,
-            },
-        );
-        for y in 0..WORKER_HEAD_HEIGHT {
-            for x in 0..24 {
-                assert_eq!(
-                    head.pixel(x, y),
-                    full.pixel(x, y),
-                    "crop mismatch at ({x}, {y})"
-                );
+        for encoding in [
+            PixelEncoding::HalfBlocks,
+            PixelEncoding::Quadrants,
+            PixelEncoding::Sextants,
+        ] {
+            let width = if encoding == PixelEncoding::Quadrants {
+                48
+            } else {
+                24
+            };
+            let mut full =
+                Canvas::with_color_depth_and_encoding(width, 34, ColorDepth::TrueColor, encoding);
+            render_worker_with_look(
+                &mut full,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: 34,
+                },
+            );
+            let mut head = Canvas::with_color_depth_and_encoding(
+                width,
+                WORKER_HEAD_HEIGHT,
+                ColorDepth::TrueColor,
+                encoding,
+            );
+            render_worker_head_with_look(
+                &mut head,
+                &sprites,
+                &worker,
+                &look,
+                0,
+                PixelRect {
+                    x: 0,
+                    y: 0,
+                    width,
+                    height: WORKER_HEAD_HEIGHT,
+                },
+            );
+            for y in 0..WORKER_HEAD_HEIGHT {
+                for x in 0..width {
+                    assert_eq!(
+                        head.pixel(x, y),
+                        full.pixel(x, y),
+                        "crop mismatch at ({x}, {y}) in {encoding:?}"
+                    );
+                }
             }
         }
     }

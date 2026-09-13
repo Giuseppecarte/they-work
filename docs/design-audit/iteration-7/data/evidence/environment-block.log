@@ -1,0 +1,6 @@
+Initial execution in workspace sandbox, 2026-09-08:
+Build: success, dev profile, 4.74s.
+Supervisor: Error: Operation not permitted (os error 1).
+Runner: Error: Fixture supervisor startup timed out.
+Cause: sandbox denied local TCP listener before provider startup.
+Follow-up run requests permission for authenticated loopback IPC only.

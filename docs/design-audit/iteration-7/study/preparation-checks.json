@@ -1,0 +1,32 @@
+{
+  "python_syntax": "pass",
+  "scorecard_rectangular": 34,
+  "blank_participant_records": "pass",
+  "local_links": "pass",
+  "pty_exits_and_restoration": [
+    {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    {
+      "exit": 0,
+      "terminal_restored": true
+    },
+    {
+      "exit": 0,
+      "terminal_restored": true
+    }
+  ],
+  "comparison_same_store_path_and_bytes": "pass",
+  "all_checkpoint_hashes": "pass",
+  "study_result_injection": "pass",
+  "launcher_doctor": "exit 0, synthetic 3 projects/6 threads; not_a_tty and no physical-terminal claim"
+}

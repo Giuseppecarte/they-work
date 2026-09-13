@@ -1,0 +1,3 @@
+*.ansi -text -diff
+*.log -whitespace
+*.txt -whitespace

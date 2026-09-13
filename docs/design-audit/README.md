@@ -3,6 +3,12 @@
 The working folder for the second audit of `they-work`. `GOAL.md` is the brief;
 everything the audit produces belongs here beside it.
 
+Start with the [iteration 6 review](iteration-6/REVIEW.md): current-work panels,
+complete computer workstations, observation-aware presentation, reversible
+appearance previews and a complete UI inventory. Its [validation record](iteration-6/VALIDATION.md)
+separates compositor checks, executable PTYs and publication gates.
+Earlier iterations remain historical evidence.
+
 | File | |
 | --- | --- |
 | `GOAL.md` | the brief: appearance, design fidelity, ease of use, and the blind spots to attack |

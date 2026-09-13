@@ -1,0 +1,20 @@
+[
+  {
+    "case": "macos-cli",
+    "job_id": 103778170349,
+    "run_id": 34777496710,
+    "candidate": "b202913",
+    "excerpt": "macos-cli.log",
+    "sha256": "cda2ec150000dcbc5f9e992ce3017f5e557c16bd67fe9ffde5552a4a7d01a733",
+    "result": "failed"
+  },
+  {
+    "case": "windows-timestamp",
+    "job_id": 103778170358,
+    "run_id": 34777496710,
+    "candidate": "b202913",
+    "excerpt": "windows-timestamp.log",
+    "sha256": "6a872bb224b96677de187ef30e906f98d8e44e2e9f0954175bdea8130fd66f23",
+    "result": "failed"
+  }
+]

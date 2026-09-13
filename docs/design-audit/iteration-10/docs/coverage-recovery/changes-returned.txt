@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+ PROJECT NOTEBOOK  /  All floors
+f All floors · i Show IDs
+1 Attention 2 Deliveries 3 Since your visit 4 Team
+
+   Jules H. · beta-docs / Draft… Result delivered                       17s ago
+ > Kai P. · alpha-shop / Checko… Result delivered                       17s ago
+   Alex M. · alpha-shop / Revie… Request recorded                       17s ago
+                                                               [ Inspect task ]
+ Result delivered · 17s ago  ·  record 2/3
+
+ Kai P. · Checkout test evidence delivered a result.
+ Checkout tests passed; review the migration before release.
+
+ From: Checkout test evidence
+ To: Not recorded
+
+ Recorded project:
+ /Users/gc/Documents/Programming/they-work/target/audit/iteration-10/docs/fixtu
+ res/coverage-recovery-fre4irzb/coverage/alpha-shop
+ Partial local history
+h coverage · Local history · 6 partial · older changes may be missing
+[ Back ] ↑↓ · Enter opens

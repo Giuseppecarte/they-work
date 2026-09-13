@@ -1,0 +1,24 @@
+ 0 TOWER >20 20-billing-service!                        20/20 · / find · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  15 working · 35 idle · 5 need help · 5 failed
+┌ FLOORS / PROJECTS ───────────────────────────────────────────────────────────┐
+│  F16 ! 16-design-system              !1 help · 0 working · 2 idle            │
+│  F17 ▸ 17-event-pipeline             1 working · 2 idle                      │
+│  F18 ▸ 18-mobile-app                 1 working · 2 idle                      │
+│  F19 × 19-atlas-web                  ×1 failed · 1 working · 1 idle          │
+│> F20 ! 20-billing-service            !1 help · 0 working · 2 idle            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌  F20 · 20-billing-service  ──────────────────────────────────────────────────┐
+│!1 help · 0 working · 2 idle                                                  │
+│…work/docs/design-audit/tmp/iteration-3-tower/fixture-60-0/20-billing-service │
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│
+│ TEAM · 1 of 3 listed (+2 more) · Enter visit                                 │
+│ NEEDS HELP Build account settings                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 20/20 · page 4/4 · PgUp/PgDn pages · Home first · End last

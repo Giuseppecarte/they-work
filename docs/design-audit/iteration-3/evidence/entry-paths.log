@@ -1,0 +1,10 @@
+{
+  "relative_folder_confirm": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "relative_folder_restart_other_directory": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

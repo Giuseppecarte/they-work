@@ -1,0 +1,59 @@
+[
+  {
+    "name": "format",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.63
+  },
+  {
+    "name": "workspace",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "test",
+      "--locked",
+      "--workspace",
+      "--",
+      "--test-threads=1"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 110.453
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 3.592
+  },
+  {
+    "name": "release",
+    "command": [
+      "sh",
+      "docs/design-audit/native-cargo.sh",
+      "build",
+      "--locked",
+      "--release",
+      "--bin",
+      "they-work"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 27.763
+  }
+]

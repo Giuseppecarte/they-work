@@ -1,0 +1,36 @@
+ 0 TOWER >1 they-work!                                                                1/1 · / find · c sources · ? help
+  DESK / they-work  codex conversation · observed 4m 06s ago · read-only
+
+▄▄▄▄▄▄▄▄▄▄▄  Re┌ PHONE / EDITS · 5 ─────────────────────────────────────────────────────────────────────┐
+▄▄▄▄▄▄▄▄▄▄▄   W│ they-work · 5 conversations                                                            │
+▄▄▄▄▄▄▄▄▄▄▄   a│ 1 Now  2 Attention  3 Edits  4 Messages                                                │26-09-07
+▄▄▄▄▄▄▄▄▄▄▄   -│>▄▄▄▄▄ Investigate the payment service connection refused after deploy                  │
+▄▄▄▄▄▄▄▄▄▄▄    │ ▄▄▄▄▄ recorded · 16s ago · codex · they-work                                           │
+▄▄▄▄▄▄▄▄▄▄▄   R│ ▄▄▄▄▄ editing • src/payments/connection.rs • +12 −3                                    │
+▄▄▄▄▄▄▄▄▄▄▄    │       Enter: full history and current state                                            │
+▄▄▄▄▄▄▄▄▄▄▄    │                                                                                        │
+┌ HISTORY · UTC│ ▄▄▄▄▄ Review the accessibility findings and keyboard navigation                        │──────────────┐
+│Conversation: │ ▄▄▄▄▄ recorded · 16s ago · codex · they-work                                           │              │
+│Thread: person│ ▄▄▄▄▄ editing • src/payments/connection.rs • +12 −3                                    │              │
+│Branch: main  │                                                                                        │              │
+│              │ ▄▄▄▄▄ Prepare release notes for the customer dashboard                                 │              │
+│Today (UTC)   │ ▄▄▄▄▄ recorded · 16s ago · codex · they-work                                           │              │
+│21:36 RAN     │ ▄▄▄▄▄ editing • src/payments/connection.rs • +12 −3                                    │              │
+│              │                                                                                        │              │
+│              │ ▄▄▄▄▄ Review the release plan for database migration and production cutover            │              │
+│21:37 EDITED  │ ▄▄▄▄▄ recorded · 4m 16s ago · codex · they-work                                        │              │
+│              │ ▄▄▄▄▄ editing • src/payments/connection.rs • +12 −3                                    │              │
+│              │                                                                                        │              │
+│21:37 SAID    │ ▄▄▄▄▄ Verify the customer import that stopped reporting progress                       │              │
+│              │ ▄▄▄▄▄ recorded · 4m 16s ago · codex · they-work                                        │              │
+│NOW · WAITING │ ▄▄▄▄▄ editing • src/payments/connection.rs • +12 −3                                    │              │
+│awaiting appro│                                                                                        │gration       │
+│customer-accou│                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+│              │                                                                                        │              │
+└──────────────│ 1/5 · newest first · recorded history                                                  │──────────────┘
+ Original · w c│↑↓ select  Enter inspect  ←→ channel  Esc close                                         │
+  ↑↓ history  P└────────────────────────────────────────────────────────────────────────────────────────┘

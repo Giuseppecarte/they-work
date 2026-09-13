@@ -1,0 +1,50 @@
+{
+  "kitty": {
+    "exit_code": 0,
+    "quit_sent": true,
+    "probe_answered": true,
+    "forced_cleanup": false,
+    "passed": true,
+    "errors": [],
+    "frame_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+    "frame_bytes": 138686,
+    "mouse_released": true,
+    "alternate_screen_left": true
+  },
+  "iterm2": {
+    "exit_code": 0,
+    "quit_sent": true,
+    "probe_answered": true,
+    "forced_cleanup": false,
+    "passed": true,
+    "errors": [],
+    "frame_sha256": "90c19aacc73751723cf916abf9ea727f25607ff3b3592d4e85b1c68f1effc37b",
+    "frame_bytes": 138443,
+    "mouse_released": true,
+    "alternate_screen_left": true
+  },
+  "sixel": {
+    "exit_code": 0,
+    "quit_sent": true,
+    "probe_answered": true,
+    "forced_cleanup": false,
+    "passed": true,
+    "errors": [],
+    "frame_sha256": "f7b4aec3565e1dd5b75d3a22aec05ba40884634d1d8e4b22872ad73f4167e11b",
+    "frame_bytes": 39000,
+    "mouse_released": true,
+    "alternate_screen_left": true
+  },
+  "fallback": {
+    "exit_code": 0,
+    "quit_sent": true,
+    "probe_answered": false,
+    "forced_cleanup": false,
+    "passed": true,
+    "errors": [],
+    "frame_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+    "frame_bytes": 9465,
+    "mouse_released": true,
+    "alternate_screen_left": true
+  }
+}

@@ -1,0 +1,19 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on shared package cache
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `release` profile [optimized] target(s) in 13.71s
+     Running `target/native-macos/release/examples/living_gallery docs/design-audit/tmp/iteration-4-art --motion`
+office 3: 2 seats, 1/2 pages, scale 2, 0 gags
+adjoining-room 3: 2 seats, 1/2 pages, scale 2, 0 gags
+gags 3: 2 seats, 1/2 pages, scale 2, 2 gags
+meeting 3: 2 seats, 1/2 pages, scale 2, 0 gags
+office 6: 2 seats, 1/3 pages, scale 3, 0 gags
+adjoining-room 6: 2 seats, 1/3 pages, scale 3, 0 gags
+gags 6: 2 seats, 1/3 pages, scale 3, 2 gags
+meeting 6: 2 seats, 1/5 pages, scale 3, 0 gags
+office 20: 3 seats, 1/7 pages, scale 4, 0 gags
+adjoining-room 20: 3 seats, 1/7 pages, scale 4, 0 gags
+gags 20: 3 seats, 1/7 pages, scale 4, 2 gags
+meeting 20: 3 seats, 1/10 pages, scale 4, 0 gags

@@ -1,0 +1,268 @@
+[
+  {
+    "action": "SelectFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 11,
+    "width": 79,
+    "x": 0,
+    "y": 35
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 1,
+    "width": 9,
+    "x": 70,
+    "y": 35
+  },
+  {
+    "action": "SelectDesks(OfficeId(\"/projects/00-checkout\"), WorkerId(\"floor-00-person-6\"))",
+    "height": 1,
+    "width": 23,
+    "x": 0,
+    "y": 36
+  },
+  {
+    "action": "SelectTeam(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 23,
+    "x": 23,
+    "y": 36
+  },
+  {
+    "action": "SelectTeam(WorkerId(\"floor-00-person-3\"))",
+    "height": 1,
+    "width": 23,
+    "x": 46,
+    "y": 36
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/00-checkout\"))",
+    "height": 6,
+    "width": 7,
+    "x": 1,
+    "y": 39
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 5,
+    "width": 6,
+    "x": 28,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 5,
+    "width": 12,
+    "x": 27,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 3,
+    "width": 5,
+    "x": 29,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 2,
+    "width": 4,
+    "x": 34,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 7,
+    "x": 31,
+    "y": 43
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 10,
+    "x": 28,
+    "y": 45
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 5,
+    "width": 6,
+    "x": 39,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 5,
+    "width": 12,
+    "x": 38,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 3,
+    "width": 5,
+    "x": 40,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 2,
+    "width": 4,
+    "x": 45,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 1,
+    "width": 7,
+    "x": 42,
+    "y": 43
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-1\"))",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 45
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 5,
+    "width": 6,
+    "x": 50,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 5,
+    "width": 12,
+    "x": 49,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 3,
+    "width": 5,
+    "x": 51,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 2,
+    "width": 4,
+    "x": 56,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 1,
+    "width": 7,
+    "x": 53,
+    "y": 43
+  },
+  {
+    "action": "Inspect(WorkerId(\"floor-00-person-2\"))",
+    "height": 1,
+    "width": 10,
+    "x": 50,
+    "y": 45
+  },
+  {
+    "action": "CustomizeField(0)",
+    "height": 1,
+    "width": 28,
+    "x": 81,
+    "y": 5
+  },
+  {
+    "action": "CustomizeField(1)",
+    "height": 1,
+    "width": 28,
+    "x": 81,
+    "y": 6
+  },
+  {
+    "action": "CustomizeField(2)",
+    "height": 1,
+    "width": 28,
+    "x": 81,
+    "y": 7
+  },
+  {
+    "action": "CustomizeField(3)",
+    "height": 1,
+    "width": 28,
+    "x": 81,
+    "y": 8
+  },
+  {
+    "action": "CustomizeField(4)",
+    "height": 1,
+    "width": 28,
+    "x": 81,
+    "y": 9
+  },
+  {
+    "action": "ApplyAppearance",
+    "height": 1,
+    "width": 9,
+    "x": 81,
+    "y": 23
+  },
+  {
+    "action": "CancelAppearance",
+    "height": 1,
+    "width": 10,
+    "x": 92,
+    "y": 23
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 79
+  }
+]

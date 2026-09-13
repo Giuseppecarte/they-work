@@ -1,0 +1,1718 @@
+{
+  "idle-half-blocks-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      256,
+      521,
+      786,
+      1047,
+      1313,
+      1576,
+      1843,
+      2105,
+      2366,
+      2629,
+      2892,
+      3153
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 2970,
+    "max_clothing_pixels": 3600,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-half-blocks-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      263,
+      550,
+      831,
+      1114,
+      1396,
+      1677,
+      1958,
+      2246,
+      2535,
+      2821,
+      3102,
+      3390
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 11,
+    "min_clothing_pixels": 2610,
+    "max_clothing_pixels": 3240,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-half-blocks-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-half-blocks-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      262,
+      522,
+      792,
+      1057,
+      1323,
+      1593,
+      1859,
+      2123,
+      2393,
+      2659,
+      2928,
+      3189
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-half-blocks-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      257,
+      541,
+      823,
+      1107,
+      1386,
+      1673,
+      1958,
+      2244,
+      2526,
+      2805,
+      3085,
+      3373
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-half-blocks-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      252,
+      523,
+      795,
+      1057,
+      1328,
+      1595,
+      1857,
+      2118,
+      2381,
+      2652,
+      2923,
+      3184
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 10,
+    "min_clothing_pixels": 2430,
+    "max_clothing_pixels": 2970,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-quadrants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      259,
+      542,
+      827,
+      1112,
+      1395,
+      1681,
+      1964,
+      2251,
+      2542,
+      2838,
+      3121,
+      3404
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 12,
+    "min_clothing_pixels": 2790,
+    "max_clothing_pixels": 3510,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-quadrants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-quadrants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      248,
+      509,
+      772,
+      1042,
+      1310,
+      1586,
+      1855,
+      2126,
+      2394,
+      2658,
+      2928,
+      3190
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 2700,
+    "max_clothing_pixels": 2700,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-quadrants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      255,
+      538,
+      830,
+      1123,
+      1413,
+      1703,
+      1985,
+      2274,
+      2557,
+      2845,
+      3132,
+      3416
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3150,
+    "max_clothing_pixels": 3150,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-quadrants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-sextants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      256,
+      527,
+      796,
+      1060,
+      1329,
+      1595,
+      1863,
+      2133,
+      2398,
+      2665,
+      2942,
+      3209
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 11,
+    "min_clothing_pixels": 900,
+    "max_clothing_pixels": 1350,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-sextants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      264,
+      551,
+      848,
+      1132,
+      1421,
+      1704,
+      1988,
+      2270,
+      2561,
+      2843,
+      3126,
+      3408
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 11,
+    "min_clothing_pixels": 990,
+    "max_clothing_pixels": 1200,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-sextants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "idle-sextants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      258,
+      527,
+      788,
+      1050,
+      1322,
+      1594,
+      1857,
+      2120,
+      2387,
+      2652,
+      2925,
+      3187
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 930,
+    "max_clothing_pixels": 930,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-sextants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      258,
+      549,
+      838,
+      1127,
+      1418,
+      1711,
+      2004,
+      2289,
+      2573,
+      2859,
+      3143,
+      3426
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 990,
+    "max_clothing_pixels": 990,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "completed",
+    "status_preserved": true,
+    "passed": true
+  },
+  "idle-sextants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-half-blocks-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      255,
+      527,
+      800,
+      1080,
+      1346,
+      1617,
+      1889,
+      2158,
+      2424,
+      2693,
+      2969,
+      3244
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 8,
+    "min_clothing_pixels": 3240,
+    "max_clothing_pixels": 3870,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-half-blocks-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      251,
+      534,
+      821,
+      1107,
+      1389,
+      1673,
+      1962,
+      2258,
+      2539,
+      2835,
+      3124,
+      3405
+    ],
+    "distinct_room_frames": 11,
+    "distinct_clothing_masks": 7,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3870,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-half-blocks-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-half-blocks-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      251,
+      521,
+      790,
+      1062,
+      1328,
+      1600,
+      1875,
+      2146,
+      2422,
+      2692,
+      2964,
+      3232
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-half-blocks-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      259,
+      541,
+      827,
+      1106,
+      1392,
+      1677,
+      1957,
+      2238,
+      2520,
+      2807,
+      3091,
+      3379
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-half-blocks-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-quadrants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      249,
+      520,
+      799,
+      1071,
+      1339,
+      1616,
+      1889,
+      2156,
+      2425,
+      2701,
+      2968,
+      3244
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 6,
+    "min_clothing_pixels": 2790,
+    "max_clothing_pixels": 3150,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-quadrants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      259,
+      544,
+      835,
+      1125,
+      1416,
+      1699,
+      1982,
+      2275,
+      2558,
+      2844,
+      3130,
+      3415
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 8,
+    "min_clothing_pixels": 3150,
+    "max_clothing_pixels": 3645,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-quadrants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-quadrants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      252,
+      522,
+      789,
+      1063,
+      1336,
+      1610,
+      1883,
+      2157,
+      2427,
+      2704,
+      2977,
+      3245
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 2700,
+    "max_clothing_pixels": 2700,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-quadrants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      256,
+      539,
+      833,
+      1123,
+      1415,
+      1705,
+      1996,
+      2294,
+      2584,
+      2870,
+      3164,
+      3451
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3150,
+    "max_clothing_pixels": 3150,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-quadrants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-sextants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      255,
+      533,
+      804,
+      1096,
+      1378,
+      1648,
+      1920,
+      2258,
+      2679,
+      2971,
+      3255,
+      3532
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 10,
+    "min_clothing_pixels": 960,
+    "max_clothing_pixels": 1260,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-sextants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      264,
+      550,
+      840,
+      1128,
+      1412,
+      1703,
+      1991,
+      2283,
+      2567,
+      2854,
+      3144,
+      3431
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 8,
+    "min_clothing_pixels": 1170,
+    "max_clothing_pixels": 1500,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-sextants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "working-sextants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      254,
+      535,
+      809,
+      1082,
+      1358,
+      1639,
+      1915,
+      2193,
+      2474,
+      2749,
+      3027,
+      3297
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 960,
+    "max_clothing_pixels": 960,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "working-sextants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      260,
+      548,
+      840,
+      1127,
+      1412,
+      1706,
+      1999,
+      2290,
+      2579,
+      2877,
+      3187,
+      3498
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 1020,
+    "max_clothing_pixels": 1020,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "working-sextants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-half-blocks-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      259,
+      532,
+      805,
+      1080,
+      1359,
+      1634,
+      1911,
+      2185,
+      2458,
+      2732,
+      3002,
+      3272
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 7,
+    "min_clothing_pixels": 3420,
+    "max_clothing_pixels": 3690,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-half-blocks-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      270,
+      551,
+      835,
+      1116,
+      1404,
+      1697,
+      1993,
+      2286,
+      2569,
+      2850,
+      3140,
+      3430
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 7,
+    "min_clothing_pixels": 3420,
+    "max_clothing_pixels": 3870,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-half-blocks-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-half-blocks-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      252,
+      523,
+      792,
+      1066,
+      1340,
+      1617,
+      1886,
+      2160,
+      2443,
+      2719,
+      2990,
+      3266
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-half-blocks-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      252,
+      536,
+      824,
+      1104,
+      1390,
+      1673,
+      1953,
+      2241,
+      2524,
+      2807,
+      3093,
+      3380
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3060,
+    "max_clothing_pixels": 3060,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-half-blocks-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-quadrants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      257,
+      538,
+      821,
+      1101,
+      1387,
+      1657,
+      1928,
+      2201,
+      2472,
+      2748,
+      3021,
+      3299
+    ],
+    "distinct_room_frames": 11,
+    "distinct_clothing_masks": 9,
+    "min_clothing_pixels": 2835,
+    "max_clothing_pixels": 3240,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-quadrants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      263,
+      548,
+      840,
+      1123,
+      1416,
+      1698,
+      1983,
+      2272,
+      2557,
+      2844,
+      3131,
+      3416
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 7,
+    "min_clothing_pixels": 3330,
+    "max_clothing_pixels": 3600,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-quadrants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-quadrants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      249,
+      522,
+      794,
+      1065,
+      1333,
+      1604,
+      1882,
+      2149,
+      2420,
+      2689,
+      2961,
+      3228
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 2700,
+    "max_clothing_pixels": 2700,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-quadrants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      261,
+      555,
+      841,
+      1128,
+      1416,
+      1702,
+      1993,
+      2278,
+      2566,
+      2860,
+      3149,
+      3435
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 3150,
+    "max_clothing_pixels": 3150,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-quadrants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-sextants-80x24-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      251,
+      525,
+      797,
+      1067,
+      1340,
+      1609,
+      1877,
+      2147,
+      2419,
+      2691,
+      2963,
+      3240
+    ],
+    "distinct_room_frames": 11,
+    "distinct_clothing_masks": 9,
+    "min_clothing_pixels": 1080,
+    "max_clothing_pixels": 1290,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-sextants-120x32-on": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      254,
+      539,
+      832,
+      1117,
+      1408,
+      1696,
+      1983,
+      2272,
+      2560,
+      2850,
+      3144,
+      3430
+    ],
+    "distinct_room_frames": 12,
+    "distinct_clothing_masks": 10,
+    "min_clothing_pixels": 1170,
+    "max_clothing_pixels": 1500,
+    "motion_enabled": true,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-sextants-iso-on-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "quiet-sextants-80x24-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      254,
+      521,
+      788,
+      1057,
+      1326,
+      1595,
+      1866,
+      2137,
+      2409,
+      2678,
+      2947,
+      3223
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 960,
+    "max_clothing_pixels": 960,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "observed_header": "FLOOR / they-work  /Users/gc/Documents/Pro\u2026 \u2022 3 workers \u2022 running \u2022 all desks",
+    "skin_adjacent_clothing_only": true,
+    "passed": true
+  },
+  "quiet-sextants-120x32-off": {
+    "samples": 12,
+    "minimum_sample_interval_ms": 240,
+    "sample_times_ms": [
+      260,
+      551,
+      851,
+      1142,
+      1436,
+      1725,
+      2024,
+      2315,
+      2597,
+      2886,
+      3179,
+      3477
+    ],
+    "distinct_room_frames": 1,
+    "distinct_clothing_masks": 1,
+    "min_clothing_pixels": 1020,
+    "max_clothing_pixels": 1020,
+    "motion_enabled": false,
+    "terminal_environment": "truecolor",
+    "requested_projection": "iso",
+    "clothing_rgb_lookup": [
+      [
+        47,
+        111,
+        174
+      ],
+      [
+        79,
+        158,
+        232
+      ],
+      [
+        127,
+        189,
+        242
+      ]
+    ],
+    "source_turn": "inProgress",
+    "status_preserved": true,
+    "passed": true
+  },
+  "quiet-sextants-iso-off-exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

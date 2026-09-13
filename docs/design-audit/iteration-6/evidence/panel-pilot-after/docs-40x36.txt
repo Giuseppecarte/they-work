@@ -1,0 +1,36 @@
+                                        
+ Casey                                  
+ Document API behavior                  
+ codex · Ready · 0s                     
+ Available history                      
+ [ Now ][ Activity ][ Team ][ Details ] 
+                                        
+ OBSERVED · 0s ago                      
+ No current activity reported           
+                                        
+ LATEST RESULT · Casey                  
+ Retry behavior documented.             
+ Changed docs/api.md.                   
+ Validation: examples match the         
+ current endpoint.                      
+                                        
+ RECORDED TEAM · 2 related tasks        
+ Avery · Working                        
+ Morgan · Question for you              
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+ [ Task actions ] [ Expand ]            
+ All shown · Esc back                   
+                                        

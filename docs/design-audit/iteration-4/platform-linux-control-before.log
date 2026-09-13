@@ -1,0 +1,83 @@
+building they-work-dev:local ...
+sha256:5d556c8ecd19aec6f9e3cd9f6a90ee91e07c66dcef5fab2c4c13f543ff4739a9
+   Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+   Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.91s
+     Running unittests src/lib.rs (target/debug/deps/theywork_control-c8bbbb914df6c96a)
+
+running 2 tests
+test supervisor::tests::permission_replies_cannot_expand_paths_network_or_lifetime ... ok
+test supervisor::tests::structured_reply_rejects_other_question_ids_and_nontext_answers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/control.rs (target/debug/deps/control-575fce3c786b64fe)
+
+running 9 tests
+test cancelled_turn_clears_approvals_and_external_ids_have_no_authority ... FAILED
+test approvals_require_current_request_and_single_action_decision ... FAILED
+test complete_and_disconnected_turns_do_not_stay_controllable_as_working ... FAILED
+test closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt ... FAILED
+test connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start ... FAILED
+test explicit_delegations_create_three_people_and_results_without_granting_child_control ... FAILED
+test supervisor_process_entry ... ok
+test owner_permissions_token_authentication_and_source_binding_are_enforced ... FAILED
+test uncertain_send_is_durable_and_restart_never_replays_or_reconnects ... FAILED
+
+failures:
+
+---- cancelled_turn_clears_approvals_and_external_ids_have_no_authority stdout ----
+
+thread 'cancelled_turn_clears_approvals_and_external_ids_have_no_authority' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- approvals_require_current_request_and_single_action_decision stdout ----
+
+thread 'approvals_require_current_request_and_single_action_decision' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- complete_and_disconnected_turns_do_not_stay_controllable_as_working stdout ----
+
+thread 'complete_and_disconnected_turns_do_not_stay_controllable_as_working' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt stdout ----
+
+thread 'closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start stdout ----
+
+thread 'connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- explicit_delegations_create_three_people_and_results_without_granting_child_control stdout ----
+
+thread 'explicit_delegations_create_three_people_and_results_without_granting_child_control' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- owner_permissions_token_authentication_and_source_binding_are_enforced stdout ----
+
+thread 'owner_permissions_token_authentication_and_source_binding_are_enforced' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+---- uncertain_send_is_durable_and_restart_never_replays_or_reconnects stdout ----
+
+thread 'uncertain_send_is_durable_and_restart_never_replays_or_reconnects' panicked at crates/theywork-control/tests/control.rs:28:14:
+Python 3 is needed for offline process fixtures
+
+
+failures:
+    approvals_require_current_request_and_single_action_decision
+    cancelled_turn_clears_approvals_and_external_ids_have_no_authority
+    closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt
+    complete_and_disconnected_turns_do_not_stay_controllable_as_working
+    connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start
+    explicit_delegations_create_three_people_and_results_without_granting_child_control
+    owner_permissions_token_authentication_and_source_binding_are_enforced
+    uncertain_send_is_durable_and_restart_never_replays_or_reconnects
+
+test result: FAILED. 1 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p theywork-control --test control`

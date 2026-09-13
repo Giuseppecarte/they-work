@@ -1,0 +1,17 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "exit_code": 2,
+  "issue_locations": 466,
+  "by_suffix": {
+    ".log": 125,
+    ".diff": 2,
+    ".txt": 339
+  },
+  "non_raw_evidence_issues": [],
+  "policy": "Raw log, fixed-width cell text and recorded diff bytes are preserved, including trailing spaces and terminal blank lines. Rust formatting and authored source/doc whitespace checks pass."
+}

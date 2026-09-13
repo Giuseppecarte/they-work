@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "baseline": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "application_candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "recorded_at": "2026-09-10T16:34:57.693073+00:00",
+  "engineering_findings": [
+    {
+      "id": "REL-01",
+      "size": "S",
+      "status": "verified",
+      "evidence": "control/REL-01.md",
+      "blocker": null
+    },
+    {
+      "id": "RELEASE-01",
+      "size": "S",
+      "status": "blocked/not tested",
+      "evidence": "release/RELEASE.md",
+      "blocker": "Actual native CI archive/checksum pairs from the same candidate are unavailable; fixture rehearsal is auxiliary only."
+    },
+    {
+      "id": "REPRO-01",
+      "size": "S",
+      "status": "verified",
+      "evidence": "repro/REPRO.md",
+      "blocker": null
+    },
+    {
+      "id": "DOC-01",
+      "size": "S",
+      "status": "verified",
+      "evidence": "docs/DOC-01.md",
+      "blocker": null
+    },
+    {
+      "id": "DATA-01",
+      "size": "M",
+      "status": "verified",
+      "evidence": "data/REPORT.md",
+      "blocker": null
+    },
+    {
+      "id": "DATA-02",
+      "size": "M",
+      "status": "verified",
+      "evidence": "data/REPORT.md",
+      "blocker": null
+    },
+    {
+      "id": "WIN-01",
+      "size": "M",
+      "status": "blocked/not tested",
+      "evidence": "windows/README.md",
+      "blocker": "Native Windows x64 and ARM64 replacement/recovery/process jobs have not executed."
+    },
+    {
+      "id": "PERF-01",
+      "size": "M",
+      "status": "verified",
+      "evidence": "perf/PERF-01.md",
+      "blocker": null
+    }
+  ],
+  "verified": 6,
+  "required": 8,
+  "gate_open": false,
+  "REL-02": {
+    "status": "not started; engineering gate remains closed",
+    "brief": "../iteration-7/reliability/IMPLEMENTATION-BRIEF.md"
+  },
+  "UX-01": "open/not tested;zero participants",
+  "UX-02": "open/not tested;zero participants",
+  "production_fix": {
+    "commit": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+    "problem": "Docker dependency-cache layer omitted an explicit Cargo test target and failed a clean multiarch build.",
+    "change": "Prepare a dummy target in the cache layer; complete source COPY replaces it.",
+    "regression": "Fails old layer;21/21 helper suite and clean final image pass."
+  },
+  "documentation_followup": "CONTRIBUTING clarifies Python>=3.11 for TOML-reading release helper;no application change.",
+  "fresh_vs_reused": "Clean image/repro/final integration use7cb26e4. Directed data/control/perf/visual checks begun at4097e4f are reused only with matching relevant Rust and binary hashes.",
+  "integrated_native_results": "validation/integration-results.json",
+  "native_process_results": "validation/native-process.json",
+  "study_status": "study/status.json",
+  "public_actions": "No push, public image tags or GitHub Release changes. Owned disposable loopback registry removed."
+}

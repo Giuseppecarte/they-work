@@ -1,0 +1,15 @@
+{
+  "UX-01": "open/not tested",
+  "UX-02": "open/not tested",
+  "participants_enrolled": 0,
+  "completed_sessions": 0,
+  "diary_entries": 0,
+  "prototypes": 0,
+  "followups": 0,
+  "baseline_frozen": false,
+  "candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "freeze_condition": "All eight engineering gates verified. Native Windows and release CI archives remain required.",
+  "preflight": "pass: five actual launcher PTYs, three presentation modes and two semantic variants; provisional candidate only",
+  "protocol": "Five new users:2 Codex,2 Claude,1 both;45min counterbalanced tower/compact, simulated requests, voluntary3workday diary. Qualify on2 same underlying breakdowns or1 severe reproducible decision/recipient/next-step failure. At most1 prototype each;20min affected-participant followup before default.",
+  "historical_evidence": "Preflight executes in an isolated archive because the existing launcher writes into its own iteration8 evidence directory."
+}

@@ -1,0 +1,38 @@
+{
+  "repair_focus_cursor_unicode_remember": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "restart_cancel_and_demo_preserve_choice": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "temporary_first_launch": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "demo_from_first_launch": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "no_save_locked_and_reconnection": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "save_failure_temporary_recovery": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "corrupt_saved_choice_temporary_recovery": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "small_empty_tower": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "editor_rejects_empty_and_multiline_paste": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

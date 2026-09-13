@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work·                                 1/1 · c sources · ? help
+  FLOOR / they-work  /Users/gc/Documents/Pro… • 3 workers • idle • floor quiet •
+
+▄▄▄▄▄▄▄▄▄▄▄▄▄┌ PHONE ────────────────────────────────────────────┐▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│                    ──────                         │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ they-work  3 workers                              │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ STANDUP                                           │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ 1 standup   2 blocked   3 ship   4 water          │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│>▄▄▄▄▄ Design the office  idle  4s ago             │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ talking • Review finished. Ready for the n… │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ codex · main · 4.2K tokens                  │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│                                                   │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ Review onboarding flow  idle  4s ago        │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ talking • Review finished. Ready for the n… │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ codex · main · 4.3K tokens                  │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│                                                   │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ Ship the release  idle  4s ago              │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ▄▄▄▄▄ talking • Review finished. Ready for the n… │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│       codex · main · 4.4K tokens                  │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ THE ROOM RIGHT NOW                                │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ 0 running  3 idle  0 needs you                    │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄│ ↑↓ scroll  Enter thread  ←→ channel  Esc close    │▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  ←↑↓→ / hjkl│                 ━━━━━━━━                          │  page 1/1   p
+             └───────────────────────────────────────────────────┘

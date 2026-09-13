@@ -139,7 +139,14 @@ impl PixelEncoding {
         let sextants = truthy(sextants_hint)
             || windows_terminal_session.is_some_and(|session| !session.is_empty())
             || terminal_program.is_some_and(sextant_terminal);
-        let quadrants = truthy(quadrants_hint) || terminal_is_usable;
+        // Apple Terminal commonly uses font glyphs whose vertical halves do
+        // not cover the line height. Half blocks with a top-colour background
+        // avoid repeated gaps along every vertical edge. Explicit hints win.
+        let apple_font_safe = terminal_program
+            .is_some_and(|program| program.eq_ignore_ascii_case("Apple_Terminal"))
+            && !sextants
+            && !truthy(quadrants_hint);
+        let quadrants = truthy(quadrants_hint) || (terminal_is_usable && !apple_font_safe);
         let encoding = Self::resolve(
             None,
             EncodingCapabilities {
@@ -159,12 +166,17 @@ impl PixelEncoding {
             Self::Sextants => "sextants selected for a known compatible terminal".to_string(),
             Self::Quadrants => concat!(
                 "quadrants selected for a usable terminal; sextant glyph coverage cannot be ",
-                "queried, so force it with THEYWORK_ENCODING=sextants"
+                "queried; compare encodings in Settings (s)"
+            )
+            .to_string(),
+            Self::HalfBlocks if apple_font_safe => concat!(
+                "half-blocks selected for Apple Terminal's font geometry; sextant glyph coverage ",
+                "cannot be queried; compare encodings in Settings (s)"
             )
             .to_string(),
             Self::HalfBlocks => concat!(
                 "half-blocks selected because TERM is dumb or cons25; sextant glyph coverage ",
-                "cannot be queried, so force it with THEYWORK_ENCODING=sextants"
+                "cannot be queried; compare encodings in Settings (s)"
             )
             .to_string(),
         };
@@ -271,6 +283,7 @@ pub struct PixelFrame {
     height: usize,
     rgba: Arc<Vec<u8>>,
     cell_area: Option<Rect>,
+    text_cells: Vec<(u16, u16, ratatui::buffer::Cell)>,
 }
 
 impl PixelFrame {
@@ -302,6 +315,37 @@ impl PixelFrame {
     pub fn cell_area(&self) -> Option<Rect> {
         self.cell_area
     }
+
+    /// Native text to paint after the image, including opaque panel blanks.
+    pub fn text_cells(&self) -> &[(u16, u16, ratatui::buffer::Cell)] {
+        &self.text_cells
+    }
+
+    /// Fill text backgrounds in the image so every graphics protocol preserves
+    /// opaque labels. The terminal still draws the actual font glyphs.
+    pub fn with_text_backgrounds(mut self) -> Self {
+        let Some(area) = self.cell_area else {
+            return self;
+        };
+        if self.text_cells.is_empty() || area.width == 0 || area.height == 0 {
+            return self;
+        }
+        let cell_width = self.width / usize::from(area.width);
+        let cell_height = self.height / usize::from(area.height);
+        let rgba = Arc::make_mut(&mut self.rgba);
+        for (x, y, cell) in &self.text_cells {
+            let (r, g, b) = rgb_of_color(cell.bg);
+            let left = usize::from(x - area.x) * cell_width;
+            let top = usize::from(y - area.y) * cell_height;
+            for py in top..(top + cell_height).min(self.height) {
+                for px in left..(left + cell_width).min(self.width) {
+                    let offset = (py * self.width + px) * 4;
+                    rgba[offset..offset + 4].copy_from_slice(&[r, g, b, 255]);
+                }
+            }
+        }
+        self
+    }
 }
 
 /// An in-memory pixel surface whose pixels are terminal colours or transparent.
@@ -317,6 +361,8 @@ pub struct Canvas {
     light_mode: bool,
     quantized_cache: QuantizedCache,
     last_rendered_area: Cell<Option<Rect>>,
+    image_mask_area: Cell<Option<Rect>>,
+    text_cells: Vec<(u16, u16, ratatui::buffer::Cell)>,
 }
 
 impl Canvas {
@@ -356,6 +402,8 @@ impl Canvas {
             light_mode: false,
             quantized_cache: RefCell::new(HashMap::new()),
             last_rendered_area: Cell::new(None),
+            image_mask_area: Cell::new(None),
+            text_cells: Vec::new(),
         };
         canvas.resize(width_px, height_px);
         canvas
@@ -400,6 +448,14 @@ impl Canvas {
     }
 
     pub(crate) fn set_cell_pixel_size(&mut self, size: Option<(usize, usize)>) {
+        self.set_image_cell_size(size);
+    }
+
+    /// Select negotiated physical pixel geometry independently of the text
+    /// fallback encoding. `None` returns to the compact character canvas.
+    /// Zero-sized terminal replies are invalid and select the fallback.
+    pub fn set_image_cell_size(&mut self, size: Option<(usize, usize)>) {
+        let size = size.filter(|&(width, height)| width > 0 && height > 0);
         if self.cell_pixel_size != size {
             self.last_rendered_area.set(None);
         }
@@ -413,14 +469,32 @@ impl Canvas {
         ))
     }
 
-    pub(crate) fn has_image_density(&self) -> bool {
+    pub fn has_image_density(&self) -> bool {
         self.cell_pixel_size.is_some()
     }
 
-    pub(crate) fn scale_width(&self, value: usize) -> usize {
-        value.saturating_mul(self.pixels_per_cell().0)
+    pub(crate) fn begin_frame(&mut self) {
+        self.last_rendered_area.set(None);
+        self.image_mask_area.set(None);
+        self.text_cells.clear();
     }
 
+    pub(crate) fn finish_frame(&mut self, buffer: &mut Buffer) {
+        if let Some(area) = self.image_mask_area.take() {
+            for y in area.y..area.bottom() {
+                for x in area.x..area.right() {
+                    if let Some(cell) = buffer.cell_mut((x, y)) {
+                        if !cell.skip {
+                            self.text_cells.push((x, y, cell.clone()));
+                        }
+                        cell.set_skip(false);
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
     pub(crate) fn scale_half_height(&self, value: usize) -> usize {
         value
             .saturating_mul(self.pixels_per_cell().1)
@@ -428,18 +502,9 @@ impl Canvas {
             / 2
     }
 
+    #[cfg(test)]
     pub(crate) fn half_space_height(&self, value: usize) -> usize {
         value.saturating_mul(2) / self.pixels_per_cell().1
-    }
-
-    pub(crate) fn scale_image_sprite_width(&self, value: usize) -> usize {
-        self.cell_pixel_size
-            .map_or(value, |_| self.scale_width(value))
-    }
-
-    pub(crate) fn scale_image_sprite_height(&self, value: usize) -> usize {
-        self.cell_pixel_size
-            .map_or(value, |_| self.scale_half_height(value))
     }
 
     /// Resize the surface to exactly fill a terminal-cell rectangle.
@@ -460,6 +525,13 @@ impl Canvas {
     pub fn strip_colors(buffer: &mut Buffer) {
         for cell in &mut buffer.content {
             cell.set_fg(Color::Reset).set_bg(Color::Reset);
+        }
+    }
+
+    pub fn quantize_colors(buffer: &mut Buffer) {
+        for cell in &mut buffer.content {
+            cell.set_fg(palette_color(cell.fg));
+            cell.set_bg(palette_color(cell.bg));
         }
     }
 
@@ -527,16 +599,58 @@ impl Canvas {
         self.pixels.get(self.index(x, y)?).copied().flatten()
     }
 
+    /// Replace exact room materials after drawing, preserving skin, clothing,
+    /// status colours and alpha. Sources use the current global light theme;
+    /// destinations are already selected for that theme by the room palette.
+    pub(crate) fn remap_materials(&mut self, mappings: &[(Color, Color)]) {
+        let mappings = mappings
+            .iter()
+            .map(|&(from, to)| {
+                (
+                    rgb_of_color(self.themed_color(from)),
+                    rgb_of_color(to),
+                    self.convert_color(to),
+                )
+            })
+            .collect::<Vec<_>>();
+        for (index, rgba) in Arc::make_mut(&mut self.rgba)
+            .chunks_exact_mut(4)
+            .enumerate()
+        {
+            if rgba[3] == 0 {
+                continue;
+            }
+            if let Some((_, (r, g, b), cell_color)) = mappings
+                .iter()
+                .find(|(from, _, _)| *from == (rgba[0], rgba[1], rgba[2]))
+            {
+                rgba[..3].copy_from_slice(&[*r, *g, *b]);
+                self.pixels[index] = Some(*cell_color);
+            }
+        }
+    }
+
     /// Copy this canvas into an owned RGBA8 frame for a terminal-image encoder.
     ///
     /// This accessor deliberately does not select a graphics protocol or write
     /// to the terminal; callers own presenting the returned frame.
     pub fn pixel_frame(&self) -> PixelFrame {
+        let rgba = if self.depth == ColorDepth::None {
+            let mut pixels = self.rgba.as_ref().clone();
+            for pixel in pixels.chunks_exact_mut(4) {
+                let gray = luminance(Color::Rgb(pixel[0], pixel[1], pixel[2]));
+                pixel[..3].fill(gray);
+            }
+            Arc::new(pixels)
+        } else {
+            Arc::clone(&self.rgba)
+        };
         PixelFrame {
             width: self.width,
             height: self.height,
-            rgba: Arc::clone(&self.rgba),
+            rgba,
             cell_area: self.last_rendered_area.get(),
+            text_cells: self.text_cells.clone(),
         }
     }
 
@@ -558,6 +672,25 @@ impl Canvas {
         }
     }
 
+    /// Composite an already-themed physical image into a larger scene. This is
+    /// used to join contiguous floors before the single image is presented.
+    /// No frame history, text mask or image destination is copied.
+    pub fn blit_canvas(&mut self, source: &Canvas, x: usize, y: usize) {
+        if x >= self.width || y >= self.height {
+            return;
+        }
+        let width = source.width.min(self.width - x);
+        let height = source.height.min(self.height - y);
+        let rgba = Arc::make_mut(&mut self.rgba);
+        for row in 0..height {
+            let dst = (y + row) * self.width + x;
+            let src = row * source.width;
+            self.pixels[dst..dst + width].copy_from_slice(&source.pixels[src..src + width]);
+            rgba[dst * 4..(dst + width) * 4]
+                .copy_from_slice(&source.rgba[src * 4..(src + width) * 4]);
+        }
+    }
+
     /// Draw a sprite with nearest-neighbour scaling and transparent pixels.
     pub fn blit_scaled(
         &mut self,
@@ -568,6 +701,52 @@ impl Canvas {
         height: usize,
     ) {
         if width == 0 || height == 0 || sprite.width() == 0 || sprite.height() == 0 {
+            return;
+        }
+        // Authored graphic assets use integer enlargement. Decode/convert each
+        // source color once and borrow the RGBA buffer once, instead of doing
+        // Arc::make_mut and terminal palette searches for every physical pixel.
+        if width.is_multiple_of(sprite.width()) && height.is_multiple_of(sprite.height()) {
+            let scale_x = width / sprite.width();
+            let scale_y = height / sprite.height();
+            let mut colors = HashMap::new();
+            for color in sprite.pixels().iter().flatten() {
+                colors.entry(*color).or_insert_with(|| {
+                    let image_color = self.themed_color(*color);
+                    let cell_color = self.convert_color(image_color);
+                    let (r, g, b) = rgb_of_color(image_color);
+                    (cell_color, [r, g, b, 255])
+                });
+            }
+            let rgba = Arc::make_mut(&mut self.rgba);
+            for sy in 0..sprite.height() {
+                let Some(top) = y.checked_add(sy.saturating_mul(scale_y)) else {
+                    continue;
+                };
+                if top >= self.height {
+                    break;
+                }
+                for sx in 0..sprite.width() {
+                    let Some(color) = sprite.pixel(sx, sy) else {
+                        continue;
+                    };
+                    let Some(left) = x.checked_add(sx.saturating_mul(scale_x)) else {
+                        continue;
+                    };
+                    if left >= self.width {
+                        break;
+                    }
+                    let (cell_color, bytes) = colors[&color];
+                    for py in top..top.saturating_add(scale_y).min(self.height) {
+                        let start = py * self.width + left;
+                        let end = py * self.width + left.saturating_add(scale_x).min(self.width);
+                        self.pixels[start..end].fill(Some(cell_color));
+                        for pixel in rgba[start * 4..end * 4].chunks_exact_mut(4) {
+                            pixel.copy_from_slice(&bytes);
+                        }
+                    }
+                }
+            }
             return;
         }
         for dy in 0..height {
@@ -589,6 +768,18 @@ impl Canvas {
 
     /// Emit the surface as encoded cells into a ratatui buffer.
     pub fn render(&self, buffer: &mut Buffer, area: Rect) {
+        // Only the latest canvas is presented as an image. Earlier portraits
+        // remain ordinary cells. Opaque native widgets clear this temporary
+        // mask, and finish_frame removes it before returning a normal buffer.
+        if let Some(previous) = self.image_mask_area.take() {
+            for y in previous.y..previous.bottom() {
+                for x in previous.x..previous.right() {
+                    if let Some(cell) = buffer.cell_mut((x, y)) {
+                        cell.set_skip(false);
+                    }
+                }
+            }
+        }
         let (width_per_cell, height_per_cell) = self.pixels_per_cell();
         let pixel_width = self.width.div_ceil(width_per_cell).min(area.width as usize);
         let cell_height = self
@@ -601,7 +792,7 @@ impl Canvas {
         );
         for cell_y in 0..cell_height {
             for cell_x in 0..pixel_width {
-                let (samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
+                let (mut samples, sample_count) = self.samples_for_cell(cell_x, cell_y);
                 if samples[..sample_count].iter().all(Option::is_none) {
                     continue;
                 }
@@ -624,17 +815,29 @@ impl Canvas {
                 if self.encoding == PixelEncoding::HalfBlocks {
                     match (samples[0], samples[1]) {
                         (Some(top), Some(bottom)) => {
-                            cell.set_char('▀').set_fg(top).set_bg(bottom);
+                            // The background reaches the cell's top, including
+                            // font leading. A lower block anchors to the descent;
+                            // an upper block can leave a false line above it.
+                            cell.set_char('▄').set_fg(bottom).set_bg(top);
                         }
                         (Some(top), None) => {
-                            cell.set_char('▀').set_fg(top);
+                            let bottom = cell.bg;
+                            cell.set_char('▄').set_fg(bottom).set_bg(top);
                         }
                         (None, Some(bottom)) => {
-                            cell.set_char('▄').set_bg(bottom);
+                            cell.set_char('▄').set_fg(bottom);
                         }
                         (None, None) => {}
                     }
                     continue;
+                }
+                // A missing subpixel reveals the existing cell background, never
+                // its text foreground. Resolve that colour before choosing a
+                // glyph, since the quantizer may invert foreground/background.
+                for sample in samples.iter_mut().take(sample_count) {
+                    if sample.is_none() {
+                        *sample = Some(cell.bg);
+                    }
                 }
                 let quantized = {
                     let mut cache = self.quantized_cache.borrow_mut();
@@ -649,6 +852,18 @@ impl Canvas {
                 if let Some(background) = quantized.background {
                     cell.set_bg(background);
                 }
+            }
+        }
+        if self.has_image_density() {
+            if let Some(area) = self.last_rendered_area.get() {
+                for y in area.y..area.bottom() {
+                    for x in area.x..area.right() {
+                        if let Some(cell) = buffer.cell_mut((x, y)) {
+                            cell.set_skip(true);
+                        }
+                    }
+                }
+                self.image_mask_area.set(Some(area));
             }
         }
     }
@@ -838,7 +1053,7 @@ fn glyph_for_mask(encoding: PixelEncoding, mask: u8) -> Option<char> {
             0 => Some(' '),
             1 => Some('▀'),
             2 => Some('▄'),
-            3 => Some('▀'),
+            3 => Some('█'),
             _ => None,
         },
         PixelEncoding::Quadrants => {
@@ -852,6 +1067,9 @@ fn glyph_for_mask(encoding: PixelEncoding, mask: u8) -> Option<char> {
 }
 
 fn sextant_glyph(mask: u8) -> Option<char> {
+    // Unicode omits full-height columns from the sextant range because the
+    // Block Elements range already contains them as LEFT/RIGHT HALF BLOCK.
+    // They are still valid masks; excluding them damages every vertical edge.
     const MASKS: [u8; 60] = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26,
         27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50,
@@ -859,6 +1077,10 @@ fn sextant_glyph(mask: u8) -> Option<char> {
     ];
     if mask == 0 {
         Some(' ')
+    } else if mask == 21 {
+        Some('▌')
+    } else if mask == 42 {
+        Some('▐')
     } else if mask == 63 {
         Some('█')
     } else {
@@ -967,9 +1189,20 @@ fn palette_color(color: Color) -> Color {
 
 fn nearest_xterm_index(red: u8, green: u8, blue: u8) -> u8 {
     let cube = [0_u8, 95, 135, 175, 215, 255];
-    let red_cube = ((red as u16 * 5 + 127) / 255) as usize;
-    let green_cube = ((green as u16 * 5 + 127) / 255) as usize;
-    let blue_cube = ((blue as u16 * 5 + 127) / 255) as usize;
+    // The xterm colour cube is not evenly spaced: its first interval is
+    // 0..95, followed by intervals of 40. Uniform 0..255 scaling changes even
+    // colours already present in the palette and can turn skin tones pink.
+    let nearest_cube = |component| match component {
+        0..=47 => 0,
+        48..=114 => 1,
+        115..=154 => 2,
+        155..=194 => 3,
+        195..=234 => 4,
+        _ => 5,
+    };
+    let red_cube = nearest_cube(red);
+    let green_cube = nearest_cube(green);
+    let blue_cube = nearest_cube(blue);
     let cube_color = (cube[red_cube], cube[green_cube], cube[blue_cube]);
     let cube_distance = color_distance((red, green, blue), cube_color);
 
@@ -995,11 +1228,40 @@ fn color_distance(a: (u8, u8, u8), b: (u8, u8, u8)) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn integer_blits_match_scalar_sampling_with_transparency_and_clipping() {
+        let sprite = Sprite::from_rows(
+            &["ab.", ".ba"],
+            &[
+                ('a', Color::Rgb(73, 111, 148)),
+                ('b', Color::Rgb(218, 161, 106)),
+            ],
+        );
+        for depth in [ColorDepth::TrueColor, ColorDepth::Palette256] {
+            for scale in 1..=4 {
+                let mut actual = Canvas::with_color_depth(11, 9, depth);
+                let mut expected = actual.clone();
+                actual.fill(Color::Rgb(20, 30, 40));
+                expected.fill(Color::Rgb(20, 30, 40));
+                actual.blit_scaled(&sprite, 2, 3, 3 * scale, 2 * scale);
+                for y in 3..9 {
+                    for x in 2..11 {
+                        if let Some(color) = sprite.pixel((x - 2) / scale, (y - 3) / scale) {
+                            expected.set(x, y, color);
+                        }
+                    }
+                }
+                assert_eq!(actual.pixel_frame().rgba(), expected.pixel_frame().rgba());
+                assert_eq!(actual.pixels, expected.pixels);
+            }
+        }
+    }
     use ratatui::buffer::Buffer;
     use ratatui::layout::Rect;
 
     #[test]
-    fn half_block_packs_top_into_foreground_and_bottom_into_background() {
+    fn half_block_packs_bottom_into_foreground_and_top_into_background() {
         let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
         let top = Color::Rgb(255, 50, 90);
         let bottom = Color::Rgb(40, 200, 150);
@@ -1010,9 +1272,125 @@ mod tests {
         let area = buffer.area;
         canvas.render(&mut buffer, area);
         let cell = buffer.cell((0, 0)).expect("one cell");
-        assert_eq!(cell.symbol(), "▀");
-        assert_eq!(cell.fg, top);
-        assert_eq!(cell.bg, bottom);
+        assert_eq!(cell.symbol(), "▄");
+        assert_eq!(cell.fg, bottom);
+        assert_eq!(cell.bg, top);
+    }
+
+    #[test]
+    fn half_block_bottom_only_preserves_the_existing_background() {
+        let foreground = Color::Rgb(12, 80, 190);
+        let background = Color::Rgb(32, 21, 40);
+        let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
+        canvas.set(0, 1, foreground);
+        let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+        buffer[(0, 0)].set_fg(Color::Red).set_bg(background);
+        canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+        assert_eq!(buffer[(0, 0)].symbol(), "▄");
+        assert_eq!(buffer[(0, 0)].fg, foreground);
+        assert_eq!(buffer[(0, 0)].bg, background);
+    }
+
+    // Independent Unicode character-name oracle. Sextant numbers follow
+    // reading order: 12 / 34 / 56. This uses the published names, not the
+    // encoder's numeric mask table or its supported_masks helper.
+    fn unicode_sample_mask(encoding: PixelEncoding, symbol: char) -> u8 {
+        if encoding == PixelEncoding::Sextants && (0x1fb00..=0x1fb3b).contains(&(symbol as u32)) {
+            const NAMES: &str = "1 2 12 3 13 23 123 4 14 24 124 34 134 234 1234 5 15 25 125 35 235 1235 45 145 245 1245 345 1345 2345 12345 6 16 26 126 36 136 236 1236 46 146 1246 346 1346 2346 12346 56 156 256 1256 356 1356 2356 12356 456 1456 2456 12456 3456 13456 23456";
+            return NAMES
+                .split_whitespace()
+                .nth(symbol as usize - 0x1fb00)
+                .unwrap()
+                .bytes()
+                .fold(0, |mask, digit| mask | (1 << (digit - b'1')));
+        }
+        match (encoding, symbol) {
+            (_, ' ') => 0,
+            (PixelEncoding::Sextants, '▌') => 0b010101,
+            (PixelEncoding::Sextants, '▐') => 0b101010,
+            (PixelEncoding::Sextants, '█') => 0b111111,
+            (PixelEncoding::Quadrants, '▘') => 0b0001,
+            (PixelEncoding::Quadrants, '▝') => 0b0010,
+            (PixelEncoding::Quadrants, '▀') => 0b0011,
+            (PixelEncoding::Quadrants, '▖') => 0b0100,
+            (PixelEncoding::Quadrants, '▌') => 0b0101,
+            (PixelEncoding::Quadrants, '▞') => 0b0110,
+            (PixelEncoding::Quadrants, '▛') => 0b0111,
+            (PixelEncoding::Quadrants, '▗') => 0b1000,
+            (PixelEncoding::Quadrants, '▚') => 0b1001,
+            (PixelEncoding::Quadrants, '▐') => 0b1010,
+            (PixelEncoding::Quadrants, '▜') => 0b1011,
+            (PixelEncoding::Quadrants, '▄') => 0b1100,
+            (PixelEncoding::Quadrants, '▙') => 0b1101,
+            (PixelEncoding::Quadrants, '▟') => 0b1110,
+            (PixelEncoding::Quadrants, '█') => 0b1111,
+            _ => panic!("unexpected glyph: {symbol:?}"),
+        }
+    }
+
+    #[test]
+    fn dense_encodings_preserve_every_two_colour_mask_using_unicode_names() {
+        let front = Color::Rgb(220, 34, 43);
+        let back = Color::Rgb(19, 18, 31);
+        for encoding in [PixelEncoding::Quadrants, PixelEncoding::Sextants] {
+            for mask in 0..(1 << encoding.sample_count()) {
+                let samples: Vec<_> = (0..encoding.sample_count())
+                    .map(|bit| Some(if mask & (1 << bit) != 0 { front } else { back }))
+                    .collect();
+                let cell = quantize_cell(encoding, &samples);
+                let actual = unicode_sample_mask(encoding, cell.symbol);
+                for (bit, expected) in samples.into_iter().enumerate() {
+                    let reconstructed = if actual & (1 << bit) != 0 {
+                        cell.foreground
+                    } else {
+                        cell.background
+                    };
+                    assert_eq!(
+                        reconstructed, expected,
+                        "{encoding:?} mask={mask} bit={bit} glyph={:?}",
+                        cell.symbol
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn partial_dense_pixels_reveal_background_even_when_the_glyph_is_inverted() {
+        let front = Color::Rgb(220, 34, 43);
+        let back = Color::Rgb(19, 18, 31);
+        for encoding in [PixelEncoding::Quadrants, PixelEncoding::Sextants] {
+            for mask in 1..(1 << encoding.sample_count()) {
+                let mut canvas = Canvas::with_color_depth_and_encoding(
+                    encoding.width_per_cell(),
+                    encoding.height_per_cell(),
+                    ColorDepth::TrueColor,
+                    encoding,
+                );
+                for bit in 0..encoding.sample_count() {
+                    if mask & (1 << bit) != 0 {
+                        canvas.set(bit % 2, bit / 2, front);
+                    }
+                }
+                let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+                buffer[(0, 0)].set_fg(Color::Green).set_bg(back);
+                canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+                let cell = &buffer[(0, 0)];
+                let actual = unicode_sample_mask(encoding, cell.symbol().chars().next().unwrap());
+                for bit in 0..encoding.sample_count() {
+                    let reconstructed = if actual & (1 << bit) != 0 {
+                        cell.fg
+                    } else {
+                        cell.bg
+                    };
+                    assert_eq!(
+                        reconstructed,
+                        if mask & (1 << bit) != 0 { front } else { back },
+                        "{encoding:?} mask={mask} bit={bit}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
@@ -1032,6 +1410,18 @@ mod tests {
 
         assert_eq!(frame.rgba(), [12, 34, 56, 255, 0, 0, 0, 0]);
         assert_eq!(frame.cell_area(), Some(Rect::new(5, 7, 2, 1)));
+    }
+
+    #[test]
+    fn monochrome_image_frames_preserve_shape_alpha_and_owned_pixels() {
+        let mut canvas = Canvas::with_color_depth(2, 1, ColorDepth::None);
+        canvas.set(0, 0, Color::Rgb(70, 130, 240));
+        let frame = canvas.pixel_frame();
+        assert_eq!(frame.rgba()[0], frame.rgba()[1]);
+        assert_eq!(frame.rgba()[1], frame.rgba()[2]);
+        assert_eq!(&frame.rgba()[3..], [255, 0, 0, 0, 0]);
+        canvas.set(0, 0, Color::White);
+        assert_ne!(frame.rgba()[0], canvas.pixel_frame().rgba()[0]);
     }
 
     #[test]
@@ -1116,6 +1506,44 @@ mod tests {
     }
 
     #[test]
+    fn quantization_preserves_every_fixed_xterm_palette_colour() {
+        for index in 16..=255 {
+            let (red, green, blue) = indexed_rgb(index);
+            let actual = nearest_xterm_index(red, green, blue);
+            assert_eq!(actual, index, "palette index {index} must map to itself");
+        }
+    }
+
+    #[test]
+    fn xterm_quantization_matches_a_brute_force_palette_oracle() {
+        let mut colours = Vec::new();
+        for red in (0..=255).step_by(17) {
+            for green in (0..=255).step_by(17) {
+                for blue in (0..=255).step_by(17) {
+                    colours.push((red, green, blue));
+                }
+            }
+        }
+        colours.extend([(189, 119, 94), (188, 145, 93), (37, 67, 91), (232, 52, 44)]);
+        for colour in colours {
+            let actual = nearest_xterm_index(colour.0, colour.1, colour.2);
+            let distance = color_distance(colour, indexed_rgb(actual));
+            let optimum = (16..=255)
+                .map(|index| color_distance(colour, indexed_rgb(index)))
+                .min()
+                .unwrap();
+            assert_eq!(
+                distance, optimum,
+                "{colour:?} selected palette index {actual}"
+            );
+        }
+        assert_eq!(
+            indexed_rgb(nearest_xterm_index(189, 119, 94)),
+            (175, 135, 95)
+        );
+    }
+
+    #[test]
     fn monochrome_mode_renders_luminance_glyphs_without_colour() {
         for depth in [
             ColorDepth::TrueColor,
@@ -1191,7 +1619,7 @@ mod tests {
         let (encoding, locked, reason) = PixelEncoding::select(None, None, None, None, None, None);
         assert_eq!(encoding, PixelEncoding::Quadrants);
         assert!(!locked);
-        assert!(reason.contains("THEYWORK_ENCODING=sextants"));
+        assert!(reason.contains("compare encodings in Settings (s)"));
 
         for terminal in ["dumb", "cons25", "DUMB"] {
             let (encoding, locked, reason) =
@@ -1224,6 +1652,64 @@ mod tests {
         assert_eq!(encoding, PixelEncoding::Sextants);
         assert!(!locked);
         assert!(reason.contains("Windows Terminal capability signal"));
+    }
+
+    #[test]
+    fn apple_terminal_uses_lower_density_unless_explicitly_overridden() {
+        let select = |forced, sextants, quadrants| {
+            PixelEncoding::select(
+                forced,
+                Some("xterm-256color"),
+                Some("Apple_Terminal"),
+                None,
+                sextants,
+                quadrants,
+            )
+        };
+        let (encoding, locked, reason) = select(None, None, None);
+        assert_eq!(encoding, PixelEncoding::HalfBlocks);
+        assert!(!locked);
+        assert!(reason.contains("Apple Terminal's font geometry"));
+        assert_eq!(
+            select(Some("quadrants"), None, None).0,
+            PixelEncoding::Quadrants
+        );
+        assert_eq!(
+            select(Some("sextants"), None, None).0,
+            PixelEncoding::Sextants
+        );
+        assert_eq!(select(None, Some("1"), None).0, PixelEncoding::Sextants);
+        assert_eq!(select(None, None, Some("1")).0, PixelEncoding::Quadrants);
+    }
+
+    #[test]
+    fn half_blocks_preserve_all_opaque_and_transparent_sample_pairs() {
+        let backdrop = Color::Rgb(19, 18, 31);
+        let red = Color::Rgb(220, 34, 43);
+        let blue = Color::Rgb(14, 170, 210);
+        for top in [None, Some(red), Some(blue)] {
+            for bottom in [None, Some(red), Some(blue)] {
+                let mut canvas = Canvas::with_color_depth(1, 2, ColorDepth::TrueColor);
+                if let Some(top) = top {
+                    canvas.set(0, 0, top);
+                }
+                if let Some(bottom) = bottom {
+                    canvas.set(0, 1, bottom);
+                }
+                let mut buffer = Buffer::empty(Rect::new(0, 0, 1, 1));
+                buffer[(0, 0)].set_fg(Color::Green).set_bg(backdrop);
+                canvas.render(&mut buffer, Rect::new(0, 0, 1, 1));
+                let cell = &buffer[(0, 0)];
+                if top.is_none() && bottom.is_none() {
+                    assert_eq!(cell.symbol(), " ");
+                    assert_eq!(cell.bg, backdrop);
+                } else {
+                    assert_eq!(cell.symbol(), "▄");
+                    assert_eq!(cell.bg, top.unwrap_or(backdrop));
+                    assert_eq!(cell.fg, bottom.unwrap_or(backdrop));
+                }
+            }
+        }
     }
 
     #[test]
@@ -1285,7 +1771,7 @@ mod tests {
             (cell.foreground == Some(red) && cell.background == Some(blue))
                 || (cell.foreground == Some(blue) && cell.background == Some(red))
         );
-        assert!(sextant_glyph(21).is_none(), "Unicode leaves mask 21 out");
-        assert!(sextant_glyph(42).is_none(), "Unicode leaves mask 42 out");
+        assert_eq!(sextant_glyph(21), Some('▌'));
+        assert_eq!(sextant_glyph(42), Some('▐'));
     }
 }

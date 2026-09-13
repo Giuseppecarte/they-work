@@ -1,0 +1,112 @@
+2026-09-13T19:42:15.1604138Z ---- claude_collapses_nested_workdirs_to_the_nearest_git_root stdout ----
+2026-09-13T19:42:15.1604758Z 
+2026-09-13T19:42:15.1605164Z thread 'claude_collapses_nested_workdirs_to_the_nearest_git_root' panicked at crates\theywork-collect\tests\collectors.rs:588:5:
+2026-09-13T19:42:15.1606071Z assertion failed: events.iter().all(|event| event.office_path == root)
+2026-09-13T19:42:15.1606642Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:42:15.1606938Z 
+2026-09-13T19:42:15.1607166Z ---- claude_keeps_one_worker_in_one_office_across_path_spellings stdout ----
+2026-09-13T19:42:15.1607896Z 
+2026-09-13T19:42:15.1608325Z thread 'claude_keeps_one_worker_in_one_office_across_path_spellings' panicked at crates\theywork-collect\tests\collectors.rs:685:5:
+2026-09-13T19:42:15.1609016Z assertion failed: events.iter().all(|event| event.office_path == root)
+2026-09-13T19:42:15.1609294Z 
+2026-09-13T19:42:15.1609437Z ---- collector_acceptance_fixtures stdout ----
+2026-09-13T19:42:15.1609767Z collector acceptance: fixtures
+2026-09-13T19:42:15.1611085Z collector acceptance [PASS] 1. internal Codex threads excluded - guardian and assessor fixture threads are absent; work subagents are visible
+2026-09-13T19:42:15.1627854Z     collector_acceptance_fixtures
+2026-09-13T19:42:15.1628254Z 
+2026-09-13T19:42:15.1628546Z test result: FAILED. 17 passed; 3 failed; 2 ignored; 0 measured; 0 filtered out; finished in 120.88s
+2026-09-13T19:42:15.1629045Z 
+2026-09-13T19:42:15.1629911Z error: test failed, to rerun pass `-p theywork-collect --test collectors`
+2026-09-13T19:42:15.1633003Z      Running unittests src\lib.rs (target\aarch64-pc-windows-msvc\debug\deps\theywork_control-b6ecc0de42977df6.exe)
+2026-09-13T19:42:15.1844107Z 
+2026-09-13T19:42:15.1844579Z running 19 tests
+2026-09-13T19:42:15.1976141Z test security::windows_tests::concurrent_readers_never_see_missing_or_partial_state ... FAILED
+2026-09-13T19:42:15.2275808Z test security::windows_tests::interruption_before_and_after_publication_preserves_complete_state ... FAILED
+2026-09-13T19:42:15.2380714Z test security::windows_tests::rejects_directory_and_reparse_destination_without_touching_target ... ok
+2026-09-13T19:42:15.2382686Z test security::windows_tests::replacement_child ... ok
+2026-09-13T19:42:15.2478228Z test security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint ... FAILED
+2026-09-13T19:42:15.2559359Z test security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate ... FAILED
+2026-09-13T19:42:15.3860361Z ---- security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint stdout ----
+2026-09-13T19:42:15.3860736Z 
+2026-09-13T19:42:15.3861229Z thread 'security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint' panicked at crates\theywork-control\src\security_windows_tests.rs:82:56:
+2026-09-13T19:42:15.3862456Z called `Result::unwrap()` on an `Err` value: Control state belongs to another Windows user
+2026-09-13T19:42:15.3862763Z 
+2026-09-13T19:42:15.3863028Z ---- security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate stdout ----
+2026-09-13T19:42:15.3863742Z 
+2026-09-13T19:42:15.3864254Z thread 'security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate' panicked at crates\theywork-control\src\security_windows_tests.rs:104:49:
+2026-09-13T19:42:15.3865059Z called `Result::unwrap()` on an `Err` value: Control state belongs to another Windows user
+2026-09-13T19:42:15.3865369Z 
+2026-09-13T19:42:15.3865655Z ---- state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer stdout ----
+2026-09-13T19:42:15.3866037Z 
+2026-09-13T19:42:15.3866507Z thread 'state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer' panicked at crates\theywork-control\src\state_storage.rs:206:9:
+2026-09-13T19:42:15.3867244Z assertion failed: format!("{error:#}").contains("staged candidate")
+2026-09-13T19:42:15.3891085Z     supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state
+2026-09-13T19:42:15.3891463Z 
+2026-09-13T19:42:15.3891926Z test result: FAILED. 8 passed; 11 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+2026-09-13T19:42:15.3892323Z 
+2026-09-13T19:42:15.3892505Z error: test failed, to rerun pass `-p theywork-control --lib`
+2026-09-13T19:42:15.3893001Z      Running tests\control.rs (target\aarch64-pc-windows-msvc\debug\deps\control-10654ff38555d49a.exe)
+2026-09-13T19:42:15.4057973Z 
+2026-09-13T19:42:15.4058645Z running 0 tests
+2026-09-13T19:42:15.4058925Z 
+2026-09-13T19:42:15.4059177Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-13T19:42:15.4059497Z 
+2026-09-13T19:42:15.4080058Z      Running tests\data_stream.rs (target\aarch64-pc-windows-msvc\debug\deps\data_stream-9457c87dcaa3d47f.exe)
+2026-09-13T19:42:15.4284701Z 
+2026-09-13T19:42:15.4285420Z running 9 tests
+2026-09-13T19:42:24.9853951Z 
+2026-09-13T19:42:24.9854107Z Caused by:
+2026-09-13T19:42:24.9863814Z     Fixture startup timed out
+2026-09-13T19:42:24.9878427Z error: test failed, to rerun pass `-p theywork-control --test storage_process`
+2026-09-13T19:42:24.9878751Z 
+2026-09-13T19:42:24.9878817Z Caused by:
+2026-09-13T19:42:24.9879728Z   process didn't exit successfully: `C:\a\they-work\they-work\target\aarch64-pc-windows-msvc\debug\deps\storage_process-1056356eb62ad9f3.exe --test-threads=1 --skip m3_tests::encoding_frame_cost_stays_within_ten_fps_budget` (exit code: 1)
+2026-09-13T19:42:24.9880881Z      Running unittests src\lib.rs (target\aarch64-pc-windows-msvc\debug\deps\theywork_core-37aae437884f29c1.exe)
+2026-09-13T19:42:25.0070531Z 
+2026-09-13T19:42:25.0070779Z running 15 tests
+2026-09-13T19:42:25.0075190Z test collaboration::tests::identities_do_not_collide_between_providers_homes_or_session_scopes ... ok
+2026-09-13T19:42:25.0089312Z test demo::tests::demo_at_real_clock_times_exposes_attention_without_epoch_sized_usage ... ok
+2026-09-13T19:42:25.0091502Z test world::tests::a_finished_turn_reads_as_idle_and_ready_for_work ... ok
+2026-09-13T19:42:25.0093887Z test world::tests::a_worker_idle_for_an_hour_is_still_in_the_office ... ok
+2026-09-13T19:45:39.7190348Z ---- doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation stdout ----
+2026-09-13T19:45:39.7190740Z 
+2026-09-13T19:45:39.7191137Z thread 'doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation' panicked at crates\theywork-tui\tests\cli.rs:759:5:
+2026-09-13T19:45:39.7191731Z assertion failed: text.contains("source=unusual")
+2026-09-13T19:45:39.7192112Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:45:39.7192389Z 
+2026-09-13T19:45:39.7192535Z ---- first_run_non_tty_prints_discovery_and_picker stdout ----
+2026-09-13T19:45:39.7192763Z 
+2026-09-13T19:45:39.7193045Z thread 'first_run_non_tty_prints_discovery_and_picker' panicked at crates\theywork-tui\tests\cli.rs:340:5:
+2026-09-13T19:45:39.7193659Z assertion failed: text.contains(&normalize_office_path(&fixture.project_a.to_string_lossy()))
+2026-09-13T19:45:39.7194439Z 
+2026-09-13T19:45:39.7194639Z ---- project_scopes_once_without_persisting_even_with_config_dir stdout ----
+2026-09-13T19:45:39.7194922Z 
+2026-09-13T19:45:39.7195780Z thread 'project_scopes_once_without_persisting_even_with_config_dir' panicked at crates\theywork-tui\tests\cli.rs:819:5:
+2026-09-13T19:45:39.7197333Z ---- related_git_worktrees_share_the_primary_project_floor stdout ----
+2026-09-13T19:45:39.7197600Z 
+2026-09-13T19:45:39.7197917Z thread 'related_git_worktrees_share_the_primary_project_floor' panicked at crates\theywork-tui\tests\cli.rs:495:5:
+2026-09-13T19:45:39.7198392Z they-work --once
+2026-09-13T19:45:39.7198573Z timestamp_ms=1789328739157
+2026-09-13T19:45:39.7198778Z projects=1 workers=2
+2026-09-13T19:45:39.7199138Z office=/?/C:/Users/runneradmin/AppData/Local/Temp/they-work-tui-10132-28/project-a workers=2
+2026-09-13T19:45:39.7199851Z   worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+2026-09-13T19:45:39.7200689Z   worker name="Codex blocked" agent=codex status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=42
+2026-09-13T19:45:39.7201384Z next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+2026-09-13T19:45:39.7201721Z 
+2026-09-13T19:45:39.7201725Z 
+2026-09-13T19:45:39.7201758Z 
+2026-09-13T19:45:39.7201820Z failures:
+2026-09-13T19:45:39.7203154Z     related_git_worktrees_share_the_primary_project_floor
+2026-09-13T19:45:39.7203363Z 
+2026-09-13T19:45:39.7203603Z test result: FAILED. 29 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.65s
+2026-09-13T19:45:39.7203946Z 
+2026-09-13T19:45:39.7210870Z error: test failed, to rerun pass `-p theywork-tui --test cli`
+2026-09-13T19:45:39.7211558Z    Doc-tests theywork_collect
+2026-09-13T19:45:39.8329640Z 
+2026-09-13T19:45:39.8330002Z running 0 tests
+2026-09-13T19:45:39.8330166Z 
+2026-09-13T19:45:39.8330651Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-09-13T19:45:39.8330975Z 
+2026-09-13T19:45:39.8421090Z    Doc-tests theywork_control
+2026-09-13T19:45:40.0907172Z 
+2026-09-13T19:45:40.0907590Z running 0 tests

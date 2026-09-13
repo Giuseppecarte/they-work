@@ -1,0 +1,23 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+Software tower · 3 projects
+
+ CONNECTIONS
+
+ Choose which local conversations appear in your office with Local sources.
+
+ Codex: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-do
+ cs/routes-e7z48znk/saved/codex
+ Claude: offline-console-fixture 2.1.248 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-8-do
+ cs/routes-e7z48znk/saved/claude · native foreground console
+
+ Login opens the provider's official flow. Existing conversations remain tied
+ to their owning runtime.
+ Claude instructions and approvals use its official conversation.
+
+
+ [ Local sources ] [ Codex login ] [ Claude login ] [ Back ]
+
+
+ Tab focus · Enter choose · Esc back

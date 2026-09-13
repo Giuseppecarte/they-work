@@ -1,0 +1,98 @@
+{
+  "target": "x86_64-unknown-linux-musl",
+  "source_revision": "17ae09f85982b2e29c701fe47b7ce03fa34c488e",
+  "binary": {
+    "machine": 62,
+    "architecture": "amd64",
+    "elf_type": 3,
+    "interpreter": false,
+    "needed_shared_libraries": false,
+    "bytes": 6507736,
+    "sha256": "e02b43e3d90b64a5201cb790d7f9aaa690659a35b701ec6e6b76899940ecdb6b"
+  },
+  "image_id": "sha256:336a056ac7fc78a7f4ca4dc532f44d8a764dec702c6c4006fa623f900e517b8d",
+  "image": "they-work-preview:iteration11-17ae09f85982-amd64",
+  "execution": "emulated",
+  "toolchain_sha256": "9d2302bd462bf235c867d1d7983f14a52f20700aad88a46bf9c7837a3553ad74",
+  "provider_stores_mounted": false,
+  "runtime_network": "none",
+  "runtime_filesystem": "read-only",
+  "pty_geometry": {
+    "columns": 160,
+    "rows": 48,
+    "cell_pixels": [
+      8,
+      16
+    ]
+  },
+  "real_terminal": "not tested",
+  "wsl": "not tested",
+  "process_smoke": [
+    {
+      "name": "help",
+      "exit_code": 0,
+      "elapsed_seconds": 0.335
+    },
+    {
+      "name": "once",
+      "exit_code": 0,
+      "elapsed_seconds": 0.283
+    },
+    {
+      "name": "headless",
+      "exit_code": 0,
+      "elapsed_seconds": 0.503
+    }
+  ],
+  "pty_smoke": {
+    "kitty": {
+      "exit_code": 0,
+      "quit_sent": true,
+      "probe_answered": true,
+      "forced_cleanup": false,
+      "passed": true,
+      "errors": [],
+      "frame_sha256": "1f63291240a321fc44a2d36af220e8e756212f74cf75eff211a2fe3fc8bf0c05",
+      "frame_bytes": 138686,
+      "mouse_released": true,
+      "alternate_screen_left": true
+    },
+    "iterm2": {
+      "exit_code": 0,
+      "quit_sent": true,
+      "probe_answered": true,
+      "forced_cleanup": false,
+      "passed": true,
+      "errors": [],
+      "frame_sha256": "269d01d8f2e66e62d20498f5f0a8ffc76b973e6e132d3e74aabc4309882bf9ed",
+      "frame_bytes": 138442,
+      "mouse_released": true,
+      "alternate_screen_left": true
+    },
+    "sixel": {
+      "exit_code": 0,
+      "quit_sent": true,
+      "probe_answered": true,
+      "forced_cleanup": false,
+      "passed": true,
+      "errors": [],
+      "frame_sha256": "a734e5dd085787d64aa0d324c74bbd39b9027f28aca15f19b27894c67b71703e",
+      "frame_bytes": 39039,
+      "mouse_released": true,
+      "alternate_screen_left": true
+    },
+    "fallback": {
+      "exit_code": 0,
+      "quit_sent": true,
+      "probe_answered": false,
+      "forced_cleanup": false,
+      "passed": true,
+      "errors": [],
+      "frame_sha256": "e7a668e26d9d713847feee0e6307b3fbf06d59eda937c7ef83f15893956b2143",
+      "frame_bytes": 9465,
+      "mouse_released": true,
+      "alternate_screen_left": true
+    }
+  },
+  "passed": true
+}

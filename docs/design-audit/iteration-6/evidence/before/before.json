@@ -1,0 +1,50 @@
+[
+  {
+    "id": "phone-now-image-32x14",
+    "image": "phone-now-image-32x14.png",
+    "sha256": "9b5c3a1a319908f03521f461aade84c7e5c413c33c7b5fead19d2a02097d8df6",
+    "finding": "Previous phone overlay used numeric tabs, obscured the office, and did not expose clickable channels or record targets. The compact frame did not show source freshness.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  },
+  {
+    "id": "inspector-activity-image-32x14",
+    "image": "inspector-activity-image-32x14.png",
+    "sha256": "ad9af3b249f3c182809829b7394145044eff3ee58fe46ed22ab5c78bf063d0a5",
+    "finding": "Previous narrow inspector stopped at Enlarge to read work and provided no actual observation or current review action.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  },
+  {
+    "id": "advanced-image-32x14",
+    "image": "advanced-image-32x14.png",
+    "sha256": "55bd3eea4917086b7d6b6298002c79d3b14941257c93228dab351920b2f1609c",
+    "finding": "Previous 32-column settings viewport omitted the Advanced row; the requested route could not be reached by its visible action.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  },
+  {
+    "id": "phone-attention-image-80x24",
+    "image": "phone-attention-image-80x24.png",
+    "sha256": "b379c143dad28cfbed0a4482b382529037d4d7e0946320b2cbc5f5ac198d06e4",
+    "finding": "The current request label said Question for you while the old inspection summary described inferred silence; the phone now uses the shared explicit wait explanation.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  },
+  {
+    "id": "tower-light-80x24",
+    "image": "tower-light-80x24.png",
+    "sha256": "23cb9627f7f6aa5552bb96bc7a7656bd182d5cefef2f6401bc67cc906a99a5bd",
+    "finding": "Native light-theme text retained a dark sampled art background in room signs and worker plates. Semantic native panel backgrounds now participate in the same theme mapping.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  },
+  {
+    "id": "request-image-80x24",
+    "image": "request-image-80x24.png",
+    "sha256": "96e38bba2b7c558047ef1520ffc6a5d7ea59fe75bbfa44128c83944a60ff2b9e",
+    "finding": "Audit harness defect: the old m then F4 route captured the inline composer, not the request review. The corrected route clicks Review for the exact worker and asserts REVIEW REQUEST.",
+    "status": "defect",
+    "kind": "earlier iteration-6 synthetic Ui frame, not a live terminal screenshot"
+  }
+]

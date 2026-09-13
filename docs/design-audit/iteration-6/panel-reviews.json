@@ -1,0 +1,212 @@
+{
+  "directed-work-actions-192x58": {
+    "sha256": "f3127a6abe6d1955c0851105a1fb27bb7eea0ec47b8ef02f01d44fe2c0b08f32",
+    "status": "pass",
+    "note": "All available controls are visible after wrapping: Review, Instruct, Character, Stop and Reconnect remain separate; content reserves their rows. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "directed-work-actions-80x24": {
+    "sha256": "4faf34079024a6c74ea05b0132beb4c332d7cbf10dca59b4f74c8281285bffd0",
+    "status": "pass",
+    "note": "All available controls are visible after wrapping: Review, Instruct, Character, Stop and Reconnect remain separate; content reserves their rows. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "directed-work-expanded-192x58": {
+    "sha256": "8d1f9c5990d45468fac7098dc0f6574c5254cead9f9a7a9fc2f9bf2d215350e1",
+    "status": "pass",
+    "note": "Expanded reading keeps identity, source warning and current request visible and provides Collapse to return; content width is readable."
+  },
+  "directed-work-expanded-80x24": {
+    "sha256": "247652f3aaa4f5075e3944ff4245730ad0bcc05a37119282b11067cd555d0ece",
+    "status": "pass",
+    "note": "Expanded reading keeps identity, source warning and current request visible and provides Collapse to return; content width is readable. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "directed-work-results-192x58": {
+    "sha256": "b6652c91ac09bfe91411a72b4e434164d6d62705140ec63f88b224a53a055bb5",
+    "status": "pass",
+    "note": "Only the delivered result remains in Activity, with author/title/body and an All activity return action. Current Review is separate from historical content. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "directed-work-results-80x24": {
+    "sha256": "76dc31700451d7877fb23139f289f546b439830d9f138f3ab6043b45252f79c6",
+    "status": "pass",
+    "note": "Only the delivered result remains in Activity, with author/title/body and an All activity return action. Current Review is separate from historical content."
+  },
+  "inspector-activity-image-110x80": {
+    "sha256": "8a2316acec8e66eaff685a1a3f1be2665bd25afe9b2b63bd002bb4342d309816",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint."
+  },
+  "inspector-activity-image-120x36": {
+    "sha256": "f9f85f1f44bcc39fce491d3d56a99afcdb88332e0ff72f310c09911fd2602fe9",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Inspected the 40-column side panel crop; wrapped buttons stay inside it."
+  },
+  "inspector-activity-image-192x58": {
+    "sha256": "367ffd641fc194f1a571701527a8d5e024f66becc8930ea284000f08c2ce0a2a",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-activity-image-240x70": {
+    "sha256": "b87fe2f6cacc2a7f6a49d85ba4ef66933cbfba8d9a5758746931f7b5d9b08f58",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-activity-image-32x14": {
+    "sha256": "db16825d7d5b894ebd41661e38ebe4577b17891f328038fac91d8bcadb097e63",
+    "status": "pass",
+    "note": "Emergency summary only: identity, source warning and current request are readable with Review and Back. Full Activity, Team and Details tabs require a larger window; this is not a claim of full tab support at 32 columns."
+  },
+  "inspector-activity-image-80x24": {
+    "sha256": "b3a8c93a927cb5a4db23bf55def9bad580e6503647e35d5cea8831019bd3821e",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-activity-light-80x24": {
+    "sha256": "516a181bd02c1414f5035003f174c8a2568f948319624e2784f8d0baf9e7c472",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Light palette keeps body, warning and selected tab legible. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-activity-native-80x24": {
+    "sha256": "b3a8c93a927cb5a4db23bf55def9bad580e6503647e35d5cea8831019bd3821e",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Native cell fallback preserves the same hierarchy and actions. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-activity-no-color-80x24": {
+    "sha256": "1a342e041944671a9069502842495f204ca25295a6939787011dc1a655d37598",
+    "status": "pass",
+    "note": "Retained result and tool observations remain distinct and readable. Results filter and current request action are separate; overflow has an explicit reading hint. Monochrome keeps text labels and bold selection; meaning does not rely on color. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-details-image-110x80": {
+    "sha256": "7304ded45b7c7df19d1b3ab4098dc45fa28ec8548a39021d885e65afd9f1d42f",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero."
+  },
+  "inspector-details-image-120x36": {
+    "sha256": "9319b7ac2ae8954d54531ebb1631e64f4481296c3b817d9a441950fb7c34d96a",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. The visible PgUp/Dn hint names line positions; additional details continue below the reading area."
+  },
+  "inspector-details-image-192x58": {
+    "sha256": "9996d25c85f50c79e4e5e2ee3131b0f7eee5191a5ff252cffca08d3ea92e9c92",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-details-image-240x70": {
+    "sha256": "54184584ba6705c94679ad2d305b4741e438c7f32a77886fc787bf98cf702d04",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-details-image-32x14": {
+    "sha256": "db16825d7d5b894ebd41661e38ebe4577b17891f328038fac91d8bcadb097e63",
+    "status": "pass",
+    "note": "Emergency summary only: identity, source warning and current request are readable with Review and Back. Full Activity, Team and Details tabs require a larger window; this is not a claim of full tab support at 32 columns."
+  },
+  "inspector-details-image-80x24": {
+    "sha256": "ce26da89ccb7ef2ae74e7e47940cff83b106e2566e08afcf983fb5ebdff00c1d",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. The visible PgUp/Dn hint names line positions; additional details continue below the reading area."
+  },
+  "inspector-details-light-80x24": {
+    "sha256": "3d655f7fa5e7ba9474978b74268a762f2d2160d6a3bc6eaf43dd7950713179ac",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. The visible PgUp/Dn hint names line positions; additional details continue below the reading area. Light colors preserve legible body and warning contrast."
+  },
+  "inspector-details-native-80x24": {
+    "sha256": "ce26da89ccb7ef2ae74e7e47940cff83b106e2566e08afcf983fb5ebdff00c1d",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. The visible PgUp/Dn hint names line positions; additional details continue below the reading area."
+  },
+  "inspector-details-no-color-80x24": {
+    "sha256": "8e6b46ee6197241a3949f5a0691d602fbb149bb402af6eaaa3778d5928cde7e3",
+    "status": "pass",
+    "note": "Source warning remains fixed above the scrollable details; project, connection and source provenance have clear labels. Missing or zero/default token data is labeled Token usage unavailable, without claiming a reported zero. The visible PgUp/Dn hint names line positions; additional details continue below the reading area. Bold headings and explicit labels remain understandable without color."
+  },
+  "inspector-now-image-110x80": {
+    "sha256": "7357c206a358f1b6d4756a54e816cf4fb9b72de8fff26c2b16ac656bb12a7696",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible."
+  },
+  "inspector-now-image-120x36": {
+    "sha256": "ebed713fa8dcfe3a9a5f583c2193a3134b329037eb8680148c7ae05f8a3f0405",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Inspected the 40-column side panel crop; wrapped buttons stay inside it."
+  },
+  "inspector-now-image-192x58": {
+    "sha256": "90ca7f5c32d54a94a609df3ccf211b873927e08bce0bb6a911d0656b3e19260c",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-now-image-240x70": {
+    "sha256": "5646010423634dcc0efd01645b26fa363aa27713a9c00c3a0a00274f505ab64e",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-now-image-32x14": {
+    "sha256": "db16825d7d5b894ebd41661e38ebe4577b17891f328038fac91d8bcadb097e63",
+    "status": "pass",
+    "note": "Emergency summary only: identity, source warning and current request are readable with Review and Back. Full Activity, Team and Details tabs require a larger window; this is not a claim of full tab support at 32 columns."
+  },
+  "inspector-now-image-80x24": {
+    "sha256": "510f2674d5f86324452f1b0d48139c8670bd391ea3231db735de43eb9184002e",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-now-light-80x24": {
+    "sha256": "622fb4e9737035a13e52faa9003954964b9e76efaeff3942c37c3f294a920f98",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Light palette keeps body, warning and selected tab legible. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-now-native-80x24": {
+    "sha256": "510f2674d5f86324452f1b0d48139c8670bd391ea3231db735de43eb9184002e",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Native cell fallback preserves the same hierarchy and actions. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-now-no-color-80x24": {
+    "sha256": "e5512314736e8b0eeeea2da625d270432a212ee24f45a4bc23ad807493143123",
+    "status": "pass",
+    "note": "Observed verb/path and actual delivered result are distinct; current request leads, source coverage stays fixed, and Task actions/Expand remain visible. Monochrome keeps text labels and bold selection; meaning does not rely on color. Final reading hint explicitly names line position; all primary and secondary controls remain inside the panel."
+  },
+  "inspector-team-image-110x80": {
+    "sha256": "ba8090b547b18ce9d591a6af58b6fc0ca5b4267836ab1e72ee46e952f2fd1fc4",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented."
+  },
+  "inspector-team-image-120x36": {
+    "sha256": "9aa8b456a3797bb9b3567d5e917ca9564ec93e9ab6a40507e7500ec16a8fad44",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Inspected the 40-column side panel crop; wrapped buttons stay inside it."
+  },
+  "inspector-team-image-192x58": {
+    "sha256": "47b9e81bfe4a1960378ebe342674ac1c8ebf97c8771a45c34c4b8dc7bda47b1f",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-team-image-240x70": {
+    "sha256": "ffc625f9f76c21402610ec8765067db248f5c3c8a6051fa237619b34f7eed763",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Final full-frame review: the background Latest roster preserves selected identity, real task title, status and source observation age in separate columns; the work panel and its controls remain legible."
+  },
+  "inspector-team-image-32x14": {
+    "sha256": "db16825d7d5b894ebd41661e38ebe4577b17891f328038fac91d8bcadb097e63",
+    "status": "pass",
+    "note": "Emergency summary only: identity, source warning and current request are readable with Review and Back. Full Activity, Team and Details tabs require a larger window; this is not a claim of full tab support at 32 columns."
+  },
+  "inspector-team-image-80x24": {
+    "sha256": "1b02a1a90de870ffe71259bbea6dcd70df6d77e3dccd4ab43819e3c7083271c6",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented."
+  },
+  "inspector-team-light-80x24": {
+    "sha256": "ab16d852eb677879549ccc5caffcef401549127a92e62b4ee0c26042b9dd03a3",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Light palette keeps body, warning and selected tab legible."
+  },
+  "inspector-team-native-80x24": {
+    "sha256": "1b02a1a90de870ffe71259bbea6dcd70df6d77e3dccd4ab43819e3c7083271c6",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Native cell fallback preserves the same hierarchy and actions."
+  },
+  "inspector-team-no-color-80x24": {
+    "sha256": "d2f140d3700363d61e70713871cb4af8ee73a507516bf009b3cf7efc0a35140e",
+    "status": "pass",
+    "note": "Both recorded teammates retain alias, real title, distinct state and explicit delegation relation. No parent or progress is invented. Monochrome keeps text labels and bold selection; meaning does not rely on color."
+  }
+}

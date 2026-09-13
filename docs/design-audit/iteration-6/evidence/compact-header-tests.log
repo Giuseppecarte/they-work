@@ -1,0 +1,11 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 3 tests
+test views::tower::compact::tests::native_pagination_pins_the_parent_without_duplicating_people ... ok
+test views::tower::compact::tests::native_fallback_has_real_clicks_and_keeps_the_selected_family_visible ... ok
+test views::tower::compact::tests::both_native_rosters_reserve_state_and_source_age_with_long_aliases ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 254 filtered out; finished in 0.02s
+

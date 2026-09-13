@@ -1,0 +1,38 @@
+[
+  {
+    "case": "fresh real archive install",
+    "exit": 0,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\nInstalled: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces/they-work\nStart with: \"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces/they-work\" --setup\nAdd /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces to your shell PATH to use the they-work command.\n",
+    "stderr": ""
+  },
+  {
+    "case": "replace same-build installation while it is running",
+    "exit": 0,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\nInstalled: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces/they-work\nStart with: \"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces/they-work\" --setup\nAdd /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces to your shell PATH to use the they-work command.\n",
+    "stderr": ""
+  },
+  {
+    "case": "download",
+    "exit": 1,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\n",
+    "stderr": "No downloadable native asset for v0.7.0-audit/aarch64-apple-darwin. Nothing installed. The older v0.1.0 release is Docker-only; see INSTALL.md to build this checkout.\n"
+  },
+  {
+    "case": "checksum",
+    "exit": 1,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\n",
+    "stderr": "SHA256 verification failed; nothing installed.\n"
+  },
+  {
+    "case": "truncated",
+    "exit": 1,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\n",
+    "stderr": "tar: Error opening archive: truncated gzip input\n"
+  },
+  {
+    "case": "unwritable",
+    "exit": 1,
+    "stdout": "Downloading they-work-aarch64-apple-darwin.tar.gz (v0.7.0-audit) ...\n",
+    "stderr": "mktemp: mkstemp failed on /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/install/installed path with spaces/.they-work.BtscUNPS: Permission denied\n"
+  }
+]

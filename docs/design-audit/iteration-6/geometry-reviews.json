@@ -1,0 +1,47 @@
+{
+  "tower-image-80x24": {
+    "sha256": "f842fa7e33a519791c1821a8678c1dca92c8ea49b632a983719134138da962a7",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+  },
+  "tower-image-120x36": {
+    "sha256": "efb21e02b1e609abbcbe6ad6f8a7670643218d274b428520f03a9da621035652",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+  },
+  "tower-image-192x58": {
+    "sha256": "6371b15770072ff6af360f9f7773f8c62a9b8012238323d326a98788f9cfe21b",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Overview retains two/three/five complete floors at80/120/192columns; names explicitly truncate within their plates."
+  },
+  "office-auto-image-80x24": {
+    "sha256": "c2f18c21eaac1ddcbf4f6c0f8860f302de928b1230d687bd2abc7e2729e803df",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+  },
+  "office-auto-image-120x36": {
+    "sha256": "4299b243c5d6d01c1917838057506eeb2c58107295eee7bbe1793696e4a213e4",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+  },
+  "office-auto-image-192x58": {
+    "sha256": "4828214330b99e23e84f7208dfd86b4fd64e0cebcbbad420021d61b991fc0e3e",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Complete desktops/laptops, hands and chairs remain visible; available space controls rooms and people pages. Any lower native roster reserves state and source age beside identity."
+  },
+  "inspector-now-image-80x24": {
+    "sha256": "1ec4186afaa167e9370c9d96f1559c056f2a842b6273b3ad849a9873d55af824",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+  },
+  "inspector-now-image-120x36": {
+    "sha256": "5017ebfe59fb310fdf474a0027ad8cf638f428943c306a1d5a1def1017310bac",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+  },
+  "inspector-now-image-192x58": {
+    "sha256": "0faf2acdb8ee1500427b0e28103e37c92a8277e845b2c1b647b28d8e3f6f3e82",
+    "status": "pass",
+    "note": "Full 10x20 frame visually inspected: exact authored pixels, native text alignment, floor boundaries and status/selection remain legible. Now retains task, current request, observed action, latest result and coverage. At80columns the full brief is used; at120/192 the panel stays alongside legible equipment. Supporting native roster keeps status and observation age."
+  }
+}

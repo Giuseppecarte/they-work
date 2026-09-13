@@ -1,0 +1,179 @@
+{
+  "commit": "5fa7d55d89af9c407ea95327d8080322e2bef13e",
+  "daemon_architecture": "arm64",
+  "driver_platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "image": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "index": {
+    "digest": "sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+    "manifests": [
+      {
+        "digest": "sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "size": 863
+      },
+      {
+        "digest": "sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "arm64",
+          "os": "linux"
+        },
+        "size": 863
+      },
+      {
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "digest": "sha256:75b8ac9be115ac3ca5bb298b5c5cf957ab2de36f0c0262a9b878a8c6e21449fd",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "size": 566
+      },
+      {
+        "annotations": {
+          "vnd.docker.reference.digest": "sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400",
+          "vnd.docker.reference.type": "attestation-manifest"
+        },
+        "digest": "sha256:ce0fe768adecc7952ec402b621b36eafaee41596b59d7ee78844c6fbb7aa39f5",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "unknown",
+          "os": "unknown"
+        },
+        "size": 566
+      }
+    ],
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "schemaVersion": 2,
+    "size": 1607
+  },
+  "passed": false,
+  "platforms": {
+    "linux/amd64": {
+      "errors": [
+        "fallback: Interactive process did not exit normally after q",
+        "fallback: No-reply fallback has no quadrant-specific glyphs"
+      ],
+      "execution": "emulated",
+      "frames": {
+        "fallback": {
+          "errors": [
+            "Interactive process did not exit normally after q",
+            "No-reply fallback has no quadrant-specific glyphs"
+          ],
+          "exit_code": null,
+          "forced_cleanup": true,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": false,
+          "probe_answered": false,
+          "quit_sent": false
+        },
+        "iterm2": {
+          "errors": [],
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": true,
+          "probe_answered": true,
+          "quit_sent": true
+        },
+        "kitty": {
+          "errors": [],
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": true,
+          "probe_answered": true,
+          "quit_sent": true
+        }
+      },
+      "locale": {
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LC_CTYPE": "C.UTF-8"
+      },
+      "manifest_digest": "sha256:07c517944f12b2ef6a3457c7f8c6b19a9c944716de5e52f57392f27360fe8ee1",
+      "passed": false
+    },
+    "linux/arm64": {
+      "errors": [
+        "fallback: Interactive process did not exit normally after q",
+        "fallback: No-reply fallback has no quadrant-specific glyphs"
+      ],
+      "execution": "daemon-native",
+      "frames": {
+        "fallback": {
+          "errors": [
+            "Interactive process did not exit normally after q",
+            "No-reply fallback has no quadrant-specific glyphs"
+          ],
+          "exit_code": null,
+          "forced_cleanup": true,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": false,
+          "probe_answered": false,
+          "quit_sent": false
+        },
+        "iterm2": {
+          "errors": [],
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": true,
+          "probe_answered": true,
+          "quit_sent": true
+        },
+        "kitty": {
+          "errors": [],
+          "exit_code": 0,
+          "forced_cleanup": false,
+          "glyph_counts": {
+            "half": 0,
+            "quadrant": 0,
+            "sextant": 0
+          },
+          "passed": true,
+          "probe_answered": true,
+          "quit_sent": true
+        }
+      },
+      "locale": {
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LC_CTYPE": "C.UTF-8"
+      },
+      "manifest_digest": "sha256:d00d9c2befa91ee5f865bdd8208498d76197bd264a8eba176f488d0101ce6400",
+      "passed": false
+    }
+  },
+  "schema": 1,
+  "terminal_evidence": "simulated PTY; not a physical terminal"
+}

@@ -1,0 +1,11 @@
+{
+  "platform": "macos",
+  "architecture": "aarch64",
+  "relative_exit_code": 1,
+  "absolute_exit_code": 0,
+  "cases_per_run": 3,
+  "same_cases_and_results": true,
+  "relative_parent_created_in_repository": true,
+  "absolute_report_matches_stdout": true,
+  "production_or_fixture_changes": false
+}

@@ -1,0 +1,18 @@
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.94s
+     Running unittests src/main.rs (target/native-macos/debug/deps/they_work-526baba1a367d777)
+
+running 1 test
+test control_host::tests::recovery_failure_is_visible_and_fresh_storage_is_not_an_error ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s
+
+     Running tests/cli.rs (target/native-macos/debug/deps/cli-42bd60851ccdd66e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+

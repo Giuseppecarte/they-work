@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-3/review_entry.py", line 75, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-3/review_entry.py", line 73, in main
+    else:results=after(args.binary)
+                 ~~~~~^^^^^^^^^^^^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-3/review_entry.py", line 65, in after
+    home=fresh('after-demo-corrupt');chosen(home).parent.mkdir(parents=True);chosen(home).write_text('broken');s=Session(binary,home,['--demo','--no-save']);s.key(b'c');assert 'Connect your team' in s.text();s.key(b'\r');results['demo_can_repair_corrupt_connection']=s.finish();assert chosen(home).read_text()=='broken'
+                                                                                                                                                                                                                                                                           ~~~~~~~~^^
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-2/review_pty.py", line 116, in finish
+    raise AssertionError('UI did not exit while the PTY was drained')
+AssertionError: UI did not exit while the PTY was drained

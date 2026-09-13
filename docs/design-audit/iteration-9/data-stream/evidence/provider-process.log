@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/control.rs (target/native-macos/debug/deps/control-1e7c51d4a06c4eb1)
+
+running 2 tests
+test data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage ... ok
+test data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 1.00s
+

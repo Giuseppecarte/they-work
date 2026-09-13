@@ -1,0 +1,18 @@
+{
+  "apple-terminal-1-resize": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "apple-terminal-3-resize": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "apple-terminal-20-resize": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "other-surfaces": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

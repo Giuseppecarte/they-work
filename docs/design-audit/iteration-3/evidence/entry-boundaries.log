@@ -1,0 +1,10 @@
+{
+  "tiny_terminal_requires_visible_choices": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "demo_can_repair_corrupt_connection": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

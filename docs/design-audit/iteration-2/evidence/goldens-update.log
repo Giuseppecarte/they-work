@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 4 tests
+test golden::tests::snapshot_diff_reports_changed_rows ... ok
+test golden::tests::snapshot_fixture_is_tall_and_contains_attention_states ... ok
+test golden::tests::sign_glyph_sheets_match_checked_in_goldens ... ok
+test golden::tests::snapshots_match_checked_in_goldens ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 113 filtered out; finished in 3.54s

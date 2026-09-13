@@ -1,0 +1,41 @@
+ 0 TOWER  no floors · / find · c sources · ? help
+
+ NEW TASK
+
+   Provider: codex  ←/→ change
+   Project: /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-0x4axde5/vertical-project▏
+
+
+ approval▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ F5 send · F2 stop · F3 console · F4 requests · F6 reconnect · Esc back

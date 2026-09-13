@@ -1,0 +1,185 @@
+{
+  "cells": [
+    80,
+    24
+  ],
+  "mode": "256",
+  "fixture_root": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-sources-pty/80x24-256-c42m8sac",
+  "real_provider_calls": 0,
+  "initial_rgb_sgr": false,
+  "initial_background": "#1c1c1c",
+  "exit": 0,
+  "terminal_restored": true,
+  "alternate_screen_restored": true,
+  "focus_transitions": [
+    {
+      "focus": 5,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 6,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 7,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 0,
+      "screen_sha256": "af09e84e1f698d1f3bb1ec0dc58626f5e2da3cdf5dcb736bb7fc80595073b22d"
+    },
+    {
+      "focus": 1,
+      "screen_sha256": "dc40f798f5d314cfefc7e35d454784e7af423e346f7bc2acbba443d34322ed92"
+    },
+    {
+      "focus": 2,
+      "screen_sha256": "c8007eda13d0893885e11ffd805a7c3807ca537e840eaa2a8e914bb9bc514a02"
+    },
+    {
+      "focus": 3,
+      "screen_sha256": "f90f1543b116049d5d95943f77c3b3e77cca3e17c950ee0a0430137cd13ed26b"
+    },
+    {
+      "focus": 4,
+      "screen_sha256": "3577b14bf03fdc6542a84aaeb3553d7fdb2e50ffebbc07f5b36f10299d86aab4"
+    },
+    {
+      "focus": 5,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 4,
+      "screen_sha256": "3577b14bf03fdc6542a84aaeb3553d7fdb2e50ffebbc07f5b36f10299d86aab4"
+    },
+    {
+      "focus": 3,
+      "screen_sha256": "f90f1543b116049d5d95943f77c3b3e77cca3e17c950ee0a0430137cd13ed26b"
+    },
+    {
+      "focus": 2,
+      "screen_sha256": "c8007eda13d0893885e11ffd805a7c3807ca537e840eaa2a8e914bb9bc514a02"
+    },
+    {
+      "focus": 1,
+      "screen_sha256": "dc40f798f5d314cfefc7e35d454784e7af423e346f7bc2acbba443d34322ed92"
+    },
+    {
+      "focus": 0,
+      "screen_sha256": "af09e84e1f698d1f3bb1ec0dc58626f5e2da3cdf5dcb736bb7fc80595073b22d"
+    },
+    {
+      "focus": 7,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 6,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 5,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 6,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 7,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 0,
+      "screen_sha256": "af09e84e1f698d1f3bb1ec0dc58626f5e2da3cdf5dcb736bb7fc80595073b22d"
+    },
+    {
+      "focus": 1,
+      "screen_sha256": "dc40f798f5d314cfefc7e35d454784e7af423e346f7bc2acbba443d34322ed92"
+    },
+    {
+      "focus": 2,
+      "screen_sha256": "c8007eda13d0893885e11ffd805a7c3807ca537e840eaa2a8e914bb9bc514a02"
+    },
+    {
+      "focus": 3,
+      "screen_sha256": "f90f1543b116049d5d95943f77c3b3e77cca3e17c950ee0a0430137cd13ed26b"
+    },
+    {
+      "focus": 4,
+      "screen_sha256": "3577b14bf03fdc6542a84aaeb3553d7fdb2e50ffebbc07f5b36f10299d86aab4"
+    },
+    {
+      "focus": 5,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 6,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 7,
+      "screen_sha256": "0094cf8b0ebfd5e3df02ab565ef37c5f99c6516d69882b13a00521aa2ad49098"
+    },
+    {
+      "focus": 0,
+      "screen_sha256": "af09e84e1f698d1f3bb1ec0dc58626f5e2da3cdf5dcb736bb7fc80595073b22d"
+    },
+    {
+      "focus": 1,
+      "screen_sha256": "36dad67e88f0af0eeb5ac2a2ee02b3adccac821dfa29c4381427db9105ac48e4"
+    },
+    {
+      "focus": 2,
+      "screen_sha256": "683b20ca4191c0846a560aa250c3f723216ce7f68562c34bb750f7a1ad49bd97"
+    }
+  ],
+  "edited_path_was_cancelled": true,
+  "both_disabled_persisted": true,
+  "passed": true,
+  "fake_provider_probes": [],
+  "evidence": {
+    "01-chooser.png": "dee73c54e0e5f33a05cb42320042c242a2474c1333c25f983c6daacfc1062139",
+    "01-chooser.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "02-editing.png": "dd057f6601ced5065a1f7dae4c9b05d66de743bee14ce01a13166c27d2669112",
+    "02-editing.txt": "543da8739de00edec6813be91318923edadf07b21e2ca03d771ccbc344ed9b60",
+    "03-edit-cancelled.png": "2b92b9665f18855c4241acc1e6e96780bbdfefdc5d6e45988b42daf5a80a3ac1",
+    "03-edit-cancelled.txt": "f815fb97fc2b017fb968c99b07b4fa0820c277b304b0e5e4add51ed6d889b2a0",
+    "04-both-off.png": "0889b576c2da52144b328becba0511c1f3f4e65027f630a84e7e2b4bc72955fa",
+    "04-both-off.txt": "32018bac3790c09d94f2870c6ef6ca87fdab0763d148f338119d50391ed0bc7c",
+    "05-empty-tower.png": "fb7b94146bcc06b927ca50fca4a3a2937e8c9e5052465efcbd489860f2a4860e",
+    "05-empty-tower.txt": "fc2ee92f728f62380a9c599cfe733b0dd5608899fff329ead896e90b503b3353",
+    "focus-forward-01.png": "6e8eb167b157d5775c48dc83ad0d3ec5da08402e7285900b4a011f05f8955197",
+    "focus-forward-01.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "focus-forward-02.png": "71d9946a88fa5b07be6e454d978528163b4ec4d473dd1a7cc89825630ace3af4",
+    "focus-forward-02.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "focus-forward-03.png": "a79560e72e7b5269f7bfa13c9d7931f4659fffb6bb77573629ec8c02d8b5417d",
+    "focus-forward-03.txt": "1c0a4afe925f380a728bc4c382b7f3253e15918ba38d4dd5f241af37ab541603",
+    "focus-forward-04.png": "2b92b9665f18855c4241acc1e6e96780bbdfefdc5d6e45988b42daf5a80a3ac1",
+    "focus-forward-04.txt": "f815fb97fc2b017fb968c99b07b4fa0820c277b304b0e5e4add51ed6d889b2a0",
+    "focus-forward-05.png": "93f8f7200659900eed9981685924e8dd7950ff03afc688db5f54696b59c698fc",
+    "focus-forward-05.txt": "c92e45291a16fc3b7ec1e9ea0e856ca217c3f9647a30efd3c5514178306b2424",
+    "focus-forward-06.png": "0c6a6aa99825b49b056086b6d1541039da29e26eddf045a1a0bd11ead1e0b588",
+    "focus-forward-06.txt": "e9bb65d314f5fa721dfe85735b8da74806042652ab59147e8af9d2da3fb8e9bc",
+    "focus-forward-07.png": "d7106ec1a18a0976109dcbae15b04c281065c3a2a21601160494a0526096190d",
+    "focus-forward-07.txt": "19c455660cd98abe85b1648c9eb91427c9781e6d229df4b00f6dfd1eecde8eaa",
+    "focus-forward-08.png": "dee73c54e0e5f33a05cb42320042c242a2474c1333c25f983c6daacfc1062139",
+    "focus-forward-08.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "focus-reverse-01.png": "d7106ec1a18a0976109dcbae15b04c281065c3a2a21601160494a0526096190d",
+    "focus-reverse-01.txt": "19c455660cd98abe85b1648c9eb91427c9781e6d229df4b00f6dfd1eecde8eaa",
+    "focus-reverse-02.png": "0c6a6aa99825b49b056086b6d1541039da29e26eddf045a1a0bd11ead1e0b588",
+    "focus-reverse-02.txt": "e9bb65d314f5fa721dfe85735b8da74806042652ab59147e8af9d2da3fb8e9bc",
+    "focus-reverse-03.png": "93f8f7200659900eed9981685924e8dd7950ff03afc688db5f54696b59c698fc",
+    "focus-reverse-03.txt": "c92e45291a16fc3b7ec1e9ea0e856ca217c3f9647a30efd3c5514178306b2424",
+    "focus-reverse-04.png": "2b92b9665f18855c4241acc1e6e96780bbdfefdc5d6e45988b42daf5a80a3ac1",
+    "focus-reverse-04.txt": "f815fb97fc2b017fb968c99b07b4fa0820c277b304b0e5e4add51ed6d889b2a0",
+    "focus-reverse-05.png": "a79560e72e7b5269f7bfa13c9d7931f4659fffb6bb77573629ec8c02d8b5417d",
+    "focus-reverse-05.txt": "1c0a4afe925f380a728bc4c382b7f3253e15918ba38d4dd5f241af37ab541603",
+    "focus-reverse-06.png": "71d9946a88fa5b07be6e454d978528163b4ec4d473dd1a7cc89825630ace3af4",
+    "focus-reverse-06.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "focus-reverse-07.png": "6e8eb167b157d5775c48dc83ad0d3ec5da08402e7285900b4a011f05f8955197",
+    "focus-reverse-07.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "focus-reverse-08.png": "dee73c54e0e5f33a05cb42320042c242a2474c1333c25f983c6daacfc1062139",
+    "focus-reverse-08.txt": "3f6ed2214bf34fbde583989e0a5317cb8673f661af53338ad28d1237f754fd4e",
+    "session.ansi": "ba4856e8cd6861057be294566c0db5b321993f49303fc9e73e0d8f3696cb2e43"
+  }
+}

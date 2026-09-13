@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+Software tower · 2 projects                                                     
+ PROJECT NOTEBOOK  /  All floors                                                
+f All floors · i Show IDs                                                       
+1 Attention 2 Deliveries 3 Since your visit 4 Team                              
+                                                                                
+ > Rene P. · accounts / Review … FOR YOU · APPROVAL NEEDED               0s ago 
+ [ Mark seen ]                                               [ Review request ] 
+ FOR YOU · APPROVAL NEEDED  ·  record 1/1                                       
+ Rene P. · accounts / Review the account permission changes                     
+ Review the simulated command for the account project. Opening this request     
+ does not approve it.                                                           
+                                                                                
+ A human request was recorded by the source.                                    
+                                                                                
+ Partial local history                                                          
+ Synthetic local observation fixture. No authenticated provider or real         
+ command is used.                                                               
+ STREAM OBSERVATION                                                             
+ Source: /fixture/codex                                                         
+ Lineage: fixture-stream                                                        
+ 300 numbered events missing in this lineage; 0 events awaiting an actor; 0     
+History · limits · h coverage · 300 missing stream events · 2 local evictions   
+[ Back ] ↑↓ · Enter opens                                                       

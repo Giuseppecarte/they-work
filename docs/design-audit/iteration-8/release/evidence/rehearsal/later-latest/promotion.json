@@ -1,0 +1,16 @@
+{
+  "before": {
+    "latest": "sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea",
+    "version": null
+  },
+  "candidate": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "completed_steps": [],
+  "error": "Latest changed; no tags were changed",
+  "native_release": "not-attempted",
+  "observed_after_failure": {
+    "latest": "sha256:b58e24f04109a15a7e4e9f695b3272efbdad13022c67c67806345c5c5eabbeea",
+    "version": null
+  },
+  "schema": 1,
+  "status": "promotion-failed-inspect-registry"
+}

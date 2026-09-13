@@ -1,0 +1,26 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.25s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 18 tests
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::insufficient_receipt_geometry_explains_how_to_read_and_never_sends ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::request_shortcut_drops_the_previous_instruction_receipt ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::new_task_displays_one_caret_only_in_the_active_field ... ok
+test views::control::tests::rejected_receipt_wraps_in_inline_full_and_new_composers_without_hiding_draft_or_action ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 241 filtered out; finished in 0.02s
+

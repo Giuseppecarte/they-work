@@ -1,22 +1,17 @@
-//! Session-only renderer settings and their live preview.
-
-use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph, Widget};
-use ratatui::Frame;
-use theywork_core::{Millis, Worker};
-
-use crate::canvas::{Canvas, ColorDepth, PixelEncoding};
-use crate::sprite::{SpriteSet, WorkerLook};
-
-use super::office::Projection;
-use super::{
-    draw_panel, fill_office_background, has_area, inset, paint_opaque, render_worker_with_look,
-    short_path, PixelRect, UiTheme, ACCENT, INK, MUTED, PANEL, PANEL_HIGHLIGHT,
+//! Appearance and input preferences, with compatibility settings kept explicit.
+use super::{office::Projection, paint_opaque, UiTheme, INK, MUTED, PANEL};
+use crate::{
+    canvas::{ColorDepth, PixelEncoding},
+    interaction::{Action, HitRegion},
+};
+use ratatui::{
+    layout::Rect,
+    style::{Modifier, Style},
+    widgets::{Paragraph, Widget},
+    Frame,
 };
 
-pub(crate) struct SettingsDrawContext<'a> {
+pub(crate) struct SettingsDrawContext {
     pub(crate) projection: Projection,
     pub(crate) theme: UiTheme,
     pub(crate) color_depth: ColorDepth,
@@ -24,192 +19,138 @@ pub(crate) struct SettingsDrawContext<'a> {
     pub(crate) encoding: PixelEncoding,
     pub(crate) encoding_locked: bool,
     pub(crate) motion: bool,
+    pub(crate) mouse: bool,
     pub(crate) name_plates: bool,
     pub(crate) cursor: usize,
-    pub(crate) worker: Option<(&'a Worker, WorkerLook)>,
-    pub(crate) now: Millis,
-    pub(crate) canvas: &'a mut Canvas,
-    pub(crate) sprites: &'a SpriteSet,
+    pub(crate) advanced: bool,
+    pub(crate) room_palette: usize,
 }
 
-pub(crate) fn draw(frame: &mut Frame, context: SettingsDrawContext<'_>) {
-    let SettingsDrawContext {
-        projection,
-        theme,
-        color_depth,
-        color_locked,
-        encoding,
-        encoding_locked,
-        motion,
-        name_plates,
-        cursor,
-        worker,
-        now,
-        canvas,
-        sprites,
-    } = context;
-    let area = frame.area();
-    if area.width < 20 || area.height < 8 {
-        super::draw_tiny(frame, "settings need a little more terminal space");
-        return;
+pub(crate) fn draw(frame: &mut Frame, c: SettingsDrawContext) -> Vec<HitRegion> {
+    let full = frame.area();
+    let width = full.width.min(68);
+    let height = full.height.saturating_sub(3).min(19);
+    let area = Rect::new(full.x + (full.width - width) / 2, full.y + 2, width, height);
+    paint_opaque(frame, area, Style::default().fg(INK).bg(PANEL));
+    if width < 16 || height < 5 {
+        return Vec::new();
     }
-
-    let popup_width = area.width.saturating_sub(4).clamp(20, 76);
-    let popup_height = area.height.saturating_sub(4).clamp(8, 24);
-    let popup = Rect::new(
-        area.x
-            .saturating_add(area.width.saturating_sub(popup_width) / 2),
-        area.y
-            .saturating_add(area.height.saturating_sub(popup_height) / 2),
-        popup_width,
-        popup_height,
+    let inner = Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
+    crate::components::heading(
+        frame,
+        Rect::new(inner.x, inner.y, inner.width, 1),
+        if c.advanced {
+            "Advanced · compatibility"
+        } else {
+            "Settings · appearance & input"
+        },
     );
-    let popup_style = Style::default().fg(INK).bg(PANEL);
-    paint_opaque(frame, popup, popup_style);
-    Block::default()
-        .title(" SETTINGS  session only ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
-        .style(popup_style)
-        .render(popup, frame.buffer_mut());
-
-    let inner = inset(popup, 1);
-    if !has_area(inner) {
-        return;
-    }
-    let left_width = inner.width.clamp(1, 30);
-    let left = Rect::new(inner.x, inner.y, left_width, inner.height);
-    let right = Rect::new(
-        inner.x.saturating_add(left_width),
-        inner.y,
-        inner.width.saturating_sub(left_width),
-        inner.height,
-    );
-    let options_inner = draw_panel(frame, left, "OPTIONS", true);
-    let preview_inner = draw_panel(frame, right, "LIVE PREVIEW", false);
-    let colour = if color_locked {
-        format!("{} (env)", color_depth_label(color_depth))
+    let rows: Vec<(&str, String)> = if c.advanced {
+        vec![
+            ("Camera", c.projection.label().into()),
+            (
+                "Text graphics",
+                format!(
+                    "{}{}",
+                    c.encoding.label(),
+                    if c.encoding_locked {
+                        " · set externally"
+                    } else {
+                        ""
+                    }
+                ),
+            ),
+            ("Office palette", format!("{} / 4", c.room_palette + 1)),
+            ("Back to Settings", "Enter".into()),
+        ]
     } else {
-        color_depth_label(color_depth).to_string()
+        vec![
+            (
+                "Theme",
+                if c.theme == UiTheme::Light {
+                    "Light"
+                } else {
+                    "Dark"
+                }
+                .into(),
+            ),
+            (
+                "Color",
+                format!(
+                    "{}{}",
+                    color_depth_label(c.color_depth),
+                    if c.color_locked {
+                        " · set externally"
+                    } else {
+                        ""
+                    }
+                ),
+            ),
+            ("Motion", if c.motion { "Full" } else { "Reduced" }.into()),
+            (
+                "Nameplates",
+                if c.name_plates {
+                    "All workers"
+                } else {
+                    "Selection & requests"
+                }
+                .into(),
+            ),
+            (
+                "Mouse",
+                if c.mouse {
+                    "Click to inspect"
+                } else {
+                    "Terminal selection"
+                }
+                .into(),
+            ),
+            ("Advanced", "Cameras & text graphics".into()),
+        ]
     };
-    let pixels = if encoding_locked {
-        format!("{} (env)", encoding.label())
+    let available = inner.height.saturating_sub(3).max(1) as usize;
+    let first = c.cursor.saturating_sub(available - 1);
+    let mut hits = Vec::new();
+    for (i, (label, value)) in rows.iter().enumerate().skip(first).take(available) {
+        let row = Rect::new(inner.x, inner.y + 1 + (i - first) as u16, inner.width, 1);
+        let selected = i == c.cursor;
+        let style = if selected {
+            super::selection_style()
+        } else {
+            Style::default().fg(INK).bg(PANEL)
+        };
+        let label_width = (inner.width / 2).min(20) as usize;
+        let label = super::short_path(label, label_width.saturating_sub(2));
+        paint_opaque(frame, row, style);
+        Paragraph::new(format!(
+            "{} {:label_width$}{}",
+            if selected { ">" } else { " " },
+            label,
+            value
+        ))
+        .style(if selected {
+            style.add_modifier(Modifier::BOLD)
+        } else {
+            style
+        })
+        .render(row, frame.buffer_mut());
+        hits.push(HitRegion::new(row, Action::Setting(i)));
+    }
+    let message = if c.advanced {
+        "Older cameras: limited artwork and controls."
     } else {
-        encoding.label().to_string()
+        "Changes apply now. Decor has Apply / Cancel."
     };
-    let options = [
-        ("camera", projection.label()),
-        ("light", if theme == UiTheme::Light { "on" } else { "off" }),
-        (
-            "theme",
-            if theme == UiTheme::Light {
-                "paper"
-            } else {
-                "noir"
-            },
-        ),
-        ("colour", colour.as_str()),
-        ("motion", if motion { "on" } else { "off" }),
-        ("names", if name_plates { "on" } else { "off" }),
-        ("pixels", pixels.as_str()),
-    ];
-    if has_area(options_inner) {
-        for (index, (label, value)) in options.iter().enumerate() {
-            let row = options_inner.y.saturating_add(index as u16);
-            if row >= options_inner.y.saturating_add(options_inner.height) {
-                break;
-            }
-            let selected = index == cursor;
-            let style = if selected {
-                Style::default()
-                    .fg(INK)
-                    .bg(PANEL_HIGHLIGHT)
-                    .add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(MUTED).bg(PANEL)
-            };
-            Paragraph::new(Line::from(vec![
-                Span::styled(format!(" {:<8}", label), style),
-                Span::styled((*value).to_string(), style.fg(ACCENT)),
-            ]))
-            .style(style)
-            .render(
-                Rect::new(options_inner.x, row, options_inner.width, 1),
-                frame.buffer_mut(),
-            );
-        }
-    }
-    if has_area(preview_inner) {
-        let label_height = preview_inner.height.min(2);
-        let label_area = Rect::new(
-            preview_inner.x,
-            preview_inner.y,
-            preview_inner.width,
-            label_height,
+    Paragraph::new(super::wrap_text(message, inner.width).join("\n"))
+        .style(Style::default().fg(MUTED))
+        .render(
+            Rect::new(inner.x, inner.bottom().saturating_sub(2), inner.width, 2),
+            frame.buffer_mut(),
         );
-        let worker_label = worker.map_or_else(
-            || "no worker selected".to_string(),
-            |(worker, _)| short_path(&worker.name, 24),
-        );
-        Paragraph::new(format!("{}  •  {}", projection.label(), worker_label))
-            .style(Style::default().fg(MUTED).bg(PANEL))
-            .render(label_area, frame.buffer_mut());
-        let preview = Rect::new(
-            preview_inner.x,
-            preview_inner.y.saturating_add(label_height),
-            preview_inner.width,
-            preview_inner.height.saturating_sub(label_height),
-        );
-        if has_area(preview) {
-            canvas.resize_for_cells(preview.width as usize, preview.height as usize);
-            let floor_start = fill_office_background(canvas, sprites);
-            if let Some((worker, look)) = worker {
-                let sprite = sprites.worker_frame(worker, look, now);
-                let width = canvas
-                    .scale_image_sprite_width(sprite.width())
-                    .min(canvas.width().saturating_sub(2))
-                    .max(1);
-                let height = canvas
-                    .scale_image_sprite_height(sprite.height())
-                    .min(floor_start.saturating_sub(1).max(1))
-                    .max(1);
-                let worker_x = canvas.width().saturating_sub(width) / 2;
-                let worker_y = floor_start.saturating_sub(height);
-                render_worker_with_look(
-                    canvas,
-                    sprites,
-                    worker,
-                    &look,
-                    now,
-                    PixelRect {
-                        x: worker_x,
-                        y: worker_y,
-                        width,
-                        height,
-                    },
-                );
-            }
-            let desk_width = canvas
-                .scale_image_sprite_width(sprites.desk.width())
-                .min(canvas.width())
-                .max(1);
-            let desk_height = canvas
-                .scale_image_sprite_height(sprites.desk.height())
-                .min(canvas.height())
-                .max(1);
-            canvas.blit_scaled(
-                &sprites.desk,
-                canvas.width().saturating_sub(desk_width) / 2,
-                canvas.height().saturating_sub(desk_height),
-                desk_width,
-                desk_height,
-            );
-            canvas.render(frame.buffer_mut(), preview);
-        }
-    }
+    hits
 }
 
-fn color_depth_label(depth: ColorDepth) -> &'static str {
+pub(crate) fn color_depth_label(depth: ColorDepth) -> &'static str {
     match depth {
         ColorDepth::TrueColor => "truecolor",
         ColorDepth::Palette256 => "256",

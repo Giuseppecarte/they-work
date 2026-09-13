@@ -2,8 +2,8 @@
 
 they-work is intentionally small. The binary polls local agent data, folds
 observations into a shared world model, and renders that model as a terminal
-office. Keep those responsibilities separate so the read-only promise remains
-easy to inspect.
+office. Keep observation separate from explicitly authorized provider controls.
+The collectors remain read-only, and the renderer performs no I/O.
 
 ## Crate layout
 
@@ -11,6 +11,8 @@ easy to inspect.
 | --- | --- |
 | theywork-core | Domain model for offices, workers, activities, events, and the deterministic demo world |
 | theywork-collect | Read-only Claude Code and Codex sources that turn local data into core events |
+| theywork-control | Private local supervisor, provider RPC authority and native-console handoff |
+| theywork-terminal-image | Negotiated graphics transport and bounded image encoding |
 | theywork-render | In-memory canvas, sprites, animations, overlays, and views; it performs no I/O |
 | theywork-tui | The binary: argument parsing, polling, terminal setup, and wiring |
 
@@ -19,52 +21,66 @@ easy to inspect.
 should emit a core event when the model needs new information; a renderer
 should consume the existing world model rather than reaching into a source.
 
-## Project-selection contract
+## Observation and control contracts
 
-The user-facing startup, project-switching, persistence, and setup-check
-behavior is specified in [`docs/project-selection.md`](docs/project-selection.md).
-The CLI exposes `--project`, `--config-dir`, and the non-rendering `--doctor`
-diagnostic; the collector owner supplies normalized project identities and
-first-scan counts. Keep the
-default path read-only and make every additional write require the explicit
-config-directory opt-in described there.
+[INSTALL.md](INSTALL.md#choose-your-conversation-sources) is the current
+user-facing contract for source consent, navigation and persistence.
+Native interactive sessions offer **Remember on this computer** in the normal
+settings directory; `--config-dir` overrides that location, rather than granting
+permission by itself. Remember disabled or `--no-save` leaves the session
+temporary. The standard Docker runtime still needs an explicit writable settings
+mount to save. Keep source records read-only in every mode.
+
+`--project` restricts the input to one normalized repository; choosing a floor
+only changes the view. The collectors supply normalized project identities and
+first-scan counts. The [Source trait](crates/theywork-core/src/source.rs) documents
+the polling contract: the host traverses sources sequentially in a background
+thread, publishes a batch, then waits one second. This is independent of frame
+rendering; a slow read extends the traversal and delays the other sources.
+
+[The control contract](docs/CONTROLS.md) defines provider ownership, requests,
+receipts and private supervisor state. Reading a transcript never grants
+authority over an external execution. The earlier
+[project-selection proposal](docs/project-selection.md) is historical, not an
+alternative current contract.
 
 ## Build and test
 
-Rust is not required on the host. <code>./scripts/cargo</code> builds
-<code>docker/Dockerfile.dev</code> on first use, mounts the repository at
-<code>/src</code>, and runs Cargo as the invoking user:
+Use native Rust 1.90 with a C compiler and Python 3 for the offline process
+fixtures, or Docker. Python is a development dependency, not an end-user runtime
+requirement. `./scripts/cargo` prefers
+local Cargo and falls back to `docker/Dockerfile.dev`. Set
+`THEYWORK_TOOLCHAIN=native` or `THEYWORK_TOOLCHAIN=docker` to choose explicitly.
+The Docker image runs as the invoking user, mounts the checkout at `/src`, and
+keeps Cargo's cache in `.cargo-home`. Temporary build/test files stay in `target/tmp`.
 
-~~~bash
-make fetch
-./scripts/cargo fmt --all -- --check
-./scripts/cargo clippy --workspace --all-targets -- -D warnings
-./scripts/cargo test --workspace
-make build
-make demo
+~~~sh
+make check
+make native  # local Rust: build target/release/they-work
+make install # local Rust: install into Cargo's user bin
+make demo    # optional Docker runtime; no source mounts
 python3 scripts/test-install.py
+python3 scripts/test-native-install.py
 ~~~
 
-<code>make fmt</code> formats files in place. <code>make fmt-check</code> is
-the non-mutating version. <code>make check</code> fetches the locked
-dependencies with explicit network access, then runs the formatting check,
-strict Clippy, and the workspace tests offline. The release image is
-built from <code>docker/Dockerfile</code>; its dependency layer copies the
-manifests and stub sources before the real sources, so ordinary source edits
-can reuse the registry and dependency layers.
+`make check` fetches locked dependencies, then checks formatting, strict Clippy,
+and workspace tests. The canonical suite uses `--test-threads=1` because its
+wall-clock frame-budget checks must not compete with other expensive render
+scenarios. No timing thresholds are relaxed. Provider tests use offline fakes
+and need local loopback sockets and PTYs; they never start a real model turn.
+Docker commands run without network access by default;
+`make fetch` explicitly enables network access to populate the dependency cache.
+Native Cargo follows its normal network policy. To run individual Docker tests
+on a fresh checkout, first run `THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked`.
+CI forces Docker for that verification lane and separately builds, runs tests,
+and smoke-tests release binaries natively on Linux, macOS, and Windows (x64/ARM64).
 
-The Cargo container runs with Docker's <code>--network none</code> by default.
-<code>make check</code> handles the fresh-checkout bootstrap. Before running
-individual Cargo commands in a fresh checkout, populate the ignored
-<code>.cargo-home</code> cache once with an explicit networked fetch:
-
-~~~bash
-THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked
-~~~
-
-CI caches that directory by lockfile and toolchain pin and performs that
-networked bootstrap only on a cache miss. Set <code>THEYWORK_CARGO_NETWORK</code>
-only when intentionally refreshing the dependency cache.
+The release workflow packages each tested native binary with `LICENSE` and
+SHA256 checksums, builds a Linux/amd64 and Linux/arm64 candidate index, verifies
+that immutable digest on both platforms and checks native archive hashes before
+promoting version/latest. It then attaches native installers and archives to the
+tagged GitHub Release. This workflow is a release gate, not evidence that an unrun
+platform has passed. No releases were published as part of the design audit.
 
 <code>cargo fmt --all</code> crosses crate boundaries. For a focused change,
 use <code>./scripts/cargo fmt -p &lt;crate&gt;</code> (and add
@@ -86,8 +102,9 @@ mounts.
 
 ## Adding a sprite
 
-1. Add the sprite data and its dimensions in
-   <code>crates/theywork-render/src/sprite.rs</code>.
+1. Add high-resolution character art in
+   <code>crates/theywork-render/src/living_office/art.rs</code>; keep compatible
+   compact sprites in <code>crates/theywork-render/src/sprite.rs</code>.
 2. Add it to <code>SpriteSet</code> and give it a descriptive name.
 3. Reuse the existing transparent-pixel and nearest-neighbor scaling helpers
    instead of drawing directly into the terminal buffer.
@@ -121,18 +138,49 @@ suite, and the release image build on pushes and pull requests.
 
 ## Releasing the image
 
-Create and push a semantic version tag such as `v1.2.3`. The tag-only
-[`release workflow`](.github/workflows/release.yml) builds `docker/Dockerfile`
-and publishes both `ghcr.io/giuseppecarte/they-work:v1.2.3` and `latest`. It
-then pulls the published digest through a 160×48 Kitty-capable PTY, checking
-the baked UTF-8 locale, a graphics transmission, and quadrant-specific output
-when the terminal does not answer the graphics probe. It has `packages:write`
-only in that tag-triggered workflow; CI for branches and pull requests remains
-read-only. Re-shoot the README stills from that published digest after the
-check passes. The no-checkout install command and image pinning rules are in
-[`docs/release.md`](docs/release.md).
+Create and push an authorized version tag such as `v1.2.3`. The tag-only
+[`release workflow`](.github/workflows/release.yml) builds once to a unique
+candidate reference. It verifies that immutable multi-architecture digest with
+explicit platform runs and normal PTY exits, checks all six native archives and
+retains a publication intent before advancing version and `latest`. Candidate
+tags may be visible in the public package; they are unpromoted artifacts.
+
+Promotion reuses the verified index without rebuilding it. It is not atomic
+across two image tags and the GitHub Release. A failure can leave a verified
+version published while `latest` or native release publication is incomplete;
+follow the [recovery runbook](docs/release.md), not an automatic rollback. The
+workflow serializes promotion but does not prevent external publishers or impose
+semantic version order. Branch and pull-request CI does not publish packages.
+
+Run the deterministic release checks without registry writes using Python 3.11
+or newer (the prepared audit environment uses Python 3.12):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-release-image.py
+```
+
+For the explicit-platform verifier, disposable-registry rehearsal, native
+checksum contract and authorized publication recovery commands, use
+[`docs/release.md`](docs/release.md). Simulated capability replies and emulation
+are recorded as such; neither is physical-terminal or native ARM certification.
 
 ## Reviewing art
+
+For a small reproducibility check from a clean checkout, follow
+[the audit guide](docs/AUDIT.md):
+
+~~~sh
+python3 scripts/audit.py bootstrap --python /path/to/python3.12
+python3 scripts/audit.py smoke
+~~~
+
+Omit `--python` when `python3` already uses Python 3.12. Bootstrap prepares the
+declared dependencies; smoke runs offline afterward and produces one complete
+screen plus one bounded collector-fixture result under ignored `target/audit/`.
+The manifest identifies the actual binary, dependencies, font and capture
+method. This is a compositor replay, not physical-terminal or user validation.
+The larger legacy review bundle below remains available for its existing
+compatibility targets; it is not a prerequisite for the small audit smoke.
 
 The renderer is a pixel canvas whose resolution is the terminal size. A design
 drawn at desktop resolution does not survive scaling down to 80 columns. The
@@ -259,11 +307,11 @@ diff is not a substitute for that comparison.
 
 ## CI boundary
 
-CI runs on a Linux GitHub-hosted runner with no configured Claude or Codex home.
+The Docker verification lane runs on a Linux GitHub-hosted runner with no configured Claude or Codex home.
 The collector acceptance suite therefore exercises its fixtures and skips its
 live-machine smoke check when those homes are absent; it does not prove a
-particular user's transcript or database layout. CI also does not cover
-Windows/WSL bind-mount behavior, terminal-specific key handling and dimensions,
+particular user's transcript or database layout. The native matrix checks Windows builds and fixture behavior; CI does not cover
+WSL bind-mount behavior, terminal-specific key handling and dimensions,
 or pulling the public release image from its registry. The checked-in
 goldens cover deterministic rendering; the interactive demo remains a manual
 terminal check.

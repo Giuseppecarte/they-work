@@ -1,0 +1,34 @@
+     Locking 33 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling zerocopy v0.8.56
+   Compiling quote v1.0.47
+   Compiling version_check v0.9.5
+   Compiling unicode-ident v1.0.24
+   Compiling find-msvc-tools v0.1.11
+   Compiling serde_core v1.0.229
+   Compiling shlex v2.0.1
+   Compiling vcpkg v0.2.15
+   Compiling pkg-config v0.3.34
+   Compiling once_cell v1.21.4
+   Compiling cc v1.4.4
+   Compiling cfg-if v1.0.4
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling ahash v0.8.12
+   Compiling serde_json v1.0.151
+   Compiling bitflags v2.13.1
+   Compiling memchr v2.8.3
+   Compiling smallvec v1.15.2
+   Compiling fallible-iterator v0.3.0
+   Compiling libsqlite3-sys v0.30.1
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.4
+   Compiling serde_derive v1.0.229
+   Compiling hashbrown v0.14.5
+   Compiling hashlink v0.9.1
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling rusqlite v0.32.1
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-source-performance-audit v0.0.0 (/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-7/performance)
+    Finished `release` profile [optimized] target(s) in 17.56s

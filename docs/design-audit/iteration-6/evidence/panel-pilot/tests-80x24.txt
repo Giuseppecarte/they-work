@@ -1,0 +1,24 @@
+                                                                                
+ Morgan                                                                         
+ Validate timeout behavior                                                      
+ codex · Response requested · 0s                                                
+ Available history                                                              
+ [ Now ][ Activity ][ Team ][ Details ]                                         
+                                                                                
+ FOR YOU · Choose the public timeout                                            
+ Keep 30 seconds or increase it to 60 seconds? Existing clients rely on 30.     
+                                                                                
+ OBSERVED · 0s ago                                                              
+ No current activity reported                                                   
+ The source recorded a question. Review its current form to answer.             
+                                                                                
+ RECORDED UPDATES                                                               
+ No retained activity or result from this source yet.                           
+                                                                                
+ RECORDED TEAM · 2 related tasks                                                
+ Casey · Ready                                                                  
+ Avery · Working                                                                
+                                                                                
+ [ Review request ] [ More ] [ Expand ]                                         
+ PgUp/Dn · 1/14 · Esc back                                                      
+                                                                                

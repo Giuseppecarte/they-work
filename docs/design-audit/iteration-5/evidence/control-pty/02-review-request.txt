@@ -1,0 +1,35 @@
+ 0 TOWER >1 vertical-project!                                                         1/1 · / find · c connect · ? help
+[Tower] [Attention] [Deliveries] [Find] [New task] [Connections]
+
+ REVIEW REQUEST
+
+ PENDING REQUEST 1/1 ·
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-control-pty/run-gnm_dn97/vertical-project
+ / approval · managed-1
+ Approval requested
+
+ command: test-only-command
+
+
+ 1  Allow this request
+ 2  Decline
+ 3  Cancel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Confirmed: Instruction accepted · operation 2c5621e7575995b3ea1f30dc9a5b2dae7cf5f84d80ff6222b7ca2537216796a8
+ [ 1 Allow this request ] [ 2 Decline ] [ 3 Cancel ] [ Back ]
+
+
+ Tab focus · Enter choose · PgUp/Dn read · Esc back

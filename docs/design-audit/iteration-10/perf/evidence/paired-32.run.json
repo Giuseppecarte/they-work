@@ -1,0 +1,27 @@
+{
+  "revision": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "mode": "paired",
+  "overlap_per_worker": 32,
+  "started_at": "2026-09-10T16:18:53.882942+00:00",
+  "command": [
+    "/usr/bin/time",
+    "-l",
+    "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/original-test",
+    "claude::correlation_tests::correlation_resource_replay",
+    "--exact",
+    "--ignored",
+    "--nocapture"
+  ],
+  "binary_sha256": "50c32dfffe3d990722683e2ef40b7bcd3ae47d19b2aa05eee6367dee048f62b4",
+  "cwd": "/Users/gc/Documents/Programming/they-work",
+  "environment": {
+    "THEYWORK_PERF_MODE": "paired",
+    "THEYWORK_PERF_OUTPUT": "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/paired-32",
+    "THEYWORK_PERF_OVERLAP": "32",
+    "TMPDIR": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp"
+  },
+  "exit_code": 0,
+  "finished_at": "2026-09-10T16:19:50.276395+00:00",
+  "raw_result": "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/perf/paired-32/result.json",
+  "executed_tests": 1
+}

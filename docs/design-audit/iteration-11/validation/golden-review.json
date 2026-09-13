@@ -1,0 +1,692 @@
+[
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/cameras.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/desk.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/guard.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/help.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/office.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/phone.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.dark.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.normal.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.normal.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.normal.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.normal.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.small.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.small.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.small.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/settings.light.small.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/sign-glyph-sheet.half-blocks.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/sign-glyph-sheet.quadrants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  },
+  {
+    "file": "crates/theywork-render/tests/goldens/sign-glyph-sheet.sextants.golden",
+    "headers_identical": true,
+    "row_count_identical": true,
+    "color_only": true
+  }
+]

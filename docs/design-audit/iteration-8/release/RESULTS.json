@@ -1,0 +1,78 @@
+{
+  "candidate": "localhost:5058/they-work@sha256:ddc6a0fb6dccece7eab549e6701e16b9b02cfe3405dbb82ff440cebb825ed092",
+  "checks": {
+    "deterministic_passed": 20,
+    "deterministic_tests": 20,
+    "product_pty_cases": 6,
+    "product_pty_passed": 6,
+    "registry_cases": 9,
+    "registry_passed": 9
+  },
+  "evidence_normalization": {
+    "evidence/build.log": {
+      "method": "Split carriage-return progress records into lines and trim trailing whitespace; command content and outcomes retained",
+      "original_sha256": "9a8f4fcf2dfd76ee33b3a6c1541a95d33785055b46b6f4dd3b8a1822b64a28bb"
+    }
+  },
+  "evidence_sha256": {
+    "evidence/build-metadata.json": "b22c12cc63074dd6ea7004379db93983df2ac864520d7e6a35ecf1ef10e9371e",
+    "evidence/build.log": "42dafdbbbbe6e0cdfb2dd22255556176b2fc67b04bef54b604b3b9d8d12d36e8",
+    "evidence/cleanup.log": "dbaf7846aa4c79638904b88090e78416dbe49b3e2f739be5eb7edd9a274e1001",
+    "evidence/fallback-before.ansi": "68198e1fcb831d71131f5534424d0678197de88f55d4fbd1e9649e0045b99858",
+    "evidence/rehearsal.log": "20076584b4c7b9afab60e2bb65d8328ddad5f60328a1174c91657d6b7688e6b2",
+    "evidence/rehearsal/between-tags/intent.json": "356478ced39f5dd09f317c6b68e73890b7da70ab8048fd1265d3ec9bf38eb75a",
+    "evidence/rehearsal/between-tags/promotion.json": "8727a525b611d3db252919f47620293fb71b93c8021b234d0b49da9568d3797d",
+    "evidence/rehearsal/between-tags/retry.json": "04cc21f1aee7cbb81a4089347266934d6cb1b4676e69ea1016e73684ad31869b",
+    "evidence/rehearsal/between-tags/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/later-latest/intent.json": "122006b63dc0f0bd67edcfbef400daacf70445873c151a87e16cfab0ac5f0cf3",
+    "evidence/rehearsal/later-latest/promotion.json": "86f966a76ef453b95ed70940a0e17af54c875e01369656a77e52072fd255d903",
+    "evidence/rehearsal/later-latest/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/lost-latest-ack/intent.json": "89f11c875d052d026da08be36b231a087e1c1adaa84a7c524d676efd9f01e8d2",
+    "evidence/rehearsal/lost-latest-ack/promotion.json": "9a926aec85234b6ba164be630a85436b97418861d8d5758e28249d61d9c59670",
+    "evidence/rehearsal/lost-latest-ack/retry.json": "8809c44ee8952673d74021dfd9d105718839711bdc8a9e2aae96267626350f63",
+    "evidence/rehearsal/lost-latest-ack/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/lost-version-ack/intent.json": "1f86d38a91136c4e7aa64f164fe41c865352b201f1c47328ef5374e3d007f5d4",
+    "evidence/rehearsal/lost-version-ack/promotion.json": "4c7e91972802b25782bcdc62b956db2e29d08052f9ee0aaf5147f3f1748d7c08",
+    "evidence/rehearsal/lost-version-ack/retry.json": "8809c44ee8952673d74021dfd9d105718839711bdc8a9e2aae96267626350f63",
+    "evidence/rehearsal/lost-version-ack/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/native-publication-failed/intent.json": "38306bdb723cf5ec26343f256d85ba6d2d9552ac3a9c485778b3c7860bf468ba",
+    "evidence/rehearsal/native-publication-failed/promotion.json": "39a262e8a85087c4751fb4ddc1d9c02d0515fb1950bfdd817d520bcb7c0bf931",
+    "evidence/rehearsal/native-publication-failed/retry.json": "8809c44ee8952673d74021dfd9d105718839711bdc8a9e2aae96267626350f63",
+    "evidence/rehearsal/native-publication-failed/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/results.json": "66f3a7db08ba4673530f8c88db1f5954b6e61be00a879d773031e2ec646400a9",
+    "evidence/rehearsal/success/intent.json": "83b2665e99a7c9511b1079a53bbe11880ecea715d967f4425008dd6ef4b09f47",
+    "evidence/rehearsal/success/promotion.json": "2b5a017091733c862953bcab737f155504c489a63e739152e7eb7482fdd383c6",
+    "evidence/rehearsal/success/retry.json": "8809c44ee8952673d74021dfd9d105718839711bdc8a9e2aae96267626350f63",
+    "evidence/rehearsal/success/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/rehearsal/version-conflict/intent.json": "f0ece023407f8972685695657fd74867e898dc3a6310fb3ad28e675a083eaefb",
+    "evidence/rehearsal/version-conflict/promotion.json": "a605ce3586cd9306b0cd14ac32b61073f0d7118b1c4eaf5c592534df13c93870",
+    "evidence/rehearsal/version-conflict/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/unit-tests.log": "6233d216f58e61513661269cf3f921ca88aa3b6755156a38b22a8c7f15061357",
+    "evidence/verification-initial.json": "072eaf12bc70528c21e11ed46784444b57654bf71547bb1ce3d87c044becaf17",
+    "evidence/verification-initial.log": "9adc9531ede3146b00ee54a18fc0677c1a2444048d281126239795398e2c22c3",
+    "evidence/verification.json": "a73f425b31a35f7516f29bc7d0c4644374f0da7cdb9ec6eedefb79a36db81754",
+    "evidence/verification.log": "c9b30217bb90dac2909f43032bc2656a29d58f072630da44208868f5699adb30"
+  },
+  "item": "RELEASE-01",
+  "not_tested": [
+    "Remote GitHub Actions execution/artifact upload",
+    "GHCR authentication and public tag publication",
+    "Native archive execution in this rehearsal (checksum fixtures only)",
+    "GitHub Release API failure (outcome fixture only)",
+    "Physical terminal rendering"
+  ],
+  "recorded_utc": "2026-09-09T14:56:52.622076+00:00",
+  "schema": 1,
+  "source_reference": "5fa7d55d89af9c407ea95327d8080322e2bef13e",
+  "source_reference_limit": "Reference captured after build of a shared dirty tree; exact tested artifact identified by index digest",
+  "source_sha256": {
+    ".github/workflows/release.yml": "6fd1d83aef04caa7e78e38db7c69b1a59636956188e250e0f66f709b3d9049f9",
+    "docs/release.md": "30b1c64256216c26017be350311514a761cd8c3cdcd40d90b01a834af4acfc2b",
+    "scripts/rehearse-release-image.py": "de47dd6ae9551d956311947c3cf9db1ab0aff4c6a0ecfb4153617c638b59dd46",
+    "scripts/release_image.py": "0f17632e7af704df582b5078a092b9622b492fb0709ba42458d3cf81b5457ec5",
+    "scripts/test-published-image.py": "06636b8c6d969b0fa9d7df82b40371e79b51b9f85e4ae3bb225208f1801a75cb",
+    "scripts/test-release-image.py": "678da9c9b59ced9daa56a67b2a3d1f630790c719d435d3274768ad72322632d7"
+  },
+  "source_state": "dirty",
+  "status": "implemented; local acceptance passed; remote publication not tested"
+}

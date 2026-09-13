@@ -1,0 +1,11 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running unittests src\lib.rs (target\aarch64-pc-windows-msvc\debug\deps\theywork_control-6439605431c7a01c.exe)
+
+running 4 tests
+test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok
+test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok
+test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok
+test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.11s
+

@@ -1,0 +1,64 @@
+[
+  {
+    "request": {
+      "Start": {
+        "project": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/project with spaces",
+        "prompt": "approval",
+        "operation_id": "baseline-approval"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Instruction accepted",
+        "id": "baseline-approval",
+        "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-7-reliability/run-20260908-152343/control-actions/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"baseline-approval\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Reply": {
+        "request_id": "5d5b8b05068914b2723335f25879c1e580048bbe051f65e26a3211946f76c37f:0153994f51d0acebf840f837fe95ea0486edc81b2793d22f4138245775a667de:\"approval-1\"",
+        "response": {
+          "decision": "decline"
+        },
+        "operation_id": "baseline-decline"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Reply written; awaiting provider resolution",
+        "id": "baseline-decline",
+        "request_key": "{\"Reply\":{\"request_id\":\"5d5b8b05068914b2723335f25879c1e580048bbe051f65e26a3211946f76c37f:0153994f51d0acebf840f837fe95ea0486edc81b2793d22f4138245775a667de:\\\"approval-1\\\"\",\"response\":{\"decision\":\"decline\"},\"operation_id\":\"baseline-decline\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  },
+  {
+    "request": {
+      "Interrupt": {
+        "thread_id": "managed-1",
+        "turn_id": "turn-1",
+        "operation_id": "baseline-stop"
+      }
+    },
+    "response": {
+      "value": {
+        "detail": "Interrupt requested; waiting for completion",
+        "id": "baseline-stop",
+        "request_key": "{\"Interrupt\":{\"thread_id\":\"managed-1\",\"turn_id\":\"turn-1\",\"operation_id\":\"baseline-stop\"}}",
+        "status": "Confirmed",
+        "thread_id": "managed-1",
+        "turn_id": "turn-1"
+      },
+      "error": null
+    }
+  }
+]

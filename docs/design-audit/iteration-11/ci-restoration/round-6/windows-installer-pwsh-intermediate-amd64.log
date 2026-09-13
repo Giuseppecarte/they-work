@@ -1,0 +1,18 @@
+Native macOS ARM64 PowerShell 7.6.6; simulated Windows AMD64 target selection
+Downloading they-work-x86_64-pc-windows-msvc.zip (v0.2.0) ...
+Installed: /Users/gc/Documents/Programming/they-work/target/installer-tests/b0aef84e-fbb6-4f47-b713-e4798215b730/path with spaces/they-work.exe
+Start with: & '/Users/gc/Documents/Programming/they-work/target/installer-tests/b0aef84e-fbb6-4f47-b713-e4798215b730/path with spaces/they-work.exe' --setup (your sources), or --demo
+PASS: valid archive, path with spaces, NoPath
+Downloading they-work-x86_64-pc-windows-msvc.zip (latest) ...
+PASS: checksum failure preserves previous executable
+Downloading they-work-x86_64-pc-windows-msvc.zip (latest) ...
+PASS: download failure preserves previous executable
+Downloading they-work-x86_64-pc-windows-msvc.zip (latest) ...
+PASS: duplicate checksum rejected
+Downloading they-work-x86_64-pc-windows-msvc.zip (latest) ...
+install.ps1: /Users/gc/Documents/Programming/they-work/scripts/test-native-install.ps1:64
+Line |
+  64 |      & $installer -InstallDir $destination -NoPath
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Exception calling "Replace" with "3" argument(s): "The value cannot be
+     | an empty string. (Parameter 'path')"

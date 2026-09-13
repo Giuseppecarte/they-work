@@ -1,0 +1,49 @@
+{
+  "binary_sha256": "670ced3bd4662b5da5b483a17b6db91e15040865e1b934228367889f03aaf007",
+  "cells": [
+    80,
+    24
+  ],
+  "keyboard_only": true,
+  "authenticated_provider": false,
+  "participant_sessions": 0,
+  "physical_terminal": "not tested",
+  "cases": {
+    "coverage": {
+      "attention": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "deliveries": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "changes": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "team": {
+        "coverage_readable": true,
+        "back_visible": true,
+        "esc_restores_selection": true,
+        "hidden_record_actions_blocked": true,
+        "settings_unchanged_by_coverage": true
+      },
+      "terminal_exit": {
+        "exit": 0,
+        "terminal_restored": true
+      }
+    }
+  },
+  "status": "fail",
+  "failure": "Traceback (most recent call last):\n  File \"/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py\", line 173, in main\n    result[\"cases\"][\"recovery\"] = recovery(binary, folder / \"recovery\", output)\n                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-10/docs/check_coverage_recovery.py\", line 124, in recovery\n    s.wait(lambda: len(resumes()) == 1, \"explicit resume without sending a turn\")\n  File \"/Users/gc/Documents/Programming/they-work/docs/design-audit/iteration-6/review_control_pty.py\", line 134, in wait\n    raise AssertionError(f'Timed out: {label}\\n{self.text()}')\nAssertionError: Timed out: explicit resume without sending a turn\n[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  \nvertical-project / Work brief                                                   \n                                                                                \n Alex J.                                                                        \n working                                                                        \n codex \u00b7 Source unavailable \u00b7 23s                                               \n Source unavailable                                                             \n [ Now ][ Activity ][ Team ][ Details ]                                         \n                                                                                \n OBSERVED \u00b7 23s ago                                                             \n Last recorded: No current activity reported                                    \n                                                                                \n RECORDED UPDATES                                                               \n No retained activity or result from this source yet.                           \n [ Expand ]                                                                     \n PgUp/Dn \u00b7 line 1/6 \u00b7 Esc                                                       \n                                                                                \n INSTRUCTION TO vertical-project / working                                      \n Observation only. This connection cannot accept instructions.                  \n                                                                                \n                                                                                \n                                                                                \n [ Back ]                                                                       \n Tab/Enter \u00b7 F7 expand \u00b7 Esc cancel                                             \n"
+}

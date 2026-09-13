@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+accounts / Work brief                                                           
+                                                                                
+ Rene P.                                                                        
+ Review the account permission changes                                          
+ codex · Response requested · 0s                                                
+ History · limits in Details                                                    
+ [ Now ][ Activity ][ Team ][ Details ]                                         
+                                                                                
+ FOR YOU · Review simulated command                                             
+ Command: fixture-only-check                                                    
+ Project: /projects/accounts                                                    
+ A simulated request; no command will execute.                                  
+                                                                                
+ OBSERVED · 0s ago                                                              
+ Editing src/accounts.rs                                                        
+                                                                                
+ LATEST RESULT · Rene P.                                                        
+ Recorded result: permission fixture updated; review is still required.         
+                                                                                
+ [ Review request ] [ Task actions ] [ Expand ]                                 
+ All shown · Esc back                                                           
+                                                                                
+[ Back ] [ Settings ] [ Design ] Tab controls · ↑↓ read · e expand              

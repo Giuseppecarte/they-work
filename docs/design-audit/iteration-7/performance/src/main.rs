@@ -1,0 +1,65 @@
+use std::io::Write;
+use std::path::PathBuf;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use theywork_collect::ClaudeSource;
+use theywork_core::{Source, World};
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let home = PathBuf::from(args.get(1).expect("Claude fixture home"));
+    let transcript = PathBuf::from(args.get(2).expect("Transcript to append"));
+    let project = args.get(3).expect("Recorded project");
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64;
+    let mut source = ClaudeSource::new(&home);
+    let start = Instant::now();
+    let events = source.poll(now).expect("fixture cold scan");
+    let cold_ms = start.elapsed().as_secs_f64() * 1000.0;
+    let cold_events = events.len();
+    let mut world = World::new();
+    let start = Instant::now();
+    for event in events {
+        world.apply(event);
+    }
+    let fold_ms = start.elapsed().as_secs_f64() * 1000.0;
+    let mut quiet = Vec::new();
+    let mut append = Vec::new();
+    let mut quiet_events = Vec::new();
+    let mut append_events = Vec::new();
+    for index in 0..60 {
+        let start = Instant::now();
+        let events = source.poll(now + index * 2).unwrap();
+        quiet.push(start.elapsed().as_secs_f64() * 1000.0);
+        quiet_events.push(events.len());
+        for event in events {
+            world.apply(event);
+        }
+        let value = serde_json::json!({"type":"assistant","timestamp":now+index*2+1,
+            "sessionId":"audit-0000","cwd":project,"uuid":format!("tail-{index}"),
+            "message":{"stop_reason":"tool_use","content":[{"type":"tool_use",
+                "id":format!("tail-call-{index}"),"name":"Read","input":{"file_path":"src/tail.rs"}}]}});
+        let mut file = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&transcript)
+            .unwrap();
+        writeln!(file, "{value}").unwrap();
+        drop(file);
+        let start = Instant::now();
+        let events = source.poll(now + index * 2 + 1).unwrap();
+        append.push(start.elapsed().as_secs_f64() * 1000.0);
+        append_events.push(events.len());
+        for event in events {
+            world.apply(event);
+        }
+    }
+    let workers: usize = world.offices().map(|office| office.workers.len()).sum();
+    println!(
+        "{}",
+        serde_json::json!({"cold_ms":cold_ms,"fold_ms":fold_ms,"cold_events":cold_events,
+        "quiet_poll_ms":quiet,"append_poll_ms":append,"quiet_event_counts":quiet_events,
+        "append_event_counts":append_events,"final_workers":workers,
+        "final_projects":world.offices().count(),"scope":"Direct production ClaudeSource and World, no TUI/terminal; 60 quiet and 60 one-record append polls."})
+    );
+}

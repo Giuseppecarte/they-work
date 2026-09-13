@@ -1,0 +1,4 @@
+# Preserve raw terminal control bytes, including CR and significant spaces.
+*.ansi -text -diff
+# These are exact generated transcripts; preserve their terminal blank lines.
+*.log -whitespace

@@ -7,13 +7,21 @@
 //! This crate is deliberately I/O-free and dependency-light so it can stay
 //! stable while the crates around it churn.
 
+mod collaboration;
 pub mod demo;
 mod event;
+mod history;
 mod model;
 mod source;
 mod world;
 
+pub use collaboration::{
+    CollaborationEvent, CollaborationKind, CoverageLevel, Evidence, Relationship, RelationshipKind,
+    SequenceRange, SourceCoverage, SourceId, StreamContinuity, ThreadIdentity,
+    ToolCorrelationCoverage, TreeEntry, WaitReason, WorkerLifecycle, WorkerRole,
+};
 pub use event::{Event, EventKind};
+pub use history::HistoryWindow;
 pub use model::{Activity, Agent, Beat, Office, OfficeId, Outcome, Worker, WorkerId, WorkerStatus};
 pub use source::{Source, SourceError};
 pub use world::World;
@@ -23,6 +31,8 @@ pub use world::World;
 /// Enough to read the shape of a turn, few enough that a day-old thread costs
 /// no more to remember than a fresh one.
 pub const HISTORY_LEN: usize = 64;
+pub const COLLABORATION_HISTORY_LEN: usize = 512;
+pub const RETIRED_WORKER_LIMIT: usize = 512;
 
 /// Milliseconds since the Unix epoch.
 ///

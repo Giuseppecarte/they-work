@@ -1,0 +1,93 @@
+{
+  "cases": [
+    {
+      "automatic": {
+        "hit_bounds": true,
+        "route": true
+      },
+      "columns": 80,
+      "configuration": {
+        "cell_pixels": [
+          8,
+          16
+        ],
+        "effective_color": "TrueColor",
+        "effective_encoding": "Quadrants"
+      },
+      "id": "tower-image-80x24",
+      "limitation": null,
+      "mode": "image",
+      "native_cells": "tower-image-80x24.cells.json",
+      "native_text": "tower-image-80x24.txt",
+      "physical_rgba": "tower-image-80x24.rgba",
+      "reason": "Automatic route and hit bounds passed; visual review pending.",
+      "rendered_surface": "tower",
+      "rows": 24,
+      "status": "not-tested",
+      "surface": "tower",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    }
+  ],
+  "kind": "Real Ui / TestBackend; no real terminal or provider was invoked.",
+  "schema": 1,
+  "sizes": [
+    [
+      32,
+      14
+    ],
+    [
+      80,
+      24
+    ],
+    [
+      120,
+      36
+    ],
+    [
+      192,
+      58
+    ],
+    [
+      110,
+      80
+    ],
+    [
+      240,
+      70
+    ]
+  ],
+  "surfaces": [
+    "tower",
+    "office-auto",
+    "office-side",
+    "office-iso",
+    "office-top",
+    "office-list",
+    "inspector-now",
+    "inspector-activity",
+    "inspector-team",
+    "inspector-details",
+    "attention",
+    "deliveries",
+    "changes",
+    "team",
+    "finder",
+    "connections",
+    "new-task",
+    "task-controls",
+    "request",
+    "project-picker",
+    "sources",
+    "character",
+    "design",
+    "settings",
+    "advanced",
+    "help",
+    "phone-now",
+    "phone-attention",
+    "phone-edits",
+    "phone-messages",
+    "more"
+  ]
+}

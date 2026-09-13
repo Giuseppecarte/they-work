@@ -1,0 +1,24 @@
+ 0 TOWER >8 08-billing-service!                          8/20 · / find · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐
+┌ │/ codex                                                                   │─┐
+│ │60 matches · 7–12                                                         │ │
+│ │> Build account settings                                         WORKING  │ │
+│>│  03-customer-onboarding · codex · floor 03                               │ │
+│ │  Update integration tests                                          IDLE  │ │
+│ │  03-customer-onboarding · codex · floor 03                               │ │
+└─│  Review the API contract                                         FAILED  │─┘
+┌ │  03-customer-onboarding · codex · floor 03                               │─┐
+│!│  Build account settings                                       ATTENTION  │ │
+│…│  04-design-system · codex · floor 04                                     │ │
+│▄│  Review the API contract                                           IDLE  │▄│
+│▄│  04-design-system · codex · floor 04                                     │▄│
+│▄│  Update integration tests                                          IDLE  │▄│
+│▄│  04-design-system · codex · floor 04                                     │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│ │…s/design-audit/tmp/iteration-3-finder/fixture-60-0/03-customer-onboarding│ │
+│ │↑↓ choose · Enter open · Esc back · Ctrl+U clear                          │ │
+└─└──────────────────────────────────────────────────────────────────────────┘─┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 8/20 · page 2/4 · PgUp/PgDn pages · Home first · End last

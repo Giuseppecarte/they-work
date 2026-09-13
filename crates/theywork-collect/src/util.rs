@@ -5,16 +5,26 @@ use std::time::Duration;
 use serde_json::Value;
 use theywork_core::Millis;
 
+pub(crate) fn source_id(home: &Path) -> theywork_core::SourceId {
+    // Do not use office normalization: distinct WSL distributions and homes
+    // must not collapse into the same source just because their projects do.
+    let absolute = std::fs::canonicalize(home).unwrap_or_else(|_| {
+        if home.is_absolute() {
+            home.to_path_buf()
+        } else {
+            std::env::current_dir().unwrap_or_default().join(home)
+        }
+    });
+    theywork_core::SourceId(absolute.to_string_lossy().into_owned())
+}
+
 /// Convert the path spellings used by Windows and WSL into one stable office id.
 pub fn normalize_office_path(input: &str) -> String {
-    let input = input.trim();
-    if input.is_empty() {
+    let slashed = slashed_path(input);
+    if slashed.is_empty() {
         return String::new();
     }
-
-    let slashed = input.replace('\\', "/");
     let wsl_unc = is_wsl_unc(&slashed);
-    let windows_shaped = wsl_unc || is_windows_drive(input) || is_windows_mount(&slashed);
     let absolute = slashed.starts_with('/') || wsl_unc;
     let mut components = Vec::new();
     let mut unc_components_to_skip = if wsl_unc { 2 } else { 0 };
@@ -49,10 +59,26 @@ pub fn normalize_office_path(input: &str) -> String {
         normalized = normalized.trim_end_matches('/').to_string();
     }
 
-    if windows_shaped {
+    // A WSL UNC prefix transports a Linux path; its case remains significant.
+    // Only a Windows drive (including /mnt/c after UNC removal) folds case.
+    if is_windows_drive(&slashed) || is_windows_mount(&normalized) {
         normalized.to_lowercase()
     } else {
         normalized
+    }
+}
+
+fn slashed_path(input: &str) -> String {
+    let slashed = input.trim().replace('\\', "/");
+    // Canonical Windows paths use a verbatim prefix. Remove it consistently
+    // before filesystem traversal and office normalization; otherwise a
+    // traversed //?/C:/ path becomes a different /?/C:/ office identity.
+    if let Some(path) = slashed.strip_prefix("//?/UNC/") {
+        format!("//{path}")
+    } else if let Some(path) = slashed.strip_prefix("//?/") {
+        path.to_string()
+    } else {
+        slashed
     }
 }
 
@@ -114,6 +140,7 @@ pub(crate) fn truncate_detail(input: &str) -> String {
     let mut output = String::with_capacity(sanitized.len().min(DETAIL_LIMIT));
     let mut count = 0;
     let mut pending_space = false;
+    let mut truncated = false;
 
     for ch in sanitized.chars() {
         if ch.is_whitespace() {
@@ -125,6 +152,7 @@ pub(crate) fn truncate_detail(input: &str) -> String {
 
         if pending_space {
             if count == DETAIL_LIMIT {
+                truncated = true;
                 break;
             }
             output.push(' ');
@@ -133,12 +161,17 @@ pub(crate) fn truncate_detail(input: &str) -> String {
         }
 
         if count == DETAIL_LIMIT {
+            truncated = true;
             break;
         }
         output.push(ch);
         count += 1;
     }
 
+    if truncated {
+        output.pop();
+        output.push('…');
+    }
     output
 }
 
@@ -147,10 +180,17 @@ pub(crate) fn truncate_detail(input: &str) -> String {
 /// unit here so a cap never cuts through a UTF-8 code point or destroys the
 /// text the desk view is meant to show.
 pub(crate) fn truncate_timeline_text(input: &str) -> String {
-    sanitize_terminal_text(input)
-        .chars()
+    let sanitized = sanitize_terminal_text(input);
+    let mut characters = sanitized.chars();
+    let mut text = characters
+        .by_ref()
         .take(TIMELINE_TEXT_LIMIT)
-        .collect()
+        .collect::<String>();
+    if characters.next().is_some() {
+        text.pop();
+        text.push('…');
+    }
+    text
 }
 
 pub(crate) fn text_line_count(input: &str) -> u32 {
@@ -376,19 +416,46 @@ pub(crate) fn repository_root_with_project_hint(
     }
 
     let mut current = PathBuf::from(filesystem_path(input));
+    let hinted_root = project_root_hint(&normalized, project_key)
+        .filter(|hint| !is_obvious_non_project_path(hint));
     let result = loop {
         if current.join(".git").exists() {
-            break sanitize_terminal_text(&normalize_office_path(&current.to_string_lossy()));
+            let root = shared_git_root(&current).unwrap_or_else(|| current.clone());
+            break sanitize_terminal_text(&normalize_office_path(&root.to_string_lossy()));
+        }
+        // A recorded project boundary must not be swallowed by an unrelated
+        // repository mounted above it (for example a host checkout container).
+        if hinted_root.as_deref()
+            == Some(normalize_office_path(&current.to_string_lossy()).as_str())
+        {
+            break sanitize_terminal_text(hinted_root.as_deref().unwrap());
         }
         if !current.pop() {
-            break project_root_hint(&normalized, project_key)
-                .filter(|hint| !is_obvious_non_project_path(hint))
+            break hinted_root
                 .map(|hint| sanitize_terminal_text(&hint))
                 .unwrap_or_else(|| NON_PROJECT_OFFICE.to_string());
         }
     };
     cache.insert(normalized, result.clone());
     result
+}
+
+/// Git worktrees are separate checkouts of the same project. Read only Git's
+/// small pointer files so their conversations share the primary project's floor.
+fn shared_git_root(worktree: &Path) -> Option<PathBuf> {
+    let marker = worktree.join(".git");
+    if !marker.is_file() {
+        return None;
+    }
+    let pointer = std::fs::read_to_string(marker).ok()?;
+    let directory = pointer.trim().strip_prefix("gitdir:")?.trim();
+    let git_dir = worktree.join(directory);
+    let common = std::fs::read_to_string(git_dir.join("commondir")).ok()?;
+    let common_dir = git_dir.join(common.trim()).canonicalize().ok()?;
+    if common_dir.file_name()? != ".git" {
+        return None;
+    }
+    common_dir.parent().map(Path::to_path_buf)
 }
 
 fn is_obvious_non_project_path(path: &str) -> bool {
@@ -452,7 +519,7 @@ fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<Stri
 }
 
 fn filesystem_path(input: &str) -> String {
-    let slashed = input.trim().replace('\\', "/");
+    let slashed = slashed_path(input);
     if !is_wsl_unc(&slashed) {
         return slashed.trim_end_matches('/').to_string();
     }
@@ -488,6 +555,62 @@ mod tests {
 
         let long = "x".repeat(DETAIL_LIMIT + 10);
         assert_eq!(truncate_detail(&long).chars().count(), DETAIL_LIMIT);
+        assert!(truncate_detail(&long).ends_with('…'));
+        assert!(!truncate_detail(&"x".repeat(DETAIL_LIMIT)).ends_with('…'));
+        assert!(truncate_timeline_text(&"界".repeat(TIMELINE_TEXT_LIMIT + 1)).ends_with('…'));
+    }
+
+    #[test]
+    fn windows_canonical_paths_and_wsl_linux_case_keep_project_identity() {
+        assert_eq!(
+            normalize_office_path(r"\\?\C:\Users\Dev\Repo"),
+            "c:/users/dev/repo"
+        );
+        assert_eq!(
+            normalize_office_path(r"\\wsl.localhost\Ubuntu\home\Dev\Repo"),
+            "/home/Dev/Repo"
+        );
+        assert_ne!(
+            normalize_office_path("/home/Dev/Repo"),
+            normalize_office_path("/home/dev/repo")
+        );
+    }
+
+    #[test]
+    fn filesystem_paths_preserve_windows_and_wsl_office_identity() {
+        for (recorded, filesystem, office) in [
+            (
+                r"C:\Users\Dev\Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            (
+                r"\\?\C:\Users\Dev\Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            (
+                "//?/C:/Users/Dev/Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            ("/home/Dev/Repo", "/home/Dev/Repo", "/home/Dev/Repo"),
+            (
+                r"\\wsl.localhost\Ubuntu\home\Dev\Repo",
+                "/home/Dev/Repo",
+                "/home/Dev/Repo",
+            ),
+            (
+                r"\\?\UNC\wsl.localhost\Ubuntu\home\Dev\Repo",
+                "/home/Dev/Repo",
+                "/home/Dev/Repo",
+            ),
+        ] {
+            let traversed = filesystem_path(recorded);
+            assert_eq!(traversed, filesystem, "filesystem spelling of {recorded}");
+            assert_eq!(normalize_office_path(recorded), office, "{recorded}");
+            assert_eq!(normalize_office_path(&traversed), office, "{recorded}");
+        }
     }
 
     #[test]

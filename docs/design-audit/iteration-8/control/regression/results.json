@@ -1,0 +1,512 @@
+{
+  "schema": 1,
+  "binary": "/Users/gc/Documents/Programming/they-work/target/native-macos/release/they-work",
+  "binary_sha256": "ca446efcfc928d3f3cfdb0ab6a98b97e7122765093d38e1315a5eda1781abe48",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "real_provider_calls": false,
+  "public_release_calls": false,
+  "scratch": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225",
+  "expected_outcomes": {
+    "install": "The real archived binary installs and runs; replacement is atomic; failed downloads, checksum or extraction preserve the prior binary.",
+    "concurrent": "Eight concurrent copies of one operation execute exactly one native turn; changing its payload is rejected.",
+    "control-actions": "Below the history bound, the same fixture approval can be declined and its owned active turn interrupted exactly once.",
+    "uncertain": "A missing acknowledgement remains uncertain; restart and duplicate operation IDs never replay work.",
+    "crash": "A crash after the provider receives a turn but before its acknowledgement recovers an uncertain receipt without replay.",
+    "permission": "A pre-send storage failure sends nothing; after storage recovers the operation must not remain indefinitely Sending.",
+    "quota": "A file-size quota failure sends nothing and does not falsely confirm execution; restart can recover the empty durable state.",
+    "after-send": "A post-send durable-write failure is not replayed; restart exposes uncertainty for the already executed operation.",
+    "ledger": "At the operation-history bound, new work may be refused, but an owned active turn must remain interruptible and its current request answerable."
+  },
+  "cases": {
+    "concurrent": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "eight same-ID clients execute once",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "same ID with changed payload is rejected",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Operation ID was reused for a different action"
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": "turn-1",
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/concurrent/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/concurrent/project with spaces",
+              "role": "Main",
+              "status": "working",
+              "title": "working",
+              "updated_at": 1788964945999
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "shared": {
+              "detail": "Instruction accepted",
+              "id": "shared",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/concurrent/project with spaces\",\"prompt\":\"working\",\"operation_id\":\"shared\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "control-actions": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "baseline approval belongs to an accepted actual fixture turn",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Instruction accepted",
+              "id": "baseline-approval",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/control-actions/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"baseline-approval\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "decline format is accepted below the bound",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Reply written; awaiting provider resolution",
+              "id": "baseline-decline",
+              "request_key": "{\"Reply\":{\"request_id\":\"c01f813f427ed263d4dae45def3d2b1d73812539db8233fb578fbd3e64602b63:a22b214a0d900726b9069bbbef7835fed715999c38da002bec4abcc439b0377e:\\\"approval-1\\\"\",\"response\":{\"decision\":\"decline\"},\"operation_id\":\"baseline-decline\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "interrupt format is accepted below the bound",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Interrupt requested; waiting for completion",
+              "id": "baseline-stop",
+              "request_key": "{\"Interrupt\":{\"thread_id\":\"managed-1\",\"turn_id\":\"turn-1\",\"operation_id\":\"baseline-stop\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/control-actions/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/control-actions/project with spaces",
+              "role": "Main",
+              "status": "interrupted",
+              "title": "approval",
+              "updated_at": 1788964946165
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 3,
+          "operations": {
+            "baseline-approval": {
+              "detail": "Instruction accepted",
+              "id": "baseline-approval",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/control-actions/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"baseline-approval\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "baseline-decline": {
+              "detail": "Reply written; awaiting provider resolution",
+              "id": "baseline-decline",
+              "request_key": "{\"Reply\":{\"request_id\":\"c01f813f427ed263d4dae45def3d2b1d73812539db8233fb578fbd3e64602b63:a22b214a0d900726b9069bbbef7835fed715999c38da002bec4abcc439b0377e:\\\"approval-1\\\"\",\"response\":{\"decision\":\"decline\"},\"operation_id\":\"baseline-decline\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            },
+            "baseline-stop": {
+              "detail": "Interrupt requested; waiting for completion",
+              "id": "baseline-stop",
+              "request_key": "{\"Interrupt\":{\"thread_id\":\"managed-1\",\"turn_id\":\"turn-1\",\"operation_id\":\"baseline-stop\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": "turn-1"
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 1
+        }
+      }
+    },
+    "uncertain": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "missing acknowledgement reports uncertainty",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "restart does not launch provider or replay",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "duplicate remains uncertain without execution",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "explicit reconnect does not start another turn",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 1,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/uncertain/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/uncertain/project with spaces",
+              "role": "Main",
+              "status": "idle",
+              "title": "uncertain",
+              "updated_at": 1788964946252
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 2,
+          "operations": {
+            "lost-ack": {
+              "detail": "Provider acknowledgement timed out; do not resend",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/uncertain/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "recover": {
+              "detail": "Conversation connected; no turn started",
+              "id": "recover",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"recover\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "crash": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "restart does not launch provider or replay",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 0,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        },
+        {
+          "check": "duplicate remains uncertain without execution",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        },
+        {
+          "check": "explicit reconnect does not start another turn",
+          "status": "pass",
+          "actual": {
+            "thread/start": 1,
+            "thread/resume": 1,
+            "turn/start": 1,
+            "turn/steer": 0,
+            "turn/interrupt": 0
+          }
+        }
+      ],
+      "details": {
+        "interrupted_call": "JSONDecodeError",
+        "final_state": {
+          "connected": true,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": true,
+                "reply": true,
+                "send": true,
+                "steer": true
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/project with spaces",
+              "role": "Main",
+              "status": "idle",
+              "title": "uncertain",
+              "updated_at": 1788964947961
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 2,
+          "operations": {
+            "lost-ack": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "lost-ack",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/crash/project with spaces\",\"prompt\":\"uncertain\",\"operation_id\":\"lost-ack\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "recover": {
+              "detail": "Conversation connected; no turn started",
+              "id": "recover",
+              "request_key": "{\"Reconnect\":{\"thread_id\":\"managed-1\",\"operation_id\":\"recover\"}}",
+              "status": "Confirmed",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 1,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    },
+    "after-send": {
+      "status": "pass",
+      "checks": [
+        {
+          "check": "post-send persistence error does not claim durable confirmation",
+          "status": "pass",
+          "actual": {
+            "value": null,
+            "error": "Permission denied (os error 13)"
+          }
+        },
+        {
+          "check": "post-send restart preserves uncertainty and does not replay",
+          "status": "pass",
+          "actual": {
+            "value": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "after-write",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/after-send/project with spaces\",\"prompt\":\"gate-ack\",\"operation_id\":\"after-write\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            },
+            "error": null
+          }
+        }
+      ],
+      "details": {
+        "final_state": {
+          "connected": false,
+          "threads": {
+            "managed-1": {
+              "active_turn_id": null,
+              "capabilities": {
+                "attach": false,
+                "interrupt": false,
+                "reply": false,
+                "send": false,
+                "steer": false
+              },
+              "identity": {
+                "native_id": "managed-1",
+                "provider": "Codex",
+                "session_id": null,
+                "source": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/after-send/codex"
+              },
+              "latest_text": "",
+              "managed": true,
+              "project": "/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/after-send/project with spaces",
+              "role": "Main",
+              "status": "disconnected",
+              "title": "gate-ack",
+              "updated_at": 1788964948315
+            }
+          },
+          "pending_requests": [],
+          "last_error": null,
+          "operations_count": 1,
+          "operations": {
+            "after-write": {
+              "detail": "Host restarted before acknowledgement. Inspect the conversation; nothing was resent.",
+              "id": "after-write",
+              "request_key": "{\"Start\":{\"project\":\"/Users/gc/Documents/Programming/they-work/target/audit/control-regression/run-20260909-084225/after-send/project with spaces\",\"prompt\":\"gate-ack\",\"operation_id\":\"after-write\"}}",
+              "status": "Uncertain",
+              "thread_id": "managed-1",
+              "turn_id": null
+            }
+          }
+        },
+        "provider_counts": {
+          "thread/start": 1,
+          "thread/resume": 0,
+          "turn/start": 1,
+          "turn/steer": 0,
+          "turn/interrupt": 0
+        }
+      }
+    }
+  },
+  "summary": {
+    "scenarios": 5,
+    "pass": 14,
+    "defect": 0,
+    "harness_errors": 0
+  }
+}

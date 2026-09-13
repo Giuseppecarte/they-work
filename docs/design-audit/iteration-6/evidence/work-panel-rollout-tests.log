@@ -1,0 +1,497 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.45s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 14 tests
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... FAILED
+
+failures:
+
+---- views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning stdout ----
+
+thread 'views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning' panicked at crates/theywork-render/src/views/control.rs:1689:9:
+assertion failed: text.contains("this workspace")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning
+
+test result: FAILED. 13 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p theywork-render --lib`
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.32s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 14 tests
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.01s
+
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 7 tests
+test views::finder::tests::paste_is_bounded_text_and_never_a_navigation_key ... ok
+test views::finder::tests::quiet_turn_does_not_match_a_request_for_approval ... ok
+test views::finder::tests::search_distinguishes_duplicate_projects_and_prioritizes_exact_task_titles ... ok
+test views::finder::tests::refresh_preserves_identity_when_live_results_shift ... ok
+test views::finder::tests::aliases_and_real_titles_both_find_the_same_stable_task_target ... ok
+test views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record ... FAILED
+test views::finder::tests::unicode_editing_and_narrow_cursor_remain_in_bounds ... ok
+
+failures:
+
+---- views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record stdout ----
+
+thread 'views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record' panicked at crates/theywork-render/src/views/finder.rs:699:9:
+title-only navigation should open Now
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record
+
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 231 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p theywork-render --lib`
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 18 tests
+test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
+test views::workboard::tests::changes_use_entry_baseline_and_include_retired_history_without_talking_duplicates ... ok
+test views::workboard::tests::direct_team_focus_expands_ancestors_and_keeps_the_requested_worker_selected ... ok
+test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
+test views::workboard::tests::recorded_deliveries_keep_unknown_recipients_and_absent_senders_honest ... ok
+test views::workboard::tests::selection_follows_delivery_identity_across_reordering ... ok
+test views::workboard::tests::retired_child_delivery_stays_readable_in_its_project ... ok
+test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
+test views::workboard::tests::team_preserves_nested_missing_member_and_fork_relationships_once ... ok
+test views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized ... FAILED
+test views::workboard::tests::delivery_and_changes_open_the_shared_record_without_marking_it_read ... ok
+test views::workboard::tests::one_delivery_gives_unused_list_space_to_its_body ... ok
+test views::workboard::tests::all_floor_titles_distinguish_projects_and_help_matches_the_channel ... ok
+test views::workboard::tests::global_attention_separates_human_requests_and_supports_visible_floor_filter ... ok
+test views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded ... FAILED
+test views::workboard::tests::local_markers_round_trip_and_have_a_bound ... ok
+test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
+
+failures:
+
+---- views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized stdout ----
+
+thread 'views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized' panicked at crates/theywork-render/src/views/workboard.rs:1652:9:
+assertion failed: matches!(board.handle_key(key(KeyCode::Enter)), Some(Action::Open(_)))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded stdout ----
+
+thread 'views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded' panicked at crates/theywork-render/src/views/workboard.rs:1748:9:
+assertion failed: before.contains("sender delivered a result")
+
+
+failures:
+    views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded
+    views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized
+
+test result: FAILED. 16 passed; 2 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p theywork-render --lib`
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.18s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 5 tests
+test views::inspector::tests::export_work_panel_pilot ... ignored, Manual pilot capture; writes only to an explicit audit output directory
+test views::inspector::tests::source_warning_and_current_request_action_survive_a_short_panel ... ok
+test views::inspector::tests::historical_requests_never_offer_a_current_approval_action ... ok
+test views::inspector::tests::pilot_prioritizes_observed_work_result_and_current_request_at_80_columns ... ok
+test views::inspector::tests::activity_keeps_all_retained_beats_and_anchors_while_updates_arrive ... ok
+
+test result: ok. 4 passed; 0 failed; 1 ignored; 0 measured; 233 filtered out; finished in 0.01s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 7 tests
+test views::finder::tests::paste_is_bounded_text_and_never_a_navigation_key ... ok
+test views::finder::tests::quiet_turn_does_not_match_a_request_for_approval ... ok
+test views::finder::tests::search_distinguishes_duplicate_projects_and_prioritizes_exact_task_titles ... ok
+test views::finder::tests::refresh_preserves_identity_when_live_results_shift ... ok
+test views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record ... ok
+test views::finder::tests::aliases_and_real_titles_both_find_the_same_stable_task_target ... ok
+test views::finder::tests::unicode_editing_and_narrow_cursor_remain_in_bounds ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 233 filtered out; finished in 0.02s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.20s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 18 tests
+test views::workboard::tests::direct_team_focus_expands_ancestors_and_keeps_the_requested_worker_selected ... ok
+test views::workboard::tests::changes_use_entry_baseline_and_include_retired_history_without_talking_duplicates ... ok
+test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
+test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
+test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+test views::workboard::tests::recorded_deliveries_keep_unknown_recipients_and_absent_senders_honest ... ok
+test views::workboard::tests::retired_child_delivery_stays_readable_in_its_project ... ok
+test views::workboard::tests::selection_follows_delivery_identity_across_reordering ... ok
+test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
+test views::workboard::tests::delivery_and_changes_open_the_shared_record_without_marking_it_read ... ok
+test views::workboard::tests::all_floor_titles_distinguish_projects_and_help_matches_the_channel ... ok
+test views::workboard::tests::one_delivery_gives_unused_list_space_to_its_body ... ok
+test views::workboard::tests::team_preserves_nested_missing_member_and_fork_relationships_once ... ok
+test views::workboard::tests::global_attention_separates_human_requests_and_supports_visible_floor_filter ... ok
+test views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized ... ok
+test views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded ... ok
+test views::workboard::tests::local_markers_round_trip_and_have_a_bound ... ok
+test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.02s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.58s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 2 tests
+test work_brief::tests::activity_preserves_verbs_and_observed_outcomes ... ok
+test work_brief::tests::anchor_counts_new_records_without_losing_selected_identity ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.00s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.54s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 6 tests
+test views::inspector::tests::export_work_panel_pilot ... ignored, Manual pilot capture; writes only to an explicit audit output directory
+test views::inspector::tests::emergency_panel_keeps_current_work_and_exact_request_access ... ok
+test views::inspector::tests::source_warning_and_current_request_action_survive_a_short_panel ... ok
+test views::inspector::tests::historical_requests_never_offer_a_current_approval_action ... ok
+test views::inspector::tests::pilot_prioritizes_observed_work_result_and_current_request_at_80_columns ... ok
+test views::inspector::tests::activity_keeps_all_retained_beats_and_anchors_while_updates_arrive ... ok
+
+test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 237 filtered out; finished in 0.02s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+warning: function `status_style` is never used
+   --> crates/theywork-render/src/views/mod.rs:365:15
+    |
+365 | pub(crate) fn status_style(status: WorkerStatus) -> Style {
+    |               ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `theywork-render` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.76s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 1 test
+test views::inspector::tests::export_work_panel_pilot ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 242 filtered out; finished in 0.11s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.82s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 7 tests
+test views::inspector::tests::export_work_panel_pilot ... ignored, Manual pilot capture; writes only to an explicit audit output directory
+test views::inspector::tests::source_warning_and_current_request_action_survive_a_short_panel ... ok
+test views::inspector::tests::emergency_panel_keeps_current_work_and_exact_request_access ... ok
+test views::inspector::tests::side_panel_wraps_primary_expand_and_all_available_secondary_actions ... ok
+test views::inspector::tests::historical_requests_never_offer_a_current_approval_action ... ok
+test views::inspector::tests::pilot_prioritizes_observed_work_result_and_current_request_at_80_columns ... ok
+test views::inspector::tests::activity_keeps_all_retained_beats_and_anchors_while_updates_arrive ... ok
+
+test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 238 filtered out; finished in 0.01s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.56s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 3 tests
+test work_brief::tests::activity_preserves_verbs_and_observed_outcomes ... ok
+test work_brief::tests::finder_preview_does_not_claim_stale_activity_is_current ... ok
+test work_brief::tests::anchor_counts_new_records_without_losing_selected_identity ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 244 filtered out; finished in 0.00s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.65s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 15 tests
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::request_shortcut_drops_the_previous_instruction_receipt ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 233 filtered out; finished in 0.01s
+
+
+running 1 test
+test views::inspector::tests::export_work_panel_pilot ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 247 filtered out; finished in 0.08s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.68s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 16 tests
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::request_shortcut_drops_the_previous_instruction_receipt ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::new_task_displays_one_caret_only_in_the_active_field ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 234 filtered out; finished in 0.00s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.91s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 19 tests
+test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+test views::workboard::tests::changes_use_entry_baseline_and_include_retired_history_without_talking_duplicates ... ok
+test views::workboard::tests::direct_team_focus_expands_ancestors_and_keeps_the_requested_worker_selected ... ok
+test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
+test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
+test views::workboard::tests::global_attention_separates_human_requests_and_supports_visible_floor_filter ... ok
+test views::workboard::tests::one_delivery_gives_unused_list_space_to_its_body ... ok
+test views::workboard::tests::recorded_deliveries_keep_unknown_recipients_and_absent_senders_honest ... ok
+test views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age ... FAILED
+test views::workboard::tests::retired_child_delivery_stays_readable_in_its_project ... ok
+test views::workboard::tests::selection_follows_delivery_identity_across_reordering ... ok
+test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
+test views::workboard::tests::team_preserves_nested_missing_member_and_fork_relationships_once ... ok
+test views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized ... ok
+test views::workboard::tests::delivery_and_changes_open_the_shared_record_without_marking_it_read ... ok
+test views::workboard::tests::all_floor_titles_distinguish_projects_and_help_matches_the_channel ... ok
+test views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded ... ok
+test views::workboard::tests::local_markers_round_trip_and_have_a_bound ... ok
+test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
+
+failures:
+
+---- views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age stdout ----
+
+thread 'views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age' panicked at crates/theywork-render/src/views/workboard.rs:1254:18:
+selected roster row
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age
+
+test result: FAILED. 18 passed; 1 failed; 0 ignored; 0 measured; 234 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `-p theywork-render --lib`
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.76s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 1 test
+test views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 252 filtered out; finished in 0.02s
+
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.71s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 19 tests
+test views::workboard::tests::changes_use_entry_baseline_and_include_retired_history_without_talking_duplicates ... ok
+test views::workboard::tests::coverage_distinguishes_partial_stale_unavailable_and_unknown_sources ... ok
+test views::workboard::tests::direct_team_focus_expands_ancestors_and_keeps_the_requested_worker_selected ... ok
+test views::workboard::tests::local_read_marker_never_answers_approves_or_completes_a_request ... ok
+test views::workboard::tests::native_human_request_marker_survives_other_beats_and_changes_for_a_new_request ... ok
+test views::workboard::tests::recorded_deliveries_keep_unknown_recipients_and_absent_senders_honest ... ok
+test views::workboard::tests::retired_child_delivery_stays_readable_in_its_project ... ok
+test views::workboard::tests::selection_follows_delivery_identity_across_reordering ... ok
+test views::workboard::tests::session_only_family_can_collapse_even_when_child_id_sorts_first ... ok
+test views::workboard::tests::team_preserves_nested_missing_member_and_fork_relationships_once ... ok
+test views::workboard::tests::undersized_notice_cannot_mark_or_open_hidden_rows_until_resized ... ok
+test views::workboard::tests::one_delivery_gives_unused_list_space_to_its_body ... ok
+test views::workboard::tests::global_attention_separates_human_requests_and_supports_visible_floor_filter ... ok
+test views::workboard::tests::delivery_and_changes_open_the_shared_record_without_marking_it_read ... ok
+test views::workboard::tests::all_floor_titles_distinguish_projects_and_help_matches_the_channel ... ok
+test views::workboard::tests::long_roster_labels_preserve_status_and_source_observation_age ... ok
+test views::workboard::tests::event_details_start_with_a_narrative_and_hide_native_ids_until_expanded ... ok
+test views::workboard::tests::local_markers_round_trip_and_have_a_bound ... ok
+test views::workboard::tests::small_notebook_keeps_all_channels_escape_and_scrollable_safe_detail ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 234 filtered out; finished in 0.02s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 7 tests
+test views::inspector::tests::export_work_panel_pilot ... ignored, Manual pilot capture; writes only to an explicit audit output directory
+test views::inspector::tests::emergency_panel_keeps_current_work_and_exact_request_access ... ok
+test views::inspector::tests::side_panel_wraps_primary_expand_and_all_available_secondary_actions ... ok
+test views::inspector::tests::source_warning_and_current_request_action_survive_a_short_panel ... ok
+test views::inspector::tests::historical_requests_never_offer_a_current_approval_action ... ok
+test views::inspector::tests::pilot_prioritizes_observed_work_result_and_current_request_at_80_columns ... ok
+test views::inspector::tests::activity_keeps_all_retained_beats_and_anchors_while_updates_arrive ... ok
+
+test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 246 filtered out; finished in 0.01s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 16 tests
+test views::control::tests::drafts_keep_their_target_and_typing_cannot_trigger_commands ... ok
+test views::control::tests::acknowledgement_cannot_clear_another_tasks_draft ... ok
+test views::control::tests::a_replacement_request_requires_deliberate_selection ... ok
+test views::control::tests::new_task_drafts_stay_with_their_provider_and_project ... ok
+test views::control::tests::structured_answers_preserve_request_and_question_ids ... ok
+test views::control::tests::tab_can_return_from_buttons_to_fields_without_editing_a_hidden_draft ... ok
+test views::control::tests::inline_composer_keeps_target_and_only_executes_visible_capabilities ... ok
+test views::control::tests::utf8_editing_and_paste_preserve_boundaries ... ok
+test views::control::tests::request_buttons_capture_exact_identity_and_reject_replacement_or_changed_choices ... ok
+test views::control::tests::project_picker_disambiguates_equal_names_and_removes_non_adjacent_duplicate_paths ... ok
+test views::control::tests::project_picker_keeps_the_full_known_path_and_connections_offer_sources ... ok
+test views::control::tests::operational_hits_follow_current_capabilities_and_never_promote_observed_tasks ... ok
+test views::control::tests::tab_focus_activates_the_visible_request_button_and_prevents_double_reply ... ok
+test views::control::tests::request_shortcut_drops_the_previous_instruction_receipt ... ok
+test views::control::tests::request_choices_are_not_duplicated_and_long_options_keep_their_meaning ... ok
+test views::control::tests::new_task_displays_one_caret_only_in_the_active_field ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 237 filtered out; finished in 0.00s
+

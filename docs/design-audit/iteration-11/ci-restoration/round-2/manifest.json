@@ -1,0 +1,39 @@
+{
+  "base_commit": "b202913b40c2b6e386892a8a259a72e7ee0f9b7b",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "scope": "Native fixture follow-up; source hashes bind modified candidate files before commit",
+  "source_sha256": {
+    ".github/workflows/native.yml": "5da7021d72a980d3150056d70dcaf87831c722f1644e80a7751e0c39d010645d",
+    "crates/theywork-collect/src/lib.rs": "ad80a64341847749db89ef13b9632ceced7b581053010cab8dc895c902b2421e",
+    "crates/theywork-collect/tests/collectors.rs": "a750971b61dadf3cca32b7dca7a34d35b1b969c25c85c315c5ce2180e2931260",
+    "crates/theywork-tui/tests/cli.rs": "e9cfc14dac1dc5fe84c7d2e4f973a31983cbfd1228b77f9a95e024a17117577d"
+  },
+  "fresh_evidence": [
+    "checks.json",
+    "format.log",
+    "workspace.log",
+    "clippy.log",
+    "cli-default-temp-before.log",
+    "cli-default-temp-final.log"
+  ],
+  "native_confirmation": "pending next GitHub candidate",
+  "physical_terminal": "not tested",
+  "workspace_counts": {
+    "passed": 471,
+    "failed": 0,
+    "ignored": 4,
+    "harness_reports": 21
+  },
+  "evidence_sha256": {
+    "windows-timestamp.log": "6a872bb224b96677de187ef30e906f98d8e44e2e9f0954175bdea8130fd66f23",
+    "failures.json": "1a2d50556579c2a246955a1cf5e3b6e825e81afaf8905262f887d3683ec52409",
+    "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clippy.log": "3a019f0edff4515ffa49960353f5b87f93e5baa2b8e7bbc1c17f1983c3d9e121",
+    "macos-cli.log": "cda2ec150000dcbc5f9e992ce3017f5e557c16bd67fe9ffde5552a4a7d01a733",
+    "workspace.log": "1caf6ca27cd15e79aa8f72c69e6e1719fb3f167c054146ac5a7f924bfc74bb47",
+    "checks.json": "a56c77bad51b373a8db1cbcebc16e797c477e123e141e7fa04569717840a01f3",
+    "cli-default-temp-before.log": "5428e954aa12f727ddda49407617916c650ed90dbbfab0cc9975e8a98f481cc0",
+    "linux-archive-inspection.json": "1e52c8c7a624e8d9baf78d6457ba1173b6bc937bf4f321b040ec32ac8c337e89",
+    "cli-default-temp-final.log": "f82b57eaee0b2cc00ded6d89a0717a64f615da158f4693ddfe86835a8135d104"
+  }
+}

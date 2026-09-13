@@ -1,0 +1,47 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.72s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 39 tests
+test views::office::tests::auto_projection_chooses_room_then_degrades_by_available_space ... ok
+test views::office::tests::desk_layout_caps_the_main_floor_and_pages_overflow ... ok
+test views::office::tests::common_five_worker_floor_uses_balanced_rows ... ok
+test views::office::tests::chairs_workers_and_desks_form_a_seated_stack_at_one_scale ... ok
+test views::office::tests::clouds_never_draw_outside_their_window ... ok
+test views::office::tests::compact_project_sign_keeps_a_flat_face_clear_of_alert_rows ... ok
+test views::office::tests::every_floor_density_uses_native_pixels_or_integer_enlargement ... ok
+test views::office::tests::flat_project_titles_never_cross_the_native_attention_banner ... ok
+test views::office::tests::isometric_room_has_a_floor_plate_with_breathing_space ... ok
+test views::office::tests::isometric_room_keeps_objects_separate_and_ground_open ... ok
+test views::office::tests::isometric_sign_stays_in_its_reserved_band ... ok
+test views::office::tests::compact_isometric_floor_pages_before_workers_overlap ... ok
+test views::office::tests::light_mode_keeps_floor_outlines_dark ... ok
+test views::office::tests::long_isometric_sign_steps_down_without_leaving_its_band ... ok
+test views::office::tests::five_workers_fit_the_plate_without_clipping_or_each_other ... ok
+test views::office::tests::manager_reaches_attention_pose_after_travel ... ok
+test views::office::tests::common_terminal_draws_workers_and_labels_instead_of_a_plain_list ... ok
+test views::office::tests::occupied_desk_tiles_are_unique_and_spread_across_the_plate ... ok
+test views::office::tests::office_palettes_change_room_materials_but_keep_worker_and_alert_colours ... ok
+test views::office::tests::painter_order_puts_nearer_and_taller_items_last ... ok
+test views::office::tests::project_labels_are_safe_and_split_without_ellipsis ... ok
+test views::office::tests::project_sign_stays_above_floor_and_within_bounded_area ... ok
+test views::office::tests::projection_cycle_is_reversible_for_every_view ... ok
+test views::office::tests::midnight_floor_seams_survive_the_256_colour_terminal_palette ... ok
+test views::office::tests::resize_plans_have_only_occupied_rows_and_adjacent_nameplates ... ok
+test views::office::tests::isometric_floor_is_a_continuous_surface_at_odd_pixel_sizes ... ok
+test views::office::tests::sky_is_deterministic_but_changes_with_time ... ok
+test views::office::tests::worker_marker_positions_use_encoding_cell_density ... ok
+test views::office::tests::worker_plate_names_preserve_distinguishing_suffixes ... ok
+test views::office::tests::shared_prefixes_and_duplicate_titles_keep_distinguishable_nameplates ... ok
+test views::office::tests::room_motion_freezes_sky_figures_and_manager_together ... ok
+test views::office::tests::blocked_floor_labels_avoid_the_manager_at_the_rendered_time ... ok
+test views::office::tests::native_room_uses_the_available_image_frame ... ok
+test views::office::tests::worker_wardrobe_variants_have_distinct_pixels_at_every_density ... ok
+test views::office::tests::complete_they_work_sign_keeps_every_letter_face_at_every_density ... ok
+test views::office::tests::isometric_worker_labels_use_theme_surfaces_over_the_art ... ok
+test views::office::tests::every_letter_and_digit_keeps_its_five_by_seven_face_at_every_density ... ok
+test views::office::tests::floor_worker_plates_stay_with_their_desks_at_every_encoding ... ok
+test views::office::tests::isometric_navigation_reaches_last_worker_and_keeps_identity_through_resize ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 216 filtered out; finished in 11.33s
+

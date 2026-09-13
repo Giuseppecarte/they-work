@@ -1,0 +1,31 @@
+{
+  "base": "8084397e21cd004fba344c6b0154ee8f0e3be805",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "toolchain": "cargo 1.90.0 (840b83a10 2025-07-30)",
+  "sources": {
+    ".github/workflows/native.yml": "df1a1929505ec0d5b8585cbc6ed49043565fae23474e05d1261ec078f165c751",
+    "crates/theywork-collect/src/claude.rs": "774b111667cce23cbe23fd4baa8d52288617347820619031fa5fefa0a714953d",
+    "crates/theywork-collect/tests/collaboration.rs": "7807a72222fc5f16155e585216d10c9bd5bc99eb460289dd2dbad9b80a575320",
+    "crates/theywork-collect/tests/collectors.rs": "4a196dcfa5b22a903678f4e07dd6b216a31e18892c52b672f0a14ff8b47d1863",
+    "crates/theywork-control/tests/control.rs": "d51962d57548f5a49fcffff16c515decf7da6068b3c53008c8e1255d966baa76",
+    "crates/theywork-control/tests/fake_provider.py": "bfed99940fa344b885864640aacec0a9408779ca97af058b956ec69cc6a6ce8e",
+    "crates/theywork-render/tests/goldens/.gitattributes": "174f20a029da1616e88f5300872eae273999e1f8b24c07f35af8828625425b86"
+  },
+  "evidence": {
+    "docs/design-audit/iteration-11/ci-restoration/arm64-debug-timing.log": "30995c62f1818090bb3c8cad673b2868f22e6f6c5bc6dff483c2adf873d95040",
+    "docs/design-audit/iteration-11/ci-restoration/checks.json": "b6e47ff2a66fb603c8b1f998591f14e89b9966d60da1b21e3df11f7800d21953",
+    "docs/design-audit/iteration-11/ci-restoration/clippy.log": "b7d89887ce64b541771fc175fd43e9864886f8f8e5654d23fe08c6e725523121",
+    "docs/design-audit/iteration-11/ci-restoration/collaboration-default-temp-after.log": "d8f45793e61b0188f3113bee91a5c690464b2c22c17f0c66e796e0823fcee896",
+    "docs/design-audit/iteration-11/ci-restoration/collectors-default-temp-after.log": "abeb7db2afb9c392888de6a05370da039d7193a1380b10cbfa3ae1585729c3ab",
+    "docs/design-audit/iteration-11/ci-restoration/control-timeout-follow-up.log": "fb2293e11912355bdf343b3a22afba922ec1b10370333c55efb7e9deba3a69c8",
+    "docs/design-audit/iteration-11/ci-restoration/format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/design-audit/iteration-11/ci-restoration/initial-failures.json": "469b83a8fccd5c2fef7d7fd39c9136be01a28c6fec152bf82432f9fe66d16f34",
+    "docs/design-audit/iteration-11/ci-restoration/macos-fixture.log": "2a9593e542bfa5d8a8f0276d59fec0c944bd4acbbcf842db94a0a52f899e40cc",
+    "docs/design-audit/iteration-11/ci-restoration/optimized-timing.log": "a41f241a353f33ab397f0893b10caed5cfd246df60f15d3a92b45ab26dc2bdd2",
+    "docs/design-audit/iteration-11/ci-restoration/provider-startup.log": "0ea2b3f4d66d04df25e02ca91203e4977fe6c19d0201ad0ab7872ef2e681e2c0",
+    "docs/design-audit/iteration-11/ci-restoration/windows-clippy.log": "94a7355b3c41897095ac1ab61f1acbe7b9ad3ac5dea2da12e0d4fa484961fc9e",
+    "docs/design-audit/iteration-11/ci-restoration/workspace.log": "e8db66436cf949cdfc03452a54f502af0aa8a2408f4a47e5759293226a6159d5",
+    "docs/design-audit/iteration-11/ci-restoration/golden-checkout.json": "28896b106e1c883bfba5a25cc67055bd8b2d9e58e5cba5a6c33b50e2f29cb277"
+  },
+  "native_ci": "Pending rerun on committed fixes; earlier failures retained."
+}

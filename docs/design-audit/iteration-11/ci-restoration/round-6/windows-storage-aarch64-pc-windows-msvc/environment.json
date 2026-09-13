@@ -1,0 +1,8 @@
+{
+  "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+  "os": "Microsoft Windows NT 10.0.26200.0",
+  "filesystem": "NTFS",
+  "architecture": "Arm64",
+  "runner": "windows-11-arm",
+  "target": "aarch64-pc-windows-msvc"
+}

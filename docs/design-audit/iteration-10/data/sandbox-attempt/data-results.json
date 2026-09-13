@@ -1,0 +1,83 @@
+{
+  "candidate": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "started_at": "2026-09-10T16:16:35.377288+00:00",
+  "platform_evidence": "native macOS; no authenticated providers or terminal paint",
+  "cases": [
+    {
+      "name": "lineage",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "-p",
+        "theywork-control",
+        "--lib",
+        "stream::tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 0.18,
+      "expected_passed": 3,
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "log": "lineage.log",
+      "sha256": "81a55781f6a708ed0b1cf23aeb309c60fac343c76df528a4f04eba06fe0c1151",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    },
+    {
+      "name": "reconciliation",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "-p",
+        "theywork-control",
+        "--test",
+        "data_stream",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "pass",
+      "exit_code": 0,
+      "elapsed_seconds": 2.756,
+      "expected_passed": 9,
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0,
+      "log": "reconciliation.log",
+      "sha256": "aab6a7498fb17eb9d8fa063a3ecf26449df4140124897c6cc075b529b6584aeb",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    },
+    {
+      "name": "stream-process",
+      "command": [
+        "sh",
+        "docs/design-audit/native-cargo.sh",
+        "test",
+        "--locked",
+        "-p",
+        "theywork-control",
+        "--test",
+        "control",
+        "data_stream",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "fail",
+      "exit_code": 101,
+      "elapsed_seconds": 1.089,
+      "expected_passed": 2,
+      "passed": 0,
+      "failed": 2,
+      "ignored": 0,
+      "log": "stream-process.log",
+      "sha256": "a88897d105c06f471c9180ac3a358ae7944785f09cf3582df5a87eb490899cb5",
+      "process_cases": "Inspect harness-free results separately; not included in ordinary test count."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "after": {
+    "latest": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+    "version": "sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324"
+  },
+  "before": {
+    "latest": "sha256:5832e56f23a9a4b5aecd823b293fe75cd8068bc727cb1e92396e7cea1761d5ae",
+    "version": null
+  },
+  "candidate": "localhost:5060/they-work@sha256:8646bd16dec77d6db329b90e3f7686051df3e2b7146a6060a3e467cab2abf324",
+  "completed_steps": [
+    "version",
+    "latest"
+  ],
+  "native_release": "not-attempted",
+  "recovered_acknowledgements": [
+    "latest"
+  ],
+  "schema": 1,
+  "status": "images-promoted"
+}

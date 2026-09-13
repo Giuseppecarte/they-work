@@ -1,0 +1,24 @@
+ 0 TOWER >8 08-billing-service!                          8/20 · / find · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐
+┌ │/ Project, task, provider or state…                                       │─┐
+│ │20 projects · type to find conversations                                  │ │
+│ │> 01-atlas-web                                                   PROJECT  │ │
+│>│  Floor 01 · 3 workers · 0 need attention                                 │ │
+│ │  02-billing-service                                             PROJECT  │ │
+│ │  Floor 02 · 3 workers · 0 need attention                                 │ │
+└─│  03-customer-onboarding                                         PROJECT  │─┘
+┌ │  Floor 03 · 3 workers · 1 need attention                                 │─┐
+│!│  04-design-system                                               PROJECT  │ │
+│…│  Floor 04 · 3 workers · 1 need attention                                 │ │
+│▄│  05-event-pipeline                                              PROJECT  │▄│
+│▄│  Floor 05 · 3 workers · 0 need attention                                 │▄│
+│▄│  06-mobile-app                                                  PROJECT  │▄│
+│▄│  Floor 06 · 3 workers · 0 need attention                                 │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│ │…y-work/docs/design-audit/tmp/iteration-3-finder/fixture-60-0/01-atlas-web│ │
+│ │↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear           │ │
+└─└──────────────────────────────────────────────────────────────────────────┘─┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 8/20 · page 2/4 · PgUp/PgDn pages · Home first · End last

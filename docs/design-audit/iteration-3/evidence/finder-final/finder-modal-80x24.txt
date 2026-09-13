@@ -1,0 +1,24 @@
+ 0 TOWER >8 08-billing-service!                          8/20 · / find · ? help
+  SOFTWARE TOWER  20 floors · 60 workers
+  ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐
+┌ │/ qcs?                                                                    │─┐
+│ │0 matches · 0–0                                                           │ │
+│ │No matching projects or conversations.                                    │ │
+│>│Try a task name, codex, claude, or attention.                             │ │
+│ │                                                                          │ │
+│ │                                                                          │ │
+└─│                                                                          │─┘
+┌ │                                                                          │─┐
+│!│                                                                          │ │
+│…│                                                                          │ │
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│▄│                                                                          │▄│
+│ │                                                                          │ │
+│ │↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear           │ │
+└─└──────────────────────────────────────────────────────────────────────────┘─┘
+  ↑↓ floors · Enter visit · ! attention · / find · c sources · ? help
+  Floor 8/20 · page 2/4 · PgUp/PgDn pages · Home first · End last

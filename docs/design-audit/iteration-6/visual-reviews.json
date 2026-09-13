@@ -1,0 +1,797 @@
+{
+  "new-task-image-32x14": {
+    "sha256": "9046dc31bb0078497a51b1b1f9978e5ecfca4a291790047a67ec4657a91577ff",
+    "status": "pass",
+    "note": "At 32x14 the creation form uses a legible enlarge-terminal notice with Esc return; no partial input or action is presented. Visual guard only; this is not a usable creation layout."
+  },
+  "connections-image-32x14": {
+    "sha256": "bdd22f33f2272438935397ef1892f3fc4b885f50b8c23ffdb7d3eb7259a838bb",
+    "status": "pass",
+    "note": "Final32 Connections retains source explanation, all four choices and complete compact Tab/Enter/Esc hint; no clipped action."
+  },
+  "project-picker-image-32x14": {
+    "sha256": "9046dc31bb0078497a51b1b1f9978e5ecfca4a291790047a67ec4657a91577ff",
+    "status": "pass",
+    "note": "At 32x14 the picker safely shows an enlarge-terminal notice and Esc return; no incomplete project list is presented."
+  },
+  "settings-image-32x14": {
+    "sha256": "df2aa8bc56c9273468d2cdab16752f994f9c0391d6d4622389a0c309da29f46c",
+    "status": "pass",
+    "note": "Final32 Settings retains all six rows, values and immediate-apply guidance; compact Back/select/edit footer now fits completely."
+  },
+  "advanced-image-32x14": {
+    "sha256": "2cdc7a82fa877459863f775b22f2a625b9847f95bbfa11a895b0dc7888ebb375",
+    "status": "pass",
+    "note": "Final32 Advanced retains controls/values, visibly abbreviated long labels, warning and complete Back/select/edit footer."
+  },
+  "more-image-32x14": {
+    "sha256": "b63ae8bb765d4b8233d61408267bb72e8e4a372554f615575fdff122f4cf866f",
+    "status": "pass",
+    "note": "Final32 More retains all eight destinations, shortcuts and selected marker; compact Back/Enter/Esc footer is complete."
+  },
+  "help-image-32x14": {
+    "sha256": "d6b094a38bf338651335dade71ddceab3193a50f050d88ec1c5072b481e50fb4",
+    "status": "pass",
+    "note": "At 32x14 Help uses a readable compact overlay with scroll arrows and Esc back; the visible introduction explains floors/tasks without clipped lines."
+  },
+  "character-image-32x14": {
+    "sha256": "cc12beaa1a73e1a30855642964bc97816ec62aa67773b705d5751ffc1deca9c5",
+    "status": "pass",
+    "note": "Final32 editor keeps every field/current value, active focus and Apply/Cancel/Preview visible; compact footer fits completely."
+  },
+  "design-image-32x14": {
+    "sha256": "c709a42f24837d1bc3fc83d95c5bbd2f36ac18c4929522f44776fceaa8b990d3",
+    "status": "pass",
+    "note": "Final32 editor keeps every field/current value, active focus and Apply/Cancel/Preview visible; compact footer fits completely."
+  },
+  "finder-image-32x14": {
+    "sha256": "bb44748639d2e3b3c45ef4999e4277c390bbbc625685aaf9399f5535b0b003af",
+    "status": "pass",
+    "note": "Latest 32-column Finder re-inspected: one selected result, range, observation age and navigation remain visible without overlap. Emergency layout compresses title and status; the request label is shortened to Approval need. Opening the result exposes the full request."
+  },
+  "changes-image-32x14": {
+    "sha256": "2237e5a0488a6d3b71cf37fdd11c255f21da1e8891fc1ecc920feace5574f4b9",
+    "status": "pass",
+    "note": "Regenerated 32-column notebook inspected: reserved age column no longer merges with clipped title/state; complete review/inspect action, record count and footer remain visible. Detail uses compact wrapping at this emergency size."
+  },
+  "deliveries-image-32x14": {
+    "sha256": "d8b5f4143d6230525bb0cdcecb0a67f91c411ca5924c522df38b991786113096",
+    "status": "pass",
+    "note": "Regenerated 32-column notebook inspected: reserved age column no longer merges with clipped title/state; complete review/inspect action, record count and footer remain visible. Detail uses compact wrapping at this emergency size."
+  },
+  "empty-image-32x14": {
+    "sha256": "fb7d0de6e7457152e95975c5928a5b60bd3dbc483a1b4d5575edae8ee056ca36",
+    "status": "pass",
+    "note": "Empty connected sources are explained separately from source failure; New task is visible and wrapped body fits 32x14."
+  },
+  "filtered-empty-image-32x14": {
+    "sha256": "f497d61ee3bcf3b122b2b20b0311254528229e2801d04f8dbd9419663ba73e6a",
+    "status": "pass",
+    "note": "Filter-empty state explains that conversations may exist outside the filter and shows Check sources. Heading is visibly ellipsized; body is complete at 32x14."
+  },
+  "no-sources-image-32x14": {
+    "sha256": "74b8cca2d1c8e381ad6a2c35b3706452ea5dc109ccdcfaf36cdad866bb66204d",
+    "status": "pass",
+    "note": "No-source state has complete wrapped explanation and Connect sources CTA at 32x14."
+  },
+  "source-error-image-32x14": {
+    "sha256": "b7666489f93f897b107d7b62c68901a527da4d3fc939107ce20d9123b4ac0213",
+    "status": "pass",
+    "note": "Source failure is explicit in the top warning and body; Check sources action remains visible at 32x14 and empty is not presented as no work."
+  },
+  "scanning-image-32x14": {
+    "sha256": "452c48325567ee00f6f37ac7f6d3c9e369c9f914e778e832401b746755d972e3",
+    "status": "pass",
+    "note": "Scanning state explains what is being read and offers Connections; complete wrapped body fits 32x14."
+  },
+  "attention-image-32x14": {
+    "sha256": "1b892aa1918ba82a0b55968802deca2d293a63f311d9596203007861b2a1e08d",
+    "status": "pass",
+    "note": "Regenerated 32-column notebook inspected: reserved age column no longer merges with clipped title/state; complete review/inspect action, record count and footer remain visible. Detail uses compact wrapping at this emergency size."
+  },
+  "team-image-32x14": {
+    "sha256": "e6ac19aa64fddf94159182557aa8c9006baf801753343fc8724797fd9abaa4ea",
+    "status": "pass",
+    "note": "Regenerated 32-column notebook inspected: reserved age column no longer merges with clipped title/state; complete review/inspect action, record count and footer remain visible. Detail uses compact wrapping at this emergency size."
+  },
+  "directed-finder-none-32x14": {
+    "sha256": "97e28467895e62cdf6107f7ee4bfc31c3ec0a6b0b0d2fb1fbade6c22bc427624",
+    "status": "pass",
+    "note": "Latest narrow no-match Finder re-inspected: zero count, wrapped no-matches explanation, typed query and navigation remain visible over an opaque background."
+  },
+  "office-auto-image-32x14": {
+    "sha256": "5cc144ff4d498ee5423ef654464e83eed9701c80b7f203f24bc8b87d28e275cb",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-side-image-32x14": {
+    "sha256": "5cc144ff4d498ee5423ef654464e83eed9701c80b7f203f24bc8b87d28e275cb",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-iso-image-32x14": {
+    "sha256": "90e5c90119e15bcdf8941cbabd4ce3348680678fd4b1788ed0f759ead78066e6",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-top-image-32x14": {
+    "sha256": "90e5c90119e15bcdf8941cbabd4ce3348680678fd4b1788ed0f759ead78066e6",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-list-image-32x14": {
+    "sha256": "90e5c90119e15bcdf8941cbabd4ce3348680678fd4b1788ed0f759ead78066e6",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "tower-image-32x14": {
+    "sha256": "38099f37ea9318f86ef407c229b21497eca6461d07f8502994c23fad43de442f",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "directed-single-project-32x14": {
+    "sha256": "f7de440b960316950c793b23b1640cde4ead4b4665be582448cdedf652d884af",
+    "status": "pass",
+    "note": "Current 32-column full frame re-opened after singular-copy correction: header reads 1 project; worker count, selected identity, source-not-checked explanation, unknown observation age and compact controls remain visible. No new clipping or overlap."
+  },
+  "directed-single-worker-32x14": {
+    "sha256": "4692cbde4d7bd69e04f810dd1f5fdb66a03af8d31e0844fa2110b46d614da1fc",
+    "status": "pass",
+    "note": "Current 32-column full frame re-opened after singular-copy correction: header reads 1 project; worker count, selected identity, source-not-checked explanation, unknown observation age and compact controls remain visible. No new clipping or overlap."
+  },
+  "directed-last-floor-32x14": {
+    "sha256": "3373024beb67423202820018c4fd840f6e58f96265ad509b251d39f86c85a3ae",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "directed-last-person-32x14": {
+    "sha256": "65a6dc6838b18a4f3a31fc1084bc049c3ea52b26e5685c8ed4dc9f28632e140c",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "directed-long-names-32x14": {
+    "sha256": "ca66248e333c515e28749f7613369f571d117d24662d9a00904e97c2c0fa3dea",
+    "status": "not-tested",
+    "note": "Latest frame layout inspected; CJK glyphs remain missing in this single-font replay. Glyph fidelity and terminal font fallback are not tested, so no visual font-coverage pass is claimed."
+  },
+  "directed-names-off-32x14": {
+    "sha256": "63b2ec7cdca5054f0b50df1082781bde95dbf88bd8542195bf2f8283142a1837",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "directed-mixed-waits-32x14": {
+    "sha256": "fd0719b7d64e8bc4c8f2d975d86a2f560219b308b223b729ececb6edaa801840",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "directed-source-offline-32x14": {
+    "sha256": "f8364d9469a03f0c3ca73b66720843fc9e4f65d1a99765487e70f84a1710fc3b",
+    "status": "pass",
+    "note": "Latest narrow offline source capture re-inspected: neutral unavailable marker, Unavailable status, observation age and Source unavailable explanation remain distinct from working or human-request states."
+  },
+  "directed-source-stale-32x14": {
+    "sha256": "5c9154a672a0960578162ec44b1ef7aa09ef59375ae55b5894408afeecb0c627",
+    "status": "pass",
+    "note": "Latest narrow stale-source capture re-inspected: Last known and 3m age are separate, explanatory refresh-needed text wraps, and no live-work claim is introduced."
+  },
+  "new-task-image-80x24": {
+    "sha256": "a489a7287ad5ce2f133e8e72b9adea788dfa2c7862636448a9dc00b0658cbe09",
+    "status": "pass",
+    "note": "Rechecked final correction: a single caret marks active instructions, Project has no inactive caret, Add instructions to create is complete, and Choose project/Back/footer fit."
+  },
+  "project-picker-image-80x24": {
+    "sha256": "2505ee22efcf16b0518c5f392c83762ed15dd5ae4052e93a6c6cc362d6756d69",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "connections-image-80x24": {
+    "sha256": "a6420c48c34c6dcb92172ee0b0b634532ae2e64600421fb93597624aa0c19a15",
+    "status": "pass",
+    "note": "All source/login options fit, with a clear local-conversations explanation and official-console/provider ownership guidance; no clipping."
+  },
+  "settings-image-80x24": {
+    "sha256": "8aba0aaf1a58be32d7bf84c321a0b5f4ae0e7282ee3c36c89ab9880f656a8c25",
+    "status": "pass",
+    "note": "Six settings and values align with clear focus; compatibility entry and immediate-apply guidance are readable over an opaque panel."
+  },
+  "advanced-image-80x24": {
+    "sha256": "601580ae6061454b312b2f929d8d75def9f7759493c0bf6104aef3a251a1841d",
+    "status": "pass",
+    "note": "Camera, text encoding and legacy palette controls align; warning explains limited older cameras, and return-to-Settings is explicit."
+  },
+  "more-image-80x24": {
+    "sha256": "6969f5444422507170586bb58e23066b04a845928bdb0f56abfe9c8a85f63fda",
+    "status": "pass",
+    "note": "All navigation destinations and shortcuts fit within the opaque menu; background graphics do not overwrite menu text."
+  },
+  "character-image-80x24": {
+    "sha256": "cdc6772ae08d099729cbf25eb1004a4fdeb696aef4b693ef94a654b67a9e9bbb",
+    "status": "pass",
+    "note": "Live character preview and fields occupy separate columns; Name/Outfit/Animation and Apply/Cancel fit. Preview bodies, laptop and native plate do not overlap."
+  },
+  "design-image-80x24": {
+    "sha256": "a960222afefa140890ef46cfc389ff3ac34a707596c28f103985e50c033d09b3",
+    "status": "pass",
+    "note": "Room preview stays separate from five design options; complete Preview/Apply/Cancel guidance fits and the laptop scene remains legible."
+  },
+  "finder-image-80x24": {
+    "sha256": "bd182628980ecd49c0267a57a7b752f4574a24c5862d8288e49dcc478b2bec60",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "new-task-image-192x58": {
+    "sha256": "010a8a0319d180527347ebf3ebda150f19271f169062ba187e52c45032cac4fc",
+    "status": "pass",
+    "note": "Rechecked final tall/wide correction: the form height is bounded, actions and full guidance now sit near the instructions region, and only the active field has a caret. No clipping or distant bottom-screen action group."
+  },
+  "connections-image-192x58": {
+    "sha256": "8ce1746c2747b619b259eb931c41996fd202843e544fb031c10ab156dac386a6",
+    "status": "pass",
+    "note": "Rechecked final bounded Connections: explanatory/provider text wraps completely, all four actions now sit near the content instead of screen bottom, and navigation fits. Docked120 buttons wrap into two clear lines."
+  },
+  "settings-image-110x80": {
+    "sha256": "29ef67ea2af4ecc9d0052c2347a73147bbcc21411addc1027ee91dd9bf9b48a1",
+    "status": "pass",
+    "note": "Tall110 keeps Settings bounded rather than stretching it; all rows, values and immediate-apply guidance remain clear. Opaque panel preserves text over graphics."
+  },
+  "advanced-image-110x80": {
+    "sha256": "c865806b06f23e429192ade1fae195dca4f60088a3fdddbed179f242e2fe4ed1",
+    "status": "pass",
+    "note": "Tall110 keeps compatibility controls bounded, warning and return action visible; column text remains separate (confirmed four-space gap in capture text)."
+  },
+  "project-picker-image-192x58": {
+    "sha256": "682369cdc55235870ccd6342d07f9ed258b0efebe964de610a56a4d65e889ba5",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "character-image-192x58": {
+    "sha256": "d62047e6224442ea04f49566970a40ae3ad42e4e2166b5f6b114e82d69788998",
+    "status": "pass",
+    "note": "Latest full character form and background room re-inspected: active name caret, outfit/animation fields and nearby Apply/Cancel remain complete. Updated Latest rows keep state/age separate; actor, station and native nameplate geometry is unchanged."
+  },
+  "design-image-110x80": {
+    "sha256": "38aa470c11b09799477dcd56f5fd8b749eeeebfece9416b40b8072b75c86c18f",
+    "status": "pass",
+    "note": "Rechecked final office-design panel: all five fields/values fit, Apply/Cancel and Preview now stay near the fields, and the compact footer is complete. Room art and native labels remain separate from controls."
+  },
+  "connections-image-110x80": {
+    "sha256": "15a218e79405b8b8d7c6db78f73b613e2985deacba7eb5bee382174375a5c847",
+    "status": "pass",
+    "note": "Rechecked final bounded Connections: explanatory/provider text wraps completely, all four actions now sit near the content instead of screen bottom, and navigation fits. Docked120 buttons wrap into two clear lines."
+  },
+  "new-task-light-80x24": {
+    "sha256": "29fe502c7bd6522788ce7c03a777f1f192d73ac7a9e3f060a8ac5350a61cba7a",
+    "status": "pass",
+    "note": "Rechecked final variant: only active instructions show a caret; Project has no inactive cursor. Add instructions to create, Choose project/Back and footer are complete and readable in this theme/renderer."
+  },
+  "new-task-no-color-80x24": {
+    "sha256": "f064647b4670261e0d8121adf86242f18b6ddf3972f21ed2ca0eec30bf7c0335",
+    "status": "pass",
+    "note": "Rechecked final variant: only active instructions show a caret; Project has no inactive cursor. Add instructions to create, Choose project/Back and footer are complete and readable in this theme/renderer."
+  },
+  "connections-light-80x24": {
+    "sha256": "c28e113f33b69675bf61c1d8766feda844bddbff03e1cd8ca6ef05e0271bbb92",
+    "status": "pass",
+    "note": "Light Connections uses dark readable ink, separate button backgrounds and complete source/provider guidance."
+  },
+  "settings-light-80x24": {
+    "sha256": "e698b551890a7f2eea06507a53ffc55135d89de3c36710ea27f61b4462b31e2b",
+    "status": "pass",
+    "note": "Light Settings keeps dark readable labels, selected row/value, helper copy and opaque cream background over artwork."
+  },
+  "settings-no-color-80x24": {
+    "sha256": "1f0d342a65eeecb18b3c3afd5ccb8d50a97246d6de66d40fff0176848466f7de",
+    "status": "pass",
+    "note": "NO_COLOR Settings retains > focus, values, help and a fully opaque panel; grayscale background does not obscure controls."
+  },
+  "advanced-light-80x24": {
+    "sha256": "fe06ccf76e202f07d0df468c412bf54458b6e8329dc2c3066f9d6109ba7ab20a",
+    "status": "pass",
+    "note": "Light Advanced retains contrast across heading, selected compatibility control, values, warning and keyboard footer."
+  },
+  "advanced-no-color-80x24": {
+    "sha256": "86f70a03e59a8a8a822807b1f05a577fa5cb990d28bce9ce33c77caac5bed73d",
+    "status": "pass",
+    "note": "NO_COLOR Advanced retains separate > selection marker, visible values and limitation guidance; no color-only meaning."
+  },
+  "character-light-80x24": {
+    "sha256": "c86cad4a486aa4a725ec0def438299724341004b263e04cf662b26055e71de60",
+    "status": "pass",
+    "note": "Light editor has readable dark text and focused row; preview native sign/nameplates use light semantic backgrounds and no longer disappear on dark artwork."
+  },
+  "character-no-color-80x24": {
+    "sha256": "d7895316a269124ddb4fadc552320f5b1a050f5b06198ea2927bdad966bffe31",
+    "status": "pass",
+    "note": "Monochrome editor keeps > focus, Apply/Cancel, preview label and a grayscale room with independent selected/request markers; no color-only state."
+  },
+  "design-light-80x24": {
+    "sha256": "cb622b8b9f134ee95cc35a944526fb826a2a6c7fcaea00ff9fed5847748e7db9",
+    "status": "pass",
+    "note": "Light editor has readable dark text and focused row; preview native sign/nameplates use light semantic backgrounds and no longer disappear on dark artwork."
+  },
+  "design-no-color-80x24": {
+    "sha256": "71dabf6f3080cbf015c1975fcd923cd66e665da6f6d8bb52f479369665e877db",
+    "status": "pass",
+    "note": "Monochrome editor keeps > focus, Apply/Cancel, preview label and a grayscale room with independent selected/request markers; no color-only state."
+  },
+  "new-task-image-120x36": {
+    "sha256": "eb63e1a8914e5e908cdcca7fe51e5f6af047f50dae2fa69b1c008ba982657d03",
+    "status": "pass",
+    "note": "Rechecked final120 docked form: Project no longer has an inactive caret; Add instructions to create and compact Tab/Enter/Esc footer fit in the narrow panel, with Choose project/Back visible."
+  },
+  "project-picker-image-240x70": {
+    "sha256": "76e71b4cb5caa2e00379c85f6f20e64a8d189329c9afb1fbe85f2452e499b761",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "connections-native-80x24": {
+    "sha256": "a6420c48c34c6dcb92172ee0b0b634532ae2e64600421fb93597624aa0c19a15",
+    "status": "pass",
+    "note": "Character-renderer variant visually checked at80: form labels, selection, all values/actions and guidance fit; opaque content stays separate from underlying compact roster."
+  },
+  "settings-native-80x24": {
+    "sha256": "6789d19feb67579390d8d24ae2160212fb0983b4b05a5507ef14e417dbfb69dd",
+    "status": "pass",
+    "note": "Latest native-only full screen re-inspected: opaque menu/form covers the changed roster correctly; selected row, labels, available actions and compact footer remain readable. Visible background status/age cells do not paint through the panel."
+  },
+  "advanced-native-80x24": {
+    "sha256": "fa3fe94bd261b888a9ca3b6814fef27a2758cb42309272c34cf35c904d63215c",
+    "status": "pass",
+    "note": "Latest native-only full screen re-inspected: opaque menu/form covers the changed roster correctly; selected row, labels, available actions and compact footer remain readable. Visible background status/age cells do not paint through the panel."
+  },
+  "new-task-native-80x24": {
+    "sha256": "a489a7287ad5ce2f133e8e72b9adea788dfa2c7862636448a9dc00b0658cbe09",
+    "status": "pass",
+    "note": "Rechecked final variant: only active instructions show a caret; Project has no inactive cursor. Add instructions to create, Choose project/Back and footer are complete and readable in this theme/renderer."
+  },
+  "project-picker-light-80x24": {
+    "sha256": "5393d1a1da81661be080356a7abccb2cb6b75c429190a421722c791d0403a820",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "project-picker-no-color-80x24": {
+    "sha256": "b8df0d6ea899e952fc2404403793a09a8850354d05360d56dfb380580eeaed28",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "more-light-80x24": {
+    "sha256": "c9164bcab31584f7b8de24fbe5a0cf8ba5cfaa354683c75c150004d503df8a74",
+    "status": "pass",
+    "note": "Theme variant preserves all menu destinations, shortcuts, > focus and Back; menu remains opaque over artwork."
+  },
+  "more-no-color-80x24": {
+    "sha256": "017420013cb634184b82c867938cd0ebcd0725fa93ef5d86aeaa6ec48fe965f0",
+    "status": "pass",
+    "note": "Theme variant preserves all menu destinations, shortcuts, > focus and Back; menu remains opaque over artwork."
+  },
+  "character-native-80x24": {
+    "sha256": "8a305fc460146fcc2bfbe0158fb2a04789c3beec411b2259dd3b39af458804c4",
+    "status": "pass",
+    "note": "Character-renderer editor provides the complete editable fields, current values, Apply/Cancel and Preview field state. It uses a full text form at80; this frame does not display a pixel room preview."
+  },
+  "design-native-80x24": {
+    "sha256": "4f3a25b0a5f991c930a730789a27706be0ab4a0983cfe9a20ecc11bf1bd80a26",
+    "status": "pass",
+    "note": "Character-renderer editor provides the complete editable fields, current values, Apply/Cancel and Preview field state. It uses a full text form at80; this frame does not display a pixel room preview."
+  },
+  "finder-native-80x24": {
+    "sha256": "e779a191de95f7401f3ea4c0837194f3b92e0ef05ee2fc0d86357c20320e51d0",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "finder-no-color-80x24": {
+    "sha256": "d9f698e1b7db015732f4f42cc21590b09dc6d9c9ac7f4aefb2801f0b487b3b22",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "more-native-80x24": {
+    "sha256": "74ad52b568bd246927d0c7ba58f21fa1a3f4b562f7100b1cd0b0188987c83f71",
+    "status": "pass",
+    "note": "Latest native-only full screen re-inspected: opaque menu/form covers the changed roster correctly; selected row, labels, available actions and compact footer remain readable. Visible background status/age cells do not paint through the panel."
+  },
+  "project-picker-native-80x24": {
+    "sha256": "2505ee22efcf16b0518c5f392c83762ed15dd5ae4052e93a6c6cc362d6756d69",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "finder-light-80x24": {
+    "sha256": "930ad3725d97557fe079402fdc33a0e083c48c097e74d077b6821eb3e0355b96",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "connections-no-color-80x24": {
+    "sha256": "4f076240ece430781e50f691c1d4349bcfb1918b96b5002222ea25d6d9407c14",
+    "status": "pass",
+    "note": "Monochrome Connections retains all four labeled actions, local/provider explanation and Tab/Enter/Esc guidance; meaning does not depend on color."
+  },
+  "connections-image-120x36": {
+    "sha256": "d76e142aaf0695e5e17bd0cc26ac5fcb8983ecb22af61484877aadbb9edbcfe8",
+    "status": "pass",
+    "note": "Rechecked final bounded Connections: explanatory/provider text wraps completely, all four actions now sit near the content instead of screen bottom, and navigation fits. Docked120 buttons wrap into two clear lines."
+  },
+  "settings-image-120x36": {
+    "sha256": "ba5744ff10ad5a3123371bd2ad0b344fae5150380693775029fa4725c6aad786",
+    "status": "pass",
+    "note": "Settings stays bounded and opaque at120, preserving aligned six fields, focused row and immediate-apply guidance over the three-floor scene."
+  },
+  "advanced-image-120x36": {
+    "sha256": "ed1d0a6affda8eada0237349f2b72b9501167844994c4b1354e24a7f3ec47b7a",
+    "status": "pass",
+    "note": "This size was visually inspected: compatibility dialog stays bounded and opaque; four controls/values, selection and limitation text fit without overlapping the tower."
+  },
+  "advanced-image-192x58": {
+    "sha256": "e8d5f189f28bd496f14f229438df801da62f47d6d02243ddb9dfe5e5463028fa",
+    "status": "pass",
+    "note": "This size was visually inspected: compatibility dialog stays bounded and opaque; four controls/values, selection and limitation text fit without overlapping the tower."
+  },
+  "advanced-image-240x70": {
+    "sha256": "3e46d029210c02a40be1b64432a9c002afb8ef5de87ea0c94560422b1ab0cdff",
+    "status": "pass",
+    "note": "This size was visually inspected: compatibility dialog stays bounded and opaque; four controls/values, selection and limitation text fit without overlapping the tower."
+  },
+  "character-image-120x36": {
+    "sha256": "ae6ba707199fbb1c7776ebc3055651ac7ae25fa1e780f045b51151783272dc0a",
+    "status": "pass",
+    "note": "Rechecked final character editor: Apply/Cancel and Preview now remain near the fields in tall/wide panels; focused name/current values fit. Pixel preview and factual native state plates stay below bodies with clear laptop/desktop separation."
+  },
+  "character-image-110x80": {
+    "sha256": "8f68bd05124d8fa3489adbc17410ca0d2cd1f859cd1dbaa26daba4dcba298a3a",
+    "status": "pass",
+    "note": "Rechecked final character editor: Apply/Cancel and Preview now remain near the fields in tall/wide panels; focused name/current values fit. Pixel preview and factual native state plates stay below bodies with clear laptop/desktop separation."
+  },
+  "character-image-240x70": {
+    "sha256": "34091f6c5823dbaa7bf33b383ae5180e8cec2aab5ea3377c03819685a888fd3d",
+    "status": "pass",
+    "note": "Latest full character form and background room re-inspected: active name caret, outfit/animation fields and nearby Apply/Cancel remain complete. Updated Latest rows keep state/age separate; actor, station and native nameplate geometry is unchanged."
+  },
+  "design-image-120x36": {
+    "sha256": "26e5baf99119bb3ac736b9fbc3e4bc6dddcc77ecf9066dfaa11b40d9229c2110",
+    "status": "pass",
+    "note": "Rechecked final office-design panel: all five fields/values fit, Apply/Cancel and Preview now stay near the fields, and the compact footer is complete. Room art and native labels remain separate from controls."
+  },
+  "design-image-192x58": {
+    "sha256": "97e28cda82386a2c78e0c363fa80b44b4df0e11469de4e19585255607a20f6e4",
+    "status": "pass",
+    "note": "Rechecked final office-design panel: all five fields/values fit, Apply/Cancel and Preview now stay near the fields, and the compact footer is complete. Room art and native labels remain separate from controls."
+  },
+  "design-image-240x70": {
+    "sha256": "d1bcaf07703322b11ccf504d0663089c3b6eab3b2fdef777ea5fb32621ad97fc",
+    "status": "pass",
+    "note": "Rechecked final office-design panel: all five fields/values fit, Apply/Cancel and Preview now stay near the fields, and the compact footer is complete. Room art and native labels remain separate from controls."
+  },
+  "finder-image-120x36": {
+    "sha256": "bf0fcd478cb5cbec667f2aa68b9fa8a7afa7d8bce182b07cfd0ec0a1444d824e",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "finder-image-192x58": {
+    "sha256": "10a3693e00db369c7978db983fe1856f2ee5e8fa242bc8cc685a53e8b60983a9",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "finder-image-110x80": {
+    "sha256": "44007e4a82df053c1de6b4bd78c0b48498f4aafff9febb3ce9972abc1f169efa",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "finder-image-240x70": {
+    "sha256": "d1cf8e4b4b2b71af1da28096a83a09b6eb915e54a66d77a804acd9c5159a0d66",
+    "status": "pass",
+    "note": "Latest regenerated full Finder re-inspected: total/range, selected result and footer remain readable. Task titles shorten before the protected state field; observation age occupies its own second-row field. Opaque regular border and background keep underlying room pixels out."
+  },
+  "more-image-120x36": {
+    "sha256": "82302b8d2a9d315874ec851723be58c25fc5cf7731a705447bdad6aa230beec1",
+    "status": "pass",
+    "note": "This size was visually inspected: navigation menu stays compact at upper left, with complete eight destinations/keys, selected > and Back, and no graphics crossing its text."
+  },
+  "more-image-192x58": {
+    "sha256": "6f0342acd27d66ea4431d1f13228ae33f31c9799d78e619a5ed6b90cafacd2a0",
+    "status": "pass",
+    "note": "This size was visually inspected: navigation menu stays compact at upper left, with complete eight destinations/keys, selected > and Back, and no graphics crossing its text."
+  },
+  "more-image-110x80": {
+    "sha256": "dec97b32afbe827e6685e3a21a90f53d4375d09ec97f0dd0b06db8d5f4636bd6",
+    "status": "pass",
+    "note": "This size was visually inspected: compact menu retains eight destinations/keys, selected > and Back; tall/wide space does not stretch menu or obscure its contents."
+  },
+  "more-image-240x70": {
+    "sha256": "61f103ced5827a695e27f1f11e05fd366d351578e04de5bb3ad5e336c224df83",
+    "status": "pass",
+    "note": "This size was visually inspected: compact menu retains eight destinations/keys, selected > and Back; tall/wide space does not stretch menu or obscure its contents."
+  },
+  "settings-image-192x58": {
+    "sha256": "a5ffe8925ea114fd41cdce45cedb55d1c42e5e819d311b1981c1c49c7046e5db",
+    "status": "pass",
+    "note": "Wide192 Settings remains bounded with six aligned fields/values, selected row, immediate-apply explanation and no graphics overwriting the panel."
+  },
+  "connections-image-240x70": {
+    "sha256": "09a198f16b174a14c6cb3bd82f18500a37e1a5a3e660f5cf958ebe11564b03bb",
+    "status": "pass",
+    "note": "Rechecked final bounded Connections: explanatory/provider text wraps completely, all four actions now sit near the content instead of screen bottom, and navigation fits. Docked120 buttons wrap into two clear lines."
+  },
+  "new-task-image-110x80": {
+    "sha256": "11abd9e19ad3e9d06be9bcce90fa9970a8df5746155d153b44ff6b0848c05924",
+    "status": "pass",
+    "note": "Rechecked final tall/wide correction: the form height is bounded, actions and full guidance now sit near the instructions region, and only the active field has a caret. No clipping or distant bottom-screen action group."
+  },
+  "new-task-image-240x70": {
+    "sha256": "d2245ab3a2aa377e87eba2fdcfe2a1332ea49473300bfa55007ee2bb23f0a32f",
+    "status": "pass",
+    "note": "Rechecked final tall/wide correction: the form height is bounded, actions and full guidance now sit near the instructions region, and only the active field has a caret. No clipping or distant bottom-screen action group."
+  },
+  "settings-image-240x70": {
+    "sha256": "2969af578ef439958106678820272a792ac1fce8a792b5b25478b220eddf4d97",
+    "status": "pass",
+    "note": "Final wide240 Settings stays bounded and opaque, retaining six controls/current values, clear focus, immediate-apply explanation and complete compact footer."
+  },
+  "project-picker-image-120x36": {
+    "sha256": "fbb2bdcf1be8eccf47fa63734c6618719647edbb6ddc1241685592e884a4d49d",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "project-picker-image-110x80": {
+    "sha256": "084191bb10420fe6661d634f2cb1c4992b0a105523720af7f61316a2298f23b3",
+    "status": "pass",
+    "note": "Regenerated full screen inspected: selected project, complete range/total count, Enter and F7 back fit the footer. Fullscreen and sidebar variants retain opaque readable body and visible global navigation."
+  },
+  "office-side-image-110x80": {
+    "sha256": "4fbbe7eebeeb8ec74fffe847aeefacc9b9a93cc1036973783dfc1c92efe1438a",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-side-image-120x36": {
+    "sha256": "ed7df86e304e68bbef3dd6ff7c6b4a896c17a19df98abafac890ee55ce905ac1",
+    "status": "pass",
+    "note": "Exact PNG SHA-256 match to inspected office-auto-image-120x36. This image is byte-identical; its visual verdict is linked to that reviewed capture, not inferred from the route."
+  },
+  "office-side-image-192x58": {
+    "sha256": "6d4efce5b02ccd65b400bff16953c444eaa6976a7c792e02e33da9ac9404cac2",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-side-image-80x24": {
+    "sha256": "327b67e8ad3711d0736c467a693d13f4635e7303f2724b6ea1499a42ed8d88cb",
+    "status": "pass",
+    "note": "Exact PNG SHA-256 match to inspected office-auto-image-80x24. This image is byte-identical; its visual verdict is linked to that reviewed capture, not inferred from the route."
+  },
+  "office-side-light-80x24": {
+    "sha256": "81f92685bffaa54a14c4760714c51186468e595ad3d2647bf33ad14fbc2f03a4",
+    "status": "pass",
+    "note": "Exact PNG SHA-256 match to inspected office-auto-light-80x24. This image is byte-identical; its visual verdict is linked to that reviewed capture, not inferred from the route."
+  },
+  "empty-image-120x36": {
+    "sha256": "25260c21a3ea6d1f6a2fbd0e69eb409bd49cbf799719b1973127024a3cace5fd",
+    "status": "pass",
+    "note": "Full-screen empty-connected-source state visually inspected at this size: complete explanation distinguishes no conversations from a source failure, New task sits next to guidance, and footer remains readable. Tall space introduces no overlap."
+  },
+  "empty-image-192x58": {
+    "sha256": "0b3f9ccd46949c014c97380920a7af8e139dbe8ddd1045710934cbc18922d178",
+    "status": "pass",
+    "note": "Full-screen empty-connected-source state visually inspected at this size: complete explanation distinguishes no conversations from a source failure, New task sits next to guidance, and footer remains readable. Tall space introduces no overlap."
+  },
+  "empty-image-110x80": {
+    "sha256": "3def36038b65eef9d6e121299bc9e4d79e48098c44fddf0134197471fb2daf0b",
+    "status": "pass",
+    "note": "Full-screen empty-connected-source state visually inspected at this size: complete explanation distinguishes no conversations from a source failure, New task sits next to guidance, and footer remains readable. Tall space introduces no overlap."
+  },
+  "empty-image-240x70": {
+    "sha256": "46cc2bf4f2ba4eb9672bf93b1a215f4660259001915851f00e7eb77548ac3529",
+    "status": "pass",
+    "note": "Full-screen empty-connected-source state visually inspected at this size: complete explanation distinguishes no conversations from a source failure, New task sits next to guidance, and footer remains readable. Tall space introduces no overlap."
+  },
+  "no-sources-image-110x80": {
+    "sha256": "d1ab96f504fe4c5f7e02259f728d26f7571fab463ee97d807114544b2bab40ac",
+    "status": "pass",
+    "note": "Full screen inspected: explicit no-sources explanation and Connect sources action stay together near the top; primary navigation and footer are complete. Empty tall/wide space introduces no collision or hidden action."
+  },
+  "no-sources-image-120x36": {
+    "sha256": "87274dc0341f5dcc7dd7303c83d1f3083774e833c07d67a2bd274faadef087ff",
+    "status": "pass",
+    "note": "Full screen inspected: explicit no-sources explanation and Connect sources action stay together near the top; primary navigation and footer are complete. Empty tall/wide space introduces no collision or hidden action."
+  },
+  "no-sources-image-192x58": {
+    "sha256": "7206bc98ef296d2c1e04699d0ed2578e3e24faad918c3bbc08f6bab18650fc9a",
+    "status": "pass",
+    "note": "Full screen inspected: explicit no-sources explanation and Connect sources action stay together near the top; primary navigation and footer are complete. Empty tall/wide space introduces no collision or hidden action."
+  },
+  "no-sources-image-240x70": {
+    "sha256": "012ae2e9c8eb3106257553508d2c7d2fd5444aa38936cb2b418494d513832d8a",
+    "status": "pass",
+    "note": "Full screen inspected: explicit no-sources explanation and Connect sources action stay together near the top; primary navigation and footer are complete. Empty tall/wide space introduces no collision or hidden action."
+  },
+  "scanning-image-110x80": {
+    "sha256": "c5eadc4ce434f28e8caf1914a6e3be2a7744e4c2189cd03d67225539e686f8c8",
+    "status": "pass",
+    "note": "Full screen inspected: reading-local-sources message is complete, visually distinct from empty/error states, with Connections action immediately below and unobscured navigation/footer. No unsupported progress estimate or fabricated worker activity."
+  },
+  "scanning-image-120x36": {
+    "sha256": "b7a743db16122f5c05fe737bf8dcf0fe3e4f2321a4ecffb1bfbed0f0c3c6b2ff",
+    "status": "pass",
+    "note": "Full screen inspected: reading-local-sources message is complete, visually distinct from empty/error states, with Connections action immediately below and unobscured navigation/footer. No unsupported progress estimate or fabricated worker activity."
+  },
+  "scanning-image-192x58": {
+    "sha256": "d600e291525709d37e24628733875c28248acb3e59ff8a04f99491cb874f79e0",
+    "status": "pass",
+    "note": "Full screen inspected: reading-local-sources message is complete, visually distinct from empty/error states, with Connections action immediately below and unobscured navigation/footer. No unsupported progress estimate or fabricated worker activity."
+  },
+  "scanning-image-240x70": {
+    "sha256": "1f7e765763e140831b71671403ace889ed8dd9f2f8fe727fe5c0236ba658913c",
+    "status": "pass",
+    "note": "Full screen inspected: reading-local-sources message is complete, visually distinct from empty/error states, with Connections action immediately below and unobscured navigation/footer. No unsupported progress estimate or fabricated worker activity."
+  },
+  "filtered-empty-image-110x80": {
+    "sha256": "74817fa2b21752555d9a6a9301627f7bb01685f6d46130e12b6c70247eaba2a6",
+    "status": "pass",
+    "note": "Full screen inspected: no-match project-filter state clearly identifies the filter and gives the complete restart-without-project instruction. Check sources and all global controls remain visible, with no clipping at this size."
+  },
+  "filtered-empty-image-120x36": {
+    "sha256": "f59c666a7ffe72440783a4806bfaeb3bdcf222897de6713d547970a4e103662e",
+    "status": "pass",
+    "note": "Full screen inspected: no-match project-filter state clearly identifies the filter and gives the complete restart-without-project instruction. Check sources and all global controls remain visible, with no clipping at this size."
+  },
+  "filtered-empty-image-192x58": {
+    "sha256": "678b494be3d50b64df78207211699156ab898dbc99599d28f686ebb2042474e8",
+    "status": "pass",
+    "note": "Full screen inspected: no-match project-filter state clearly identifies the filter and gives the complete restart-without-project instruction. Check sources and all global controls remain visible, with no clipping at this size."
+  },
+  "filtered-empty-image-240x70": {
+    "sha256": "195bfcd1693a4a678356532ca9c23b20ce797523be86f5d3de1e0b49cef3ce8b",
+    "status": "pass",
+    "note": "Full screen inspected: no-match project-filter state clearly identifies the filter and gives the complete restart-without-project instruction. Check sources and all global controls remain visible, with no clipping at this size."
+  },
+  "source-error-image-110x80": {
+    "sha256": "28fa3367c8d5cb4e269646970e848a0341ca8004d5bd7d6dfd7075345b517590",
+    "status": "pass",
+    "note": "Full screen inspected: amber source issue, full unavailable-folder reason, explanatory body and Check sources action are readable. At110 columns the explanation wraps without hiding its conclusion or moving controls offscreen; large empty area is intentionally unused."
+  },
+  "source-error-image-120x36": {
+    "sha256": "b83a5723296ceb89da4a3b3ae74de26496bc475a114617de4a618016d140d7ec",
+    "status": "pass",
+    "note": "Full screen inspected: amber source issue, full unavailable-folder reason, explanatory body and Check sources action are readable. At110 columns the explanation wraps without hiding its conclusion or moving controls offscreen; large empty area is intentionally unused."
+  },
+  "source-error-image-192x58": {
+    "sha256": "1bf7fd92735fad5ef636879eaca5e6b315741d2f925827b887ce698271b9dcc0",
+    "status": "pass",
+    "note": "Full screen inspected: amber source issue, full unavailable-folder reason, explanatory body and Check sources action are readable. At110 columns the explanation wraps without hiding its conclusion or moving controls offscreen; large empty area is intentionally unused."
+  },
+  "source-error-image-240x70": {
+    "sha256": "78e7ae2cb1c476f532767767c209c10f3e5d269002f1d7530fb216bdf1b66ef0",
+    "status": "pass",
+    "note": "Full screen inspected: amber source issue, full unavailable-folder reason, explanatory body and Check sources action are readable. At110 columns the explanation wraps without hiding its conclusion or moving controls offscreen; large empty area is intentionally unused."
+  },
+  "office-list-image-110x80": {
+    "sha256": "9ba196943b09dfe5fcbc9e29e18ca1eb575083866f2caa55b3529e8d59b06a60",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-image-120x36": {
+    "sha256": "274c960dd449782043a77b31066056298a057e13400f7d20fae2c76d4dbe257e",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-image-192x58": {
+    "sha256": "e054635b0063a601332da03006ce50dc23a1b3579ed33a968732354353cc8b4a",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-image-240x70": {
+    "sha256": "7e880982bc4e46a643e7b4beef255181bb4864713952ac54eebd22d5ab64ec9f",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-image-80x24": {
+    "sha256": "fc498ed9f1e831cc1c650a984f2b5ed7d53988cfb8a61aba376994fa6b196808",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-light-80x24": {
+    "sha256": "35e0942836899a95ff0da9196cc6215b11cb764b73bcfe55256fb054ce628f3f",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-list-no-color-80x24": {
+    "sha256": "3b47c7794d77a56a9bdb876fec51eb4cd262599d49f7e55f88f9a5a7b907a47f",
+    "status": "pass",
+    "note": "Full screen inspected: all seven tasks remain readable in the compatibility list, selected row has an explicit > marker, blocked and running states have textual labels, and page1/1 plus navigation remain visible. Light/monochrome review does not rely on color alone."
+  },
+  "office-side-native-80x24": {
+    "sha256": "3384798195341210f8a791e66c725a4e86657caa1625afa3138be69934455a0e",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-side-no-color-80x24": {
+    "sha256": "81bf4f384537b9e0ffd7ef19367ea8d8ebb7c712dd728cc8f11bb9fecced1e7f",
+    "status": "pass",
+    "note": "Full screen inspected: grayscale team scene keeps all three complete workstations and native name/status plates; selected > is separate from ! state, so selection is identifiable without color."
+  },
+  "office-iso-native-80x24": {
+    "sha256": "d6ab0cc856a3df59cf06c16163a51bb71c43d91cdd96cdadde5c723969701b50",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-list-native-80x24": {
+    "sha256": "d6ab0cc856a3df59cf06c16163a51bb71c43d91cdd96cdadde5c723969701b50",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-top-native-80x24": {
+    "sha256": "d6ab0cc856a3df59cf06c16163a51bb71c43d91cdd96cdadde5c723969701b50",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-iso-light-80x24": {
+    "sha256": "81b23bc7eacacc722e4fc1df89cf07d2b84587ed82536769acf1d3f0ccc4336a",
+    "status": "pass",
+    "note": "Regenerated light isometric frame inspected: native nameplates now have light semantic backgrounds, making selected text and attention marker readable. Art title no longer overlaps attention strip; room and worker geometry retained."
+  },
+  "office-side-image-240x70": {
+    "sha256": "51f9c7385da98599958b6d082bdfbbc9b0e9d0eb8740b4f0221ca1995c5198d6",
+    "status": "pass",
+    "note": "Latest regenerated full screen re-inspected after shared roster-column changes. Worker identity, selected marker, factual status and separate observation age remain legible. Labels use explicit shortening in compact layouts; all visible controls stay in bounds."
+  },
+  "office-iso-image-110x80": {
+    "sha256": "30c2bb35052db8abf057d8a198b8c53d1c31577e82f8c0bd6225ad775c76bc53",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-iso-image-192x58": {
+    "sha256": "dc4a52403e1a954944f10d4f59deb3208c168095e60bfa26c500ce23eed9c70f",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-iso-image-240x70": {
+    "sha256": "97a4eb85ad547f855085580c20c52720a845a4b8a68582f80bfaee4b47937431",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-iso-image-80x24": {
+    "sha256": "3c29b6b44e247f176dcb549a1f8532ecdb3a2d8f154c1a2e5a42e0ef8ac23f11",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-iso-no-color-80x24": {
+    "sha256": "35bd4eae2368661a7d947274f886f4817a059593568c909588e719940e9e4544",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-iso-image-120x36": {
+    "sha256": "aebbbaabb38dd6f52b9a06e377ec5173d63902114a7b2d2f547084cc0c305dce",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-top-image-110x80": {
+    "sha256": "7e049c6c26386a0f8f5a51db4fdc88abdad469e86447e8c9ebcc24b5d0b62529",
+    "status": "pass",
+    "note": "Full compatibility screen inspected: all seven workstations and native shortened task labels fit with separate selected/status markers. Title is separated from attention strip, floor boundaries remain straight, footer/page visible. Tall empty margins and simplified original art are compatibility-mode limitations, not the primary room."
+  },
+  "office-top-image-192x58": {
+    "sha256": "f9f34fd29e5a4d3e0a1296f4d0e243ea3889c19052024c07153c8674733095f0",
+    "status": "pass",
+    "note": "Full compatibility screen inspected: all seven workstations and native shortened task labels fit with separate selected/status markers. Title is separated from attention strip, floor boundaries remain straight, footer/page visible. Tall empty margins and simplified original art are compatibility-mode limitations, not the primary room."
+  },
+  "office-top-image-240x70": {
+    "sha256": "83f27a26ac0dfc9bd95b8109c94998de2323471eb4b6106a6952161d247c94aa",
+    "status": "pass",
+    "note": "Full compatibility screen inspected: all seven workstations and native shortened task labels fit with separate selected/status markers. Title is separated from attention strip, floor boundaries remain straight, footer/page visible. Tall empty margins and simplified original art are compatibility-mode limitations, not the primary room."
+  },
+  "office-top-image-80x24": {
+    "sha256": "6c1281bda20a55f5f028a0c51357c960463ed87e5f189fe549905cebe53d0632",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-top-light-80x24": {
+    "sha256": "eea031151643a4b082411a95a4a58dd841321804da22d6d1de162cad6460d131",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-top-no-color-80x24": {
+    "sha256": "a3ef2c72f94fb3764d1e8c2503ee20db260e3563a7af3f0bdbf778ffa6b480af",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  },
+  "office-top-image-120x36": {
+    "sha256": "83c19d6bf56d80f16ba57324cb4a3be209cd7bac06bfd825b78d360eee448d6d",
+    "status": "pass",
+    "note": "Regenerated full compatibility frame visually re-inspected. Title and attention banner no longer overlap; native header still identifies the project, visible worker labels remain separate and readable, selected/status markers retained."
+  }
+}

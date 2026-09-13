@@ -1,0 +1,16 @@
+ THEY WORK  /  YOUR SOFTWARE TOWER
+ Connect your team
+ One project per floor. One conversation
+Local data only. No account or API key
+needed.
+┌ > [x] CLAUDE CODE ───────────────────┐
+│/Users/gc/Documents/Programming/they-w│
+│Folder found · contents read only afte│
+└──────────────────────────────────────┘
+┌   [ ] CODEX ─────────────────────────┐
+│/Users/gc/Documents/Programming/they-w│
+│Disconnected                          │
+└──────────────────────────────────────┘
+Choices apply to this run. Use
+↑↓ select  Space on/off  e folder
+Enter connect   d demo   Esc back

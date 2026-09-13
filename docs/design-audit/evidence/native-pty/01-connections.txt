@@ -1,0 +1,30 @@
+
+
+       THEY WORK  /  YOUR SOFTWARE TOWER
+       Connect your team
+       One project per floor. One conversation per worker.
+      Choose which local conversations can appear in your tower.
+      No account or API key needed. Prompts, tool activity and titles stay on this machine.
+      Approve requests in the original agent app; this office observes them.
+
+      ┌ > [x] CLAUDE CODE ───────────────────────────────────────────────────────────────────┐
+      │/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/pty-fixture/claude    │
+      │Folder found · contents read only after connecting                                    │
+      └──────────────────────────────────────────────────────────────────────────────────────┘
+      ┌   [ ] CODEX ─────────────────────────────────────────────────────────────────────────┐
+      │/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/pty-fixture/missing-co│
+      │Disconnected                                                                          │
+      └──────────────────────────────────────────────────────────────────────────────────────┘
+      Choices will be remembered in your selected config directory.
+
+
+
+
+
+
+
+
+
+
+      ↑↓ select  Space on/off  e folder
+      Enter connect   d demo   Esc back

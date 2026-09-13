@@ -1,0 +1,14 @@
+[ Tower ] [ Attention ] [ More ]
+Software tower · 20 projects    
+┌ PHONE / EDITS · 26 ──────────┐
+│All projects · 50 conversatio…│
+│[ Now ]        [ Attention ]  │
+│[ Edits ]      [ Messages ]   │
+│>Build the shared account int…│
+│ Recorded · 0s ago · codex · …│
+│ Partial local history        │
+│ editing • src/account.rs     │
+│                              │
+│1/26 · recorded history · Ent…│
+└──────────────────────────────┘
+[ Back ] ↑↓ · Enter opens       

@@ -1,0 +1,24 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]  
+Software tower · 20 projects                                                    
+▸ ┌ FIND YOUR TEAM ──────────────────────────────────────────────────────────┐] 
+○ │/ no-such-project-or-task                                                 │  
+▄▄│0 matches · 0–0                                                           │ ▄
+▄▄│No matching projects or conversations.                                    │▄▄
+▄▄│Try a task name, codex, claude, or attention.                             │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+  │                                                                          │] 
+▄▄│                                                                          │ ▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│                                                                          │▄▄
+▄▄│↑↓ choose · PgUp/Dn page · Enter open · Esc back · Ctrl+U clear           │▄▄
+▄▄└──────────────────────────────────────────────────────────────────────────┘▄▄
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▸Casey C.▄ ·Noa W.  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+[ Back ] Type to search · ↑↓ results · Enter open                               

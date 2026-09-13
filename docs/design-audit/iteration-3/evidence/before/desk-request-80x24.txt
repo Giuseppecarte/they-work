@@ -1,0 +1,24 @@
+ 0 TOWER >1 they-work!                                 1/1 · c sources · ? help
+  DESK / Review the release plan for database migration and production cutover
+
+▄▄▄▄▄▄▄▄▄▄▄  REVIEW THE RELEASE PLAN FOR DATABASE MIGRATION AND PRODUCTION CUTOV
+▄▄▄▄▄▄▄▄▄▄▄  branch main · thread person-0
+▄▄▄▄▄▄▄▄▄▄▄  4.2K tokens
+▄▄▄▄▄▄▄▄▄▄▄  CHARACTER · Original · Your conversation's familiar face [w]
+▄▄▄▄▄▄▄▄▄▄▄  ▌WAITING ON YOU
+▄▄▄▄▄▄▄▄▄▄▄  ▌Review in the original thread; this view is read-only.
+▄▄▄▄▄▄▄▄▄▄▄  ▌awaiting approval: deploy --project project-production-eu-west
+             ▌--require-backup verified-2026-09-07 --migration customer
+             ▌
+
+┌ THIS THREAD · NEWEST LAST ───────────────────────────────────────────────────┐
+│               exit 0                                                         │
+│                                                                              │
+│21:23 EDITED   src/payments/connection.rs                                     │
+│               +12 −3                                                         │
+│                                                                              │
+│21:23 SAID     Verified the test outcome and recorded the migration checklist.│
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+ THINKING  RAN / READ  EDITED  SAID  ASKED
+  ↑↓ scroll  ←→ desks  w character  W reset  p phone  Esc floor · read-only

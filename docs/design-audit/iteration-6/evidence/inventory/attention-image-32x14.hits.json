@@ -1,0 +1,93 @@
+[
+  {
+    "action": "Key(Char('f'))",
+    "height": 1,
+    "width": 14,
+    "x": 0,
+    "y": 3
+  },
+  {
+    "action": "Key(Char('i'))",
+    "height": 1,
+    "width": 17,
+    "x": 15,
+    "y": 3
+  },
+  {
+    "action": "Key(Char('1'))",
+    "height": 1,
+    "width": 7,
+    "x": 0,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('2'))",
+    "height": 1,
+    "width": 6,
+    "x": 7,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('3'))",
+    "height": 1,
+    "width": 6,
+    "x": 13,
+    "y": 4
+  },
+  {
+    "action": "Key(Char('4'))",
+    "height": 1,
+    "width": 7,
+    "x": 19,
+    "y": 4
+  },
+  {
+    "action": "NotebookSelect(\"attention:floor-00-person-0:1000:APPROVAL NEEDED\")",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 6
+  },
+  {
+    "action": "NotebookSelect(\"attention:floor-00-person-2:1000:QUESTION FOR YOU\")",
+    "height": 1,
+    "width": 30,
+    "x": 1,
+    "y": 7
+  },
+  {
+    "action": "Review(WorkerId(\"floor-00-person-0\"))",
+    "height": 1,
+    "width": 18,
+    "x": 13,
+    "y": 8
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "More",
+    "height": 1,
+    "width": 8,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 13
+  }
+]

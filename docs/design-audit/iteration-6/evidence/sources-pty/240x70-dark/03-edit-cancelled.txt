@@ -1,0 +1,48 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                            Connections / Sources
+                                                                            Choose the conversations visible in your tower.
+                                                                            Reads titles, messages and activity from local app data folders.
+                                                                            No they-work account. Provider controls require a verified connection.
+                                                                              [x] Claude Code
+                                                                            > …work/docs/design-audit/tmp/iteration-6-sources-pty/240x70-dark-0i1ggclf/home/.claude
+                                                                              Ready · reads after Connect
+
+                                                                              [x] Codex
+                                                                            · …-work/docs/design-audit/tmp/iteration-6-sources-pty/240x70-dark-0i1ggclf/home/.codex
+                                                                              Ready · reads after Connect
+
+                                                                              [x] Remember on this computer
+                                                                            Save sources and local appearance.
+                                                                            Space: toggle · e: edit folder
+
+
+
+
+
+
+
+
+                                                                            Tab/↑↓ choose · Enter activate
+                                                                            [ Connect ] [ Demo ] [ Back ]
+                                                                            F5 connect · d demo · Esc back

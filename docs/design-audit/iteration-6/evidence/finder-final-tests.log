@@ -1,0 +1,28 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.77s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-2aa890ea21033036)
+
+running 8 tests
+test views::finder::tests::aliases_and_real_titles_both_find_the_same_stable_task_target ... ok
+test views::finder::tests::long_search_rows_keep_observation_age_and_offline_projects_do_not_request_attention ... ok
+test views::finder::tests::paste_is_bounded_text_and_never_a_navigation_key ... ok
+test views::finder::tests::quiet_turn_does_not_match_a_request_for_approval ... ok
+test views::finder::tests::refresh_preserves_identity_when_live_results_shift ... ok
+test views::finder::tests::retained_file_and_result_search_opens_the_exact_shared_record ... ok
+test views::finder::tests::search_distinguishes_duplicate_projects_and_prioritizes_exact_task_titles ... ok
+test views::finder::tests::unicode_editing_and_narrow_cursor_remain_in_bounds ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 249 filtered out; finished in 0.02s
+
+     Running tests/image_layers.rs (target/native-macos/debug/deps/image_layers-f8958eb30fff12c2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/pixel_frame.rs (target/native-macos/debug/deps/pixel_frame-12d6af3d41896bd6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

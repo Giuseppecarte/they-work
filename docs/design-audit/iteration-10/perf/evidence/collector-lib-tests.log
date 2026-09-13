@@ -1,0 +1,35 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-7c24cd2786d1f4fd)
+
+running 28 tests
+test claude::correlation_tests::correlation_resource_replay ... ignored, bounded resource replay; use an isolated target/audit output directory
+test claude::pending::tests::conflicts_stay_ambiguous_and_complete_removal_frees_all_indices ... ok
+test claude::correlation_tests::resource_output_guard_rejects_overwrite_traversal_and_outside_locations ... ok
+test claude::pending::tests::ordinal_wrap_keeps_retirement_order_and_reset_releases_accounting ... ok
+test claude::pending::tests::count_limits_retire_oldest_observations_without_refreshing_duplicate_age ... ok
+test claude::tests::current_questions_keep_their_context_beyond_caption_length ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test codex_source::tests::ended_threads_leave_every_codex_runtime_map ... ok
+test claude::correlation_tests::replacement_worker_does_not_inherit_the_previous_workers_loss_or_correlation ... ok
+test tests::windows_profile_spellings_map_to_wsl_mounts ... ok
+test codex_source::tests::pending_requests_preserve_command_suffixes_and_mark_the_resource_limit ... ok
+test claude::correlation_tests::duplicate_and_conflicting_input_beyond_caption_limit_never_change_recipient_facts ... ok
+test claude::correlation_tests::background_launch_ack_keeps_correlation_for_an_explicit_late_completion ... ok
+test util::tests::normalizes_and_caps_details ... ok
+test util::tests::parses_utc_timestamp_to_epoch_millis ... ok
+test util::tests::normalizes_real_office_path_spellings ... ok
+test claude::pending::tests::byte_limits_count_full_ids_utf8_capacity_and_oversize_rejection ... ok
+test claude::correlation_tests::rewrite_and_disconnection_release_pending_state_without_erasing_history_loss ... ok
+test util::tests::project_key_finds_unmounted_repository_root ... ok
+test util::tests::terminal_controls_are_visible_and_inert_before_truncation ... ok
+test util::tests::windows_canonical_paths_and_wsl_linux_case_keep_project_identity ... ok
+test tests::recent_populated_candidate_wins_over_stale_candidate ... ok
+test claude::correlation_tests::oversized_id_keeps_activity_without_storing_or_misclassifying_results ... ok
+test util::tests::codex_recorded_project_survives_a_store_only_mount ... ok
+test claude::correlation_tests::retired_late_results_do_not_invent_activity_and_healthy_polls_preserve_losses ... ok
+test util::tests::unknown_paths_share_a_non_project_bucket ... ok
+test util::tests::project_hint_cannot_promote_home_or_codex_conversation ... ok
+test claude::pending::tests::aggregate_count_and_byte_pressure_cannot_be_bypassed_with_more_cursors ... ok
+
+test result: ok. 27 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 4.48s
+

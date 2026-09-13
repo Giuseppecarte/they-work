@@ -1,0 +1,128 @@
+[
+  {
+    "action": "SelectFloor(OfficeId(\"/projects/solo\"))",
+    "height": 11,
+    "width": 110,
+    "x": 0,
+    "y": 35
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/solo\"))",
+    "height": 1,
+    "width": 9,
+    "x": 101,
+    "y": 35
+  },
+  {
+    "action": "EnterFloor(OfficeId(\"/projects/solo\"))",
+    "height": 6,
+    "width": 7,
+    "x": 1,
+    "y": 39
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 5,
+    "width": 7,
+    "x": 48,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 5,
+    "width": 11,
+    "x": 48,
+    "y": 40
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 3,
+    "width": 5,
+    "x": 49,
+    "y": 42
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 3,
+    "width": 5,
+    "x": 54,
+    "y": 41
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 1,
+    "width": 5,
+    "x": 51,
+    "y": 43
+  },
+  {
+    "action": "Inspect(WorkerId(\"solo\"))",
+    "height": 1,
+    "width": 10,
+    "x": 48,
+    "y": 45
+  },
+  {
+    "action": "Tower",
+    "height": 1,
+    "width": 9,
+    "x": 0,
+    "y": 0
+  },
+  {
+    "action": "Attention",
+    "height": 1,
+    "width": 13,
+    "x": 10,
+    "y": 0
+  },
+  {
+    "action": "Deliveries",
+    "height": 1,
+    "width": 14,
+    "x": 24,
+    "y": 0
+  },
+  {
+    "action": "Find",
+    "height": 1,
+    "width": 10,
+    "x": 39,
+    "y": 0
+  },
+  {
+    "action": "NewTask",
+    "height": 1,
+    "width": 12,
+    "x": 50,
+    "y": 0
+  },
+  {
+    "action": "Connections",
+    "height": 1,
+    "width": 15,
+    "x": 63,
+    "y": 0
+  },
+  {
+    "action": "Close",
+    "height": 1,
+    "width": 8,
+    "x": 0,
+    "y": 79
+  },
+  {
+    "action": "Key(Char('s'))",
+    "height": 1,
+    "width": 12,
+    "x": 9,
+    "y": 79
+  },
+  {
+    "action": "Decorate(OfficeId(\"/projects/solo\"))",
+    "height": 1,
+    "width": 10,
+    "x": 22,
+    "y": 79
+  }
+]

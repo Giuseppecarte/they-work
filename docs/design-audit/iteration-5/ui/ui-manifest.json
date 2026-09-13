@@ -1,0 +1,131 @@
+{
+  "kind": "Ui TestBackend + exact physical RGBA + native mask; Menlo/Pillow replay, not a terminal screenshot",
+  "files": [
+    {
+      "path": "attention-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "0571afddcbe686617e31e90faf7f896109441aa3a710cbf67f03c7f0b99a767f"
+    },
+    {
+      "path": "attention-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "68f0558f88dc4bd61010ff3218e8e45d1108ce6db9770224161fd09f814a1c57"
+    },
+    {
+      "path": "attention-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "c9c9729be7b292beda86c40f241b39471ff4fd730c91573b8f8173a32b6ff6a3"
+    },
+    {
+      "path": "character-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "b5d2241ecdbd972cf4d3cf92bc5f69e4c3d6f37d06e9564c1e135178ed3ebeb7"
+    },
+    {
+      "path": "character-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "2b78630fffd924210270b086cd9a8784e2b529d6a452a1f50bb2e13a9d5e0a9c"
+    },
+    {
+      "path": "character-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "6dd9a8e572428f93d1a15569b5352f529d1edf77c8aa9b3a97a394373bb109d5"
+    },
+    {
+      "path": "connections-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "a1f0f07f8aa34ee4ffe564f2a26e813501fb0a2263fadd2aab583bd4621cf07d"
+    },
+    {
+      "path": "connections-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "39c84de9cffc61844ba3f422cf2b17b6522e4545f7de85f3ffc2a26bd442b9c0"
+    },
+    {
+      "path": "connections-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "a356711721e7195ae116cfabf250b376d8368274fe72c97e0c76bfb5b42ce971"
+    },
+    {
+      "path": "design-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "f69db03842dcad72857a97e0de575a521820bed1a2af2135d51cee3ac03c33ae"
+    },
+    {
+      "path": "design-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "559e8ac07f4c6f5ee0f2e3bd8507208bf70d39fe2f7ffda9dabd333469b236ab"
+    },
+    {
+      "path": "design-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "798adcebc72cec070156676d3096ed99f8e1aac8d74e03ff2dc9b2a6e1a7851b"
+    },
+    {
+      "path": "inspector-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "1b46712c2acf90169f5fd238854831c932ba6dde3c44a2475275f9d10eba585b"
+    },
+    {
+      "path": "inspector-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "3403226782bef96804faf9581832e93d438410034fced8091c684184e856777a"
+    },
+    {
+      "path": "inspector-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "ade88e8b295c0bd033fd557b132ac73a994f4d4ad1f27d26357a9c6b6fa208e4"
+    },
+    {
+      "path": "office-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "3b0fc2a5bcdc2b00a0441624e1ec76e41f74de25bf80f5e5a7a65270cccb45ee"
+    },
+    {
+      "path": "office-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "f989c042a409384bb69311153545ca8407d3443f6139d4cfb1acf98e10883331"
+    },
+    {
+      "path": "office-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "4374ca25bb2cefb53ccdfd336b4692c560afb3c2ce8b51e9b3b76b7a1f9d9464"
+    },
+    {
+      "path": "request-120x36.png",
+      "width": 960,
+      "height": 576,
+      "sha256": "f0d87e8439578eb47f413ad434f78bf2c510556c7958e523ee5c903c3cfa6d7c"
+    },
+    {
+      "path": "request-192x58.png",
+      "width": 1536,
+      "height": 928,
+      "sha256": "7670a1ced837936a8f48ca6fc8b5a1bef5363db826366f27cf42425c9d540774"
+    },
+    {
+      "path": "request-80x24.png",
+      "width": 640,
+      "height": 384,
+      "sha256": "a71ab98b6eae2d86e892cc102ddb5306fe52d29d7f2a70b0b4e0247edb42d02a"
+    }
+  ]
+}

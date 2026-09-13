@@ -1,0 +1,23 @@
+ 0 TOWER  no floors · / find · ? help
+[Tower] [Attention] [Deliveries] [Find] [New task] [Connections]
+
+ NEW TASK
+
+   Provider: codex  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-5-co
+
+ approval▏
+
+
+
+
+
+
+
+
+
+ [ Start task ] [ Back ]
+
+
+ Tab fields/buttons · Enter choose · Esc back

@@ -1,0 +1,37 @@
+{
+  "source_revision": "17ae09f85982b2e29c701fe47b7ce03fa34c488e",
+  "passed": true,
+  "evidence_kind": "container execution of extracted archives; not an actual WSL terminal",
+  "provider_stores_mounted": false,
+  "network": "none",
+  "root_filesystem": "read-only",
+  "extraction": "isolated tmpfs",
+  "platforms": {
+    "amd64": {
+      "passed": true,
+      "exit_code": 0,
+      "execution": "emulated",
+      "archive": {
+        "name": "they-work-x86_64-unknown-linux-musl.tar.gz",
+        "sha256": "c87ffe9484b6f319f683d2b6ce77f7170b1c693e71d2c7a888f6c13983717ae0",
+        "bytes": 3102600
+      },
+      "elapsed_seconds": 0.719,
+      "image_id": "sha256:336a056ac7fc78a7f4ca4dc532f44d8a764dec702c6c4006fa623f900e517b8d",
+      "log_sha256": "0f377e71574ebdb8a0780614d65fc9b32de6366d48a9be74290a45cbbf080969"
+    },
+    "arm64": {
+      "passed": true,
+      "exit_code": 0,
+      "execution": "daemon-native",
+      "archive": {
+        "name": "they-work-aarch64-unknown-linux-musl.tar.gz",
+        "sha256": "05d5288483e0175ef7490d79892afceb149f53b72e19ad472a8c0e0ceec82523",
+        "bytes": 2866486
+      },
+      "elapsed_seconds": 0.531,
+      "image_id": "sha256:4a4f56bfb00b4b4e7c3dff86123c2467db444306fc9137c2e909560c17580c9b",
+      "log_sha256": "6242d77e4d15cf228ffbe492fe348ea73579db6db2540dfda82b23da4f271ed7"
+    }
+  }
+}

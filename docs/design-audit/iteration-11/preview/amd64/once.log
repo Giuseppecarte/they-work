@@ -1,0 +1,14 @@
+$ /usr/local/bin/docker run --rm --platform linux/amd64 --network none --read-only --cap-drop ALL --security-opt no-new-privileges they-work-preview:iteration11-17ae09f85982-amd64 --demo --no-save --once
+they-work --once
+timestamp_ms=1789141470309
+projects=3 workers=6
+office=/home/dev/checkout workers=3
+  worker name="Timeout tests" agent=codex status=blocked waiting_on="Choose the public timeout: 30 or 60 seconds (demo)." idle_age=0s tokens=20836
+  worker name="Checkout lead" agent=codex status=running detail="Tests pass, pushing." activity=talking idle_age=0s tokens=12336
+  worker name="Retry endpoint" agent=codex status=idle activity=idle idle_age=0s tokens=16586
+office=/home/dev/website workers=2
+  worker name="Preview review" agent=claude status=blocked waiting_on="Approve publishing the preview to staging (fictional demo request)." idle_age=0s tokens=29336
+  worker name="Landing page" agent=claude status=running activity=thinking idle_age=0s tokens=25086
+office=/home/dev/infra workers=1
+  worker name="Integration checks" agent=claude status=failed detail="Integration checks failed: the demo database is unavailable." activity=error idle_age=0s tokens=33586
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.

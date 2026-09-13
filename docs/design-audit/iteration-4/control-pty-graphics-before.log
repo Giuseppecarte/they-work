@@ -1,0 +1,55 @@
+{
+  "binary_sha256": "c065bf20bd70cbd57327e267e8ce23ab47f63fbac81bfa1a66c8d5eeb6728c68",
+  "fixture_root": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-vq5a2dqk",
+  "real_provider_calls": 0,
+  "encoding": "controlled Kitty",
+  "ui-start-approval": {
+    "native_thread": "managed-1",
+    "native_turn": "turn-1",
+    "literal_project_and_prompt": true
+  },
+  "explicit-scoped-approval": {
+    "command_visible": "test-only-command",
+    "reply": {
+      "id": "approve-1",
+      "result": {
+        "decision": "accept"
+      }
+    }
+  },
+  "delegated-team-in-world": {
+    "people": 4,
+    "parent": "managed-2",
+    "children": [
+      "child-0",
+      "child-1"
+    ],
+    "children_observed_without_control": true,
+    "active_meeting_visible": true,
+    "resolved_approval_not_waiting": false
+  },
+  "native-console-roundtrip": {
+    "args": [
+      "--",
+      "native return; literal $(text)"
+    ],
+    "cwd": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-vq5a2dqk/vertical-project",
+    "source": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-4-control-pty/run-vq5a2dqk/claude",
+    "tty": true,
+    "canonical": true,
+    "echo": true
+  },
+  "terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  },
+  "close-reopen-no-replay": {
+    "supervisor_survived": true,
+    "turn_start_count": 2,
+    "same_provider_process": true
+  },
+  "reopened_terminal_exit": {
+    "exit": 0,
+    "terminal_restored": true
+  }
+}

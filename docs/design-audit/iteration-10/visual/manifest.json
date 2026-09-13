@@ -1,0 +1,2728 @@
+{
+  "automatic_pass": true,
+  "cases": [
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-32x14-8x16.hits.json",
+        "rgba": "inspector-now-image-32x14-8x16.rgba",
+        "text": "inspector-now-image-32x14-8x16.txt",
+        "text_sha256": "9423aa981b8cc6d38a5a90a58e7af21ed6434a903065a2f7115e7cefe87375a6",
+        "cells_sha256": "350ab3d463917bdcb52f3de04452110454c1c3d487719c5e74d39acec99d404f",
+        "hits_sha256": "965a12c14e2dc380a2d54510ec1ee54454c8c27fb974da102f252529333899d3",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": "Compact brief is the rendered fallback; Details was selected at80x24 before resizing and does not imply tabs are available at32x14.",
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Emergency view exposes request and Review separately; title clips and full history requires enlargement. No absent Details tab is advertised."
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-80x24-8x16.hits.json",
+        "rgba": "inspector-now-image-80x24-8x16.rgba",
+        "text": "inspector-now-image-80x24-8x16.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "f5feaae710e4e6f164daa90341e0eebdfbe261e9cc33bb3d367b78a8c16c43e1",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "4333dace06cf19239d563978f8716c3d0dbde7f07b89479c7508fbd044431733"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Task, current request, Editing observation and latest result are visible together; history notice does not replace Review."
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-light-80x24-8x16.hits.json",
+        "rgba": "inspector-now-light-80x24-8x16.rgba",
+        "text": "inspector-now-light-80x24-8x16.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "4923438bd788c0ebe1c11b5dd7990cd0818497cd19c7042be9b638997a4c4aad",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "c6769c70e5c454949ac74f22edfd5fe43a250da09f7c17b6b835fddd7c2730be"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-mono-80x24-8x16.hits.json",
+        "rgba": "inspector-now-mono-80x24-8x16.rgba",
+        "text": "inspector-now-mono-80x24-8x16.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "6919f6780893c51bc4ff2eac4168beda083cb8ec303b27cab3733b9e242cfc47",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-120x36-8x16.hits.json",
+        "rgba": "inspector-now-image-120x36-8x16.rgba",
+        "text": "inspector-now-image-120x36-8x16.txt",
+        "text_sha256": "24471ce6b3df257e2d82b28e71f25515667e2198d4d6b33b153a789c10e93145",
+        "cells_sha256": "2beca4d0739bd9b77520e2568b39c86592cec9bca5ee337a011f330e4a18e8f8",
+        "hits_sha256": "51873ac8e651065e8a4d4ef7f03babb85bfb1c94848bcedee9ef50ca002c8dee",
+        "rgba_sha256": "8aeadd3452dcd110e1bc82402ddf694bc38bbf3ff913cedfc783b7ceed9053a8"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-192x58-8x16.hits.json",
+        "rgba": "inspector-now-image-192x58-8x16.rgba",
+        "text": "inspector-now-image-192x58-8x16.txt",
+        "text_sha256": "d3c30d9c2f86b650a869934bc5a4c8d4493795561451ea88a07815125b61b0df",
+        "cells_sha256": "701a9dc471013b810c07d646086d3ace2a2f09b233443749cb5ccbde7d1cbc00",
+        "hits_sha256": "a89ca81f3ac59a5dd4c756c031c8e72107464288838b079ebfcccd1822b6f2fa",
+        "rgba_sha256": "0f1ebb7557ad54e4c1bf34bb873edd2732e56d22280a8040a47f427a31158528"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-110x80-8x16.hits.json",
+        "rgba": "inspector-now-image-110x80-8x16.rgba",
+        "text": "inspector-now-image-110x80-8x16.txt",
+        "text_sha256": "f6020e5b72233d1e34ca3789a072a9e567c77da09f611a23200b550a6d7e4b7c",
+        "cells_sha256": "dd9bf49cddb097c6c8c2c6326c1822566b5e132e0759476215d6980f2356f9b4",
+        "hits_sha256": "955b8efe89e0268fe69eccf9d9dd3e4fd32614c6ef375a9b1c8406d0b8f8120c",
+        "rgba_sha256": "d2471c4c1adb748e5a285b123449ded9c0a431a01af3860a223beff1fa353d7c"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-240x70-8x16.hits.json",
+        "rgba": "inspector-now-image-240x70-8x16.rgba",
+        "text": "inspector-now-image-240x70-8x16.txt",
+        "text_sha256": "20330c3d6c10bdc14a6ea32a3a58dd5466350b6cda16903dac1f419d4951609d",
+        "cells_sha256": "ab500a00962cd34500cde47c6cf12d75086b3e3656180edf58537e578615310d",
+        "hits_sha256": "743c6d794e14862e407cf4b167c78172a51806c8aeba4c38d04c9a2434f17829",
+        "rgba_sha256": "b5c685b9034bc8ad510a9700a42ec51c19aa65953a791aa0387896e541054dcf"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-32x14-8x16.hits.json",
+        "rgba": "inspector-details-image-32x14-8x16.rgba",
+        "text": "inspector-details-image-32x14-8x16.txt",
+        "text_sha256": "9423aa981b8cc6d38a5a90a58e7af21ed6434a903065a2f7115e7cefe87375a6",
+        "cells_sha256": "350ab3d463917bdcb52f3de04452110454c1c3d487719c5e74d39acec99d404f",
+        "hits_sha256": "965a12c14e2dc380a2d54510ec1ee54454c8c27fb974da102f252529333899d3",
+        "rgba_sha256": "4333dace06cf19239d563978f8716c3d0dbde7f07b89479c7508fbd044431733"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": "Compact brief is the rendered fallback; Details was selected at80x24 before resizing and does not imply tabs are available at32x14.",
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-80x24-8x16.hits.json",
+        "rgba": "inspector-details-image-80x24-8x16.rgba",
+        "text": "inspector-details-image-80x24-8x16.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "936eea6ad681261973026db1172e7e7a9976d37296f88063bfc4be384c54ffb8",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "4333dace06cf19239d563978f8716c3d0dbde7f07b89479c7508fbd044431733"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-light-80x24-8x16.hits.json",
+        "rgba": "inspector-details-light-80x24-8x16.rgba",
+        "text": "inspector-details-light-80x24-8x16.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "45d55572156376197150865d83bcca7f111e24385499e9fcbf405e21b8d6317e",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "c6769c70e5c454949ac74f22edfd5fe43a250da09f7c17b6b835fddd7c2730be"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-mono-80x24-8x16.hits.json",
+        "rgba": "inspector-details-mono-80x24-8x16.rgba",
+        "text": "inspector-details-mono-80x24-8x16.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "fbc7b9f7b91ddd41513f77ddfc44708e0bc97acaa2c4f390fd3f947b1f939fd1",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-120x36-8x16.hits.json",
+        "rgba": "inspector-details-image-120x36-8x16.rgba",
+        "text": "inspector-details-image-120x36-8x16.txt",
+        "text_sha256": "dc6ea406a8445a0f5f93f97a722bc11215e4f89d4db6cd0401718095d60cf566",
+        "cells_sha256": "aaf63ebe29580a2a4ec937e977bbd250470261cb7ce47b8bded590825f3b3adc",
+        "hits_sha256": "e5be135ca7c60643c2b41d4b2c26cce85ec372f5b1f38e37e22521205600b994",
+        "rgba_sha256": "8aeadd3452dcd110e1bc82402ddf694bc38bbf3ff913cedfc783b7ceed9053a8"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Side panel preserves office and pending worker signal; source facts scroll and Review stays visible."
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-192x58-8x16.hits.json",
+        "rgba": "inspector-details-image-192x58-8x16.rgba",
+        "text": "inspector-details-image-192x58-8x16.txt",
+        "text_sha256": "9a3339d76d47e17959624f99f0e4fd49a4dc6793111bc88ced4092c94e9b632c",
+        "cells_sha256": "3c0a7c4e58352917c8e4949ada8969c19d1c6c09afb2299c82b5b59b5397e07f",
+        "hits_sha256": "8e87bdfc4c264ac4501d0a1999f5e978c00f9586c3cb0452125909f773de0d0f",
+        "rgba_sha256": "0f1ebb7557ad54e4c1bf34bb873edd2732e56d22280a8040a47f427a31158528"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-110x80-8x16.hits.json",
+        "rgba": "inspector-details-image-110x80-8x16.rgba",
+        "text": "inspector-details-image-110x80-8x16.txt",
+        "text_sha256": "c77c9466a8eb8573d10f1cb3f6299e0a1167b0ec45b82029f8ef6420eac249c2",
+        "cells_sha256": "ccc7b3e1a6c901fae2474d5f8cb3ed058024521e8c6304418ea483e90e492073",
+        "hits_sha256": "5536eca574f720edf49465d7fc42d08a26e3e970d6608c1f238065339e56b143",
+        "rgba_sha256": "d2471c4c1adb748e5a285b123449ded9c0a431a01af3860a223beff1fa353d7c"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-240x70-8x16.hits.json",
+        "rgba": "inspector-details-image-240x70-8x16.rgba",
+        "text": "inspector-details-image-240x70-8x16.txt",
+        "text_sha256": "0d1af92e6c9dfec67d824644e7445f6d28cb5e6647c0b7e8c733ed61d581d1a7",
+        "cells_sha256": "e14c463df5f5dd9fa7042d3dc034f4be10e3148f2cea7aa4746e578f08c7cc49",
+        "hits_sha256": "f9e9760d0207acd1004c6ab2cf555343016f5af3ae14a53725ff670c728c8d9f",
+        "rgba_sha256": "b5c685b9034bc8ad510a9700a42ec51c19aa65953a791aa0387896e541054dcf"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-32x14-8x16.hits.json",
+        "rgba": "attention-image-32x14-8x16.rgba",
+        "text": "attention-image-32x14-8x16.txt",
+        "text_sha256": "fbdb333e056f1d371b40e33763bf7572d0e51e1f873fa6287c0a59c119aa2053",
+        "cells_sha256": "8d0799a420faa87bc037a251106efe42e8988a02773793e283796c666c341cb0",
+        "hits_sha256": "3143cd072b384d37570700c7d257cdfa1ee81514a65923866b31a03589317c8d",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-80x24-8x16.hits.json",
+        "rgba": "attention-image-80x24-8x16.rgba",
+        "text": "attention-image-80x24-8x16.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "243d77150536da348f1a860c18a23eec838880ea64be4bd809cdaf0bdcd8b4d8",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "7141a6cd3767ae4f312b6d822bc773368b4f55fe647bbb26c54cf7a5836b251a"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-light-80x24-8x16.hits.json",
+        "rgba": "attention-light-80x24-8x16.rgba",
+        "text": "attention-light-80x24-8x16.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "1b95d258e2c42d6e0726c50f736aeeabbd038b57e6d90ca2d4e2aeb3bf59b861",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "f02ce6162be4b5e35a033035bf6663dc71696ed66faca03f674062ee786d9d2d"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-mono-80x24-8x16.hits.json",
+        "rgba": "attention-mono-80x24-8x16.rgba",
+        "text": "attention-mono-80x24-8x16.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "598d1d814b76ede549c8c79930d95112f5b20590125252f76f26029c3a3ca7e1",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "attention-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-120x36-8x16.hits.json",
+        "rgba": "attention-image-120x36-8x16.rgba",
+        "text": "attention-image-120x36-8x16.txt",
+        "text_sha256": "8c6d6b8486aeb49a122df115d22f786fdca1fd2411d27ab0006f8d68de5a03b1",
+        "cells_sha256": "e7dcf7993027b38ad339498a732cbb3707a1cb28466d0a5cfc1da0adc9f576a7",
+        "hits_sha256": "feefd837bcdf00085dfa62282e6ab7224c46aa9eb6e5ecdb936cc74c2266432b",
+        "rgba_sha256": "386b18001859f42ef86ee0954590589a3be767556f04b32bf2fc87d83fce253d"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-192x58-8x16.hits.json",
+        "rgba": "attention-image-192x58-8x16.rgba",
+        "text": "attention-image-192x58-8x16.txt",
+        "text_sha256": "5797a27b8d3fadf81293d18dbd3ddd2cb13394d2d1fe3173f77c679d3a520cc3",
+        "cells_sha256": "f109ac96a39a5e862480bf7dbcca1395630e12dcc405a5cfc3a667c5ce7915f0",
+        "hits_sha256": "061c98d29a22715b251d95c8f128682076177ca91915fb714f668369938666ff",
+        "rgba_sha256": "3fb6696c477f5b6049df79846464ef14f83575374296c8e187497b69ecda14d0"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Current request and exact Review action remain visible; source event losses are not counted as missing approvals. Spare vertical space is an existing layout tradeoff."
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-110x80-8x16.hits.json",
+        "rgba": "attention-image-110x80-8x16.rgba",
+        "text": "attention-image-110x80-8x16.txt",
+        "text_sha256": "71207d3f157dd94247ea128e8bdad680c26692c57b0d7ec160e2d0a82c9bf426",
+        "cells_sha256": "e8b972ac20f4b646e7b386a89d3a90333598b8814d847f3295529524aa0e18e3",
+        "hits_sha256": "25e5666e68ece5948bf30c4b4a3e25e4b4e75b498f3e4066ae406e85aeb6cf7e",
+        "rgba_sha256": "cca0f9e5ef57e5f4a44d2cd69016a32877ba4dd5136c80727577bcb21bc249a4"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-240x70-8x16.hits.json",
+        "rgba": "attention-image-240x70-8x16.rgba",
+        "text": "attention-image-240x70-8x16.txt",
+        "text_sha256": "01a13ff075635418b482afe08e986412ce11aeff943533945783ee764315772c",
+        "cells_sha256": "69499f39c312701a28ccb14f25120cd38aac257297b64b1273a5b1d977eabaa7",
+        "hits_sha256": "eb588c36436469ffe753fed0851f812de6c3da31dd901af4ba99385ce1c00eb4",
+        "rgba_sha256": "0cb589a364883fff4a4a6a1fa1328234379199c51888c8074abde329cea8e573"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-32x14-8x16.hits.json",
+        "rgba": "deliveries-image-32x14-8x16.rgba",
+        "text": "deliveries-image-32x14-8x16.txt",
+        "text_sha256": "b54130394545819c96d97727b8a4f041be523e0f934e5fa234a6296dfa424f6a",
+        "cells_sha256": "5a9af5c16151697c252628752944b0df1dc9a98bf797bcf382d2f2375193e9f2",
+        "hits_sha256": "1bd6aa12b1b2a2d0af1f8321ada95f1217921c5a9611f0fae214494132fa4cd4",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-80x24-8x16.hits.json",
+        "rgba": "deliveries-image-80x24-8x16.rgba",
+        "text": "deliveries-image-80x24-8x16.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "e8480d63113de89dc5b0adccddede3359f9cd37cd6a1f1cb023d36666c40e358",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "ba4f9fe9f4939e74692894d414f58b3b1e1239ba7610ab8533b881ef40dcbbc9"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-light-80x24-8x16.hits.json",
+        "rgba": "deliveries-light-80x24-8x16.rgba",
+        "text": "deliveries-light-80x24-8x16.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "8837d3112feefeb950245ad95b0b7b9c42cfaa12d9c89aea1122b9acbf2c79a7",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "075cf64aad1c0576981022a244904cd2aa0c98a0e263eeb503a0b99a7c236b22"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-mono-80x24-8x16.hits.json",
+        "rgba": "deliveries-mono-80x24-8x16.rgba",
+        "text": "deliveries-mono-80x24-8x16.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "a22582a7064df24d5901600ca26e77cb58412285239eeccac1e9febfb06d02c6",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-120x36-8x16.hits.json",
+        "rgba": "deliveries-image-120x36-8x16.rgba",
+        "text": "deliveries-image-120x36-8x16.txt",
+        "text_sha256": "8eada20fec81da2d7c06af3c59bfa84b9a3c401b9d4b8f297da592e6898a035c",
+        "cells_sha256": "aff1143d53192766b4525f6416be2a1124ab40ed608ac260db8f3237df8db49c",
+        "hits_sha256": "5a080ca6f621619ef75a083ef4dd2a26726b5d6f069ed6d0bebe63a575145cbb",
+        "rgba_sha256": "18bc456e7a4ca9ed715a270d67d4bfff4317269d14484a4c14fc0a9b8414f5a7"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-192x58-8x16.hits.json",
+        "rgba": "deliveries-image-192x58-8x16.rgba",
+        "text": "deliveries-image-192x58-8x16.txt",
+        "text_sha256": "ddff7b5b26cb6efaf7894a33d0d3c28ab714925e4c14e21624092aa73519b219",
+        "cells_sha256": "6a9919b1d51c2ce57d9164db9bab6c51ac3f1013fbc2551b546246ff39306770",
+        "hits_sha256": "29c64e1a472ae3dae77dc83addfa4ecf1af99a69cfafd1a888aec3da791d57b9",
+        "rgba_sha256": "d2c7b78b7203845c7079cc68c1af9f86ce255c20fb5e6dd44aabc4c6b7495874"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-110x80-8x16.hits.json",
+        "rgba": "deliveries-image-110x80-8x16.rgba",
+        "text": "deliveries-image-110x80-8x16.txt",
+        "text_sha256": "73ebf3e0fa2525fbfe56e9a81ed5dcc2e534fbb28b276373f96738407fba3067",
+        "cells_sha256": "8870065871b3c91df4413446f37e70ba0e76d98935d9a74f12c13c9c47c98ac2",
+        "hits_sha256": "29da2ff2f0f05c81604c4960450f1529d816399371bb02455abf29be559a7c1b",
+        "rgba_sha256": "12bdab9b889fe87cacec92188708374e19286c9f859307db45c04dccb11353f6"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Recorded result and project survive in the tray; missing recipient says Not recorded. Local-retention and stream units are separate."
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-240x70-8x16.hits.json",
+        "rgba": "deliveries-image-240x70-8x16.rgba",
+        "text": "deliveries-image-240x70-8x16.txt",
+        "text_sha256": "53344edcaa44ada702b54fe2d6d9708c74f6cf46d69ce237adf31579eedfe0b5",
+        "cells_sha256": "2d301f16c146257892b5581b3de07cbb110a558ffedf97c30b037a0272ae4cd3",
+        "hits_sha256": "b3a4c35cb45a78b1b5d1dcf40499a1722e8d99e1ffd6bb8b3ec6bdc3090c7d3a",
+        "rgba_sha256": "b1e36ce8503425cac8855f7c31c6efc964f708ce00db7bdab271e486092a27a4"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-32x14-8x16.hits.json",
+        "rgba": "changes-image-32x14-8x16.rgba",
+        "text": "changes-image-32x14-8x16.txt",
+        "text_sha256": "05e028e9bc312069eea7d456b8dc6a3842c7015c2e3afd763fe45a70f87c52f0",
+        "cells_sha256": "808fa4d21b7133f44fe2808126ca4520f6088a782210261bcb43262e72ab3602",
+        "hits_sha256": "44bd41e289606466a9582b784743d54aa9edaa8c45eefa33f4d15c629ed4ba5a",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-80x24-8x16.hits.json",
+        "rgba": "changes-image-80x24-8x16.rgba",
+        "text": "changes-image-80x24-8x16.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "dcccb2717e58b8071d953665e985dd3aa0a16cb32d8106da153a0029649f7869",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "a6e73aafd0937987ae0c42defbfa1dbcfb328f259dda4f96709b4cf49254705b"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-light-80x24-8x16.hits.json",
+        "rgba": "changes-light-80x24-8x16.rgba",
+        "text": "changes-light-80x24-8x16.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "871afae7901d5c35b23b8caff94f5268ddd7eb441c7af57ae9e1f6337ee1d567",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "be869329fe3ac8eeff693865e9e9e37d61697a237a12e2cf0a6892e3d167dd0e"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-mono-80x24-8x16.hits.json",
+        "rgba": "changes-mono-80x24-8x16.rgba",
+        "text": "changes-mono-80x24-8x16.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "71a32d5b16c7e3b31db47f81348846d1eff4f1c6faffb3ca195388d0fa8c5c11",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "changes-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-120x36-8x16.hits.json",
+        "rgba": "changes-image-120x36-8x16.rgba",
+        "text": "changes-image-120x36-8x16.txt",
+        "text_sha256": "1eb0f8deacea3e2ae42eb14bb86abfc7f1e8afa00306c4c0fa13b380a5a54ef9",
+        "cells_sha256": "2772c89c06851df7cc3bb27c903a41c4483757d53266523f10feac03b13f670d",
+        "hits_sha256": "c33dec3eb3dfd52e6e53aeab12c845d0ffff1b86334aca400ca83bd0571d5b1c",
+        "rgba_sha256": "a608a0442bfedbfb6dc1705cbb28d2eb19ca91181ab7a6d6418676dcee1a307f"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-192x58-8x16.hits.json",
+        "rgba": "changes-image-192x58-8x16.rgba",
+        "text": "changes-image-192x58-8x16.txt",
+        "text_sha256": "ff3be07d59e1eb5daf89f98ebb18941c06e4ea6245461a60cd75175b729c25f4",
+        "cells_sha256": "f2adc942f1d9e71b77f5b08181f43cc44e6583b2fa8b8cf4efaedc596dabebce",
+        "hits_sha256": "30df6a742d3ce77bd5dea57a1b484955186a6ae5f410a793891e3836618946b1",
+        "rgba_sha256": "3493a7a489fda82f18979ead2a9a069f579ed22eb8eaa8dd3a24536d27f99f82"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-110x80-8x16.hits.json",
+        "rgba": "changes-image-110x80-8x16.rgba",
+        "text": "changes-image-110x80-8x16.txt",
+        "text_sha256": "8e0e67d2e531f91e496981830ed5405755139bba3bc69ba4aacc98959fbc94b0",
+        "cells_sha256": "56880a948a433b74fb93c1f1c9941372ddd2e9676c80069240e7a62a9b7a1991",
+        "hits_sha256": "4172fbb37b4c53905085ba588dd52b8d47b1cad583e0fe3bc1c7d82520c56678",
+        "rgba_sha256": "a95528fdc3b5f1c05552d5e1f00bf440271097aa6f87a6bf625ec28dac9d0477"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-240x70-8x16.hits.json",
+        "rgba": "changes-image-240x70-8x16.rgba",
+        "text": "changes-image-240x70-8x16.txt",
+        "text_sha256": "6d21e7526d624ae0fc9dc8a28a124fc07aeae9a9b1e6dacc382e05477e939f0d",
+        "cells_sha256": "6602fa3f5854addeefdfd602f06cfa2ec9f162e17b5ec8c001302cbee3dd490c",
+        "hits_sha256": "5dc1f83d19365ced9e5a1a6399fe595f42fb594b3c2c3d82567d8d6e4531c0f9",
+        "rgba_sha256": "ef960260ea929f5cef477d911b00dd9d67ddce88fa03455acb11846a542aa56f"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-32x14-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-32x14-8x16.hits.json",
+        "rgba": "coverage-image-32x14-8x16.rgba",
+        "text": "coverage-image-32x14-8x16.txt",
+        "text_sha256": "251a7d34d82790c3ecad422c148fcc7a7aceb0cbb40dcbdc27920e133fce7423",
+        "cells_sha256": "493b13a2896d0149beafc0bee2043af4ac64b55611995851bbb72716db04db99",
+        "hits_sha256": "a42f41cf8373fb1602b0ec6b40619fac9846db8cb166a5afe6f882e8268eaa12",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-32x14-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-80x24-8x16.hits.json",
+        "rgba": "coverage-image-80x24-8x16.rgba",
+        "text": "coverage-image-80x24-8x16.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "dc1fe8fb7d7aa3f042da140a9bbbfe8642fca70fb85b3a95b0f2fd70bf0102a2",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "868985e13cb67e0c788e46fd5b101d3daaf3aae8f0236966271958c96daa1477"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-80x24-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-light-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-light-80x24-8x16.hits.json",
+        "rgba": "coverage-light-80x24-8x16.rgba",
+        "text": "coverage-light-80x24-8x16.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "a7d2a46aee1f778c809d112d8156c2b8825211182a77f8c7b8294bfa38e6e9da",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "9b13b60dbbb46d88dbbfa8d938220132545743a6a3091e5d1903a4f15a57fcea"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-light-80x24-8x16",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-mono-80x24-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-mono-80x24-8x16.hits.json",
+        "rgba": "coverage-mono-80x24-8x16.rgba",
+        "text": "coverage-mono-80x24-8x16.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "fd7293ca6b8d9921ee1aec128c43062b843e376c3f1f5ffa20736151c6e13e51",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-mono-80x24-8x16",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Image-free report preserves boundaries, scope, separate units and keyboard Back/read controls without color."
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-120x36-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-120x36-8x16.hits.json",
+        "rgba": "coverage-image-120x36-8x16.rgba",
+        "text": "coverage-image-120x36-8x16.txt",
+        "text_sha256": "3ea48a83daf646c48319106ab1691896436b362542dbdf9162fffef121ddd5c4",
+        "cells_sha256": "06531a9f0828ba3a0bc973ddb42418046c4712cf4591439971ec6b61444d1c26",
+        "hits_sha256": "dab747e1c15e7c7becb7527658da24b4d38461b8d1e24ecbe106c569960aabb7",
+        "rgba_sha256": "cdf6925406cebdb0ce971b8aacb78799cfb815d620b88393b5df19d267b06b0f"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-120x36-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-192x58-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-192x58-8x16.hits.json",
+        "rgba": "coverage-image-192x58-8x16.rgba",
+        "text": "coverage-image-192x58-8x16.txt",
+        "text_sha256": "660adb57df2afc3dc96a98e1b84c0473128b1b5759e66b665a4e268e5cbbce3c",
+        "cells_sha256": "d0f2e3795b9da3ce1ebf2375a06e27c9230fe37fbe34600e19cf3490cfa14b2e",
+        "hits_sha256": "c63b4909c46f12ac6859af0b72a265d199c235a4cb0e53cbea2b8b1ffad30d47",
+        "rgba_sha256": "40c022fd137c10ad3d95ad8738f1306177023427af1104ae900dd00e7536d5b6"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-192x58-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-110x80-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-110x80-8x16.hits.json",
+        "rgba": "coverage-image-110x80-8x16.rgba",
+        "text": "coverage-image-110x80-8x16.txt",
+        "text_sha256": "1857e0976e35ce5f0ddc5182e3eaf4d27b883c1cd1c01742e20f6d59caa52516",
+        "cells_sha256": "59c73e36b902e2a45239f787ed9cdf21d73cae6a90d79fb8a652e782d82a547e",
+        "hits_sha256": "2fc7c5ca124a943df9ad5614359381acfc521155813499ddbafb88fbc33c5082",
+        "rgba_sha256": "c75c17dcdd8490ba64944ee26882d59a946a2d54e871370941eacb1a8d091d7f"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-110x80-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-240x70-8x16.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-240x70-8x16.hits.json",
+        "rgba": "coverage-image-240x70-8x16.rgba",
+        "text": "coverage-image-240x70-8x16.txt",
+        "text_sha256": "fe52a288aaada87348c5c7549245568a659e07e1b3cc26a99af7cef4eb7ec030",
+        "cells_sha256": "e2638f37269217f49d27cf3b5b7e9cecef6e21f510ff9bd6ece479a0f3d59d7c",
+        "hits_sha256": "9d0ce6d880a80764cfdccbee39be0e138459620cec85396c73fb6037d65c84a2",
+        "rgba_sha256": "c092fe1e783ef7e2880a6595c9f4e1683c6b5f2ed1bd7913ca17eba689225511"
+      },
+      "cell_pixels": [
+        8,
+        16
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-240x70-8x16",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-32x14-10x20.hits.json",
+        "rgba": "inspector-now-image-32x14-10x20.rgba",
+        "text": "inspector-now-image-32x14-10x20.txt",
+        "text_sha256": "9423aa981b8cc6d38a5a90a58e7af21ed6434a903065a2f7115e7cefe87375a6",
+        "cells_sha256": "7a89e7d0e73a546e74ff998cef92cf93117c98bcc3b4a09fa3e807926b8d766b",
+        "hits_sha256": "965a12c14e2dc380a2d54510ec1ee54454c8c27fb974da102f252529333899d3",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": "Compact brief is the rendered fallback; Details was selected at80x24 before resizing and does not imply tabs are available at32x14.",
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-80x24-10x20.hits.json",
+        "rgba": "inspector-now-image-80x24-10x20.rgba",
+        "text": "inspector-now-image-80x24-10x20.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "bf2ee99c4dd5ebf7dd92b1e58eca299b103fbf395a8834e8cebc032cc95de3ed",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "fdd624a33e4b75ffa9cb8373afcd4875d8b3ef2e5a58e41ac4c3c95f05909bd8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-light-80x24-10x20.hits.json",
+        "rgba": "inspector-now-light-80x24-10x20.rgba",
+        "text": "inspector-now-light-80x24-10x20.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "1c8e341fb91134c7ebbaac2173752d877544d870046f9f662d44bf686d541733",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "1ea961ef29a901a8521ea05141140fbd5e03f405a6caeb85f18de139054d2f5e"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-mono-80x24-10x20.hits.json",
+        "rgba": "inspector-now-mono-80x24-10x20.rgba",
+        "text": "inspector-now-mono-80x24-10x20.txt",
+        "text_sha256": "797ce02e514d2ee7641b5bcd9215261d5c24fdaa7af3e479cac54dcc3f745a6a",
+        "cells_sha256": "5d900bc51b101fb64b360d7a906ce207bb1609d583a5788946ad3e567820c990",
+        "hits_sha256": "bf2b28c2606db94a64133f8f5d2d1db28877c4a46dce1a3705d66c3b23a7efdc",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-120x36-10x20.hits.json",
+        "rgba": "inspector-now-image-120x36-10x20.rgba",
+        "text": "inspector-now-image-120x36-10x20.txt",
+        "text_sha256": "140c02f44235d76ec0a0c4bcdeee22b7a3369d863684fdeabb2bce5a1913f745",
+        "cells_sha256": "d2f243eb055f1ff4e24b774474fe6a15a86cc52b552889b5ed4cc5b2cdfa1f9c",
+        "hits_sha256": "d959359ae64e22c3082351b0679e80f5673e1e078f4c3cf8fc331a650ccdfe13",
+        "rgba_sha256": "40bf1d6b67af3a3a5f92a476aec8d9a18efe2fe5adad036edd81d916919bff5b"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-192x58-10x20.hits.json",
+        "rgba": "inspector-now-image-192x58-10x20.rgba",
+        "text": "inspector-now-image-192x58-10x20.txt",
+        "text_sha256": "48061b9db1e64d21ed7e22b3778e82e681bf3c19ac33fcde18ce989e50d14275",
+        "cells_sha256": "6a7db41c8417311bd00fdb8a56d13eac3bac0cd857503569814adf9154a6e8f5",
+        "hits_sha256": "8127ac19ae650498768cf79f013774eadd403f7e38c7a5062a8da7fc824009c5",
+        "rgba_sha256": "db46cf6b15710e2386341766498c2fb44319217881e3c851c6c770b053ac9bc8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-110x80-10x20.hits.json",
+        "rgba": "inspector-now-image-110x80-10x20.rgba",
+        "text": "inspector-now-image-110x80-10x20.txt",
+        "text_sha256": "a9fc6d79d0920e42d4a46dbaf9d4a51f7db7aa09594c1d2683bbb0865255754f",
+        "cells_sha256": "d80c853343685d5ce1bfb15f1174defb1a3bcaa58b4f394627c17b26f6ad43d4",
+        "hits_sha256": "c098a1dde9b704ad87e4d25a03771d5622d4dba72965eb3fae00ab2273f18e4d",
+        "rgba_sha256": "40e4bb658a2bdd92acea1c167aec4e22e60efe3e595b2a23fafd3df01b94324b"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-now-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-now-image-240x70-10x20.hits.json",
+        "rgba": "inspector-now-image-240x70-10x20.rgba",
+        "text": "inspector-now-image-240x70-10x20.txt",
+        "text_sha256": "e241e0deb80be4e50e4d29bb16c7229ec89ad8adb303c6687b09b47283ccce6c",
+        "cells_sha256": "876db542db8eaf672f794969452fe3d3785431694b642d1a7a2bd0ba0c3eefbb",
+        "hits_sha256": "356570e8c94bc418d75f52020c72231e02de7915b1d02155a64e677e1d3dcae0",
+        "rgba_sha256": "381f3846d6f0853088ced6966adf3167c7bd67319605ee104409f9b5f8eba7db"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-now-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "inspector-now",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-32x14-10x20.hits.json",
+        "rgba": "inspector-details-image-32x14-10x20.rgba",
+        "text": "inspector-details-image-32x14-10x20.txt",
+        "text_sha256": "9423aa981b8cc6d38a5a90a58e7af21ed6434a903065a2f7115e7cefe87375a6",
+        "cells_sha256": "7a89e7d0e73a546e74ff998cef92cf93117c98bcc3b4a09fa3e807926b8d766b",
+        "hits_sha256": "965a12c14e2dc380a2d54510ec1ee54454c8c27fb974da102f252529333899d3",
+        "rgba_sha256": "fdd624a33e4b75ffa9cb8373afcd4875d8b3ef2e5a58e41ac4c3c95f05909bd8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": "Compact brief is the rendered fallback; Details was selected at80x24 before resizing and does not imply tabs are available at32x14.",
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-80x24-10x20.hits.json",
+        "rgba": "inspector-details-image-80x24-10x20.rgba",
+        "text": "inspector-details-image-80x24-10x20.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "f2401b66e08b35275d79e2f07be2aa49ac22d41add8865b79789c439c323249b",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "fdd624a33e4b75ffa9cb8373afcd4875d8b3ef2e5a58e41ac4c3c95f05909bd8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-light-80x24-10x20.hits.json",
+        "rgba": "inspector-details-light-80x24-10x20.rgba",
+        "text": "inspector-details-light-80x24-10x20.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "cbd0bab43ff503770aedc26b71f15185edef600a7c8f634ac1314477af262379",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "1ea961ef29a901a8521ea05141140fbd5e03f405a6caeb85f18de139054d2f5e"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-mono-80x24-10x20.hits.json",
+        "rgba": "inspector-details-mono-80x24-10x20.rgba",
+        "text": "inspector-details-mono-80x24-10x20.txt",
+        "text_sha256": "a79aa76a4c66e57614d06c16457cc9ee9a7ab38274c9c55e3005e1962c983754",
+        "cells_sha256": "f12f8623a42862c273b94be292e0dfd2e37258ca465648339edeae580ca0079f",
+        "hits_sha256": "0c41ac12dd3a92382fd900f5d6d02e91cdd1caf95317296250dbacba002036f8",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-120x36-10x20.hits.json",
+        "rgba": "inspector-details-image-120x36-10x20.rgba",
+        "text": "inspector-details-image-120x36-10x20.txt",
+        "text_sha256": "1cd5687c826a02ff6bc36180d55de1fa6666ff108a7a4793824686285aa0755f",
+        "cells_sha256": "9ed1420d70e39ca85e9153c276bd35440ae4e950f9108f400b17f7ac357553fc",
+        "hits_sha256": "3956ba3781d55d3b916db2311c031c7000f17ea967ae6c91ff871c3e7164dd64",
+        "rgba_sha256": "40bf1d6b67af3a3a5f92a476aec8d9a18efe2fe5adad036edd81d916919bff5b"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-192x58-10x20.hits.json",
+        "rgba": "inspector-details-image-192x58-10x20.rgba",
+        "text": "inspector-details-image-192x58-10x20.txt",
+        "text_sha256": "dcb122538a7607fe907d48066f63338e4430bca211d85edb3689ec1362d0aa46",
+        "cells_sha256": "4600380a7f47bb243d6ffbfa8b84a3a2e4ad2b49594bc80e419ed53d8f00cbfc",
+        "hits_sha256": "4ddc46ce4559026608a4231797984450b6b5f46ca6db4c8426c45594cb59d552",
+        "rgba_sha256": "db46cf6b15710e2386341766498c2fb44319217881e3c851c6c770b053ac9bc8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-110x80-10x20.hits.json",
+        "rgba": "inspector-details-image-110x80-10x20.rgba",
+        "text": "inspector-details-image-110x80-10x20.txt",
+        "text_sha256": "691b1e4c733c650556ebeb2bc29ab7d0f6018c1ca526e05d0b43bbaeedbb171d",
+        "cells_sha256": "e943f472e0a21dfd572cb39122593cef9a945c099fda89db383a7d0b55f7967a",
+        "hits_sha256": "60d5f8516507c2064fcb99db47e0a0085c664fc6aa02699b566ddb3b6b7e6e5e",
+        "rgba_sha256": "40e4bb658a2bdd92acea1c167aec4e22e60efe3e595b2a23fafd3df01b94324b"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "inspector-details-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "inspector-details-image-240x70-10x20.hits.json",
+        "rgba": "inspector-details-image-240x70-10x20.rgba",
+        "text": "inspector-details-image-240x70-10x20.txt",
+        "text_sha256": "dbca49f4664234250c3aa48a8833da9986698c2941a3faa2a374087220c6e5a2",
+        "cells_sha256": "78192e1122587af12283d59d7867eece93aed2e354b1a84b8ba2f3eaef01beaf",
+        "hits_sha256": "b42af9c8f7cc2a29cc816e03febdf4819d283e578c499e6c4960b61c910db680",
+        "rgba_sha256": "381f3846d6f0853088ced6966adf3167c7bd67319605ee104409f9b5f8eba7db"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "inspector-details-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "inspector-details",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-32x14-10x20.hits.json",
+        "rgba": "attention-image-32x14-10x20.rgba",
+        "text": "attention-image-32x14-10x20.txt",
+        "text_sha256": "fbdb333e056f1d371b40e33763bf7572d0e51e1f873fa6287c0a59c119aa2053",
+        "cells_sha256": "ab1d16b3c331ba2b49cd303823a8fc111675a93aa95fdaccb4d0d1a931204485",
+        "hits_sha256": "3143cd072b384d37570700c7d257cdfa1ee81514a65923866b31a03589317c8d",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-80x24-10x20.hits.json",
+        "rgba": "attention-image-80x24-10x20.rgba",
+        "text": "attention-image-80x24-10x20.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "fd867e469300973579ee9ad03b16645ddabdf7ca50bd0845eb09cc981903e14c",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "e707f46f4cdd344b9373e70edd762b7f66b15e7ec68543051068de6a1cb1aa1d"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-light-80x24-10x20.hits.json",
+        "rgba": "attention-light-80x24-10x20.rgba",
+        "text": "attention-light-80x24-10x20.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "8af17ef20860bedc04c564978d2e632f9d691a9e7489848ab9550b60e2c484bb",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "8edb6a3c614fa88cca7c1b3b7eeaa6134b3f3d6bde5c2c3cf3f19cbc15487d50"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-mono-80x24-10x20.hits.json",
+        "rgba": "attention-mono-80x24-10x20.rgba",
+        "text": "attention-mono-80x24-10x20.txt",
+        "text_sha256": "50db4d736571dd3539107314b5aea165aa62d7c4a066f2a4e3a40a4d9733393d",
+        "cells_sha256": "acd616fc86cd49fd41edd38236f265cc48c1163dbd6e6567e8ecfeb39779e81f",
+        "hits_sha256": "ea4e2673aa203aade2845e9047a7e036582f47d2251f88a3b148ba0f3a7a4ae0",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "attention-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-120x36-10x20.hits.json",
+        "rgba": "attention-image-120x36-10x20.rgba",
+        "text": "attention-image-120x36-10x20.txt",
+        "text_sha256": "8c6d6b8486aeb49a122df115d22f786fdca1fd2411d27ab0006f8d68de5a03b1",
+        "cells_sha256": "b9c18f20a144daa85a749ad84cd37f01b172641c31697fdae29acca7dbb6a91e",
+        "hits_sha256": "feefd837bcdf00085dfa62282e6ab7224c46aa9eb6e5ecdb936cc74c2266432b",
+        "rgba_sha256": "933bf640e67a06663e2260d5d6b1e0ca25bdf70b69323b0a232f22d8a8ebf438"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-192x58-10x20.hits.json",
+        "rgba": "attention-image-192x58-10x20.rgba",
+        "text": "attention-image-192x58-10x20.txt",
+        "text_sha256": "5797a27b8d3fadf81293d18dbd3ddd2cb13394d2d1fe3173f77c679d3a520cc3",
+        "cells_sha256": "c5cb00f9b91b164308a51a09ea9ddea2dd8f7b70c70f66cb5e81cf5bc842c80e",
+        "hits_sha256": "061c98d29a22715b251d95c8f128682076177ca91915fb714f668369938666ff",
+        "rgba_sha256": "e37777b158968bc25364d1467266fc5639c064c188224be7b621a25d07960a63"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-110x80-10x20.hits.json",
+        "rgba": "attention-image-110x80-10x20.rgba",
+        "text": "attention-image-110x80-10x20.txt",
+        "text_sha256": "71207d3f157dd94247ea128e8bdad680c26692c57b0d7ec160e2d0a82c9bf426",
+        "cells_sha256": "c6d781479bbdb222945a037ae090bfc61d33cf8c8a89dc2204d24d5da3308db3",
+        "hits_sha256": "25e5666e68ece5948bf30c4b4a3e25e4b4e75b498f3e4066ae406e85aeb6cf7e",
+        "rgba_sha256": "cf1fba1ae8cdfeb51d3e0e011f33089d5ab7abe5a5eb1ecd6d119c3672364af3"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "attention-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "attention-image-240x70-10x20.hits.json",
+        "rgba": "attention-image-240x70-10x20.rgba",
+        "text": "attention-image-240x70-10x20.txt",
+        "text_sha256": "01a13ff075635418b482afe08e986412ce11aeff943533945783ee764315772c",
+        "cells_sha256": "a3daa8c68c3a2f1a7164241c18b3f02ab836bf484482a34a3ac60ae92d6052f3",
+        "hits_sha256": "eb588c36436469ffe753fed0851f812de6c3da31dd901af4ba99385ce1c00eb4",
+        "rgba_sha256": "d0cc2ea0526c053d64def99068c06fee9bb379080972ac20ea46014d3a2e94e3"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "attention-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "attention",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-32x14-10x20.hits.json",
+        "rgba": "deliveries-image-32x14-10x20.rgba",
+        "text": "deliveries-image-32x14-10x20.txt",
+        "text_sha256": "b54130394545819c96d97727b8a4f041be523e0f934e5fa234a6296dfa424f6a",
+        "cells_sha256": "8153d74711a5475f7dba18cb3f0ad50aa9e539d5f4fe3ebee79beae78fb29e74",
+        "hits_sha256": "1bd6aa12b1b2a2d0af1f8321ada95f1217921c5a9611f0fae214494132fa4cd4",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-80x24-10x20.hits.json",
+        "rgba": "deliveries-image-80x24-10x20.rgba",
+        "text": "deliveries-image-80x24-10x20.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "9fd6b35ed54befe22a6b2ed9bfc86b3f4d143a0f44e4e415d0c73331c46dd011",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "1d1fe5f62df90ce7aeae85314c34463ddfcc8f73b6c8bd8bebe0e5c7832660de"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-light-80x24-10x20.hits.json",
+        "rgba": "deliveries-light-80x24-10x20.rgba",
+        "text": "deliveries-light-80x24-10x20.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "2525f34d2125be4b9ba16875345e733e15a33815448b2658f033c3a0b0ddda4a",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "0603b3d499d85e6e641c2f0007b8338532edd60032a2869c4903391f780f6cd9"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-mono-80x24-10x20.hits.json",
+        "rgba": "deliveries-mono-80x24-10x20.rgba",
+        "text": "deliveries-mono-80x24-10x20.txt",
+        "text_sha256": "4904db148167ceed7e0bae9bff1170124d5804de1042ceea8c22680405911210",
+        "cells_sha256": "0074fce30d6b062ccec780cb33142d39f64d8e37c7c880a62b7ab40a55464001",
+        "hits_sha256": "3f8f93d72178d0e116a70beed45032937eab0ad52955cd98acb004a05ad2bcd3",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-120x36-10x20.hits.json",
+        "rgba": "deliveries-image-120x36-10x20.rgba",
+        "text": "deliveries-image-120x36-10x20.txt",
+        "text_sha256": "8eada20fec81da2d7c06af3c59bfa84b9a3c401b9d4b8f297da592e6898a035c",
+        "cells_sha256": "e4983ea208d2072263d7088d2ca59afb7937e50bc1e2152ff05e246a249b8873",
+        "hits_sha256": "5a080ca6f621619ef75a083ef4dd2a26726b5d6f069ed6d0bebe63a575145cbb",
+        "rgba_sha256": "de4f01293bca90ca839ef8fdcb8f8ec2a49aef50c398bc5972993daeae55d140"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-192x58-10x20.hits.json",
+        "rgba": "deliveries-image-192x58-10x20.rgba",
+        "text": "deliveries-image-192x58-10x20.txt",
+        "text_sha256": "ddff7b5b26cb6efaf7894a33d0d3c28ab714925e4c14e21624092aa73519b219",
+        "cells_sha256": "9bfee6e163632a4d6ba0eda3a3d0e67ee01fecee1ad788e7dbb07c165f53742f",
+        "hits_sha256": "29c64e1a472ae3dae77dc83addfa4ecf1af99a69cfafd1a888aec3da791d57b9",
+        "rgba_sha256": "4b95b1e6197d10b9b4803638991c5c0f8f0ec6b222af1592b4f4993a32748074"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-110x80-10x20.hits.json",
+        "rgba": "deliveries-image-110x80-10x20.rgba",
+        "text": "deliveries-image-110x80-10x20.txt",
+        "text_sha256": "73ebf3e0fa2525fbfe56e9a81ed5dcc2e534fbb28b276373f96738407fba3067",
+        "cells_sha256": "eea1a762292fc779c3c3329198f1ffee1857d4b5f5b32ba006140dabd99f3342",
+        "hits_sha256": "29da2ff2f0f05c81604c4960450f1529d816399371bb02455abf29be559a7c1b",
+        "rgba_sha256": "ccceb0524d98091644d2d0351dccb44c1a4504b6074b0c1ea692e785e2d83cfd"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "deliveries-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "deliveries-image-240x70-10x20.hits.json",
+        "rgba": "deliveries-image-240x70-10x20.rgba",
+        "text": "deliveries-image-240x70-10x20.txt",
+        "text_sha256": "53344edcaa44ada702b54fe2d6d9708c74f6cf46d69ce237adf31579eedfe0b5",
+        "cells_sha256": "29805ac9ada4c14df2e083903a7b89f0067b355e8f3f118edb06bbc09015bd41",
+        "hits_sha256": "b3a4c35cb45a78b1b5d1dcf40499a1722e8d99e1ffd6bb8b3ec6bdc3090c7d3a",
+        "rgba_sha256": "5e8a7220dbd9d900f2ef9c3904e8c680826e7e33e23a6194934aecd694fc52b1"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "deliveries-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "deliveries",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-32x14-10x20.hits.json",
+        "rgba": "changes-image-32x14-10x20.rgba",
+        "text": "changes-image-32x14-10x20.txt",
+        "text_sha256": "05e028e9bc312069eea7d456b8dc6a3842c7015c2e3afd763fe45a70f87c52f0",
+        "cells_sha256": "542117e5dde5da3ca93be18c5f84c3cf79cd210fa2287f66368bd9bde479200b",
+        "hits_sha256": "44bd41e289606466a9582b784743d54aa9edaa8c45eefa33f4d15c629ed4ba5a",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-80x24-10x20.hits.json",
+        "rgba": "changes-image-80x24-10x20.rgba",
+        "text": "changes-image-80x24-10x20.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "ecaf7fdc6678fa3668ea44aa99647a4b1ad480c6ee3195479ef3557d003ea58c",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "f5a52b0b1ec957eb68e358ab92c3c1b36fcfae70fc5c5d10356192c6cfc0d2f8"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-light-80x24-10x20.hits.json",
+        "rgba": "changes-light-80x24-10x20.rgba",
+        "text": "changes-light-80x24-10x20.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "4d1bf80a47a3984a168a455f5d5c3cf3012e193ce75b7cf7a578c95afbb76acb",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "7b278223b5997231ea3c09d58a191b1a6aec0be5dbc1c19a806a6d19dc8bb72d"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Selection and recorded-request wording remain legible without changing its historical authority; age is reserved in the list."
+    },
+    {
+      "artifacts": {
+        "cells": "changes-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-mono-80x24-10x20.hits.json",
+        "rgba": "changes-mono-80x24-10x20.rgba",
+        "text": "changes-mono-80x24-10x20.txt",
+        "text_sha256": "3cca4d9bb8f8322b8c3ad14fe4ef0abded22640ca138133b008312b08154aacb",
+        "cells_sha256": "784f47788163b5c8f86336c5cc579c62dc01664adf02cd677c6d1ec7836a04dc",
+        "hits_sha256": "04a0d7c090aafd6e4e5556ab90991ebb2eacb8fef7f0e38624bae54b04af6777",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "changes-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-120x36-10x20.hits.json",
+        "rgba": "changes-image-120x36-10x20.rgba",
+        "text": "changes-image-120x36-10x20.txt",
+        "text_sha256": "1eb0f8deacea3e2ae42eb14bb86abfc7f1e8afa00306c4c0fa13b380a5a54ef9",
+        "cells_sha256": "ddecfda779aaef06a6db6a78638c49329cb562feea6f9084da1414f2abf775ed",
+        "hits_sha256": "c33dec3eb3dfd52e6e53aeab12c845d0ffff1b86334aca400ca83bd0571d5b1c",
+        "rgba_sha256": "8b7a8e91c88723e2673be102cba1eff8602fd17e2c508920809c65eaca157a17"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-192x58-10x20.hits.json",
+        "rgba": "changes-image-192x58-10x20.rgba",
+        "text": "changes-image-192x58-10x20.txt",
+        "text_sha256": "ff3be07d59e1eb5daf89f98ebb18941c06e4ea6245461a60cd75175b729c25f4",
+        "cells_sha256": "1ae25827bc0cb09fde7b3ef01234bf30ece34c6769caeee197db3567945f1217",
+        "hits_sha256": "30df6a742d3ce77bd5dea57a1b484955186a6ae5f410a793891e3836618946b1",
+        "rgba_sha256": "7f5ba8e4c5b8720f3cfa89b8c012233edabb70f460d0b309eefed0258dca59e5"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-110x80-10x20.hits.json",
+        "rgba": "changes-image-110x80-10x20.rgba",
+        "text": "changes-image-110x80-10x20.txt",
+        "text_sha256": "8e0e67d2e531f91e496981830ed5405755139bba3bc69ba4aacc98959fbc94b0",
+        "cells_sha256": "a50340396b5bd44f25c71db859a504998c930629f01dd52f3aab79e1688ae7b5",
+        "hits_sha256": "4172fbb37b4c53905085ba588dd52b8d47b1cad583e0fe3bc1c7d82520c56678",
+        "rgba_sha256": "25e17c9cf09c688865f061c54442bdb00e206888f2ac59e9403a7967b408e04e"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "changes-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "changes-image-240x70-10x20.hits.json",
+        "rgba": "changes-image-240x70-10x20.rgba",
+        "text": "changes-image-240x70-10x20.txt",
+        "text_sha256": "6d21e7526d624ae0fc9dc8a28a124fc07aeae9a9b1e6dacc382e05477e939f0d",
+        "cells_sha256": "ac9c075c2b02ed5d5af5f13ddf7a95fa84a0c466dd81b02f3d46024c5b45ed6f",
+        "hits_sha256": "5dc1f83d19365ced9e5a1a6399fe595f42fb594b3c2c3d82567d8d6e4531c0f9",
+        "rgba_sha256": "3648c0fa6922d3b9d93bfda8623c636cbb83fa6f1c4618d64c846ee7697df2c5"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "changes-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "changes",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-32x14-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-32x14-10x20.hits.json",
+        "rgba": "coverage-image-32x14-10x20.rgba",
+        "text": "coverage-image-32x14-10x20.txt",
+        "text_sha256": "251a7d34d82790c3ecad422c148fcc7a7aceb0cbb40dcbdc27920e133fce7423",
+        "cells_sha256": "7e3c8e010b9ced23e0afd9299087cafff32969863d5c051b23230128aa27cda5",
+        "hits_sha256": "a42f41cf8373fb1602b0ec6b40619fac9846db8cb166a5afe6f882e8268eaa12",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 32,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-32x14-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 14,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-80x24-10x20.hits.json",
+        "rgba": "coverage-image-80x24-10x20.rgba",
+        "text": "coverage-image-80x24-10x20.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "39191ea8d5ed53e1093488aa832543ac42091b964f29aea5235c1a76b7a143f8",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "09694c0da39690690c74e516eae728b26078601b94ac930c2cd95758dc48e009"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-80x24-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-light-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-light-80x24-10x20.hits.json",
+        "rgba": "coverage-light-80x24-10x20.rgba",
+        "text": "coverage-light-80x24-10x20.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "698dd86d4ec50225467100bee47048cc36daea42ada58585a36f9c37e04e7618",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "3f1e3dac14b37748cbbf048968680aa6ae8c4e48ad10aaf2c46447a1d3770d46"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-light-80x24-10x20",
+      "mode": "light",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-mono-80x24-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-mono-80x24-10x20.hits.json",
+        "rgba": "coverage-mono-80x24-10x20.rgba",
+        "text": "coverage-mono-80x24-10x20.txt",
+        "text_sha256": "88ea5d6a86b86e3798a07e1837d0f116934e91965b3b7dff26f58f8a1a7bbd3b",
+        "cells_sha256": "b4af3329706195a95a3f8711b81089306d7e7aee459ed59b7566f530d5cdcae9",
+        "hits_sha256": "fcbee71bf0bf46c171f275c8672e814c541fa7b29c1e9a5ce5d305239330dde9",
+        "rgba_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 80,
+      "compact_limitation": null,
+      "effective_color": "None",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-mono-80x24-10x20",
+      "mode": "mono",
+      "route_reached": true,
+      "rows": 24,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-120x36-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-120x36-10x20.hits.json",
+        "rgba": "coverage-image-120x36-10x20.rgba",
+        "text": "coverage-image-120x36-10x20.txt",
+        "text_sha256": "3ea48a83daf646c48319106ab1691896436b362542dbdf9162fffef121ddd5c4",
+        "cells_sha256": "5261f39a7665f686c395caafc2ca835e411d4147b9782ffd2263f9706a877f4e",
+        "hits_sha256": "dab747e1c15e7c7becb7527658da24b4d38461b8d1e24ecbe106c569960aabb7",
+        "rgba_sha256": "315ff08fe2cd73cbf571ee5394f16045adae5407ef823986d1b816d12da355c6"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 120,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-120x36-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 36,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-192x58-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-192x58-10x20.hits.json",
+        "rgba": "coverage-image-192x58-10x20.rgba",
+        "text": "coverage-image-192x58-10x20.txt",
+        "text_sha256": "660adb57df2afc3dc96a98e1b84c0473128b1b5759e66b665a4e268e5cbbce3c",
+        "cells_sha256": "84bf569c4d33bb3895091c82f8d244b8122fda9b1b94116ab836f8d7280ef377",
+        "hits_sha256": "c63b4909c46f12ac6859af0b72a265d199c235a4cb0e53cbea2b8b1ffad30d47",
+        "rgba_sha256": "b035a4afebe7cc09c6ecb64263a199ed6517324548884ba7eabcc97b5961f113"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 192,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-192x58-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 58,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-110x80-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-110x80-10x20.hits.json",
+        "rgba": "coverage-image-110x80-10x20.rgba",
+        "text": "coverage-image-110x80-10x20.txt",
+        "text_sha256": "1857e0976e35ce5f0ddc5182e3eaf4d27b883c1cd1c01742e20f6d59caa52516",
+        "cells_sha256": "919442e9d8c20d02aefd52d0ce7bea6439b439ec4671eb4a0fbe401e7e142bfe",
+        "hits_sha256": "2fc7c5ca124a943df9ad5614359381acfc521155813499ddbafb88fbc33c5082",
+        "rgba_sha256": "df57191cc9ec01baf2fd132b7c0894023ffbea2a4e6037bd994b312420f31d99"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 110,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-110x80-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 80,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "not-tested"
+    },
+    {
+      "artifacts": {
+        "cells": "coverage-image-240x70-10x20.cells.json",
+        "hit_bounds": true,
+        "hits": "coverage-image-240x70-10x20.hits.json",
+        "rgba": "coverage-image-240x70-10x20.rgba",
+        "text": "coverage-image-240x70-10x20.txt",
+        "text_sha256": "fe52a288aaada87348c5c7549245568a659e07e1b3cc26a99af7cef4eb7ec030",
+        "cells_sha256": "5dd602c9044bece348ff8319fb0b118f968548cbb873447f20632303d7f0df47",
+        "hits_sha256": "9d0ce6d880a80764cfdccbee39be0e138459620cec85396c73fb6037d65c84a2",
+        "rgba_sha256": "b1d19d69d256323305279ed32ebbc586711d865ebb69812bf723e42a491ac26f"
+      },
+      "cell_pixels": [
+        10,
+        20
+      ],
+      "columns": 240,
+      "compact_limitation": null,
+      "effective_color": "TrueColor",
+      "effective_encoding": "Quadrants",
+      "id": "coverage-image-240x70-10x20",
+      "mode": "image",
+      "route_reached": true,
+      "rows": 70,
+      "surface": "coverage",
+      "terminal_transport": "not-tested",
+      "visual_review": "pass",
+      "visual_note": "Coverage identifies source-wide counts and separate local/tool losses; no project attribution is invented. Full replay displayed at2048x1195 for review; original is2400x1400."
+    }
+  ],
+  "fixed_time": 1000,
+  "fixture": {
+    "current_requests": 1,
+    "local_retention_evictions": 2,
+    "provider_stream_events_missing": 300,
+    "retained_collaboration_records": 512,
+    "tool_correlation": {
+      "evicted": 2,
+      "oversized": 1
+    }
+  },
+  "kind": "full Ui composition export",
+  "limitations": [
+    "Synthetic current request: no provider connection or command execution.",
+    "Mouse events select the Details tab; all other routes use keyboard events with redraw after each input.",
+    "Mono is an image-free native view.",
+    "These captures do not measure terminal transport, authenticated integration or user understanding."
+  ],
+  "motion": false,
+  "schema_version": 1,
+  "candidate": "4097e4f706faff924fbe71fb075ec469909746bf",
+  "command": "env -u NO_COLOR TERM=xterm-256color COLORTERM=truecolor THEYWORK_ENCODING=quadrants sh docs/design-audit/native-cargo.sh run --locked -p theywork-render --example coverage_inventory",
+  "source_output": "The unmodified exporter writes ignored target/audit/iteration-9/captures; fresh outputs were copied to target/audit/iteration-10/visual/raw. Historical tracked evidence was unchanged.",
+  "integrated_candidate": "7cb26e45e13de5fa9bfa3a3be7c2eeb59a1011c1",
+  "reuse_reason": "Only Docker cache preparation and its Python regression changed after export; all Rust source hashes and existing release binary match.",
+  "reviewed_complete_screens": 8,
+  "remaining_automatic_only": 88
+}

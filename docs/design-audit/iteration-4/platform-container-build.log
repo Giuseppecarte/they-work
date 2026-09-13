@@ -1,0 +1,91 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.79kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim
+#3 DONE 0.7s
+
+#2 [internal] load metadata for docker.io/library/rust:1.90.0-slim-bookworm
+#2 DONE 1.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 173B done
+#4 DONE 0.0s
+
+#5 [runtime 1/3] FROM docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+#5 resolve docker.io/library/debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171 0.0s done
+#5 DONE 0.0s
+
+#6 [build  1/13] FROM docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9
+#6 resolve docker.io/library/rust:1.90.0-slim-bookworm@sha256:64232e656c058f4468e8d024e990acff04f0fd5a5c0a88a574dc37773d7325c9 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 19.54MB 0.4s done
+#7 DONE 0.4s
+
+#8 [build 10/13] COPY crates/theywork-tui/Cargo.toml     crates/theywork-tui/
+#8 CACHED
+
+#9 [build  4/13] COPY Cargo.toml Cargo.lock* rust-toolchain.toml ./
+#9 CACHED
+
+#10 [build  8/13] COPY crates/theywork-terminal-image/Cargo.toml crates/theywork-terminal-image/
+#10 CACHED
+
+#11 [build  2/13] RUN apt-get update  && apt-get install -y --no-install-recommends gcc libc6-dev  && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [build  5/13] COPY crates/theywork-core/Cargo.toml    crates/theywork-core/
+#12 CACHED
+
+#13 [build  6/13] COPY crates/theywork-collect/Cargo.toml crates/theywork-collect/
+#13 CACHED
+
+#14 [build  7/13] COPY crates/theywork-control/Cargo.toml crates/theywork-control/
+#14 CACHED
+
+#15 [build  9/13] COPY crates/theywork-render/Cargo.toml  crates/theywork-render/
+#15 CACHED
+
+#16 [build  3/13] WORKDIR /src
+#16 CACHED
+
+#17 [build 11/13] RUN for c in core collect control terminal-image render tui; do       mkdir -p "crates/theywork-$c/src" &&       echo "" > "crates/theywork-$c/src/lib.rs";     done  && mkdir -p crates/theywork-tui/src  && echo "fn main() {}" > crates/theywork-tui/src/main.rs  && cargo build --release --locked
+#17 CACHED
+
+#18 [build 12/13] COPY . .
+#18 DONE 0.4s
+
+#19 [build 13/13] RUN find crates -name '*.rs' -exec touch {} +  && cargo build --release --locked --bin they-work
+#19 0.362    Compiling theywork-core v0.1.0 (/src/crates/theywork-core)
+#19 0.364    Compiling theywork-terminal-image v0.1.0 (/src/crates/theywork-terminal-image)
+#19 1.256    Compiling theywork-control v0.1.0 (/src/crates/theywork-control)
+#19 1.256    Compiling theywork-render v0.1.0 (/src/crates/theywork-render)
+#19 1.256    Compiling theywork-collect v0.1.0 (/src/crates/theywork-collect)
+#19 4.551    Compiling theywork-tui v0.1.0 (/src/crates/theywork-tui)
+#19 56.03     Finished `release` profile [optimized] target(s) in 55.75s
+#19 DONE 56.1s
+
+#20 [runtime 2/3] RUN useradd --create-home --uid 10001 watcher
+#20 CACHED
+
+#21 [runtime 3/3] COPY --from=build /src/target/release/they-work /usr/local/bin/they-work
+#21 DONE 0.0s
+
+#22 exporting to image
+#22 exporting layers
+#22 exporting layers 0.2s done
+#22 exporting manifest sha256:5d531e388b26bb539c3b7d41c122494e1bd1d82afbe79aa79fdc68c551cc40a3
+#22 exporting manifest sha256:5d531e388b26bb539c3b7d41c122494e1bd1d82afbe79aa79fdc68c551cc40a3 done
+#22 exporting config sha256:e7699f098bc9297c37f0dda50fac3d0f261f677e08cbb5f49262bcbb0fd55819 done
+#22 exporting attestation manifest sha256:25cd26c812c37b6c03a403d30a5ac1e0cf3a498b580693c4588e49be886f6cda done
+#22 exporting manifest list sha256:8b93a997382980fd4388170daf19398e3d4770b528a586c9ffb69e7cfb59db0d done
+#22 naming to docker.io/library/they-work:iteration4-platform done
+#22 unpacking to docker.io/library/they-work:iteration4-platform 0.0s done
+#22 DONE 0.3s

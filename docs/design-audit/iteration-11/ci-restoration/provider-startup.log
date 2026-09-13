@@ -1,0 +1,18 @@
+2026-09-13T19:11:03.3606608Z ---- approvals_require_current_request_and_single_action_decision stdout ----
+2026-09-13T19:11:03.3611972Z 
+2026-09-13T19:11:03.3612529Z thread 'approvals_require_current_request_and_single_action_decision' panicked at crates/theywork-control/tests/control.rs:119:9:
+2026-09-13T19:11:03.3617973Z state did not converge: ControlSnapshot { generation: "943b172a68a690e282918712d15efc3894a7acda7f1c6723efb047369c7b221d", connection_generation: "", codex_home: "/home/runner/work/they-work/they-work/target/control-tests/ad53a7e107d01e53e8894d4ef4bfe0299dab1823a4705d1b7bb578a4b0265021/home", connected: false, storage_recovery_required: false, observed_at: 1789326661027, provider_info: Null, threads: {}, pending_requests: [], events: [], event_window: Some(EventWindow { version: 1, stream_id: "a62ee1b883a26122844b002d4f8b3cbaf1173473f0bd3ade767645c3a952d8b8", first_retained_sequence: None, last_assigned_sequence: 0, prior_lineage_unknown: false }), operations: {"approval-start": OperationReceipt { id: "approval-start", status: Rejected, thread_id: None, turn_id: None, detail: "Provider acknowledgement timed out; do not resend", request_key: "{\"Start\":{\"project\":\"/home/runner/work/they-work/they-work/crates/theywork-control/../../target/control-tests/ad53a7e107d01e53e8894d4ef4bfe0299dab1823a4705d1b7bb578a4b0265021/project with spaces\",\"prompt\":\"approval\",\"operation_id\":\"approval-start\"}}" }}, last_error: None }
+2026-09-13T19:11:03.3623902Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:11:03.3624273Z 
+2026-09-13T19:11:03.3624286Z 
+2026-09-13T19:11:03.3624388Z failures:
+2026-09-13T19:11:03.3624741Z     approvals_require_current_request_and_single_action_decision
+2026-09-13T19:11:03.3625068Z 
+2026-09-13T19:11:03.3625380Z test result: FAILED. 12 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.87s
+2026-09-13T19:11:03.3625848Z 
+2026-09-13T19:11:03.3632317Z error: test failed, to rerun pass `-p theywork-control --test control`
+2026-09-13T19:11:03.3649964Z ##[error]Process completed with exit code 101.
+2026-09-13T19:11:03.3781219Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-13T19:11:03.3782340Z Post job cleanup.
+2026-09-13T19:11:03.4512093Z [command]/usr/bin/git version
+2026-09-13T19:11:03.4552039Z git version 2.55.0

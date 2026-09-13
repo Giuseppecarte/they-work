@@ -1,0 +1,36 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+beta-docs / Work brief
+
+ Kai Z.
+ Draft API guide
+ codex · Ready · 2s
+ Partial local history
+ [ Now ][ Activity ][ Team ][ Details ]
+
+ OBSERVED · 2s ago
+ Text update: NEW WHILE AWAY: API examples now include pagination.
+
+ LATEST RESULT · Kai Z.
+ NEW WHILE AWAY: API examples now include pagination.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ [ Task actions ] [ Expand ]
+ All shown · Esc back
+
+[ Back ] [ Settings ] [ Design ] Tab controls · ↑↓ read · e expand

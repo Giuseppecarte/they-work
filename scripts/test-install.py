@@ -2,6 +2,7 @@
 """Exercise the documented bootstrap and installer failure boundaries offline."""
 import os
 import pty
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -9,19 +10,22 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BOOTSTRAP = (ROOT / "INSTALL.md").read_text().split("~~~bash\n", 1)[1].split("~~~", 1)[0]
+BOOTSTRAP = (ROOT / "INSTALL.md").read_text().split("<!-- verified-docker-bootstrap -->", 1)[1].split("~~~bash\n", 1)[1].split("~~~", 1)[0]
 RELEASE_SCRIPT = (ROOT / "scripts/fixtures/install-v0.1.0.sh").read_bytes()
 
 
 class InstallFailures(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(prefix="they-work-install-test-")
+        scratch = ROOT / "target" / "installer-tests"
+        scratch.mkdir(parents=True, exist_ok=True)
+        self.tmp = tempfile.TemporaryDirectory(prefix="they-work-install-test-", dir=scratch)
         self.addCleanup(self.tmp.cleanup)
         self.base = Path(self.tmp.name)
         (self.base / "release.sh").write_bytes(RELEASE_SCRIPT)
         self.env = dict(os.environ, PATH=f"{self.base}:{os.environ['PATH']}",
                         INSTALL_TEST_DIR=str(self.base), INSTALL_TEST_MODE="valid",
-                        INSTALL_TEST_ERROR="denied", THEYWORK_IMAGE="example.invalid/test:missing")
+                        INSTALL_TEST_ERROR="denied", THEYWORK_IMAGE="example.invalid/test:missing",
+                        TMPDIR=str(self.base))
         self.mock("curl", '''#!/usr/bin/env python3
 import os, pathlib, sys
 base = pathlib.Path(os.environ["INSTALL_TEST_DIR"])
@@ -35,9 +39,12 @@ if mode == "truncated":
 pathlib.Path(sys.argv[sys.argv.index("-o") + 1]).write_bytes(payload)
 ''')
         self.mock("docker", '''#!/usr/bin/env python3
-import os, pathlib, sys
+import json, os, pathlib, sys
 base = pathlib.Path(os.environ["INSTALL_TEST_DIR"])
 (base / "docker-called").write_text(" ".join(sys.argv[1:]))
+(base / "docker-argv.json").write_text(json.dumps(sys.argv[1:]))
+if os.environ["INSTALL_TEST_MODE"] == "record":
+    sys.exit(0)
 if os.environ["INSTALL_TEST_MODE"] == "noninteractive_diagnostic":
     if sys.argv[1] == "pull":
         sys.exit(0)
@@ -142,6 +149,28 @@ sys.exit(17)
             invocation = (self.base / "docker-called").read_text()
             self.assertIn(argument, invocation)
             self.assertNotIn("-it", invocation)
+
+    def test_demo_never_mounts_existing_homes(self):
+        self.env.update(INSTALL_TEST_MODE="record", THEYWORK_CLAUDE_HOST=str(self.base),
+                        THEYWORK_CODEX_HOST=str(self.base))
+        result = self.run_script(["sh", str(ROOT / "docs/install.sh"), "--demo", "--once"])
+        self.assertEqual(result.returncode, 0)
+        invocation = json.loads((self.base / "docker-argv.json").read_text())
+        self.assertNotIn("--mount", invocation)
+        self.assertNotIn("-v", invocation)
+
+    def test_local_launcher_quotes_paths_and_skips_missing_homes(self):
+        source = self.base / "source with spaces"
+        source.mkdir()
+        missing = self.base / "missing"
+        self.env.update(INSTALL_TEST_MODE="record", THEYWORK_SKIP_PULL="1",
+                        THEYWORK_CLAUDE_HOST=str(source), THEYWORK_CODEX_HOST=str(missing))
+        result = self.run_script(["sh", str(ROOT / "docs/install.sh"), "--doctor"])
+        self.assertEqual(result.returncode, 0)
+        invocation = json.loads((self.base / "docker-argv.json").read_text())
+        self.assertEqual(invocation.count("--mount"), 1)
+        self.assertIn(f"type=bind,source={source},target=/data/claude,readonly", invocation)
+        self.assertFalse(missing.exists())
 
 
 if __name__ == "__main__":

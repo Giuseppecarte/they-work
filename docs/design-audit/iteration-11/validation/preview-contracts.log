@@ -1,0 +1,12 @@
+test_archive_retains_executable_bytes_and_mode (__main__.PreviewContracts.test_archive_retains_executable_bytes_and_mode) ... ok
+test_dynamic_linker_is_rejected (__main__.PreviewContracts.test_dynamic_linker_is_rejected) ... ok
+test_each_static_architecture_is_identified (__main__.PreviewContracts.test_each_static_architecture_is_identified) ... ok
+test_packaged_guide_has_its_record_and_local_contracts (__main__.PreviewContracts.test_packaged_guide_has_its_record_and_local_contracts) ... ok
+test_shared_library_dependency_is_rejected (__main__.PreviewContracts.test_shared_library_dependency_is_rejected) ... ok
+test_truncated_program_headers_are_rejected (__main__.PreviewContracts.test_truncated_program_headers_are_rejected) ... ok
+test_wrong_architecture_is_rejected (__main__.PreviewContracts.test_wrong_architecture_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.004s
+
+OK

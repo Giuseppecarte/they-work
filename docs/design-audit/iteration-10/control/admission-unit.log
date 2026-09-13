@@ -1,0 +1,14 @@
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.93s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_control-cdcd7915fcdbd0f9)
+
+running 4 tests
+test supervisor::admission_tests::failure_after_rename_keeps_restart_uncertain_when_rejection_cannot_be_saved ... ok
+test supervisor::admission_tests::permission_and_file_size_failures_reject_without_losing_fingerprint ... ok
+test supervisor::admission_tests::rejected_intent_is_saved_if_the_second_write_succeeds ... ok
+test supervisor::admission_tests::storage_fault_disables_live_authority_without_discarding_provider_state ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.20s
+

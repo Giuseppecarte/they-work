@@ -1,0 +1,13 @@
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.34s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_render-f4230b7ccf13dfb0)
+
+running 6 tests
+test views::tests::token_labels_use_human_units ... ok
+test views::tests::safe_display_replaces_controls_and_emoji ... ok
+test views::tests::opaque_paint_replaces_previous_symbols_and_background ... ok
+test views::tests::short_path_never_splits_utf8_and_respects_tiny_widths ... ok
+test views::tests::full_portrait_keeps_its_aspect_ratio_in_quadrant_cells ... ok
+test views::tests::phone_avatar_is_the_head_crop_of_the_office_sprite ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 111 filtered out; finished in 0.00s

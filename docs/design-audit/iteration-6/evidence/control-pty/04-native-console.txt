@@ -1,0 +1,35 @@
+[ Tower ] [ Attention ] [ Deliveries ] [ Search ] [ New task ] [ Connections ]
+vertical-project / Office
+
+ NEW TASK
+
+   Provider: claude  ←/→ change
+   Project:
+ /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-control-pty/run-dp8sdbyk/vertical-project
+ > Task instructions
+ native return; literal $(text)▏
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Sending to claude / /Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-control-pty/run-dp8sdb
+                                           they-work · official provider console. Exit or detach to return to the office
+.
+NATIVE_FIXTURE_READY: press Enter to return
+ Tab fields/buttons · Enter choose · Esc back

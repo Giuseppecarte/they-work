@@ -1,0 +1,15 @@
+{
+  "command": [
+    "make",
+    "check",
+    "CARGO=sh docs/design-audit/native-cargo.sh"
+  ],
+  "source_commit": "5fa7d55d89af9c407ea95327d8080322e2bef13e",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "exit_code": 0,
+  "elapsed_seconds": 113.024,
+  "passed": 422,
+  "failed_in_completed_groups": 0,
+  "ignored": 3,
+  "scope": "Pinned native Rust through the existing make check entry point; isolated provider sockets and PTYs; no authenticated providers"
+}

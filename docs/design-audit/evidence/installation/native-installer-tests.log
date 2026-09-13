@@ -1,0 +1,16 @@
+test_both_linux_and_macos_architectures_resolve_assets (__main__.NativeInstall.test_both_linux_and_macos_architectures_resolve_assets) ... ok
+test_checksum_failure_preserves_existing_install (__main__.NativeInstall.test_checksum_failure_preserves_existing_install) ... ok
+test_duplicate_checksum_rejected (__main__.NativeInstall.test_duplicate_checksum_rejected) ... ok
+test_existing_directory_cannot_be_reported_as_an_installed_binary (__main__.NativeInstall.test_existing_directory_cannot_be_reported_as_an_installed_binary) ... ok
+test_explicit_directory_works_without_home_environment (__main__.NativeInstall.test_explicit_directory_works_without_home_environment) ... ok
+test_macos_shasum_fallback_without_sha256sum (__main__.NativeInstall.test_macos_shasum_fallback_without_sha256sum) ... ok
+test_missing_release_has_actionable_failure (__main__.NativeInstall.test_missing_release_has_actionable_failure) ... ok
+test_symlink_binary_rejected (__main__.NativeInstall.test_symlink_binary_rejected) ... ok
+test_unexpected_archive_member_cannot_escape (__main__.NativeInstall.test_unexpected_archive_member_cannot_escape) ... ok
+test_unknown_architecture_and_bad_arguments_fail (__main__.NativeInstall.test_unknown_architecture_and_bad_arguments_fail) ... ok
+test_valid_archive_installs_executable_in_path_with_spaces (__main__.NativeInstall.test_valid_archive_installs_executable_in_path_with_spaces) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 4.620s
+
+OK

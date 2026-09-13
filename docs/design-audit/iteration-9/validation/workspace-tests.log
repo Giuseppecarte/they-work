@@ -1,0 +1,234 @@
+   Compiling theywork-core v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-core)
+   Compiling theywork-render v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-render)
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+   Compiling theywork-control v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-control)
+   Compiling theywork-tui v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-tui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.77s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-f81342928e821f0f)
+
+running 27 tests
+test claude::correlation_tests::background_launch_ack_keeps_correlation_for_an_explicit_late_completion ... ok
+test claude::correlation_tests::correlation_resource_replay ... ignored, bounded resource replay; use an isolated target/audit output directory
+test claude::correlation_tests::duplicate_and_conflicting_input_beyond_caption_limit_never_change_recipient_facts ... ok
+test claude::correlation_tests::oversized_id_keeps_activity_without_storing_or_misclassifying_results ... ok
+test claude::correlation_tests::replacement_worker_does_not_inherit_the_previous_workers_loss_or_correlation ... ok
+test claude::correlation_tests::retired_late_results_do_not_invent_activity_and_healthy_polls_preserve_losses ... ok
+test claude::correlation_tests::rewrite_and_disconnection_release_pending_state_without_erasing_history_loss ... ok
+test claude::pending::tests::aggregate_count_and_byte_pressure_cannot_be_bypassed_with_more_cursors ... ok
+test claude::pending::tests::byte_limits_count_full_ids_utf8_capacity_and_oversize_rejection ... ok
+test claude::pending::tests::conflicts_stay_ambiguous_and_complete_removal_frees_all_indices ... ok
+test claude::pending::tests::count_limits_retire_oldest_observations_without_refreshing_duplicate_age ... ok
+test claude::pending::tests::ordinal_wrap_keeps_retirement_order_and_reset_releases_accounting ... ok
+test claude::tests::current_questions_keep_their_context_beyond_caption_length ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test codex_source::tests::ended_threads_leave_every_codex_runtime_map ... ok
+test codex_source::tests::pending_requests_preserve_command_suffixes_and_mark_the_resource_limit ... ok
+test tests::recent_populated_candidate_wins_over_stale_candidate ... ok
+test tests::windows_profile_spellings_map_to_wsl_mounts ... ok
+test util::tests::codex_recorded_project_survives_a_store_only_mount ... ok
+test util::tests::normalizes_and_caps_details ... ok
+test util::tests::normalizes_real_office_path_spellings ... ok
+test util::tests::parses_utc_timestamp_to_epoch_millis ... ok
+test util::tests::project_hint_cannot_promote_home_or_codex_conversation ... ok
+test util::tests::project_key_finds_unmounted_repository_root ... ok
+test util::tests::terminal_controls_are_visible_and_inert_before_truncation ... ok
+test util::tests::unknown_paths_share_a_non_project_bucket ... ok
+test util::tests::windows_canonical_paths_and_wsl_linux_case_keep_project_identity ... ok
+
+test result: ok. 26 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.91s
+
+     Running tests/collaboration.rs (target/native-macos/debug/deps/collaboration-920cbd54bac89b94)
+
+running 10 tests
+test claude_background_launch_ack_is_not_a_delivery_and_late_child_resolves_the_original_event ... ok
+test claude_explicit_child_result_keeps_its_parent_as_recipient ... ok
+test claude_joins_nested_delegation_by_tool_id_and_does_not_promote_membership_to_parentage ... ok
+test claude_same_agent_ids_in_different_sessions_and_providers_remain_distinct ... ok
+test codex_archived_endpoints_are_graph_history_and_internal_tool_calls_do_not_leak_nodes ... ok
+test codex_reads_work_families_forks_and_correlated_events_without_internal_workers ... ok
+test codex_source_loss_marks_coverage_without_turn_completion_or_clock_refresh ... ok
+test codex_structural_provenance_supplies_parentage_when_edge_table_is_absent ... ok
+test codex_updates_same_timestamp_items_and_retains_removed_deliveries_without_writing_stores ... ok
+test old_worker_json_defaults_to_unknown_coverage_and_no_control_identity ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/collectors.rs (target/native-macos/debug/deps/collectors-092e2e69a8f21c61)
+
+running 23 tests
+test claude_carries_real_timestamps_and_accumulates_usage ... ok
+test claude_collapses_nested_workdirs_to_the_nearest_git_root ... ok
+test claude_keeps_one_worker_in_one_office_across_path_spellings ... ok
+test claude_maps_tools_text_turns_and_names ... ok
+test claude_recovers_from_home_gap_deletion_and_same_size_replacement ... ok
+test claude_tails_incrementally_rotates_and_discovers_sessions ... ok
+test claude_uses_file_mtime_for_all_untimestamped_lines_and_honors_recency ... ok
+test claude_uses_project_key_when_repository_is_unmounted ... ok
+test clean_wal_database_is_rejected_without_recreating_sidecars ... ok
+test codex_applies_configured_recency_bound ... ok
+test codex_database_symlinks_cannot_escape_the_configured_home ... ok
+test codex_groups_home_and_conversation_cwds_under_one_non_project_office ... ok
+test codex_hides_assessors_and_correlates_waiting_developers ... ok
+test codex_reads_roster_items_and_turn_state_incrementally ... ok
+test codex_recovers_after_replacement_schema_loss_and_wal_lock ... ok
+test cold_wal_snapshots_are_rejected_without_creating_shm ... ok
+test collector_acceptance_fixtures ... ok
+test collector_acceptance_live_when_homes_exist ... ignored, requires the live ~/.claude and ~/.codex stores
+test collectors_soak_for_hours_with_changing_stores ... ok
+test inspect_distinguishes_empty_homes_from_unreadable_stores ... ok
+test inspect_rejects_an_incomplete_codex_store ... ok
+test real_machine_smoke_when_homes_exist ... ignored, requires explicit opt-in to read live agent stores; use --doctor for diagnostics
+test sources_wires_existing_homes_and_skips_missing_ones ... ok
+
+test result: ok. 21 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 5.87s
+
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_control-3af7e422aac614fa)
+
+running 12 tests
+test state_storage::tests::ambiguous_publication_retains_one_candidate_and_blocks_every_writer ... ok
+test state_storage::tests::failed_replace_with_valid_state_can_retry_without_leaving_candidates ... ok
+test state_storage::tests::fresh_state_initializes_but_missing_established_state_never_resets ... ok
+test state_storage::tests::invalid_canonical_state_fails_without_selecting_a_valid_orphan ... ok
+test stream::tests::legacy_and_repaired_sequences_never_claim_known_prior_lineage ... ok
+test stream::tests::restart_rotates_lineage_but_live_empty_windows_keep_their_high_water_mark ... ok
+test stream::tests::sequence_exhaustion_rotates_lineage_without_reusing_a_sequence ... ok
+test supervisor::admission_tests::failure_after_rename_keeps_restart_uncertain_when_rejection_cannot_be_saved ... ok
+test supervisor::admission_tests::permission_and_file_size_failures_reject_without_losing_fingerprint ... ok
+test supervisor::admission_tests::rejected_intent_is_saved_if_the_second_write_succeeds ... ok
+test supervisor::tests::permission_replies_cannot_expand_paths_network_or_lifetime ... ok
+test supervisor::tests::structured_reply_rejects_other_question_ids_and_nontext_answers ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+     Running tests/control.rs (target/native-macos/debug/deps/control-bbc09c8d07ecb9ce)
+
+running 13 tests
+test approval_resolution_snapshots_release_waiting_and_a_new_request_blocks_again ... ok
+test approvals_require_current_request_and_single_action_decision ... FAILED
+test cancelled_turn_clears_approvals_and_external_ids_have_no_authority ... FAILED
+test closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt ... FAILED
+test complete_and_disconnected_turns_do_not_stay_controllable_as_working ... FAILED
+test connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start ... FAILED
+test data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage ... FAILED
+test data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage ... FAILED
+test explicit_delegations_create_three_people_and_results_without_granting_child_control ... FAILED
+test owner_permissions_token_authentication_and_source_binding_are_enforced ... FAILED
+test storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once ... FAILED
+test supervisor_process_entry ... ok
+test uncertain_send_is_durable_and_restart_never_replays_or_reconnects ... FAILED
+
+failures:
+
+---- approvals_require_current_request_and_single_action_decision stdout ----
+
+thread 'approvals_require_current_request_and_single_action_decision' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- cancelled_turn_clears_approvals_and_external_ids_have_no_authority stdout ----
+
+thread 'cancelled_turn_clears_approvals_and_external_ids_have_no_authority' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt stdout ----
+
+thread 'closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- complete_and_disconnected_turns_do_not_stay_controllable_as_working stdout ----
+
+thread 'complete_and_disconnected_turns_do_not_stay_controllable_as_working' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start stdout ----
+
+thread 'connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start' panicked at crates/theywork-control/tests/control.rs:749:85:
+called `Result::unwrap()` on an `Err` value: Control host exited during startup (exit status: 101)
+
+---- data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage stdout ----
+
+thread 'data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage stdout ----
+
+thread 'data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- explicit_delegations_create_three_people_and_results_without_granting_child_control stdout ----
+
+thread 'explicit_delegations_create_three_people_and_results_without_granting_child_control' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- owner_permissions_token_authentication_and_source_binding_are_enforced stdout ----
+
+thread 'owner_permissions_token_authentication_and_source_binding_are_enforced' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once stdout ----
+
+thread 'storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+---- uncertain_send_is_durable_and_restart_never_replays_or_reconnects stdout ----
+
+thread 'uncertain_send_is_durable_and_restart_never_replays_or_reconnects' panicked at crates/theywork-control/tests/control.rs:60:17:
+fixture host failed exit status: 101: 
+thread 'supervisor_process_entry' panicked at crates/theywork-control/tests/control.rs:105:64:
+called `Result::unwrap()` on an `Err` value: Operation not permitted (os error 1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+
+failures:
+    approvals_require_current_request_and_single_action_decision
+    cancelled_turn_clears_approvals_and_external_ids_have_no_authority
+    closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interrupt
+    complete_and_disconnected_turns_do_not_stay_controllable_as_working
+    connect_or_spawn_detaches_one_host_and_reuses_it_without_replaying_start
+    data_stream_process::real_provider_bursts_preserve_exact_gaps_requests_and_restart_as_unknown_lineage
+    data_stream_process::restart_from_stale_saved_tail_never_reuses_the_exposed_live_lineage
+    explicit_delegations_create_three_people_and_results_without_granting_child_control
+    owner_permissions_token_authentication_and_source_binding_are_enforced
+    storage_failure_rejects_concurrent_clients_then_explicit_new_submission_sends_once
+    uncertain_send_is_durable_and_restart_never_replays_or_reconnects
+
+test result: FAILED. 2 passed; 11 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+
+error: test failed, to rerun pass `-p theywork-control --test control`

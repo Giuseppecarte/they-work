@@ -1,0 +1,8 @@
+{"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "they_work", "title": "They Work", "version": "0.1.0"}}}
+{"method": "initialized", "params": {}}
+{"id": 2, "method": "thread/start", "params": {"approvalPolicy": "on-request", "cwd": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-control-pty/run-dp8sdbyk/vertical-project", "sandbox": "workspace-write"}}
+{"id": 3, "method": "turn/start", "params": {"input": [{"text": "approval", "type": "text"}], "threadId": "managed-1"}}
+{"id": "approve-1", "result": {"decision": "accept"}}
+{"id": 4, "method": "thread/start", "params": {"approvalPolicy": "on-request", "cwd": "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/iteration-6-control-pty/run-dp8sdbyk/vertical-project", "sandbox": "workspace-write"}}
+{"id": 5, "method": "turn/start", "params": {"input": [{"text": "working", "type": "text"}], "threadId": "managed-2"}}
+{"id": 6, "method": "turn/steer", "params": {"expectedTurnId": "turn-2", "input": [{"text": "Keep the recipient; literal $(text)", "type": "text"}], "threadId": "managed-2"}}

@@ -1,0 +1,23 @@
+   Compiling theywork-collect v0.1.0 (/Users/gc/Documents/Programming/they-work/crates/theywork-collect)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.77s
+     Running unittests src/lib.rs (target/native-macos/debug/deps/theywork_collect-7c24cd2786d1f4fd)
+
+running 15 tests
+test claude::correlation_tests::correlation_resource_replay ... ignored, bounded resource replay; use an isolated target/audit output directory
+test claude::pending::tests::conflicts_stay_ambiguous_and_complete_removal_frees_all_indices ... ok
+test claude::correlation_tests::resource_output_guard_rejects_overwrite_traversal_and_outside_locations ... ok
+test claude::pending::tests::count_limits_retire_oldest_observations_without_refreshing_duplicate_age ... ok
+test claude::correlation_tests::background_launch_ack_keeps_correlation_for_an_explicit_late_completion ... ok
+test claude::pending::tests::byte_limits_count_full_ids_utf8_capacity_and_oversize_rejection ... ok
+test claude::pending::tests::ordinal_wrap_keeps_retirement_order_and_reset_releases_accounting ... ok
+test claude::correlation_tests::rewrite_and_disconnection_release_pending_state_without_erasing_history_loss ... ok
+test claude::correlation_tests::replacement_worker_does_not_inherit_the_previous_workers_loss_or_correlation ... ok
+test claude::tests::ended_files_leave_every_claude_runtime_cache ... ok
+test claude::tests::current_questions_keep_their_context_beyond_caption_length ... ok
+test claude::correlation_tests::duplicate_and_conflicting_input_beyond_caption_limit_never_change_recipient_facts ... ok
+test claude::correlation_tests::oversized_id_keeps_activity_without_storing_or_misclassifying_results ... ok
+test claude::correlation_tests::retired_late_results_do_not_invent_activity_and_healthy_polls_preserve_losses ... ok
+test claude::pending::tests::aggregate_count_and_byte_pressure_cannot_be_bypassed_with_more_cursors ... ok
+
+test result: ok. 14 passed; 0 failed; 1 ignored; 0 measured; 13 filtered out; finished in 3.21s
+

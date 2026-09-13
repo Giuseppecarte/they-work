@@ -206,7 +206,7 @@ fn discovery_plan(agent: Agent, env: &str, mount: &str, home_rel: &str) -> Disco
         );
     }
     if let Some(profile) = std::env::var_os("USERPROFILE") {
-        if let Some(path) = windows_path_to_unix(&profile) {
+        if let Some(path) = windows_path_to_unix(&profile).filter(|_| !cfg!(windows)) {
             let kind = DiscoveryKind::WslCrossover;
             add_candidate(
                 &mut candidates,
@@ -333,18 +333,8 @@ fn candidate_quality(agent: Agent, path: &Path) -> u8 {
             }
         }
         Agent::Codex => {
-            let sqlite = path.join("sqlite");
-            let Ok(sqlite_metadata) = fs::symlink_metadata(&sqlite) else {
-                return 2;
-            };
-            if sqlite_metadata.file_type().is_symlink()
-                || !sqlite_metadata.is_dir()
-                || !metadata_allows_read(&sqlite_metadata)
-            {
-                return 1;
-            }
-            let state = sqlite.join("state_5.sqlite");
-            let history = sqlite.join("thread_history_1.sqlite");
+            let state = CodexSource::database_path(path, "state_5.sqlite");
+            let history = CodexSource::database_path(path, "thread_history_1.sqlite");
             if ![&state, &history].iter().all(|path| {
                 fs::symlink_metadata(path)
                     .is_ok_and(|metadata| !metadata.file_type().is_symlink() && metadata.is_file())
@@ -377,8 +367,8 @@ fn candidate_activity(agent: Agent, path: &Path) -> u128 {
         Agent::Codex => [
             path.to_path_buf(),
             path.join("sqlite"),
-            path.join("sqlite/state_5.sqlite"),
-            path.join("sqlite/thread_history_1.sqlite"),
+            CodexSource::database_path(path, "state_5.sqlite"),
+            CodexSource::database_path(path, "thread_history_1.sqlite"),
         ]
         .iter()
         .filter_map(|path| {
@@ -445,6 +435,7 @@ fn metadata_allows_read(metadata: &fs::Metadata) -> bool {
     }
     #[cfg(not(unix))]
     {
+        let _ = metadata;
         true
     }
 }
@@ -587,7 +578,7 @@ impl Config {
     }
 }
 
-/// Build every collector that has something to read.
+/// Watch each configured home, including an installation with no sessions yet.
 ///
 /// A missing agent home is not an error: plenty of people run only one of the
 /// two agents.
@@ -605,7 +596,7 @@ pub fn sources(cfg: &Config) -> Vec<Box<dyn Source>> {
     }
 
     if let Some(home) = cfg.codex_home.as_deref() {
-        if CodexSource::sqlite_exists(home) {
+        if CodexSource::home_exists(home) {
             sources.push(Box::new(CodexSource::with_paths_and_active_within(
                 home.to_path_buf(),
                 cfg.only_paths.clone(),
@@ -621,12 +612,22 @@ pub fn sources(cfg: &Config) -> Vec<Box<dyn Source>> {
 /// read-only SQLite connections. The result includes missing homes so a
 /// setup check can explain what it looked for.
 pub fn inspect(cfg: &Config, now: Millis) -> Vec<StoreReport> {
+    inspect_config(cfg, now, false)
+}
+
+/// Inspect only enabled sources, without opening a disabled provider's data.
+pub fn inspect_selected(cfg: &Config, now: Millis) -> Vec<StoreReport> {
+    inspect_config(cfg, now, true)
+}
+
+fn inspect_config(cfg: &Config, now: Millis, selected_only: bool) -> Vec<StoreReport> {
     let selections = discovery_selections();
     [
         (Agent::Claude, cfg.claude_home.as_ref()),
         (Agent::Codex, cfg.codex_home.as_ref()),
     ]
     .into_iter()
+    .filter(|(_, configured)| !selected_only || configured.is_some())
     .map(|(agent, configured)| {
         let discovered = selections
             .iter()
@@ -698,7 +699,21 @@ mod tests {
     }
 
     fn set_modified(path: &Path, millis: u64) {
-        fs::File::open(path)
+        let mut options = fs::OpenOptions::new();
+        options.read(true);
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::OpenOptionsExt;
+            const FILE_WRITE_ATTRIBUTES: u32 = 0x0100;
+            const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+            // These synthetic files and directories need metadata-only write
+            // access; opening a directory also requires backup semantics.
+            options
+                .access_mode(FILE_WRITE_ATTRIBUTES)
+                .custom_flags(FILE_FLAG_BACKUP_SEMANTICS);
+        }
+        options
+            .open(path)
             .expect("open fixture path")
             .set_modified(UNIX_EPOCH + Duration::from_millis(millis))
             .expect("set fixture mtime");

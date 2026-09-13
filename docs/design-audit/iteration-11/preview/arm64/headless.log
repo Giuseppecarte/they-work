@@ -1,0 +1,8 @@
+$ /usr/local/bin/docker run --rm --platform linux/arm64 --network none --read-only --cap-drop ALL --security-opt no-new-privileges they-work-preview:iteration11-17ae09f85982-arm64 --demo --no-save --headless --exit-after 100ms
+they-work --headless
+target_fps=10 effective_fps=19.62 frame_ms=100 poll_interval_ms=1000 exit_after_ms=100 elapsed_ms=101 frames=2 polls=0 events=0 poll_errors=0
+roster initial_offices=3 final_offices=3 office_min=3 office_max=3 initial_workers=6 final_workers=6 worker_min=6 worker_max=6 changes=0 joined=0 left=0 unique_workers=6
+rss_before_bytes=1015808
+rss_after_initial_scan_bytes=1609728
+rss_after_bytes=1884160
+cpu_seconds=0.000 cpu_average_percent=0.000

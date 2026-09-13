@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/gc/Documents/Programming/they-work/target/audit/iteration-10/study-checkout/docs/design-audit/iteration-8/study/preflight.py", line 14, in <module>
+    from PIL import Image
+  File "/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/python/PIL/Image.py", line 95, in <module>
+    from . import _imaging as core
+ImportError: cannot import name '_imaging' from 'PIL' (/Users/gc/Documents/Programming/they-work/docs/design-audit/tmp/python/PIL/__init__.py)

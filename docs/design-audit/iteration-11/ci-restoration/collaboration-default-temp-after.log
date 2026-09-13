@@ -1,0 +1,16 @@
+TMPDIR=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/
+
+running 10 tests
+test claude_background_launch_ack_is_not_a_delivery_and_late_child_resolves_the_original_event ... ok
+test claude_explicit_child_result_keeps_its_parent_as_recipient ... ok
+test claude_joins_nested_delegation_by_tool_id_and_does_not_promote_membership_to_parentage ... ok
+test claude_same_agent_ids_in_different_sessions_and_providers_remain_distinct ... ok
+test codex_archived_endpoints_are_graph_history_and_internal_tool_calls_do_not_leak_nodes ... ok
+test codex_reads_work_families_forks_and_correlated_events_without_internal_workers ... ok
+test codex_source_loss_marks_coverage_without_turn_completion_or_clock_refresh ... ok
+test codex_structural_provenance_supplies_parentage_when_edge_table_is_absent ... ok
+test codex_updates_same_timestamp_items_and_retains_removed_deliveries_without_writing_stores ... ok
+test old_worker_json_defaults_to_unknown_coverage_and_no_control_identity ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

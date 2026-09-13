@@ -31,7 +31,13 @@ impl TempDir {
             std::process::id()
         ));
         fs::create_dir_all(&path).unwrap();
-        Self { path }
+        // Preserve the collector's SQLite NOFOLLOW boundary even when the
+        // system temporary directory itself has a symlink spelling (macOS
+        // /var -> /private/var). Symlink fixtures below still create their own
+        // deliberate links inside this real directory.
+        Self {
+            path: fs::canonicalize(path).unwrap(),
+        }
     }
 
     fn path(&self) -> &Path {

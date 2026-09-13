@@ -27,6 +27,9 @@ The application-only candidate `92c26ba` passed both its
 The restored native matrix must be assessed from its own run on the new commit;
 those earlier checks did not execute the native jobs. Public release execution
 and real-terminal certification remain separate from a passing CI build.
+The [native CI review](CI-RESTORATION.md) records failures exposed by the first
+matrix, their corrections and the distinction between debug correctness and
+the isolated optimized frame-budget check.
 
 ## Use main as the application baseline
 

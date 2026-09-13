@@ -1,0 +1,18 @@
+2026-09-13T19:09:59.9424680Z ---- codex_archived_endpoints_are_graph_history_and_internal_tool_calls_do_not_leak_nodes stdout ----
+2026-09-13T19:09:59.9425540Z 
+2026-09-13T19:09:59.9429250Z thread 'codex_archived_endpoints_are_graph_history_and_internal_tool_calls_do_not_leak_nodes' panicked at crates/theywork-collect/tests/collaboration.rs:602:5:
+2026-09-13T19:09:59.9433920Z assertion `left == right` failed
+2026-09-13T19:09:59.9434380Z   left: 0
+2026-09-13T19:09:59.9434680Z  right: 1
+2026-09-13T19:09:59.9435220Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:09:59.9435500Z 
+2026-09-13T19:09:59.9435820Z ---- codex_reads_work_families_forks_and_correlated_events_without_internal_workers stdout ----
+2026-09-13T19:09:59.9436340Z 
+2026-09-13T19:09:59.9437410Z thread 'codex_reads_work_families_forks_and_correlated_events_without_internal_workers' panicked at crates/theywork-collect/tests/collaboration.rs:165:5:
+2026-09-13T19:09:59.9438110Z assertion `left == right` failed
+2026-09-13T19:09:59.9438700Z   left: 0
+2026-09-13T19:09:59.9438960Z  right: 5
+2026-09-13T19:09:59.9439110Z 
+2026-09-13T19:09:59.9439420Z ---- codex_source_loss_marks_coverage_without_turn_completion_or_clock_refresh stdout ----
+2026-09-13T19:09:59.9439830Z 
+2026-09-13T19:09:59.9440340Z thread 'codex_source_loss_marks_coverage_without_turn_completion_or_clock_refresh' panicked at crates/theywork-collect/tests/collaboration.rs:281:55:

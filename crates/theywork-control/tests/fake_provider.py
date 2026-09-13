@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """Offline JSONL provider fixture. Never invokes a model or executes a tool."""
+import argparse
 import json
 import os
 import sys
+import time
 
-log = sys.argv[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("log")
+parser.add_argument("--startup-delay-ms", type=int, default=0)
+args = parser.parse_args()
+if args.startup_delay_ms:
+    time.sleep(args.startup_delay_ms / 1000)
+log = args.log
 count = 0
 turn = 0
 if os.path.exists(log):

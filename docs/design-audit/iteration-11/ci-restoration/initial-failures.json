@@ -1,0 +1,34 @@
+[
+  {
+    "case": "windows-clippy",
+    "job": "103776240251",
+    "run": "34776784392",
+    "candidate": "8084397e21cd004fba344c6b0154ee8f0e3be805",
+    "evidence": "windows-clippy.log",
+    "correction": "The non-Unix placeholder identity was unit-valued; preserve an optional meaningful identity type."
+  },
+  {
+    "case": "macos-fixture",
+    "job": "103776246532",
+    "run": "34776786643",
+    "candidate": "8084397e21cd004fba344c6b0154ee8f0e3be805",
+    "evidence": "macos-fixture.log",
+    "correction": "Canonicalize synthetic temporary directories; SQLite NOFOLLOW intentionally rejects the /var symlink alias."
+  },
+  {
+    "case": "provider-startup",
+    "job": "103776240275",
+    "run": "34776784392",
+    "candidate": "8084397e21cd004fba344c6b0154ee8f0e3be805",
+    "evidence": "provider-startup.log",
+    "correction": "Use the normal RPC startup budget in process fixtures and check delayed startup without repeated dispatch."
+  },
+  {
+    "case": "arm64-debug-timing",
+    "job": "103776240250",
+    "run": "34776784392",
+    "candidate": "8084397e21cd004fba344c6b0154ee8f0e3be805",
+    "evidence": "arm64-debug-timing.log",
+    "correction": "Retain the exact threshold in an isolated optimized-build test; keep other native correctness tests in debug."
+  }
+]

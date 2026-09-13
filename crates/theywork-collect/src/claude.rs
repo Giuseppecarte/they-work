@@ -510,7 +510,8 @@ struct NameAssignment {
     assigned: String,
 }
 
-#[cfg(unix)]
+// Keep the identity type consistent across platforms. Unsupported metadata
+// returns None below; it must not become a comparable unit-valued identity.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct FileIdentity {
     device: u64,
@@ -524,9 +525,6 @@ fn file_identity(metadata: &fs::Metadata) -> Option<FileIdentity> {
         inode: metadata.ino(),
     })
 }
-
-#[cfg(not(unix))]
-type FileIdentity = ();
 
 #[cfg(not(unix))]
 fn file_identity(_: &fs::Metadata) -> Option<FileIdentity> {

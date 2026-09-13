@@ -1,0 +1,18 @@
+2026-09-13T19:13:29.0530115Z ---- m3_tests::encoding_frame_cost_stays_within_ten_fps_budget stdout ----
+2026-09-13T19:13:29.0530628Z encoding=sextants frames=100 total_ms=5408 per_frame_ms=54.08 cached_packing_ms=28.02
+2026-09-13T19:13:29.0530961Z 
+2026-09-13T19:13:29.0531290Z thread 'm3_tests::encoding_frame_cost_stays_within_ten_fps_budget' panicked at crates/theywork-render/src/lib.rs:2755:13:
+2026-09-13T19:13:29.0531838Z Sextants should keep 10-fps floor frames under 5 seconds
+2026-09-13T19:13:29.0532239Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:13:29.0532651Z 
+2026-09-13T19:13:29.0532666Z 
+2026-09-13T19:13:29.0532737Z failures:
+2026-09-13T19:13:29.0532968Z     m3_tests::encoding_frame_cost_stays_within_ten_fps_budget
+2026-09-13T19:13:29.0533188Z 
+2026-09-13T19:13:29.0533447Z test result: FAILED. 265 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 180.26s
+2026-09-13T19:13:29.0533796Z 
+2026-09-13T19:13:29.0534091Z error: test failed, to rerun pass `-p theywork-render --lib`
+2026-09-13T19:13:29.0583914Z ##[error]Process completed with exit code 101.
+2026-09-13T19:13:29.0757943Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-13T19:13:29.0759200Z Post job cleanup.
+2026-09-13T19:13:29.1509530Z [command]/usr/bin/git version

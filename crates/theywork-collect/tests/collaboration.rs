@@ -21,7 +21,10 @@ impl Fixture {
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir_all(&path).unwrap();
-        Self(path)
+        // macOS temp_dir() can use /var, a symlink to /private/var. The
+        // collector deliberately opens SQLite with NOFOLLOW, so give these
+        // ordinary-store fixtures their real path rather than a symlink alias.
+        Self(fs::canonicalize(path).unwrap())
     }
     fn source(&self) -> SourceId {
         SourceId(

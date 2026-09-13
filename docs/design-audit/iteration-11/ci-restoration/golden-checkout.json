@@ -1,0 +1,17 @@
+[
+  {
+    "path": "crates/theywork-render/tests/goldens/desk.dark.small.golden",
+    "sha256": "ab09b9b66ff0c8538a49a09ab901a8f23503dcd9399e59a2da8e05c482afc4bb",
+    "windows_checkout_matches_blob": true
+  },
+  {
+    "path": "crates/theywork-render/tests/goldens/help.dark.normal.sextants.golden",
+    "sha256": "e69143316ef4619acf9c8f6724a6c93ff9189076eed9bcbab4e0851bd9bc82a9",
+    "windows_checkout_matches_blob": true
+  },
+  {
+    "path": "crates/theywork-render/tests/goldens/office.light.normal.sextants.golden",
+    "sha256": "6e6f99e5810bc024614d55f5afe62352a4a018d3533288fbeb82329bb61df102",
+    "windows_checkout_matches_blob": true
+  }
+]

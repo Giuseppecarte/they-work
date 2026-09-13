@@ -76,7 +76,23 @@ jobs:
       - name: Check native portability
         run: cargo clippy --locked --workspace --all-targets --target ${{ matrix.target }} -- -D warnings
       - name: Run native tests
-        run: cargo test --locked --workspace --target ${{ matrix.target }} -- --test-threads=1
+        # Keep debug assertions for correctness; measure frame cost below using
+        # the optimized profile that users run, without concurrent test work.
+        run: cargo test --locked --workspace --target ${{ matrix.target }} -- --test-threads=1 --skip m3_tests::encoding_frame_cost_stays_within_ten_fps_budget
+      - name: Check optimized frame budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target/native-timing
+          cargo test --locked --release -p theywork-render --lib --target ${{ matrix.target }} m3_tests::encoding_frame_cost_stays_within_ten_fps_budget -- --exact --nocapture --test-threads=1 2>&1 | tee target/native-timing/${{ matrix.target }}.log
+          grep -F 'test result: ok. 1 passed; 0 failed;' target/native-timing/${{ matrix.target }}.log
+      - name: Upload native timing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame-timing-${{ matrix.target }}
+          path: target/native-timing/${{ matrix.target }}.log
+          if-no-files-found: warn
       - name: Verify Windows state replacement and recovery
         if: runner.os == 'Windows'
         shell: pwsh

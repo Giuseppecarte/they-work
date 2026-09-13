@@ -30,7 +30,8 @@ impl Fixture {
             format!("{}/tests/fake_provider.py", env!("CARGO_MANIFEST_DIR")),
             root.join("requests.jsonl").to_string_lossy().into_owned(),
         ];
-        config.rpc_timeout_ms = 500;
+        // Process cases use the production RPC budget: a cold Python
+        // interpreter on a shared CI runner can take longer than 500 ms to start.
         Self {
             root,
             config,
@@ -203,11 +204,14 @@ fn closing_clients_preserves_work_and_bound_identity_with_explicit_steer_interru
 #[test]
 fn uncertain_send_is_durable_and_restart_never_replays_or_reconnects() {
     let mut fixture = Fixture::new();
+    // Keep the startup budget even here. The fixture intentionally withholds
+    // the turn acknowledgement, so this case must still reach an RPC timeout.
     let client = fixture.start();
     let receipt = client
         .start_codex(fixture.project(), "uncertain", "once")
         .unwrap();
     assert_eq!(receipt.status, OperationStatus::Uncertain);
+    assert!(receipt.detail.contains("acknowledgement timed out"));
     let request_count = fixture.requests().len();
     let duplicate = client
         .start_codex(fixture.project(), "uncertain", "once")
@@ -523,10 +527,17 @@ fn approval_resolution_snapshots_release_waiting_and_a_new_request_blocks_again(
 #[test]
 fn approvals_require_current_request_and_single_action_decision() {
     let mut fixture = Fixture::new();
+    // Cover a cold provider startup beyond the old shared 500 ms test budget.
+    // This delay precedes initialization; no instruction is retried to recover.
+    fixture
+        .config
+        .codex_args
+        .extend(["--startup-delay-ms".into(), "750".into()]);
     let client = fixture.start();
-    client
+    let receipt = client
         .start_codex(fixture.project(), "approval", "approval-start")
         .unwrap();
+    assert_eq!(receipt.status, OperationStatus::Confirmed, "{receipt:?}");
     let state = wait_for(&client, |state| !state.pending_requests.is_empty());
     let request = state.pending_requests[0].clone();
     assert_eq!(request.thread_id, "managed-1");
@@ -561,6 +572,17 @@ fn approvals_require_current_request_and_single_action_decision() {
             .count(),
         1
     );
+    for method in ["initialize", "thread/start", "turn/start"] {
+        assert_eq!(
+            fixture
+                .requests()
+                .iter()
+                .filter(|request| request["method"] == method)
+                .count(),
+            1,
+            "{method} must never be replayed"
+        );
+    }
 }
 
 #[test]

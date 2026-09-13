@@ -10,6 +10,7 @@ use std::os::unix::fs::PermissionsExt;
 
 use rusqlite::{params, Connection};
 use serde_json::{json, Value};
+use theywork_collect::normalize_office_path;
 
 static NEXT_TEMP_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -22,7 +23,12 @@ impl TempDir {
         let id = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!("they-work-tui-{}-{id}", std::process::id()));
         fs::create_dir_all(&path).unwrap();
-        Self { path }
+        // macOS may spell its temporary directory through /var, which links
+        // to /private/var. Ordinary store fixtures need the real directory
+        // path so SQLite's intentional NOFOLLOW policy remains in force.
+        Self {
+            path: fs::canonicalize(path).unwrap(),
+        }
     }
 
     fn path(&self) -> &Path {
@@ -331,8 +337,8 @@ fn first_run_non_tty_prints_discovery_and_picker() {
     assert!(text.contains("WHAT THIS READS"));
     assert!(text.contains("PICK AN OFFICE"));
     assert!(text.contains("↑↓ choose   Enter open office   Tab guard office   q quit"));
-    assert!(text.contains(fixture.project_a.to_str().unwrap()));
-    assert!(text.contains(fixture.project_b.to_str().unwrap()));
+    assert!(text.contains(&normalize_office_path(&fixture.project_a.to_string_lossy())));
+    assert!(text.contains(&normalize_office_path(&fixture.project_b.to_string_lossy())));
 }
 
 #[test]
@@ -801,13 +807,17 @@ fn project_scopes_once_without_persisting_even_with_config_dir() {
     let fixture = Fixture::new();
     let project_a = fixture.project_a.to_str().unwrap();
     let project_b = fixture.project_b.to_str().unwrap();
+    // CLI arguments retain native filesystem spelling; displayed office IDs
+    // use the same normalized path on Windows and WSL.
+    let displayed_a = normalize_office_path(project_a);
+    let displayed_b = normalize_office_path(project_b);
 
     let output = run(&fixture, &["--once", "--project", project_a]);
     assert_success(&output);
     let text = stdout(&output);
     assert!(text.contains("projects=1"));
-    assert!(text.contains(project_a));
-    assert!(!text.contains(project_b));
+    assert!(text.contains(&displayed_a));
+    assert!(!text.contains(&displayed_b));
     assert!(!fixture.config_dir.join("project").exists());
 
     let output = run(
@@ -822,7 +832,7 @@ fn project_scopes_once_without_persisting_even_with_config_dir() {
     );
     assert_success(&output);
     assert!(!fixture.config_dir.join("project").exists());
-    assert!(stdout(&output).contains(project_b));
+    assert!(stdout(&output).contains(&displayed_b));
 }
 
 #[test]

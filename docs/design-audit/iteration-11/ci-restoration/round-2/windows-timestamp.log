@@ -1,0 +1,24 @@
+2026-09-13T19:24:45.5917544Z 
+2026-09-13T19:24:45.5917862Z ---- tests::recent_populated_candidate_wins_over_stale_candidate stdout ----
+2026-09-13T19:24:45.5918218Z 
+2026-09-13T19:24:45.5918685Z thread 'tests::recent_populated_candidate_wins_over_stale_candidate' panicked at crates\theywork-collect\src\lib.rs:703:14:
+2026-09-13T19:24:45.5920086Z open fixture path: Os { code: 5, kind: PermissionDenied, message: "Access is denied." }
+2026-09-13T19:24:45.5921687Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T19:24:45.5922130Z 
+2026-09-13T19:24:45.5922135Z 
+2026-09-13T19:24:45.5922225Z failures:
+2026-09-13T19:24:45.5922555Z     tests::recent_populated_candidate_wins_over_stale_candidate
+2026-09-13T19:24:45.5924020Z 
+2026-09-13T19:24:45.5924376Z test result: FAILED. 26 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.64s
+2026-09-13T19:24:45.5924749Z 
+2026-09-13T19:24:45.5937187Z error: test failed, to rerun pass `-p theywork-collect --lib`
+2026-09-13T19:24:45.7183757Z ##[error]Process completed with exit code 1.
+2026-09-13T19:24:45.7460701Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-13T19:24:45.7462429Z ##[group]Run actions/upload-artifact@v4
+2026-09-13T19:24:45.7462801Z with:
+2026-09-13T19:24:45.7463058Z   name: frame-timing-aarch64-pc-windows-msvc
+2026-09-13T19:24:45.7463424Z   path: target/native-timing/aarch64-pc-windows-msvc.log
+2026-09-13T19:24:45.7463823Z   if-no-files-found: warn
+2026-09-13T19:24:45.7464082Z   compression-level: 6
+2026-09-13T19:24:45.7464325Z   overwrite: false
+2026-09-13T19:24:45.7464569Z   include-hidden-files: false

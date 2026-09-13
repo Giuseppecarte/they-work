@@ -63,10 +63,17 @@ fn append_jsonl(path: &Path, value: Value) {
 
 fn set_modified_millis(path: &Path, millis: i64) {
     let modified = UNIX_EPOCH + Duration::from_millis(millis as u64);
-    fs::File::open(path)
-        .unwrap()
-        .set_modified(modified)
-        .unwrap();
+    let mut options = OpenOptions::new();
+    options.read(true);
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        const FILE_WRITE_ATTRIBUTES: u32 = 0x0100;
+        // Setting fixture timestamps on Windows requires write-attributes
+        // access even though this helper never writes the file contents.
+        options.access_mode(FILE_WRITE_ATTRIBUTES);
+    }
+    options.open(path).unwrap().set_modified(modified).unwrap();
 }
 
 fn process_rss_bytes() -> Option<u64> {
@@ -584,13 +591,14 @@ fn claude_collapses_nested_workdirs_to_the_nearest_git_root() {
 #[test]
 fn claude_uses_project_key_when_repository_is_unmounted() {
     let temp = TempDir::new();
-    let repo = temp.path().join("repo-with-hyphen");
-    let project_key = format!(
-        "-{}",
-        repo.to_string_lossy()
-            .trim_start_matches('/')
-            .replace('/', "-")
+    // The observed Linux project is unmounted; only its transcript lives in
+    // this host's temporary directory. A host Windows drive path cannot be
+    // embedded in a Linux project key (its colon is not a valid filename).
+    let repo = format!(
+        "/unmounted/{}/repo-with-hyphen",
+        temp.path().file_name().unwrap().to_string_lossy()
     );
+    let project_key = repo.replace('/', "-");
     let project_dir = temp.path().join("projects").join(project_key);
     fs::create_dir_all(&project_dir).unwrap();
     let transcript = project_dir.join("session-unmounted.jsonl");
@@ -601,12 +609,12 @@ fn claude_uses_project_key_when_repository_is_unmounted() {
             "type": "system",
             "timestamp": 1_000_000,
             "sessionId": "session-unmounted",
-            "cwd": repo.join("apps/web").to_string_lossy(),
+            "cwd": format!("{repo}/apps/web"),
             "customTitle": "unmounted repo worker"
         }),
     );
 
-    let root = normalize_office_path(&repo.to_string_lossy());
+    let root = normalize_office_path(&repo);
     let mut source = ClaudeSource::new(temp.path());
     let events = source.poll(2_000_000).unwrap();
     assert!(!quiet(&events));
@@ -621,16 +629,21 @@ fn claude_keeps_one_worker_in_one_office_across_path_spellings() {
     let project_dir = temp.path().join("projects/demo");
     fs::create_dir_all(&project_dir).unwrap();
     let transcript = project_dir.join("session-spellings.jsonl");
-    let unix = repo.join("apps/web").to_string_lossy().into_owned();
-    let wsl = format!(
-        r"\\wsl.localhost\Ubuntu-22.04{}",
-        repo.to_string_lossy().replace('/', "\\")
-    );
-    let dotted = format!("{}/apps/web/../docs", repo.display());
     let root = normalize_office_path(&repo.to_string_lossy());
-    let unix_root = repo.to_string_lossy().into_owned();
-    assert_eq!(normalize_office_path(&unix_root), root);
-    assert_eq!(normalize_office_path(&wsl), root);
+    let nested = repo.join("apps/web").to_string_lossy().into_owned();
+    let alternate_root = if cfg!(windows) {
+        // Drive paths use case-insensitive Windows spelling, not a WSL UNC
+        // transport for an unrelated Linux filesystem.
+        root.replace('/', "\\").to_uppercase()
+    } else {
+        format!(
+            r"\\wsl.localhost\Ubuntu-22.04{}",
+            repo.to_string_lossy().replace('/', "\\")
+        )
+    };
+    let dotted = format!("{root}/apps/web/../docs");
+    assert_eq!(normalize_office_path(&repo.to_string_lossy()), root);
+    assert_eq!(normalize_office_path(&alternate_root), root);
 
     append_jsonl(
         &transcript,
@@ -638,7 +651,7 @@ fn claude_keeps_one_worker_in_one_office_across_path_spellings() {
             "type": "system",
             "timestamp": 1_000_000,
             "sessionId": "session-spellings",
-            "cwd": unix.clone(),
+            "cwd": nested,
             "customTitle": "spelling worker"
         }),
     );
@@ -651,8 +664,8 @@ fn claude_keeps_one_worker_in_one_office_across_path_spellings() {
             "type": "assistant",
             "timestamp": 1_001_000,
             "sessionId": "session-spellings",
-            "cwd": wsl,
-            "message": {"content": [{"type": "text", "text": "wsl"}]}
+            "cwd": alternate_root,
+            "message": {"content": [{"type": "text", "text": "alternate spelling"}]}
         }),
     );
     events.extend(source.poll(2_001_000).unwrap());

@@ -699,7 +699,21 @@ mod tests {
     }
 
     fn set_modified(path: &Path, millis: u64) {
-        fs::File::open(path)
+        let mut options = fs::OpenOptions::new();
+        options.read(true);
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::OpenOptionsExt;
+            const FILE_WRITE_ATTRIBUTES: u32 = 0x0100;
+            const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+            // These synthetic files and directories need metadata-only write
+            // access; opening a directory also requires backup semantics.
+            options
+                .access_mode(FILE_WRITE_ATTRIBUTES)
+                .custom_flags(FILE_FLAG_BACKUP_SEMANTICS);
+        }
+        options
+            .open(path)
             .expect("open fixture path")
             .set_modified(UNIX_EPOCH + Duration::from_millis(millis))
             .expect("set fixture mtime");

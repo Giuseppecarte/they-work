@@ -1,0 +1,260 @@
+TMPDIR=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/
+
+running 34 tests
+test an_empty_codex_installation_is_watched_for_its_first_conversation ... FAILED
+test codex_desktop_split_database_layout_is_collected ... FAILED
+test default_saved_sources_are_used_without_a_config_flag ... FAILED
+test default_settings_fall_back_to_home_when_location_is_unset ... ok
+test demo_does_not_read_or_replace_corrupt_saved_sources ... ok
+test demo_once_does_not_open_agent_homes ... ok
+test disabled_provider_is_not_inspected_even_when_its_store_is_broken ... ok
+test doctor_explains_an_explicit_color_override ... ok
+test doctor_explains_the_published_container_terminal_fallback ... ok
+test doctor_fails_with_no_homes_and_explains_both_paths ... ok
+test doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation ... ok
+test doctor_reports_an_installed_but_empty_home ... ok
+test doctor_reports_fixture_homes ... FAILED
+test doctor_reports_one_agent_without_treating_it_as_a_failure ... ok
+test doctor_reports_owner_and_permissions_for_an_unreadable_home ... ok
+test doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted ... FAILED
+test explicit_no_sources_is_a_successful_diagnostic ... ok
+test first_run_non_tty_prints_discovery_and_picker ... ok
+test first_run_without_homes_explains_overrides_and_stops ... ok
+test headless_exit_after_runs_the_full_polling_loop ... ok
+test invalid_args_report_clear_failure ... ok
+test launching_inside_one_project_keeps_the_other_floors ... FAILED
+test migrated_codex_root_wins_over_leftover_legacy_database ... FAILED
+test native_codex_root_database_layout_is_collected ... FAILED
+test no_color_remains_authoritative_over_explicit_truecolor ... ok
+test once_does_not_create_requested_config_directory ... FAILED
+test once_lists_blocked_project_first_and_reports_unknown_waiting_state ... FAILED
+test once_never_emits_transcript_terminal_controls ... FAILED
+test project_scopes_once_without_persisting_even_with_config_dir ... FAILED
+test related_git_worktrees_share_the_primary_project_floor ... FAILED
+test saved_sources_are_respected_and_explicit_choice_overrides_them ... FAILED
+test setup_in_a_pipe_explains_noninteractive_alternative ... ok
+test unconfigured_doctor_only_checks_candidates ... ok
+test unconfigured_scripts_explain_consent_without_reading_conversations ... ok
+
+failures:
+
+failures:
+    an_empty_codex_installation_is_watched_for_its_first_conversation
+    codex_desktop_split_database_layout_is_collected
+    default_saved_sources_are_used_without_a_config_flag
+    doctor_reports_fixture_homes
+    doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted
+    launching_inside_one_project_keeps_the_other_floors
+    migrated_codex_root_wins_over_leftover_legacy_database
+    native_codex_root_database_layout_is_collected
+    once_does_not_create_requested_config_directory
+    once_lists_blocked_project_first_and_reports_unknown_waiting_state
+    once_never_emits_transcript_terminal_controls
+    project_scopes_once_without_persisting_even_with_config_dir
+    related_git_worktrees_share_the_primary_project_floor
+    saved_sources_are_respected_and_explicit_choice_overrides_them
+
+test result: FAILED. 20 passed; 14 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.44s
+
+
+thread 'an_empty_codex_installation_is_watched_for_its_first_conversation' panicked at crates/theywork-tui/tests/cli.rs:511:5:
+assertion failed: !sources[0].poll(now_ms()).unwrap().is_empty()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'codex_desktop_split_database_layout_is_collected' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327917964
+projects=0 workers=0
+next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-1/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'default_saved_sources_are_used_without_a_config_flag' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327917978
+projects=0 workers=0
+next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-2/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'doctor_reports_fixture_homes' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work doctor
+terminal_env TERM="dumb" COLORTERM="" TERM_PROGRAM=unset LANG="C.UTF-8" LC_ALL="C.UTF-8" LC_CTYPE="C.UTF-8"
+terminal_color depth=none reason="colour disabled by NO_COLOR"
+terminal_encoding encoding=half-blocks reason="half-blocks selected because TERM is dumb or cons25; sextant glyph coverage cannot be queried; compare encodings in Settings (s)"
+terminal_graphics protocol=none probe="skipped:not_a_tty" cells=unknown cell_pixels=unknown
+terminal_frame mode=cells covered_cells=unknown source_pixels=unknown
+terminal_action=they-work --demo (press s to compare pixel encodings with your terminal font)
+claude_home=found path=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-12/claude discovery=override
+claude_store=readable projects=2 threads=2 active=2 status=ready action=read_only
+codex_home=found path=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-12/codex discovery=override
+codex_store=unavailable projects=0 threads=0 active=0 reason=state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-12/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644 status=unreadable action=check_permissions_or_set_THEYWORK_CODEX_HOME
+codex: run they-work --setup, select this source, and press e to choose its app data folder. Space turns off a source you do not use.
+read=Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from state_5.sqlite and thread_history_1.sqlite under ~/.codex/ or ~/.codex/sqlite/. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.
+discovery_overrides=THEYWORK_CLAUDE_HOME=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-12/claude THEYWORK_CODEX_HOME=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-12/codex
+controls provider=codex available=false detail="Provider command is unavailable or failed (exit status: 1)"; observation remains available
+controls provider=claude available=false detail="Install the official claude CLI to use its console"; observation remains available
+next=they-work --setup (choose sources) | they-work --once (inspect workers)
+
+stderr:
+
+
+thread 'doctor_retains_recorded_codex_projects_when_the_worktree_is_not_mounted' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work doctor
+terminal_env TERM="dumb" COLORTERM="" TERM_PROGRAM=unset LANG="C.UTF-8" LC_ALL="C.UTF-8" LC_CTYPE="C.UTF-8"
+terminal_color depth=none reason="colour disabled by NO_COLOR"
+terminal_encoding encoding=half-blocks reason="half-blocks selected because TERM is dumb or cons25; sextant glyph coverage cannot be queried; compare encodings in Settings (s)"
+terminal_graphics protocol=none probe="skipped:not_a_tty" cells=unknown cell_pixels=unknown
+terminal_frame mode=cells covered_cells=unknown source_pixels=unknown
+terminal_action=they-work --demo (press s to compare pixel encodings with your terminal font)
+claude_home=found path=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-15/claude discovery=override
+claude_store=readable projects=2 threads=2 active=2 status=ready action=read_only
+codex_home=found path=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-15/codex discovery=override
+codex_store=unavailable projects=0 threads=0 active=0 reason=state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-15/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644 status=unreadable action=check_permissions_or_set_THEYWORK_CODEX_HOME
+codex: run they-work --setup, select this source, and press e to choose its app data folder. Space turns off a source you do not use.
+read=Claude Code data comes from regular .jsonl session files below ~/.claude/projects/; Codex data comes from state_5.sqlite and thread_history_1.sqlite under ~/.codex/ or ~/.codex/sqlite/. Discovery also checks THEYWORK_*_HOME overrides, /data mounts, USERPROFILE, and Windows profiles visible under /mnt/*/Users/*; main databases are opened read-only, SQLite may update an existing -shm coordination sidecar on a writable native store, missing sidecars are never created, symlinks and non-JSONL files are skipped, and project source files are never read.
+discovery_overrides=THEYWORK_CLAUDE_HOME=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-15/claude THEYWORK_CODEX_HOME=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-15/codex
+controls provider=codex available=false detail="Provider command is unavailable or failed (exit status: 1)"; observation remains available
+controls provider=claude available=false detail="Install the official claude CLI to use its console"; observation remains available
+next=they-work --setup (choose sources) | they-work --once (inspect workers)
+
+stderr:
+
+
+thread 'launching_inside_one_project_keeps_the_other_floors' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918861
+projects=2 workers=2
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-21/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-21/project-b workers=1
+  worker name="Claude idle" agent=claude status=idle detail="done" activity=talking idle_age=0s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-21/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'migrated_codex_root_wins_over_leftover_legacy_database' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918869
+projects=0 workers=0
+next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-22/codex/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'native_codex_root_database_layout_is_collected' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918878
+projects=0 workers=0
+next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-23/codex/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'once_does_not_create_requested_config_directory' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918891
+projects=1 workers=1
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-25/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-25/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'once_lists_blocked_project_first_and_reports_unknown_waiting_state' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918898
+projects=2 workers=2
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-26/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-26/project-b workers=1
+  worker name="Claude idle" agent=claude status=idle detail="done" activity=talking idle_age=0s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-26/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'once_never_emits_transcript_terminal_controls' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918906
+projects=2 workers=2
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-27/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-27/project-b workers=1
+  worker name="␛]0;AUDIT_TITLE␇" agent=claude status=idle detail="␛]52;c;ZGFuZ2Vy␇" activity=typing idle_age=0s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-27/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'project_scopes_once_without_persisting_even_with_config_dir' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918913
+projects=1 workers=1
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-28/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-28/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'related_git_worktrees_share_the_primary_project_floor' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918921
+projects=1 workers=1
+office=/var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-29/project-a workers=1
+  worker name="Claude blocked" agent=claude status=blocked waiting_on="waiting, no pending command identified" idle_age=4m 59s tokens=0
+next=Open they-work to inspect a desk. Respond to approval requests in the original agent app.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-29/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+
+
+thread 'saved_sources_are_respected_and_explicit_choice_overrides_them' panicked at crates/theywork-tui/tests/cli.rs:314:5:
+expected success
+stdout:
+they-work --once
+timestamp_ms=1789327918928
+projects=0 workers=0
+next=Start a conversation in a selected source, or run they-work --setup / --doctor.
+collector_error=codex: state database could not be opened read-only: SQLite open failed: unable to open database file: /var/folders/8h/3_l9kvy9323btc7_mcqkgprc0000gn/T/they-work-tui-57274-30/codex/sqlite/state_5.sqlite; owner=501:20 permissions=0o0644
+
+stderr:
+

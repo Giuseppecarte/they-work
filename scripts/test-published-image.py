@@ -172,6 +172,44 @@ def verify_platform(image, platform, digest, daemon_arch, timeout):
             'errors': failures}
 
 
+def count_report(graphics_counts, iterm_counts, fallback_counts):
+    return (
+        "160x48 PTY glyph counts: "
+        f"Kitty probe half={graphics_counts['half']} quadrant={graphics_counts['quadrant']} sextant={graphics_counts['sextant']}; "
+        f"iTerm2 probe half={iterm_counts['half']} quadrant={iterm_counts['quadrant']} sextant={iterm_counts['sextant']}; "
+        f"no-reply fallback half={fallback_counts['half']} quadrant={fallback_counts['quadrant']} sextant={fallback_counts['sextant']}"
+    )
+
+
+def write_github_summary(image, report):
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_path:
+        return
+    with Path(summary_path).open("a", encoding="utf-8") as summary:
+        summary.write("## Candidate image PTY verification\n\n")
+        summary.write(f"`{image}`\n\n")
+        summary.write(f"Result: {'passed' if report['passed'] else 'failed'}. ")
+        summary.write("Simulated PTY evidence; not a physical-terminal test.\n\n")
+        for platform, result in report['platforms'].items():
+            summary.write(f"### {platform} ({result['execution']})\n\n")
+            summary.write(f"Manifest: `{result['manifest_digest']}`\n\n")
+            frames = result['frames']
+            summary.write(count_report(*(frames[mode]['glyph_counts']
+                                         for mode in ('kitty', 'iterm2', 'fallback'))) + "\n\n")
+            summary.write("| Mode | Result | Normal exit after q |\n")
+            summary.write("| --- | --- | --- |\n")
+            for mode, frame in frames.items():
+                normal_exit = (frame['exit_code'] == 0 and frame['quit_sent']
+                               and not frame['forced_cleanup'])
+                summary.write(f"| {mode} | {'passed' if frame['passed'] else 'failed'} | "
+                              f"{'yes' if normal_exit else 'no'} |\n")
+            summary.write("\n")
+            for error in result['errors']:
+                summary.write(f"- {error}\n")
+        if 'error' in report:
+            summary.write(f"Verification error: {report['error']}\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True, help='Registry index tag or immutable digest')
@@ -200,6 +238,7 @@ def main():
     except Exception as error:
         report['error'] = str(error)
     write_json(args.report, report)
+    write_github_summary(report['image'], report)
     print(json.dumps(report, indent=2))
     return 0 if report['passed'] else 1
 

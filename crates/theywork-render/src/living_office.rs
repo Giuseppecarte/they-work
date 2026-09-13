@@ -1375,7 +1375,9 @@ mod tests {
     #[test]
     fn contiguous_regions_keep_one_image_and_translated_hitboxes() {
         let mut studio = Studio::new();
-        let mut canvas = Canvas::new(0, 0);
+        // This fixture checks exact RGB preservation outside the painted regions,
+        // independent of the terminal capabilities advertised by the test runner.
+        let mut canvas = Canvas::with_color_depth(0, 0, crate::canvas::ColorDepth::TrueColor);
         canvas.set_image_cell_size(Some((8, 16)));
         canvas.resize_for_cells(100, 40);
         canvas.fill(rgb(1, 2, 3));

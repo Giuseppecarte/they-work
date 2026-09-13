@@ -336,6 +336,8 @@ pub(crate) enum RoomScale {
 
 impl RoomScale {
     fn worker_size(self, grid: IsoGrid) -> (usize, usize) {
+        // Fit an authored resolution at a whole-number scale. Compact figures
+        // preserve their own face rows instead of resampling the full sprite.
         figure_dimensions(
             grid.encoding,
             grid.pixels_per_cell,
@@ -3280,9 +3282,10 @@ fn draw_floor_edges(canvas: &mut Canvas, grid: IsoGrid) {
 mod tests {
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
-    use theywork_core::{Agent, OfficeId, WorkerId};
+    use theywork_core::{Agent, OfficeId, WorkerId, BLOCKED_AFTER_MS};
 
     use super::*;
+    use crate::sprite::WORKER_HEAD_HEIGHT;
 
     #[test]
     fn projection_cycle_is_reversible_for_every_view() {
@@ -3497,9 +3500,139 @@ mod tests {
         }
     }
 
+    fn rendered_head_height(
+        sprite: &Sprite,
+        encoding: PixelEncoding,
+        cell_size: Option<(usize, usize)>,
+        width: usize,
+        height: usize,
+    ) -> usize {
+        let mut canvas = Canvas::with_color_depth_and_encoding(
+            width,
+            height,
+            crate::canvas::ColorDepth::TrueColor,
+            encoding,
+        );
+        canvas.set_cell_pixel_size(cell_size);
+        canvas.resize(width, height);
+        blit_floor_worker(&mut canvas, sprite, 0, 0, width, height);
+        let source_width = sprite.width();
+        let source_height = sprite.height();
+        let head_rows = match source_height {
+            10 => 5,
+            20 => 11,
+            34 => WORKER_HEAD_HEIGHT + 1,
+            other => panic!("unexpected authored worker height {other}"),
+        };
+        let occupied_rows = (0..height)
+            .filter(|y| {
+                let source_y = y.saturating_mul(source_height) / height.max(1);
+                source_y < head_rows
+                    && (0..width).any(|x| {
+                        let source_x = x.saturating_mul(source_width) / width.max(1);
+                        source_x >= source_width / 6
+                            && source_x < source_width * 5 / 6
+                            && canvas.pixel(x, *y).is_some()
+                    })
+            })
+            .collect::<Vec<_>>();
+        occupied_rows
+            .last()
+            .zip(occupied_rows.first())
+            .map_or(0, |(last, first)| last - first + 1)
+    }
+
+    #[test]
+    fn every_floor_figure_renders_at_the_same_head_height() {
+        let workers = (0..5)
+            .map(|slot| {
+                Worker::new(
+                    WorkerId(format!("/office#worker-{slot}")),
+                    OfficeId("/office".into()),
+                    if slot % 2 == 0 {
+                        Agent::Claude
+                    } else {
+                        Agent::Codex
+                    },
+                    format!("worker {slot}"),
+                    0,
+                )
+            })
+            .collect::<Vec<_>>();
+        let looks = worker_looks(&workers);
+        let sprites = SpriteSet::new();
+        let modes = [
+            (PixelEncoding::HalfBlocks, None, 5),
+            (PixelEncoding::Quadrants, None, 5),
+            (PixelEncoding::Sextants, None, 17),
+            (PixelEncoding::Sextants, Some((8, 16)), 68),
+            (PixelEncoding::Sextants, Some((10, 20)), 85),
+        ];
+
+        for (encoding, cell_size, expected_height) in modes {
+            let pixels_per_cell =
+                cell_size.unwrap_or((encoding.width_per_cell(), encoding.height_per_cell()));
+            let grid = make_grid_with_encoding(
+                160 * pixels_per_cell.0,
+                44 * pixels_per_cell.1,
+                ISO_ROOM_COLUMNS,
+                ISO_ROOM_ROWS,
+                encoding,
+                pixels_per_cell,
+            );
+            let (width, height) = RoomScale::Floor.worker_size(grid);
+            let stretch = if encoding == PixelEncoding::Quadrants && cell_size.is_none() {
+                2
+            } else {
+                1
+            };
+            let authored =
+                sprites.worker_frame_fitting(&workers[0], looks[0], 0, width / stretch, height);
+            assert_eq!(
+                width % authored.width(),
+                0,
+                "floor squeezes authored columns"
+            );
+            assert_eq!(
+                height % authored.height(),
+                0,
+                "floor squeezes authored rows"
+            );
+            assert_eq!(
+                width / (authored.width() * stretch),
+                height / authored.height(),
+                "floor must preserve the authored aspect ratio"
+            );
+            let mut head_heights = workers
+                .iter()
+                .zip(looks.iter())
+                .map(|(worker, look)| {
+                    rendered_head_height(
+                        &sprites.worker_frame_fitting(worker, *look, 0, width / stretch, height),
+                        encoding,
+                        cell_size,
+                        width,
+                        height,
+                    )
+                })
+                .collect::<Vec<_>>();
+            head_heights.push(rendered_head_height(
+                &sprites.manager_frame_fitting(true, 0, width / stretch, height),
+                encoding,
+                cell_size,
+                width,
+                height,
+            ));
+            assert!(
+                head_heights.iter().all(|height| *height == expected_height),
+                "{encoding:?}/{cell_size:?} floor head heights differ: {head_heights:?}"
+            );
+        }
+    }
+
     #[test]
     fn floor_worker_plates_stay_with_their_desks_at_every_encoding() {
-        let workers = (0..5)
+        let mut workers = (0..5)
             .map(|slot| {
                 Worker::new(
                     WorkerId(format!("/golden/they-work#worker-{slot}")),
@@ -3514,8 +3647,11 @@ mod tests {
                 )
             })
             .collect::<Vec<_>>();
+        workers[0].turn_in_flight = true;
+        workers[0].last_seen = -(BLOCKED_AFTER_MS as Millis) - 1;
         let visible_workers = workers.iter().collect::<Vec<_>>();
         let body = Rect::new(0, 0, 160, 44);
+        let scene_now = MANAGER_TRAVEL_MS as Millis;
 
         let modes = [
             (PixelEncoding::HalfBlocks, None),
@@ -3540,7 +3676,7 @@ mod tests {
                 &visible_workers,
                 &looks,
                 &sprites,
-                0,
+                scene_now,
                 None,
             );
             let mut terminal =
@@ -3556,7 +3692,7 @@ mod tests {
                         &visible_workers,
                         0,
                         0,
-                        0,
+                        scene_now,
                     );
                 })
                 .expect("floor with worker plates");
@@ -3593,8 +3729,8 @@ mod tests {
                     grid,
                     slot,
                     workers.len(),
-                    blocked_slot(&visible_workers, 0),
-                    0,
+                    blocked_slot(&visible_workers, scene_now),
+                    scene_now,
                 );
                 plate_rects.push(rect);
                 let tile_width_cells =

@@ -17,6 +17,26 @@ case "$TOOLCHAIN" in
     *) echo "THEYWORK_TOOLCHAIN must be auto, native, or docker" >&2; exit 2 ;;
 esac
 
+# Keep timing checks from competing with other tests on shared CI runners.
+# Explicit libtest arguments or an environment setting retain their meaning.
+if [ "${CI:-}" = true ] && [ "${1:-}" = test ] && [ "${RUST_TEST_THREADS+x}" != x ]; then
+    TEST_THREADS_EXPLICIT=false
+    TEST_ARGUMENTS=false
+    for ARGUMENT do
+        if [ "$TEST_ARGUMENTS" = true ]; then
+            case "$ARGUMENT" in
+                --test-threads|--test-threads=*) TEST_THREADS_EXPLICIT=true ;;
+            esac
+        elif [ "$ARGUMENT" = -- ]; then
+            TEST_ARGUMENTS=true
+        fi
+    done
+    if [ "$TEST_THREADS_EXPLICIT" = false ]; then
+        RUST_TEST_THREADS=1
+        export RUST_TEST_THREADS
+    fi
+fi
+
 if [ "$TOOLCHAIN" != docker ] && command -v cargo >/dev/null 2>&1; then
     TMPDIR="$ROOT/target/tmp" exec cargo "$@"
 fi
@@ -47,5 +67,6 @@ exec docker run --rm $TTY \
     -e CARGO_HOME=/src/.cargo-home \
     -e TMPDIR=/src/target/tmp \
     -e THEYWORK_UPDATE_GOLDEN \
+    -e RUST_TEST_THREADS \
     -v "$ROOT:/src" -w /src \
     "$IMAGE" cargo "$@"

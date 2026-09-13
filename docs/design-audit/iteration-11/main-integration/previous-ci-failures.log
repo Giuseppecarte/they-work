@@ -1,0 +1,22 @@
+2026-09-13T17:07:52.8967738Z ---- living_office::tests::contiguous_regions_keep_one_image_and_translated_hitboxes stdout ----
+2026-09-13T17:07:52.8968516Z 
+2026-09-13T17:07:52.8969486Z thread 'living_office::tests::contiguous_regions_keep_one_image_and_translated_hitboxes' panicked at crates/theywork-render/src/living_office.rs:1407:9:
+2026-09-13T17:07:52.8970988Z assertion `left == right` failed
+2026-09-13T17:07:52.8971396Z   left: Some(Indexed(16))
+2026-09-13T17:07:52.8971759Z  right: Some(Rgb(1, 2, 3))
+2026-09-13T17:07:52.8972309Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-09-13T17:07:52.8972773Z 
+2026-09-13T17:07:52.8973086Z ---- m3_tests::encoding_frame_cost_stays_within_ten_fps_budget stdout ----
+2026-09-13T17:07:52.8974162Z encoding=sextants frames=100 total_ms=5911 per_frame_ms=59.12 cached_packing_ms=29.52
+2026-09-13T17:07:52.8974693Z 
+2026-09-13T17:07:52.8975267Z thread 'm3_tests::encoding_frame_cost_stays_within_ten_fps_budget' panicked at crates/theywork-render/src/lib.rs:2755:13:
+2026-09-13T17:07:52.8976288Z Sextants should keep 10-fps floor frames under 5 seconds
+2026-09-13T17:07:52.8976944Z 
+2026-09-13T17:07:52.8976949Z 
+2026-09-13T17:07:52.8977095Z failures:
+2026-09-13T17:07:52.8977685Z     living_office::tests::contiguous_regions_keep_one_image_and_translated_hitboxes
+2026-09-13T17:07:52.8978552Z     m3_tests::encoding_frame_cost_stays_within_ten_fps_budget
+2026-09-13T17:07:52.8978990Z 
+2026-09-13T17:07:52.8979485Z test result: FAILED. 263 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 54.29s
+2026-09-13T17:07:52.8980176Z 
+2026-09-13T17:07:52.8990140Z error: test failed, to rerun pass `-p theywork-render --lib`

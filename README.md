@@ -20,7 +20,7 @@ sidecar, and a cold WAL store without existing sidecars is refused.
 
 The tower and work-panel previews reconstruct the actual UI image layer and
 native text mask with Menlo. They are compositor exports, not screenshots of a
-terminal emulator. The [current audit](docs/design-audit/iteration-8/README.md) records tested
+terminal emulator. The [current preview audit](docs/design-audit/iteration-11/README.md) records tested
 workflows and the remaining terminal/platform acceptance checks.
 
 ## Start here
@@ -47,8 +47,12 @@ gets its own office floor and each conversation a worker you can inspect.
 
 The [installation guide](INSTALL.md) covers compiler setup, custom data paths,
 Windows PowerShell, WSL, and Docker. Native installers and a six-platform release
-workflow are included on this branch; those assets have **not been published**.
-The older `v0.1.0` image does not contain these changes.
+workflow were developed with this version; the workflow update is currently
+separate from the application preview because it requires GitHub workflow
+permissions. Those release assets have **not been published**. The published
+`v0.1.1` image does not contain this office design. See the
+[main integration notes](docs/design-audit/iteration-11/MAIN-INTEGRATION.md)
+before creating a release tag.
 
 For this version without local Rust, use Docker from a checkout:
 

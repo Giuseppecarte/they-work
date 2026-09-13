@@ -119,7 +119,7 @@ def complete_kitty_frame(stream: bytes) -> tuple[int, int, bytes] | None:
 
 def capture_kitty_frame(
     image: str, timeout: float, keys: tuple[bytes, ...]
-) -> tuple[int, int, bytes]:
+) -> tuple[int, int, bytes, bytes]:
     master, slave = pty.openpty()
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 48, 160, 0, 0))
     with tempfile.TemporaryDirectory(prefix="they-work-published-capture-") as temporary:
@@ -139,6 +139,7 @@ def capture_kitty_frame(
         )
         os.close(slave)
         stream = bytearray()
+        terminal_output = bytearray()
         replied = False
         deadline = time.monotonic() + timeout
         final_chunk_seen = False
@@ -154,6 +155,7 @@ def capture_kitty_frame(
                     break
                 if not chunk:
                     break
+                terminal_output.extend(chunk)
                 tail = bytes(stream[-4:])
                 stream.extend(chunk)
                 if not replied and any(marker in stream for marker in PROBE_MARKERS):
@@ -171,7 +173,7 @@ def capture_kitty_frame(
                         final_chunk_seen = False
                         continue
                     os.write(master, b"q")
-                    return frame
+                    return (*frame, bytes(terminal_output))
             if not replied:
                 raise RuntimeError("published image did not request Kitty capability information")
             raise RuntimeError("published image did not emit a complete Kitty RGBA frame")
@@ -202,6 +204,11 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path, help="destination PNG path")
     parser.add_argument("--record", type=Path, help="optional JSON provenance record")
     parser.add_argument(
+        "--pty-output",
+        type=Path,
+        help="optional raw terminal bytes for the captured view",
+    )
+    parser.add_argument(
         "--key",
         action="append",
         choices=tuple(KEY_BYTES),
@@ -220,10 +227,13 @@ def main() -> int:
 
     image = published_digest(args.image)
     keys = tuple(KEY_BYTES[name] for name in args.key)
-    width, height, pixels = capture_kitty_frame(image, args.timeout, keys)
+    width, height, pixels, terminal_output = capture_kitty_frame(image, args.timeout, keys)
     encoded = png(width, height, pixels)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(encoded)
+    if args.pty_output:
+        args.pty_output.parent.mkdir(parents=True, exist_ok=True)
+        args.pty_output.write_bytes(terminal_output)
     record = {
         "source": "published-kitty-transmission",
         "image": image,
@@ -234,6 +244,8 @@ def main() -> int:
         "rgba_sha256": hashlib.sha256(pixels).hexdigest(),
         "png_sha256": hashlib.sha256(encoded).hexdigest(),
     }
+    if args.pty_output:
+        record["pty_sha256"] = hashlib.sha256(terminal_output).hexdigest()
     if args.record:
         args.record.parent.mkdir(parents=True, exist_ok=True)
         args.record.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")

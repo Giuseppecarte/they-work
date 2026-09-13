@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    uses: ./.github/workflows/native.yml
+
+  verify:
+    name: Required verification
+    runs-on: ubuntu-latest
+    env:
+      THEYWORK_TOOLCHAIN: docker
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Test installer failure boundaries
+        run: python3 scripts/test-install.py
+
+      - name: Test release verification and promotion boundaries
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 scripts/test-release-image.py
+
+      - name: Render design references
+        run: scripts/render-design.sh
+
+      - name: Export reviewable frames
+        run: make shot
+
+      - name: Upload reviewable frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: they-work-shots
+          path: docs/shots/
+          if-no-files-found: error
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build the release image with a persistent layer cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          tags: they-work:local
+          load: true
+          cache-from: type=gha,scope=they-work-runtime
+          cache-to: type=gha,mode=max,scope=they-work-runtime
+
+      - name: Restore Cargo cache
+        id: cargo-cache
+        uses: actions/cache@v4
+        with:
+          path: .cargo-home
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      # The runner supplies Docker; the Rust toolchain comes from
+      # docker/Dockerfile.dev through scripts/cargo.
+      - name: Build the Rust toolchain image with a persistent layer cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.dev
+          tags: they-work-dev:local
+          load: true
+          cache-from: type=gha,scope=they-work-dev
+          cache-to: type=gha,mode=max,scope=they-work-dev
+
+      # scripts/cargo is offline by default. Only a cache miss gets one
+      # explicit networked fetch, so ordinary CI runs cannot redownload crates.
+      - name: Prime Cargo cache on a miss
+        if: steps.cargo-cache.outputs.cache-hit != 'true'
+        run: THEYWORK_CARGO_NETWORK=bridge ./scripts/cargo fetch --locked
+
+      - name: Check workspace formatting
+        run: ./scripts/cargo fmt --all -- --check
+
+      - name: Run strict Clippy
+        run: ./scripts/cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run the full workspace test suite
+        run: ./scripts/cargo test --workspace -- --test-threads=1
+
+      - name: Run collector acceptance tests
+        run: ./scripts/cargo test -p theywork-collect --test collectors -- --nocapture
+
+      - name: Check renderer golden frames
+        run: ./scripts/cargo test -p theywork-render --lib golden::tests::snapshots_match_checked_in_goldens

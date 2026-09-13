@@ -1,0 +1,15 @@
+test_ci_non_test_commands_do_not_gain_thread_settings (__main__.CargoWrapper.test_ci_non_test_commands_do_not_gain_thread_settings) ... ok
+test_ci_tests_default_to_one_thread (__main__.CargoWrapper.test_ci_tests_default_to_one_thread) ... ok
+test_cli_and_environment_overrides_are_both_preserved (__main__.CargoWrapper.test_cli_and_environment_overrides_are_both_preserved) ... ok
+test_docker_preserves_explicit_environment_and_arguments (__main__.CargoWrapper.test_docker_preserves_explicit_environment_and_arguments) ... ok
+test_docker_receives_ci_test_default (__main__.CargoWrapper.test_docker_receives_ci_test_default) ... ok
+test_docker_without_default_keeps_threads_unset (__main__.CargoWrapper.test_docker_without_default_keeps_threads_unset) ... ok
+test_explicit_cli_thread_arguments_are_preserved (__main__.CargoWrapper.test_explicit_cli_thread_arguments_are_preserved) ... ok
+test_explicit_environment_is_preserved (__main__.CargoWrapper.test_explicit_environment_is_preserved) ... ok
+test_false_and_nonstandard_ci_values_do_not_change_defaults (__main__.CargoWrapper.test_false_and_nonstandard_ci_values_do_not_change_defaults) ... ok
+test_local_test_default_is_unchanged (__main__.CargoWrapper.test_local_test_default_is_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 2.655s
+
+OK

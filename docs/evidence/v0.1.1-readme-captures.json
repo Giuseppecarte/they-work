@@ -1,0 +1,28 @@
+{
+  "image": "ghcr.io/giuseppecarte/they-work@sha256:24ae8971400c702ca43878dde78abe54877f0dcafc5c23b436ed255cde04b08c",
+  "protocol": "kitty-direct",
+  "terminal": {
+    "columns": 160,
+    "rows": 48,
+    "cell_width": 8,
+    "cell_height": 16
+  },
+  "captures": {
+    "office": {
+      "keys": [],
+      "kitty_dimensions": [1280, 688],
+      "kitty_png_sha256": "dd6fef26ced7a70b73befad2d4e86e856fce2ca4eecf776f407ebdf38f3c52d8",
+      "pty_sha256": "451ef8bada1f28075a34ed9ec586b3d5ae77e131dd37d33f15b40860e034efa0",
+      "readme_png": "docs/office.png",
+      "readme_png_sha256": "bb67fea36ce15e73a7558b3ea2867d4f372a2e20ceaf2bee7ea6421692cb72da"
+    },
+    "desk": {
+      "keys": ["enter"],
+      "kitty_dimensions": [88, 112],
+      "kitty_png_sha256": "0dee68f61171db1754afd080d1fc17f1e2b9cd634384728fba71b8a9aefdaede",
+      "pty_sha256": "93b0852edc690e557c90a65da5a1bc0c9506185c9910fbbdaac407b7bac84863",
+      "readme_png": "docs/desk.png",
+      "readme_png_sha256": "30099146a08d2638acd717ca4b427f2e7c1792fe09c7a588b23dfb770b26fd8d"
+    }
+  }
+}

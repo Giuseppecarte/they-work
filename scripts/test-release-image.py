@@ -268,6 +268,40 @@ class PromotionTests(unittest.TestCase):
 
 
 class VerifierTests(unittest.TestCase):
+    def test_github_summary_retains_platform_glyph_and_exit_evidence(self):
+        result = {'passed': True, 'exit_code': 0, 'forced_cleanup': False,
+                  'quit_sent': True, 'glyph_counts': {'half': 0, 'quadrant': 0, 'sextant': 0}}
+        platforms = {}
+        for platform, execution in [('linux/amd64', 'daemon-native'), ('linux/arm64', 'emulated')]:
+            platforms[platform] = {'execution': execution, 'manifest_digest': CANDIDATE,
+                                   'frames': {mode: copy.deepcopy(result)
+                                              for mode in ('kitty', 'iterm2', 'fallback')},
+                                   'errors': []}
+        platforms['linux/arm64']['frames']['iterm2']['glyph_counts']['half'] = 2
+        with tempfile.TemporaryDirectory() as temporary:
+            summary = Path(temporary) / 'summary.md'
+            with patch.dict(verify.os.environ, {'GITHUB_STEP_SUMMARY': str(summary)}):
+                verify.write_github_summary(f'{REPOSITORY}@{CANDIDATE}',
+                                            {'passed': True, 'platforms': platforms})
+            content = summary.read_text()
+        self.assertIn('linux/amd64 (daemon-native)', content)
+        self.assertIn('linux/arm64 (emulated)', content)
+        self.assertIn('iTerm2 probe half=2 quadrant=0 sextant=0', content)
+        self.assertIn('no-reply fallback half=0 quadrant=0 sextant=0', content)
+        self.assertEqual(content.count('| fallback | passed | yes |'), 2)
+        self.assertIn('not a physical-terminal test', content)
+
+    def test_github_summary_reports_failure_before_any_platform_execution(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            summary = Path(temporary) / 'summary.md'
+            with patch.dict(verify.os.environ, {'GITHUB_STEP_SUMMARY': str(summary)}):
+                verify.write_github_summary('registry.invalid/candidate',
+                                            {'passed': False, 'platforms': {},
+                                             'error': 'registry unavailable'})
+            content = summary.read_text()
+        self.assertIn('Result: failed', content)
+        self.assertIn('Verification error: registry unavailable', content)
+
     def test_graphics_then_crash_or_forced_cleanup_is_a_failure(self):
         frame = b'\x1b_Ga=T,fixture'
         for code, cleanup, quit_sent in ((1, False, True), (None, True, True), (0, False, False)):

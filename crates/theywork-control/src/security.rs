@@ -23,6 +23,7 @@ pub(crate) fn private_dir(path: &Path) -> Result<()> {
     } else {
         let parent = path.parent().context("Control directory has no parent")?;
         fs::create_dir_all(parent)?;
+        #[cfg(not(windows))]
         let builder = fs::DirBuilder::new();
         #[cfg(unix)]
         let builder = {
@@ -31,11 +32,26 @@ pub(crate) fn private_dir(path: &Path) -> Result<()> {
             builder.mode(0o700);
             builder
         };
-        if let Err(error) = builder.create(path) {
-            if error.kind() != std::io::ErrorKind::AlreadyExists {
-                return Err(error.into());
+        #[cfg(not(windows))]
+        let created = builder.create(path).map_err(anyhow::Error::from);
+        #[cfg(windows)]
+        let created = create_private_windows_dir(path);
+        if let Err(error) = created {
+            if error
+                .downcast_ref::<std::io::Error>()
+                .map(std::io::Error::kind)
+                != Some(std::io::ErrorKind::AlreadyExists)
+            {
+                return Err(error);
             }
         }
+        // A competing creator must satisfy the same ownership/type checks.
+        let meta = fs::symlink_metadata(path)?;
+        anyhow::ensure!(
+            !meta.file_type().is_symlink() && meta.is_dir(),
+            "Unsafe control directory"
+        );
+        check_owner(path, &meta)?;
     }
     restrict(path, true)?;
     Ok(())
@@ -43,8 +59,33 @@ pub(crate) fn private_dir(path: &Path) -> Result<()> {
 
 pub(crate) fn private_open(path: &Path, create: bool) -> Result<File> {
     private_file_exists(path)?;
+    #[cfg(windows)]
+    if create {
+        match create_private_windows_file(path) {
+            Ok(file) => {
+                check_owner(path, &file.metadata()?)?;
+                // Retain the existing fail-closed ACL-support check even if a
+                // filesystem accepted but ignored creation security attributes.
+                restrict(path, false)?;
+                return Ok(file);
+            }
+            Err(error)
+                if error
+                    .downcast_ref::<std::io::Error>()
+                    .map(std::io::Error::kind)
+                    == Some(std::io::ErrorKind::AlreadyExists) =>
+            {
+                // CREATE_NEW never changes an existing owner's descriptor.
+                // Validate again if another writer created it after our check.
+                private_file_exists(path)?;
+            }
+            Err(error) => return Err(error),
+        }
+    }
     let mut options = OpenOptions::new();
-    options.read(true).write(true).create(create);
+    options.read(true).write(true);
+    #[cfg(not(windows))]
+    options.create(create);
     #[cfg(unix)]
     {
         use std::os::unix::fs::OpenOptionsExt;
@@ -230,13 +271,9 @@ fn check_owner(_path: &Path, meta: &fs::Metadata) -> Result<()> {
 #[cfg(windows)]
 fn check_owner(path: &Path, meta: &fs::Metadata) -> Result<()> {
     use std::os::windows::{ffi::OsStrExt, fs::MetadataExt};
-    use windows_sys::Win32::Foundation::{CloseHandle, LocalFree};
+    use windows_sys::Win32::Foundation::LocalFree;
     use windows_sys::Win32::Security::Authorization::{GetNamedSecurityInfoW, SE_FILE_OBJECT};
-    use windows_sys::Win32::Security::{
-        EqualSid, GetTokenInformation, TokenUser, OWNER_SECURITY_INFORMATION, TOKEN_QUERY,
-        TOKEN_USER,
-    };
-    use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+    use windows_sys::Win32::Security::{EqualSid, OWNER_SECURITY_INFORMATION};
     anyhow::ensure!(
         meta.file_attributes() & 0x400 == 0,
         "Control state cannot use a reparse point"
@@ -244,7 +281,6 @@ fn check_owner(path: &Path, meta: &fs::Metadata) -> Result<()> {
     let path: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
     let mut descriptor = std::ptr::null_mut();
     let mut owner = std::ptr::null_mut();
-    let mut token = std::ptr::null_mut();
     // SAFETY: owned buffers meet the Windows APIs' alignment/size contracts.
     // Every acquired native allocation/handle is released on all paths.
     unsafe {
@@ -261,10 +297,33 @@ fn check_owner(path: &Path, meta: &fs::Metadata) -> Result<()> {
         if status != 0 {
             return Err(std::io::Error::from_raw_os_error(status as i32).into());
         }
-        let result = (|| -> Result<()> {
-            if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {
-                return Err(std::io::Error::last_os_error().into());
-            }
+        let result = with_windows_user(|user| {
+            anyhow::ensure!(
+                !owner.is_null() && EqualSid(owner, user) != 0,
+                "Control state belongs to another Windows user"
+            );
+            Ok(())
+        });
+        LocalFree(descriptor);
+        result
+    }
+}
+
+#[cfg(windows)]
+fn with_windows_user<T>(
+    action: impl FnOnce(windows_sys::Win32::Security::PSID) -> Result<T>,
+) -> Result<T> {
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::Security::{GetTokenInformation, TokenUser, TOKEN_QUERY, TOKEN_USER};
+    use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+    let mut token = std::ptr::null_mut();
+    // SAFETY: the aligned token buffer owns the SID throughout the callback,
+    // and the acquired process-token handle is closed on every result path.
+    unsafe {
+        if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) == 0 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        let result = (|| {
             let mut needed = 0;
             GetTokenInformation(token, TokenUser, std::ptr::null_mut(), 0, &mut needed);
             anyhow::ensure!(
@@ -283,18 +342,124 @@ fn check_owner(path: &Path, meta: &fs::Metadata) -> Result<()> {
                 return Err(std::io::Error::last_os_error().into());
             }
             let user = &*(buffer.as_ptr().cast::<TOKEN_USER>());
-            anyhow::ensure!(
-                !owner.is_null() && EqualSid(owner, user.User.Sid) != 0,
-                "Control state belongs to another Windows user"
-            );
-            Ok(())
+            action(user.User.Sid)
         })();
-        if !token.is_null() {
-            CloseHandle(token);
-        }
-        LocalFree(descriptor);
+        CloseHandle(token);
         result
     }
+}
+
+#[cfg(windows)]
+fn with_private_windows_attributes<T>(
+    action: impl FnOnce(&windows_sys::Win32::Security::SECURITY_ATTRIBUTES) -> Result<T>,
+) -> Result<T> {
+    use windows_sys::Win32::Foundation::LocalFree;
+    use windows_sys::Win32::Security::Authorization::{
+        ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW,
+    };
+    use windows_sys::Win32::Security::SECURITY_ATTRIBUTES;
+    with_windows_user(|user| {
+        let mut sid = std::ptr::null_mut();
+        // SAFETY: user lives through this callback; both Windows allocations
+        // are copied/used while live and released before returning.
+        unsafe {
+            if ConvertSidToStringSidW(user, &mut sid) == 0 {
+                return Err(std::io::Error::last_os_error().into());
+            }
+            let mut length = 0;
+            while *sid.add(length) != 0 {
+                length += 1;
+            }
+            let owner = String::from_utf16_lossy(std::slice::from_raw_parts(sid, length));
+            LocalFree(sid.cast());
+            // TokenOwner can be an administrators group even though TokenUser
+            // is one person. Set that exact user at creation, never take over an
+            // existing object. The protected owner-only DACL stays unchanged.
+            let sddl: Vec<u16> = format!("O:{owner}D:P(A;OICI;FA;;;OW)\0")
+                .encode_utf16()
+                .collect();
+            let mut descriptor = std::ptr::null_mut();
+            if ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                sddl.as_ptr(),
+                1,
+                &mut descriptor,
+                std::ptr::null_mut(),
+            ) == 0
+            {
+                return Err(std::io::Error::last_os_error().into());
+            }
+            let attributes = SECURITY_ATTRIBUTES {
+                nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+                lpSecurityDescriptor: descriptor,
+                bInheritHandle: 0,
+            };
+            let result = action(&attributes);
+            LocalFree(descriptor);
+            result
+        }
+    })
+}
+
+#[cfg(windows)]
+fn windows_creation_path(path: &Path) -> Result<Vec<u16>> {
+    use std::os::windows::ffi::OsStrExt;
+    // Canonicalize only the existing parent: support long paths while leaving
+    // the final component for CREATE_NEW/CreateDirectory to check atomically.
+    let parent = path.parent().context("Control path has no parent")?;
+    let parent = if parent.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        parent
+    };
+    let parent = fs::canonicalize(parent)?;
+    let name = path.file_name().context("Control path has no name")?;
+    let mut wide: Vec<u16> = parent.join(name).as_os_str().encode_wide().collect();
+    anyhow::ensure!(!wide.contains(&0), "Control path contains a null character");
+    wide.push(0);
+    Ok(wide)
+}
+
+#[cfg(windows)]
+fn create_private_windows_dir(path: &Path) -> Result<()> {
+    use windows_sys::Win32::Storage::FileSystem::CreateDirectoryW;
+    let path = windows_creation_path(path)?;
+    with_private_windows_attributes(|attributes| {
+        // SAFETY: both path and security descriptor live through the call.
+        if unsafe { CreateDirectoryW(path.as_ptr(), attributes) } == 0 {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        Ok(())
+    })
+}
+
+#[cfg(windows)]
+fn create_private_windows_file(path: &Path) -> Result<File> {
+    use std::os::windows::io::FromRawHandle;
+    use windows_sys::Win32::Foundation::{GENERIC_READ, GENERIC_WRITE, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::Storage::FileSystem::{
+        CreateFileW, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_SHARE_READ,
+        FILE_SHARE_WRITE,
+    };
+    let path = windows_creation_path(path)?;
+    with_private_windows_attributes(|attributes| {
+        // SAFETY: terminated path and descriptor remain live. File takes sole
+        // ownership of the returned non-inheritable handle on success.
+        let handle = unsafe {
+            CreateFileW(
+                path.as_ptr(),
+                GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                attributes,
+                CREATE_NEW,
+                FILE_ATTRIBUTE_NORMAL,
+                std::ptr::null_mut(),
+            )
+        };
+        if handle == INVALID_HANDLE_VALUE {
+            return Err(std::io::Error::last_os_error().into());
+        }
+        Ok(unsafe { File::from_raw_handle(handle) })
+    })
 }
 
 #[cfg(not(any(unix, windows)))]

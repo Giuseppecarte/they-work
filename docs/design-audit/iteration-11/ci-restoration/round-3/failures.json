@@ -1,0 +1,20 @@
+[
+  {
+    "job_id": 103780374245,
+    "run_id": 34778278954,
+    "source": "22d9ab9a97f55267d6aecf2b2272297b801bc373",
+    "architecture": "x86_64",
+    "result": "failed",
+    "excerpt": "windows-x86_64-failure.log",
+    "sha256": "70dafd2c45d8f4d93285678f2108d87b266cbf52e70f0269905731aa33aeea47"
+  },
+  {
+    "job_id": 103780374160,
+    "run_id": 34778278954,
+    "source": "22d9ab9a97f55267d6aecf2b2272297b801bc373",
+    "architecture": "aarch64",
+    "result": "failed",
+    "excerpt": "windows-aarch64-failure.log",
+    "sha256": "5f09580c880d94b3c7beaa5d788069e75d898cb92026b665923bf2662584b364"
+  }
+]

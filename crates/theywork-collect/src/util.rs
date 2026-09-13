@@ -20,14 +20,10 @@ pub(crate) fn source_id(home: &Path) -> theywork_core::SourceId {
 
 /// Convert the path spellings used by Windows and WSL into one stable office id.
 pub fn normalize_office_path(input: &str) -> String {
-    let input = input.trim();
-    // std::fs::canonicalize returns the extended-length spelling on Windows.
-    let input = input.strip_prefix(r"\\?\").unwrap_or(input);
-    if input.is_empty() {
+    let slashed = slashed_path(input);
+    if slashed.is_empty() {
         return String::new();
     }
-
-    let slashed = input.replace('\\', "/");
     let wsl_unc = is_wsl_unc(&slashed);
     let absolute = slashed.starts_with('/') || wsl_unc;
     let mut components = Vec::new();
@@ -65,10 +61,24 @@ pub fn normalize_office_path(input: &str) -> String {
 
     // A WSL UNC prefix transports a Linux path; its case remains significant.
     // Only a Windows drive (including /mnt/c after UNC removal) folds case.
-    if is_windows_drive(input) || is_windows_mount(&normalized) {
+    if is_windows_drive(&slashed) || is_windows_mount(&normalized) {
         normalized.to_lowercase()
     } else {
         normalized
+    }
+}
+
+fn slashed_path(input: &str) -> String {
+    let slashed = input.trim().replace('\\', "/");
+    // Canonical Windows paths use a verbatim prefix. Remove it consistently
+    // before filesystem traversal and office normalization; otherwise a
+    // traversed //?/C:/ path becomes a different /?/C:/ office identity.
+    if let Some(path) = slashed.strip_prefix("//?/UNC/") {
+        format!("//{path}")
+    } else if let Some(path) = slashed.strip_prefix("//?/") {
+        path.to_string()
+    } else {
+        slashed
     }
 }
 
@@ -509,7 +519,7 @@ fn project_root_hint(normalized: &str, project_key: Option<&str>) -> Option<Stri
 }
 
 fn filesystem_path(input: &str) -> String {
-    let slashed = input.trim().replace('\\', "/");
+    let slashed = slashed_path(input);
     if !is_wsl_unc(&slashed) {
         return slashed.trim_end_matches('/').to_string();
     }
@@ -564,6 +574,43 @@ mod tests {
             normalize_office_path("/home/Dev/Repo"),
             normalize_office_path("/home/dev/repo")
         );
+    }
+
+    #[test]
+    fn filesystem_paths_preserve_windows_and_wsl_office_identity() {
+        for (recorded, filesystem, office) in [
+            (
+                r"C:\Users\Dev\Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            (
+                r"\\?\C:\Users\Dev\Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            (
+                "//?/C:/Users/Dev/Repo",
+                "C:/Users/Dev/Repo",
+                "c:/users/dev/repo",
+            ),
+            ("/home/Dev/Repo", "/home/Dev/Repo", "/home/Dev/Repo"),
+            (
+                r"\\wsl.localhost\Ubuntu\home\Dev\Repo",
+                "/home/Dev/Repo",
+                "/home/Dev/Repo",
+            ),
+            (
+                r"\\?\UNC\wsl.localhost\Ubuntu\home\Dev\Repo",
+                "/home/Dev/Repo",
+                "/home/Dev/Repo",
+            ),
+        ] {
+            let traversed = filesystem_path(recorded);
+            assert_eq!(traversed, filesystem, "filesystem spelling of {recorded}");
+            assert_eq!(normalize_office_path(recorded), office, "{recorded}");
+            assert_eq!(normalize_office_path(&traversed), office, "{recorded}");
+        }
     }
 
     #[test]

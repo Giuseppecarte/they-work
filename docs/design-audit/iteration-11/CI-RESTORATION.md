@@ -83,3 +83,47 @@ The integrated follow-up passed formatting, strict all-target Clippy, and
 471 workspace tests (4 ignored), plus the separate storage-process
 report. Commands, durations and source hashes are recorded in
 `ci-restoration/round-2/checks.json` and `manifest.json`.
+
+## Windows behavior exposed by the complete suite
+
+Candidate `22d9ab9` passed the Linux builds, macOS ARM64 build, both audit
+smokes and required verification. The complete Windows suites on x64 and
+ARM64 reproduced two production defects, beyond the earlier fixture issues:
+
+- Filesystem traversal converted the Windows verbatim prefix before removing
+  it. The resulting `/?/C:/...` office ID disagreed with the original drive
+  path and could split a repository across floors.
+- Private Windows state was created with the process's default owner and then
+  restricted. An elevated process can default to the Administrators group,
+  while subsequent validation correctly requires the current user's SID.
+
+The correction normalizes verbatim prefixes consistently before traversal
+and creates private Windows objects with an explicit current-user owner and
+protected owner-only permissions. Existing state owned by another identity
+must still be rejected; the application does not take ownership of it.
+
+A separate diagnostic fixture now distinguishes a Unix/WSL `/mnt/c` crossover
+path from a native missing home. Normalized CLI expectations and the Git
+worktree worker count remain assertions, with full stdout on failure.
+
+Raw failure excerpts for both Windows architectures are retained in
+`ci-restoration/round-3/`. Native confirmation of this correction requires the
+next candidate run. These findings show why the earlier local test pass was
+insufficient to claim native Windows readiness.
+
+Microsoft documents that a new object's default owner can differ from the
+process token's user ([owner of a new object](https://learn.microsoft.com/en-us/windows/win32/secauthz/owner-of-a-new-object)).
+The new creation descriptor explicitly selects the user; the existing owner
+comparison remains intact. Independent review also required retaining the
+post-create ACL-support check because security descriptors require filesystem
+support ([CreateFileW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)).
+The existing six-test Windows replacement contract is preserved and its ACL
+case now checks newly created/reopened directories and locks, exact one-ACE
+owner-only DACLs, and file ownership before and after replacement.
+
+Local integration of the Windows correction passed 473 workspace tests
+(4 ignored) plus three separate storage process cases, formatting and
+strict all-target Clippy. The actual Windows-target production control library
+also passes strict Clippy. Cross-compilation is recorded separately from native
+Windows execution in `ci-restoration/round-3/manifest.json`; the latter remains
+pending the next frozen commit.

@@ -70,7 +70,24 @@ fn dacl(path: &Path) -> String {
 
 #[test]
 fn replacement_keeps_owner_only_acl_for_state_config_and_endpoint() {
+    assert_eq!(
+        windows_creation_path(Path::new("local-state")).unwrap(),
+        windows_creation_path(Path::new("./local-state")).unwrap(),
+        "a relative leaf keeps the current-directory meaning without changing cwd"
+    );
     let fixture = Fixture::new();
+    // Creation must use TokenUser, including elevated runners whose default
+    // TokenOwner is an administrators group. Reopening must not take ownership.
+    check_owner(&fixture.0, &fs::symlink_metadata(&fixture.0).unwrap()).unwrap();
+    let directory_acl = dacl(&fixture.0);
+    assert!(directory_acl.contains("D:P") && directory_acl.contains(";;;OW)"));
+    assert_eq!(directory_acl.matches('(').count(), 1, "{directory_acl}");
+    private_dir(&fixture.0).unwrap();
+    assert_eq!(dacl(&fixture.0), directory_acl);
+    let lock_path = fixture.0.join("startup.lock");
+    drop(private_open(&lock_path, true).unwrap());
+    check_owner(&lock_path, &fs::symlink_metadata(&lock_path).unwrap()).unwrap();
+    drop(private_open(&lock_path, true).unwrap());
     for name in ["state.json", "config.json", "endpoint.json"] {
         let path = fixture.0.join(name);
         write_private(&path, b"old").unwrap();
@@ -79,6 +96,8 @@ fn replacement_keeps_owner_only_acl_for_state_config_and_endpoint() {
             before.contains("D:P") && before.contains(";;;OW)"),
             "{before}"
         );
+        assert_eq!(before.matches('(').count(), 1, "{before}");
+        check_owner(&path, &fs::symlink_metadata(&path).unwrap()).unwrap();
         write_private(&path, b"new complete contents").unwrap();
         assert_eq!(read_private(&path).unwrap(), b"new complete contents");
         assert_eq!(dacl(&path), before);

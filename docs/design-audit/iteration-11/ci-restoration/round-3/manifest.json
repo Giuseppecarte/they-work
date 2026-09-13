@@ -1,0 +1,30 @@
+{
+  "base_commit": "22d9ab9a97f55267d6aecf2b2272297b801bc373",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "source_sha256": {
+    "crates/theywork-collect/src/util.rs": "b795e694c976fabb9f0e75470cbe447f94593e14b5e10c9c09bc6718710966f8",
+    "crates/theywork-control/src/security.rs": "ad53f66f8947e6f5a7d44f39a8814e59404861420f0cd1a6d9cb14a452bf3783",
+    "crates/theywork-control/src/security_windows_tests.rs": "1b64992ba3e2fc22988299a6347865248547f22a1582e540954ea01204771ce0",
+    "crates/theywork-tui/tests/cli.rs": "bf453abdf4f70fe3d054dca1c0b17846fe32f4c965c0d96653a21bf3244cab9a"
+  },
+  "native_confirmation": "pending next GitHub candidate",
+  "windows_cross_compilation": "production library only; not native execution",
+  "physical_terminal": "not tested",
+  "workspace_counts": {
+    "passed": 473,
+    "failed": 0,
+    "ignored": 4,
+    "harness_reports": 21
+  },
+  "evidence_sha256": {
+    "failures.json": "9d92a769fbe973da41f5c8251959772fcdcd762d9a17e516881c197ac7c4436d",
+    "cli-default-temp.log": "1e5fc3e0756a652b78600bbbf0683ff65b9062b768b9d1274f605e78829eec69",
+    "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clippy.log": "9b621755477273ed5f25dd3f8f13deb45d164dcae525f895ee027a5030419d74",
+    "workspace.log": "c5e39baaa9a3804ef925724ef1cc40b639b89c24317c90dd2dc025322db81bca",
+    "checks.json": "c3c5f13e47126aa1e850b7c98bc1471fac43e836e3ae6c891c00ed013419ce78",
+    "windows-library-clippy.log": "4da05434ff0c51a238c3a9afc48d941e6e2c2eff8e860e5161f252f7cf283971",
+    "windows-x86_64-failure.log": "70dafd2c45d8f4d93285678f2108d87b266cbf52e70f0269905731aa33aeea47",
+    "windows-aarch64-failure.log": "5f09580c880d94b3c7beaa5d788069e75d898cb92026b665923bf2662584b364"
+  }
+}

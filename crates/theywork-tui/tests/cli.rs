@@ -337,8 +337,14 @@ fn first_run_non_tty_prints_discovery_and_picker() {
     assert!(text.contains("WHAT THIS READS"));
     assert!(text.contains("PICK AN OFFICE"));
     assert!(text.contains("↑↓ choose   Enter open office   Tab guard office   q quit"));
-    assert!(text.contains(&normalize_office_path(&fixture.project_a.to_string_lossy())));
-    assert!(text.contains(&normalize_office_path(&fixture.project_b.to_string_lossy())));
+    assert!(
+        text.contains(&normalize_office_path(&fixture.project_a.to_string_lossy())),
+        "{text}"
+    );
+    assert!(
+        text.contains(&normalize_office_path(&fixture.project_b.to_string_lossy())),
+        "{text}"
+    );
 }
 
 #[test]
@@ -746,18 +752,36 @@ fn doctor_reports_owner_and_permissions_for_an_unreadable_home() {
     assert!(text.contains("permissions=0o000"));
 }
 
+#[cfg(unix)]
 #[test]
-fn doctor_marks_a_windows_shaped_path_as_unusual_and_requests_confirmation() {
+fn doctor_marks_a_wsl_profile_path_as_unusual_and_requests_confirmation() {
     let fixture = Fixture::new();
+    // This is a WSL crossover path on a Unix host. On native Windows, /mnt
+    // is root-relative and resolves within the current drive instead.
     let unusual = PathBuf::from("/mnt/c/Users/Example/.codex");
     let missing_claude = fixture.temp.path().join("missing-claude");
     let output = run_with_homes(&fixture, &["--doctor"], &missing_claude, &unusual);
     assert!(!output.status.success());
 
     let text = stdout(&output);
-    assert!(text.contains("codex_home=missing"));
-    assert!(text.contains("source=unusual"));
-    assert!(text.contains("confirm_path=true"));
+    assert!(text.contains("codex_home=missing"), "{text}");
+    assert!(text.contains("source=unusual"), "{text}");
+    assert!(text.contains("confirm_path=true"), "{text}");
+}
+
+#[test]
+fn doctor_does_not_request_crossover_confirmation_for_a_native_missing_home() {
+    let fixture = Fixture::new();
+    let native_home = fixture.temp.path().join("missing-native-codex");
+    let missing_claude = fixture.temp.path().join("missing-claude");
+    let output = run_with_homes(&fixture, &["--doctor"], &missing_claude, &native_home);
+    assert!(!output.status.success());
+
+    let text = stdout(&output);
+    assert!(text.contains("codex_home=missing"), "{text}");
+    assert!(text.contains("action=set_override"), "{text}");
+    assert!(!text.contains("source=unusual"), "{text}");
+    assert!(!text.contains("confirm_path=true"), "{text}");
 }
 
 #[test]
@@ -815,9 +839,9 @@ fn project_scopes_once_without_persisting_even_with_config_dir() {
     let output = run(&fixture, &["--once", "--project", project_a]);
     assert_success(&output);
     let text = stdout(&output);
-    assert!(text.contains("projects=1"));
-    assert!(text.contains(&displayed_a));
-    assert!(!text.contains(&displayed_b));
+    assert!(text.contains("projects=1"), "{text}");
+    assert!(text.contains(&displayed_a), "{text}");
+    assert!(!text.contains(&displayed_b), "{text}");
     assert!(!fixture.config_dir.join("project").exists());
 
     let output = run(
@@ -832,7 +856,8 @@ fn project_scopes_once_without_persisting_even_with_config_dir() {
     );
     assert_success(&output);
     assert!(!fixture.config_dir.join("project").exists());
-    assert!(stdout(&output).contains(&displayed_b));
+    let text = stdout(&output);
+    assert!(text.contains(&displayed_b), "{text}");
 }
 
 #[test]

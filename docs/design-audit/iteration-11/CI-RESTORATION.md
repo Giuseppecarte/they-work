@@ -127,3 +127,35 @@ strict all-target Clippy. The actual Windows-target production control library
 also passes strict Clippy. Cross-compilation is recorded separately from native
 Windows execution in `ci-restoration/round-3/manifest.json`; the latter remains
 pending the next frozen commit.
+
+## Concurrent Windows replacement
+
+On `c3b56e7`, both native Windows architectures passed the path, ownership,
+shared recovery, admission and storage-process cases. The only failing test
+was replacement while a reader held the destination open: `MoveFileExW`
+returned access denied. The reader's later missing-path message came from
+fixture cleanup after the writer panic, not an independently observed gap.
+The original logs remain in `ci-restoration/round-4/`.
+
+The publisher now uses the pinned Rust 1.90 `fs::rename` implementation on the
+same canonical sibling paths. It includes the Windows POSIX rename fallback
+for this exact open-reader case ([Rust issue](https://github.com/rust-lang/rust/issues/123985),
+[pinned implementation](https://raw.githubusercontent.com/rust-lang/rust/1.90.0/library/std/src/sys/fs/windows.rs)).
+There is no delete/copy sequence, retry loop or provider resubmission. The test
+now deliberately holds the old read handle, checks both old-handle and new-path
+contents, performs all 100 publications, and joins its reader before cleanup.
+The separate no-delete-sharing rejection remains required.
+
+The staged file is still synced before publication. The old explicit
+`MOVEFILE_WRITE_THROUGH` flag was documented around copy/delete moves, which
+this same-volume path never enabled ([MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)).
+This correction does not add a claim about directory-entry durability under
+physical power loss; that remains a separate gate. Native CI must confirm
+concurrency and the existing replacement/recovery counts on this correction.
+
+Local integration passed 473 workspace tests (4 ignored), the
+three separate storage process cases, formatting, strict all-target Clippy and
+Windows-target production-library Clippy. The bounded installer/package source
+review found no further concrete blocker, but it does not replace native
+execution. Commands, source hashes and results are in
+`ci-restoration/round-4/`.

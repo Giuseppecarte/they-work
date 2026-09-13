@@ -122,6 +122,17 @@ fn sharing_violation_keeps_original_and_cleans_its_candidate() {
     drop(held);
     write_private(&path, b"new complete state").unwrap();
     assert_eq!(read_private(&path).unwrap(), b"new complete state");
+
+    // POSIX replacement may coexist with delete-sharing readers, but must not
+    // bypass a read-only destination. Restore attributes before any assertion.
+    let permissions = fs::metadata(&path).unwrap().permissions();
+    let mut read_only = permissions.clone();
+    read_only.set_readonly(true);
+    fs::set_permissions(&path, read_only).unwrap();
+    let result = write_private(&path, b"must not replace read-only state");
+    fs::set_permissions(&path, permissions).unwrap();
+    assert!(result.is_err());
+    assert_eq!(read_private(&path).unwrap(), b"new complete state");
 }
 
 #[test]
@@ -131,6 +142,11 @@ fn concurrent_readers_never_see_missing_or_partial_state() {
     let a = vec![b'a'; 4096];
     let b = vec![b'b'; 4096];
     write_private(&path, &a).unwrap();
+    // Hold one read handle for the entire replacement sequence so this covers
+    // Windows POSIX rename deterministically, rather than relying on overlap.
+    // File::open permits read/write/delete sharing; the separate denial test
+    // deliberately withholds delete sharing and must keep rejecting writes.
+    let mut original_reader = File::open(&path).unwrap();
     let stop = Arc::new(AtomicBool::new(false));
     let reader_stop = stop.clone();
     let reader_path = path.clone();
@@ -147,14 +163,33 @@ fn concurrent_readers_never_see_missing_or_partial_state() {
         }
         reads
     });
-    ready_receiver
-        .recv_timeout(Duration::from_secs(10))
-        .unwrap();
-    for index in 0..100 {
-        write_private(&path, if index % 2 == 0 { &b } else { &a }).unwrap();
-    }
+    let write_result = (|| -> Result<()> {
+        ready_receiver
+            .recv_timeout(Duration::from_secs(10))
+            .context("Waiting for concurrent reader")?;
+        for index in 0..100 {
+            write_private(&path, if index % 2 == 0 { &a } else { &b })
+                .with_context(|| format!("Concurrent publication {index}"))?;
+        }
+        Ok(())
+    })();
+    // Always stop and join before Fixture deletes the files. Otherwise a
+    // writer failure creates a misleading missing-file error in the reader.
     stop.store(true, Ordering::SeqCst);
-    assert!(reader.join().unwrap() > 0);
+    let read_result = reader.join();
+    write_result.unwrap();
+    assert!(read_result.unwrap() > 0);
+    let mut original_bytes = Vec::new();
+    original_reader.read_to_end(&mut original_bytes).unwrap();
+    assert_eq!(
+        original_bytes, a,
+        "the old handle keeps the complete old file"
+    );
+    assert_eq!(
+        fs::read(&path).unwrap(),
+        b,
+        "all 100 publications completed"
+    );
 }
 
 #[test]

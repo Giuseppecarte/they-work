@@ -1,0 +1,27 @@
+{
+  "base_commit": "c3b56e74f2e36f09d00d23e47d5184d3f17c3764",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "source_sha256": {
+    "crates/theywork-control/src/security.rs": "3e07184bfb47785331af776c97c024b0678a61cae05995ea81fb27110d571c2c",
+    "crates/theywork-control/src/security_windows_tests.rs": "082b6711a6d2185a3f9e258d4cdd3787b474a11c7fd1c1f85cf18e67f0338a97"
+  },
+  "native_confirmation": "pending next GitHub candidate",
+  "windows_cross_compilation": "production library only; not native execution",
+  "physical_terminal": "not tested",
+  "workspace_counts": {
+    "passed": 473,
+    "failed": 0,
+    "ignored": 4,
+    "harness_reports": 21
+  },
+  "evidence_sha256": {
+    "failures.json": "89f5213a70298fede4623d301d7e6561be647f1ae9763ded935baefed2e7b466",
+    "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clippy.log": "0798140672ce55de8d6e7d5ff36f4ee37c29b7f45414926cbdd697e06bcb31ae",
+    "workspace.log": "6197415167979a4ad3f7d5a3fd6d9bfe478be21810b90fe90ed5a21f3ea4c20b",
+    "checks.json": "7a77985d6c073c7bd488afd8c6bd7e2a2b945b27d68498cd1f07f28f234a2100",
+    "windows-library-clippy.log": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157",
+    "windows-x86_64-failure.log": "b883bfbdfc509d30bc249ed64315d1608648055063e2e902e4309c66778bcb13",
+    "windows-aarch64-failure.log": "c49c30948917f5e4dacf1c77444da9c2c6a9eb9197f2591e7c64e690b14a3527"
+  }
+}

@@ -58,7 +58,7 @@ pub(crate) fn private_dir(path: &Path) -> Result<()> {
 }
 
 pub(crate) fn private_open(path: &Path, create: bool) -> Result<File> {
-    private_file_exists(path)?;
+    private_file_exists(path).context("Checking private file before opening")?;
     #[cfg(windows)]
     if create {
         match create_private_windows_file(path) {
@@ -171,16 +171,17 @@ fn write_private_impl(
     publisher: impl FnOnce(&Path, &Path) -> Result<()>,
     before_sync: impl FnOnce() -> Result<()>,
 ) -> Result<()> {
-    private_file_exists(path)?;
+    private_file_exists(path).context("Checking destination before staging control state")?;
     let tmp = path.with_extension(format!("{}.tmp", random_token()?));
     let mut publication_attempted = false;
     let result = (|| {
-        let mut file = private_open(&tmp, true)?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
+        let mut file = private_open(&tmp, true).context("Creating private staged control state")?;
+        file.write_all(bytes)
+            .context("Writing staged control state")?;
+        file.sync_all().context("Syncing staged control state")?;
         drop(file);
         publication_attempted = true;
-        publisher(&tmp, path)?;
+        publisher(&tmp, path).context("Publishing staged control state")?;
         before_sync()?;
         #[cfg(unix)]
         File::open(path.parent().context("Control file has no parent")?)?.sync_all()?;
@@ -220,40 +221,19 @@ fn publish_private(tmp: &Path, path: &Path) -> Result<()> {
 
 #[cfg(windows)]
 fn publish_private(tmp: &Path, path: &Path) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::Storage::FileSystem::{
-        MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
-    };
-    let wide = |value: &Path| -> Result<Vec<u16>> {
-        let mut encoded: Vec<u16> = value.as_os_str().encode_wide().collect();
-        anyhow::ensure!(
-            !encoded.contains(&0),
-            "Control path contains a null character"
-        );
-        encoded.push(0);
-        Ok(encoded)
-    };
     // std canonicalization supplies the extended Windows prefix when needed;
     // derive the destination from that same parent without resolving its name.
-    let source_path = fs::canonicalize(tmp)?;
+    let source_path = fs::canonicalize(tmp).context("Resolving staged Windows state")?;
     let destination_path = source_path
         .parent()
         .context("Control temporary file has no parent")?
         .join(path.file_name().context("Control file has no name")?);
-    let source = wide(&source_path)?;
-    let destination = wide(&destination_path)?;
-    // SAFETY: both terminated buffers live for the call. The temporary file is
-    // a sibling on the same volume; no copy/delete or delayed move is enabled.
-    let moved = unsafe {
-        MoveFileExW(
-            source.as_ptr(),
-            destination.as_ptr(),
-            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
-        )
-    };
-    if moved == 0 {
-        return Err(std::io::Error::last_os_error().into());
-    }
+    // Rust 1.90's rename handles an open-for-read destination with Windows
+    // FileRenameInfoEx POSIX semantics when MoveFileEx returns AccessDenied
+    // (rust-lang/rust#123985). Handles denying delete sharing still reject it.
+    // The staged bytes were synced above; this is one same-volume replacement,
+    // with no copy/delete fallback, sleep/retry loop, or provider resubmission.
+    fs::rename(source_path, destination_path).context("Replacing Windows control state")?;
     Ok(())
 }
 

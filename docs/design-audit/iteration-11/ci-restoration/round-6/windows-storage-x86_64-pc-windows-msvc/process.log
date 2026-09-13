@@ -1,0 +1,26 @@
+   Compiling theywork-control v0.1.0 (D:\a\they-work\they-work\crates\theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.61s
+     Running tests\storage_process.rs (target\x86_64-pc-windows-msvc\debug\deps\storage_process-6426e5d5c21f80aa.exe)
+{
+  "architecture": "x86_64",
+  "cases": [
+    {
+      "name": "durable_receipt_and_fingerprint",
+      "status": "pass"
+    },
+    {
+      "name": "interrupted_send_never_replays",
+      "status": "pass"
+    },
+    {
+      "name": "missing_established_state_blocks_startup",
+      "status": "pass"
+    },
+    {
+      "name": "sharing_violation_preserves_state_and_rejects_unsent",
+      "status": "pass"
+    }
+  ],
+  "fixture_provider": "native Rust test executable; no account or model",
+  "platform": "windows"
+}

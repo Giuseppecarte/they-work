@@ -177,3 +177,33 @@ unchanged. `ci-restoration/round-5/` retains the native results and the local
 relative/absolute-path reproduction. The next native run must still save and
 validate the report, then execute the previously skipped Windows installer and
 archive checks before the candidate can be considered green.
+
+## Installer fixture execution
+
+On `a320398`, both native Windows storage gates passed, including persisted
+process reports. The retained artifacts match the exact source, x64/ARM64
+architectures and NTFS filesystem. Their raw and structured results agree on
+the required six replacement, four recovery, one live-fault and four process
+results. The next step exposed a separate failure in the offline installer
+fixture: the file intended for its ZIP archive was never created.
+
+The fixture used positional arguments with `Set-Content -NoNewline`. This
+matches a reported PowerShell parameter-binding bug that can silently omit the
+file ([upstream issue](https://github.com/PowerShell/PowerShell/issues/26583)).
+Its writes now specify `-LiteralPath` and `-Value`, keeping all five scenario
+assertions intact. The earlier source-only review missed this runtime behavior,
+so it was insufficient evidence for installer readiness.
+
+Executing the corrected fixture exposed another defect in the actual update
+path. PowerShell converted the `$null` backup argument of `File.Replace` into
+an empty string, which .NET rejected as an invalid path. The installer now
+passes `NullString.Value`, the documented way to supply a null .NET string
+([PowerShell API](https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.nullstring?view=powershellsdk-7.4.0)).
+The same replacement operation, checksum requirements, cleanup and PATH policy
+are retained. This preserves the intended no-backup behavior of
+[`File.Replace`](https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace?view=net-9.0).
+
+`ci-restoration/round-6/` records fresh Windows storage artifacts, the later
+installer failures and local PowerShell reproduction. Local execution on macOS
+does not establish Windows filesystem behavior. The next frozen native run
+must execute the complete installer fixture and packaged Windows executable.

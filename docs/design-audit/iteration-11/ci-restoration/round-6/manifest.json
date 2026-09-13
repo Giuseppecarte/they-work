@@ -1,0 +1,218 @@
+{
+  "candidate_commit": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+  "push_run_id": 34780785335,
+  "collected_at_utc": "2026-09-13T20:42:28.065354+00:00",
+  "classification": "Native Windows storage verified on x64 and ARM64 NTFS; full native jobs failed at installer fixture setup.",
+  "source_sha256": {
+    ".github/workflows/native.yml": "31045d41c245ed68ff43bbe9272f3b01fb78f8158f1c1e4cfd71c6940c049066",
+    "rust-toolchain.toml": "0484a3d0d7267e43e09b8b0e76a799bed558037d7ccd6046dd70fdd0cc1b6ef9",
+    "Cargo.lock": "f9945b22eb91a6607503b2252798eac5678c5ce2abf1a1a6d5861138e3e7eecb",
+    "scripts/test-native-install.ps1": "1dd28c63afe6406666c2d577f9707283ef5bfb8c02974cc6525181c02af2943e",
+    "scripts/install.ps1": "03d0e7ec9c4391b3c28e3f95344e19695d734dc4742ea8a381690a08e85fca61",
+    "crates/theywork-control/src/security.rs": "3e07184bfb47785331af776c97c024b0678a61cae05995ea81fb27110d571c2c",
+    "crates/theywork-control/src/security_windows_tests.rs": "082b6711a6d2185a3f9e258d4cdd3787b474a11c7fd1c1f85cf18e67f0338a97",
+    "crates/theywork-control/src/state_storage.rs": "f3b3da3443d776ec8f8698ddd9e56d5f47250db50bbdd1523c9aa5730189163f",
+    "crates/theywork-control/src/supervisor.rs": "9b006838d23bb7c054cecf021feb4dd623d7a80db997eec8fa277ac9979552cf",
+    "crates/theywork-control/tests/storage_process.rs": "3874e757064aae4c6601634942dbe0c19c783703a3925bebf3ace17ba787cf9a"
+  },
+  "fresh_evidence": {
+    "native_storage": [
+      {
+        "job_id": 103787295508,
+        "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "target": "aarch64-pc-windows-msvc",
+        "execution": "native",
+        "environment_file": "windows-storage-aarch64-pc-windows-msvc/environment.json",
+        "artifact_id": 10324968163,
+        "artifact_zip_sha256": "8ee6480e9a4751646785c6b91189b77203f32c6d301fafbbefb4457da42e49c2",
+        "retained_directory": "windows-storage-aarch64-pc-windows-msvc",
+        "replacement_passed": 6,
+        "recovery_passed": 4,
+        "live_fault_passed": 1,
+        "process_passed": 4,
+        "persisted_process_report_matches_stdout": true,
+        "storage_step_conclusion": "success",
+        "job_conclusion": "failure",
+        "failure_step": "Test Windows installer failure boundaries",
+        "packaging": "skipped"
+      },
+      {
+        "job_id": 103787295533,
+        "source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "target": "x86_64-pc-windows-msvc",
+        "execution": "native",
+        "environment_file": "windows-storage-x86_64-pc-windows-msvc/environment.json",
+        "artifact_id": 10324702347,
+        "artifact_zip_sha256": "a62b7afc3e3b8efa2b04bc3bf72ec3f9af6433117598ede49b2be4112a89702f",
+        "retained_directory": "windows-storage-x86_64-pc-windows-msvc",
+        "replacement_passed": 6,
+        "recovery_passed": 4,
+        "live_fault_passed": 1,
+        "process_passed": 4,
+        "persisted_process_report_matches_stdout": true,
+        "storage_step_conclusion": "success",
+        "job_conclusion": "failure",
+        "failure_step": "Test Windows installer failure boundaries",
+        "packaging": "skipped"
+      }
+    ],
+    "installer_failures": [
+      {
+        "job_id": 103787295533,
+        "run_kind": "push",
+        "checked_out_source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "raw_log_path": "docs/design-audit/tmp/ci-follow-up/job-103787295533.log",
+        "raw_log_sha256": "dafdddd1282d29cc4eb34bb1da7fd22b1f190d6dd976adb8c7dae2ad6c871b04",
+        "raw_log_bytes": 121710,
+        "excerpt": "windows-x86_64-installer-failure.log",
+        "excerpt_line_ranges": [
+          [
+            1,
+            34
+          ],
+          [
+            1311,
+            1329
+          ]
+        ],
+        "failure": "Compress-Archive cannot find the intended synthetic they-work.exe payload at scripts/test-native-install.ps1:32.",
+        "installer_scenarios_passed": 0,
+        "native_release_build": "passed before fixture setup",
+        "native_packaging": "skipped"
+      },
+      {
+        "job_id": 103787295508,
+        "run_kind": "push",
+        "checked_out_source": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+        "raw_log_path": "docs/design-audit/tmp/ci-follow-up/job-103787295508.log",
+        "raw_log_sha256": "7fd99b3d1268cb936b83bb3f3c595df8f45ca4ec94fc90be00a1bf52dbfaf94e",
+        "raw_log_bytes": 125703,
+        "excerpt": "windows-aarch64-installer-failure.log",
+        "excerpt_line_ranges": [
+          [
+            1,
+            34
+          ],
+          [
+            1372,
+            1390
+          ]
+        ],
+        "failure": "Compress-Archive cannot find the intended synthetic they-work.exe payload at scripts/test-native-install.ps1:32.",
+        "installer_scenarios_passed": 0,
+        "native_release_build": "passed before fixture setup",
+        "native_packaging": "skipped"
+      },
+      {
+        "job_id": 103787302597,
+        "run_kind": "pull_request merge",
+        "checked_out_source": "25e1be50cde3e320043479811edbb959e06e0ddd",
+        "raw_log_path": "docs/design-audit/tmp/ci-follow-up/job-103787302597.log",
+        "raw_log_sha256": "0b05c138533900a189458511993e12a711f0f38055e37ba579114a7e492d341f",
+        "raw_log_bytes": 121340,
+        "excerpt": "pr-windows-x86_64-installer-failure.log",
+        "excerpt_line_ranges": [
+          [
+            1,
+            34
+          ],
+          [
+            1306,
+            1324
+          ]
+        ],
+        "failure": "Compress-Archive cannot find the intended synthetic they-work.exe payload at scripts/test-native-install.ps1:32.",
+        "installer_scenarios_passed": 0,
+        "native_release_build": "passed before fixture setup",
+        "native_packaging": "skipped"
+      }
+    ]
+  },
+  "reused_evidence": [
+    {
+      "path": "../round-5/manifest.json",
+      "scope": "Historical diagnosis of relative report paths only; no old pass counts are substituted for this candidate."
+    }
+  ],
+  "local_installer_validation": {
+    "status": "passed locally after staged fixture and installer fixes",
+    "baseline_revision": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+    "execution": "native macOS ARM64 PowerShell; simulated Windows target selection, not Windows filesystem evidence",
+    "runtime": {
+      "PSVersion": "7.6.6",
+      "OS": "macOS 26.6.2",
+      "Platform": "Unix",
+      "ProcessArchitecture": "Arm64",
+      "Framework": ".NET 10.0.12"
+    },
+    "validation_file": "windows-installer-pwsh-validation.json",
+    "updated_source_sha256": {
+      "scripts/test-native-install.ps1": "45dab6803ec0c32b8b935fed4cb5a268c4e2e5c509aad2fd7596757728644b41",
+      "scripts/install.ps1": "5497e116c8b2539b907e748dce3b710418bf1b8882d43e0e2eb1bcc6ee993c64"
+    },
+    "stages": [
+      {
+        "name": "original",
+        "executed_checks": 0,
+        "exit_code": 1,
+        "failure": "positional Set-Content with -NoNewline silently omitted fixture executable"
+      },
+      {
+        "name": "fixture-fixed",
+        "executed_checks": 4,
+        "exit_code": 1,
+        "failure": "File.Replace backup argument $null bound to empty string"
+      }
+    ],
+    "final_results": [
+      {
+        "simulated_windows_target_architecture": "AMD64",
+        "passed": 5,
+        "exit_code": 0,
+        "log": "windows-installer-pwsh-after-amd64.log"
+      },
+      {
+        "simulated_windows_target_architecture": "ARM64",
+        "passed": 5,
+        "exit_code": 0,
+        "log": "windows-installer-pwsh-after-arm64.log"
+      }
+    ],
+    "native_windows_confirmation": "pending next candidate; local PowerShell execution is not native Windows filesystem or installer validation",
+    "limitations": [
+      "Windows executable payload is synthetic text; no Windows executable ran",
+      "Windows filesystem, ACL, and user PATH behavior require native CI",
+      "Both installer downloads are mocked; no release installation or PATH mutation occurred"
+    ]
+  },
+  "limitations": [
+    "Native packaging and archive smoke were skipped after installer fixture failure on both Windows jobs.",
+    "inspection-windows.json preserves the original in-progress job snapshot collected after storage succeeded; later failure is established by separately hashed complete job logs.",
+    "Native Windows storage evidence covers hosted NTFS runners, not broader filesystems, power loss, or physical-terminal behavior.",
+    "Authenticated providers, physical-terminal latency, and public release remain untested by this evidence."
+  ],
+  "evidence_sha256": {
+    "inspection-windows.json": "21c011115be07045be2a1eb0f91defa6db240ade0d3fef8364f41bd05b3c5180",
+    "pr-windows-x86_64-installer-failure.log": "b65ec2aee0760c04b89249105d2fec9c924042dcc9a48fffd57e40541fed6b76",
+    "windows-aarch64-installer-failure.log": "e1d6065a57487aee2b2b36e64a31202b26e9f3a679b428cb86112d5f09b30e99",
+    "windows-installer-null-string-repro.log": "ec171ad78496efdcba9661baae4f0abab5643239b038c8210bb60f9476241c71",
+    "windows-installer-pwsh-after-amd64.log": "aca45e9e729198d5bf34296c54bf6eb3423a905303bcb65f61a9271e223433a5",
+    "windows-installer-pwsh-after-arm64.log": "9b4f48dc8db2d6051b53e704d4ed64a10c49947cd784390d3acae736d3aa5e28",
+    "windows-installer-pwsh-before.log": "abf385b21870ef59bb2f36d1956fae53e6ccfb61f072fe55eb7694a5023f37d1",
+    "windows-installer-pwsh-intermediate-amd64.log": "417cac8a449a854672af3f164d16f4f4d1c44023a036f47cf38ba1f657d8fad6",
+    "windows-installer-pwsh-validation.json": "0986b3e027f6a80c0e4db26f64d7d833624aa9ac183ddc1707ac0a94c16d3313",
+    "windows-storage-aarch64-pc-windows-msvc/environment.json": "7b1f116003eee01f761f42cfe82b408186350db8451825eaf00309b9d19511cc",
+    "windows-storage-aarch64-pc-windows-msvc/live-fault.log": "280468b85984fe113526dcfa51fd869b404f236afecba0fe6037d21f5a181cf2",
+    "windows-storage-aarch64-pc-windows-msvc/process-results.json": "32e4ed4dd68f87bef05448399ec09878da486dec0701ee44a614819db7489f75",
+    "windows-storage-aarch64-pc-windows-msvc/process.log": "71905061fec82b436b02f23591ea786a6bb49ec5c4fc5a6dce9ddbc4874703bf",
+    "windows-storage-aarch64-pc-windows-msvc/recovery.log": "ac8e53fbe0a31efb743474eddce51e430e1621f1a6978a1c8ebeaae91bebce5f",
+    "windows-storage-aarch64-pc-windows-msvc/replacement.log": "1876de83e9d1e87a479750349467da6728bc33cb8e747f39faf8bcdbecfad71d",
+    "windows-storage-x86_64-pc-windows-msvc/environment.json": "7d3ca1cda6febfbbf3eeddc32c421b7faf60bd21f2f94cf4928e5376c917688b",
+    "windows-storage-x86_64-pc-windows-msvc/live-fault.log": "ca4a3c36501e73328b1386a640c8b7a6f6315c54ee614546a6c7f4511b5ddabd",
+    "windows-storage-x86_64-pc-windows-msvc/process-results.json": "3e5a811b658eb4fc09d554a65400ca78afe8b8358aef9a9d5940165dbaf22bee",
+    "windows-storage-x86_64-pc-windows-msvc/process.log": "abbc07a1c2c3a4fba53f9f339157dc03e32b25e58ddbfc39c3ce7635f03fc334",
+    "windows-storage-x86_64-pc-windows-msvc/recovery.log": "31d602bf24b9b3b103b552154539a0e66ae9f76ac84352cdb6f98c2dd33c25e3",
+    "windows-storage-x86_64-pc-windows-msvc/replacement.log": "d7bb070b031d65cba3d616bed704ec6203951f0e619b18e2909e16af612d3d8f",
+    "windows-x86_64-installer-failure.log": "524245f9b2f58ba5027486a1e7b34f2a96098994359012e8faa9b4e525df30a6"
+  }
+}

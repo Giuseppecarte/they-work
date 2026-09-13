@@ -1,0 +1,90 @@
+{
+  "execution": "native macOS ARM64 PowerShell; simulated Windows target selection, not Windows filesystem evidence",
+  "powershell_release": {
+    "name": "powershell-7.6.6-osx-arm64.tar.gz",
+    "browser_download_url": "https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/powershell-7.6.6-osx-arm64.tar.gz",
+    "digest": "sha256:6df833d094ebac1c1a74340d7b3437f4aaf5e03ce640484a1c4359f3ce8b3db1",
+    "size": 70604356,
+    "release": "v7.6.6"
+  },
+  "source_hashes": {
+    "scripts/test-native-install.ps1": "45dab6803ec0c32b8b935fed4cb5a268c4e2e5c509aad2fd7596757728644b41",
+    "scripts/install.ps1": "5497e116c8b2539b907e748dce3b710418bf1b8882d43e0e2eb1bcc6ee993c64"
+  },
+  "results": [
+    {
+      "simulated_windows_target_architecture": "AMD64",
+      "exit_code": 0,
+      "executed_checks": 5,
+      "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-after-amd64.log",
+      "log_sha256": "aca45e9e729198d5bf34296c54bf6eb3423a905303bcb65f61a9271e223433a5"
+    },
+    {
+      "simulated_windows_target_architecture": "ARM64",
+      "exit_code": 0,
+      "executed_checks": 5,
+      "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-after-arm64.log",
+      "log_sha256": "9b4f48dc8db2d6051b53e704d4ed64a10c49947cd784390d3acae736d3aa5e28"
+    }
+  ],
+  "stages": [
+    {
+      "name": "original",
+      "source_hashes": {
+        "scripts/test-native-install.ps1": "1dd28c63afe6406666c2d577f9707283ef5bfb8c02974cc6525181c02af2943e",
+        "scripts/install.ps1": "03d0e7ec9c4391b3c28e3f95344e19695d734dc4742ea8a381690a08e85fca61"
+      },
+      "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-before.log",
+      "executed_checks": 0,
+      "exit_code": 1,
+      "failure": "positional Set-Content with -NoNewline silently omitted fixture executable"
+    },
+    {
+      "name": "fixture-fixed",
+      "source_hashes": {
+        "scripts/test-native-install.ps1": "45dab6803ec0c32b8b935fed4cb5a268c4e2e5c509aad2fd7596757728644b41",
+        "scripts/install.ps1": "03d0e7ec9c4391b3c28e3f95344e19695d734dc4742ea8a381690a08e85fca61"
+      },
+      "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-intermediate-amd64.log",
+      "executed_checks": 4,
+      "exit_code": 1,
+      "failure": "File.Replace backup argument $null bound to empty string"
+    },
+    {
+      "name": "fixture-and-installer-fixed",
+      "source_hashes": {
+        "scripts/test-native-install.ps1": "45dab6803ec0c32b8b935fed4cb5a268c4e2e5c509aad2fd7596757728644b41",
+        "scripts/install.ps1": "5497e116c8b2539b907e748dce3b710418bf1b8882d43e0e2eb1bcc6ee993c64"
+      },
+      "results": [
+        {
+          "simulated_windows_target_architecture": "AMD64",
+          "exit_code": 0,
+          "executed_checks": 5,
+          "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-after-amd64.log",
+          "log_sha256": "aca45e9e729198d5bf34296c54bf6eb3423a905303bcb65f61a9271e223433a5"
+        },
+        {
+          "simulated_windows_target_architecture": "ARM64",
+          "exit_code": 0,
+          "executed_checks": 5,
+          "log": "docs/design-audit/tmp/ci-follow-up/windows-installer-pwsh-after-arm64.log",
+          "log_sha256": "9b4f48dc8db2d6051b53e704d4ed64a10c49947cd784390d3acae736d3aa5e28"
+        }
+      ]
+    }
+  ],
+  "baseline_revision": "a3203986bcd69dc9ccb64350066168c2b1515fd0",
+  "runtime": {
+    "PSVersion": "7.6.6",
+    "OS": "macOS 26.6.2",
+    "Platform": "Unix",
+    "ProcessArchitecture": "Arm64",
+    "Framework": ".NET 10.0.12"
+  },
+  "limitations": [
+    "Windows executable payload is synthetic text; no Windows executable ran",
+    "Windows filesystem, ACL, and user PATH behavior require native CI",
+    "Both installer downloads are mocked; no release installation or PATH mutation occurred"
+  ]
+}

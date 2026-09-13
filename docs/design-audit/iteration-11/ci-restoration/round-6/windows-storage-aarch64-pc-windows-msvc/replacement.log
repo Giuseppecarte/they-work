@@ -1,0 +1,21 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling syn v3.0.4
+   Compiling serde_derive v1.0.229
+   Compiling serde v1.0.229
+   Compiling theywork-core v0.1.0 (C:\a\they-work\they-work\crates\theywork-core)
+   Compiling theywork-collect v0.1.0 (C:\a\they-work\they-work\crates\theywork-collect)
+   Compiling theywork-control v0.1.0 (C:\a\they-work\they-work\crates\theywork-control)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.68s
+     Running unittests src\lib.rs (target\aarch64-pc-windows-msvc\debug\deps\theywork_control-6439605431c7a01c.exe)
+
+running 6 tests
+test security::windows_tests::concurrent_readers_never_see_missing_or_partial_state ... ok
+test security::windows_tests::interruption_before_and_after_publication_preserves_complete_state ... ok
+test security::windows_tests::rejects_directory_and_reparse_destination_without_touching_target ... ok
+test security::windows_tests::replacement_child ... ok
+test security::windows_tests::replacement_keeps_owner_only_acl_for_state_config_and_endpoint ... ok
+test security::windows_tests::sharing_violation_keeps_original_and_cleans_its_candidate ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 1.14s
+

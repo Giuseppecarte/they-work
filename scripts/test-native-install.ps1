@@ -28,11 +28,13 @@ try {
     $target = if ($architecture -eq 'ARM64') { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
     $asset = "they-work-$target.zip"
     $payload = Join-Path $scratch 'they-work.exe'
-    Set-Content -NoNewline $payload 'release fixture'
+    # Bind Value explicitly: PowerShell's dynamic NoNewline parameter can
+    # silently skip creating the file when Value is bound positionally.
+    Set-Content -LiteralPath $payload -Value 'release fixture' -NoNewline
     Compress-Archive -Path $payload -DestinationPath (Join-Path $scratch 'release.zip')
     $digest = (Get-FileHash (Join-Path $scratch 'release.zip') -Algorithm SHA256).Hash
     $checksums = Join-Path $scratch 'SHA256SUMS'
-    Set-Content $checksums "$digest  $asset"
+    Set-Content -LiteralPath $checksums -Value "$digest  $asset"
     $destination = Join-Path $scratch 'path with spaces'
     $installer = Join-Path $PSScriptRoot 'install.ps1'
     $pathBefore = [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -42,8 +44,8 @@ try {
     Assert-True ([Environment]::GetEnvironmentVariable('Path', 'User') -eq $pathBefore) 'NoPath modified PATH'
     Write-Host 'PASS: valid archive, path with spaces, NoPath'
 
-    Set-Content -NoNewline $installed 'previous executable'
-    Set-Content $checksums (('0' * 64) + "  $asset")
+    Set-Content -LiteralPath $installed -Value 'previous executable' -NoNewline
+    Set-Content -LiteralPath $checksums -Value (('0' * 64) + "  $asset")
     Expect-Failure { & $installer -InstallDir $destination -NoPath }
     Assert-True ((Get-Content -Raw $installed) -eq 'previous executable') 'Checksum failure replaced existing install'
     Write-Host 'PASS: checksum failure preserves previous executable'
@@ -54,11 +56,11 @@ try {
     $global:TheyWorkDownloadFails = $false
     Write-Host 'PASS: download failure preserves previous executable'
 
-    Set-Content $checksums "$digest  $asset`n$digest  $asset"
+    Set-Content -LiteralPath $checksums -Value "$digest  $asset`n$digest  $asset"
     Expect-Failure { & $installer -InstallDir $destination -NoPath }
     Write-Host 'PASS: duplicate checksum rejected'
 
-    Set-Content $checksums "$digest  $asset"
+    Set-Content -LiteralPath $checksums -Value "$digest  $asset"
     & $installer -InstallDir $destination -NoPath
     Assert-True ((Get-Content -Raw $installed) -eq 'release fixture') 'Update failed'
     Write-Host 'PASS: successful update'

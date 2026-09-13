@@ -46,7 +46,9 @@ try {
     $staged = Join-Path $InstallDir ('.they-work-' + [guid]::NewGuid() + '.exe')
     Copy-Item (Join-Path $work 'they-work.exe') $staged
     if (Test-Path $destination) {
-        [IO.File]::Replace($staged, $destination, $null)
+        # The .NET backup path needs a null string; PowerShell converts $null
+        # to an empty string, which File.Replace rejects.
+        [IO.File]::Replace($staged, $destination, [System.Management.Automation.Language.NullString]::Value)
     } else {
         [IO.File]::Move($staged, $destination)
     }

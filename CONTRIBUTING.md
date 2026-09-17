@@ -130,7 +130,12 @@ useful place to preview a sprite without reading anyone's files.
 If a view needs new information, extend the core event/model contract first.
 Do not make <code>render</code> depend on <code>collect</code>.
 
-## Pull requests
+## How work reaches main
+
+[`docs/workflow.md`](docs/workflow.md) is the authoritative workflow: task
+branches, the gates every change passes, running the program as verification,
+and landing on `main` by fast-forward. It replaces the pull-request model this
+section used to describe.
 
 Keep changes narrow, explain user-visible behavior, and run the commands above.
 The GitHub Actions workflow repeats formatting, strict Clippy, the full test

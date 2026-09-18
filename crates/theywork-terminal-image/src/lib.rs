@@ -30,6 +30,9 @@ use std::fmt;
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
 
+#[cfg(windows)]
+mod windows_probe;
+
 #[cfg(unix)]
 use std::io::{IsTerminal, Read, Stdin, Stdout};
 
@@ -45,6 +48,7 @@ pub const KITTY_FILE_QUERY: &[u8] = b"\x1b_Gi=32,s=1,v=1,a=q,t=f,f=32;AAAA\x1b\\
 pub const SIXEL_QUERY: &[u8] = b"\x1b[c";
 pub const CELL_SIZE_QUERY: &[u8] = b"\x1b[16t\x1b[14t\x1b[18t";
 pub const TERMINAL_VERSION_QUERY: &[u8] = b"\x1b[>q";
+pub const SYNCHRONIZED_OUTPUT_QUERY: &[u8] = b"\x1b[?2026$p";
 
 /// The image protocol selected for a terminal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -288,6 +292,7 @@ pub struct Capabilities {
     pub graphics: GraphicsProtocol,
     pub cell_size: Option<CellSize>,
     pub terminal_cells: Option<(u16, u16)>,
+    pub synchronized_output: bool,
 }
 
 impl Capabilities {
@@ -296,6 +301,7 @@ impl Capabilities {
             graphics: GraphicsProtocol::None,
             cell_size: None,
             terminal_cells: None,
+            synchronized_output: false,
         }
     }
 
@@ -348,6 +354,7 @@ impl CapabilityDetector {
         query.extend_from_slice(KITTY_FILE_QUERY);
         query.extend_from_slice(SIXEL_QUERY);
         query.extend_from_slice(CELL_SIZE_QUERY);
+        query.extend_from_slice(SYNCHRONIZED_OUTPUT_QUERY);
         query.extend_from_slice(TERMINAL_VERSION_QUERY);
         io.send(&query)?;
 
@@ -405,6 +412,8 @@ pub fn parse_capabilities(response: &[u8]) -> Capabilities {
         graphics,
         cell_size,
         terminal_cells,
+        synchronized_output: csi_bodies(response, b'y')
+            .any(|body| matches!(body, "?2026;1$" | "?2026;2$")),
     }
 }
 
@@ -553,14 +562,8 @@ fn csi_bodies(response: &[u8], final_byte: u8) -> impl Iterator<Item = &str> {
     bodies.into_iter()
 }
 
-#[cfg(unix)]
 pub fn detect_terminal() -> io::Result<Capabilities> {
     detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT)
-}
-
-#[cfg(not(unix))]
-pub fn detect_terminal() -> io::Result<Capabilities> {
-    Ok(Capabilities::none())
 }
 
 #[cfg(unix)]
@@ -592,7 +595,12 @@ pub fn detect_terminal_with_timeout(timeout: Duration) -> io::Result<Capabilitie
     Ok(capabilities)
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+pub fn detect_terminal_with_timeout(timeout: Duration) -> io::Result<Capabilities> {
+    windows_probe::detect(timeout)
+}
+
+#[cfg(not(any(unix, windows)))]
 pub fn detect_terminal_with_timeout(_: Duration) -> io::Result<Capabilities> {
     Ok(Capabilities::none())
 }
@@ -1738,6 +1746,51 @@ mod tests {
     }
 
     #[test]
+    fn synchronization_requires_a_positive_mode_reply() {
+        for state in [1, 2] {
+            let response = format!("\x1b[?2026;{state}$y");
+            assert!(parse_capabilities(response.as_bytes()).synchronized_output);
+        }
+        for response in [
+            "",
+            "\x1b[?2026;0$y",
+            "\x1b[?2026;4$y",
+            "\x1b[?2026;2y",
+            "\x1b[?2026;2$",
+            "\x1b[?2027;2$y",
+        ] {
+            assert!(!parse_capabilities(response.as_bytes()).synchronized_output);
+        }
+    }
+
+    #[test]
+    fn fragmented_replies_share_the_existing_probe_deadline() {
+        struct Fragmented {
+            chunks: std::collections::VecDeque<Vec<u8>>,
+        }
+        impl ProbeIo for Fragmented {
+            fn send(&mut self, _: &[u8]) -> io::Result<()> {
+                Ok(())
+            }
+            fn receive(&mut self, timeout: Duration) -> io::Result<Vec<u8>> {
+                assert!(timeout <= DEFAULT_PROBE_TIMEOUT);
+                Ok(self.chunks.pop_front().unwrap_or_default())
+            }
+        }
+        let mut probe = Fragmented {
+            chunks: [
+                b"\x1b[?1;2;4c\x1b[?202".to_vec(),
+                b"6;2$y\x1b[6;16;8t".to_vec(),
+            ]
+            .into(),
+        };
+        let caps = CapabilityDetector::default().detect(&mut probe).unwrap();
+        assert_eq!(caps.graphics, GraphicsProtocol::Sixel);
+        assert_eq!(caps.cell_size, Some(CellSize::new(8, 16)));
+        assert!(caps.synchronized_output);
+    }
+
+    #[test]
     fn unsupported_probe_is_bounded_and_emits_all_queries_once() {
         assert_eq!(
             CapabilityDetector::default().timeout(),
@@ -1757,6 +1810,10 @@ mod tests {
             .windows(SIXEL_QUERY.len())
             .any(|window| window == SIXEL_QUERY));
         assert!(probe.writes.ends_with(TERMINAL_VERSION_QUERY));
+        assert!(probe
+            .writes
+            .windows(SYNCHRONIZED_OUTPUT_QUERY.len())
+            .any(|bytes| bytes == SYNCHRONIZED_OUTPUT_QUERY));
     }
 
     #[test]

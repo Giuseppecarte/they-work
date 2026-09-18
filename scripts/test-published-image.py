@@ -31,7 +31,7 @@ PROBE_MARKERS = (b'\x1b_G', b'\x1b[c', b'\x1b[16t', b'\x1b[>q')
 # The default image-free office is a native roster, not pixel glyph art.
 # These independent demo facts require identity, state, project and navigation.
 NATIVE_MARKERS = (b'checkout', b'Checkout lead', b'Timeout tests', b'Retry endpoint',
-                  b'Question for you', b'People 3/3', b'[ Back ]')
+                  b'Question for you', b'People 3/3', b'[ Esc Tower ]')
 
 
 def fallback_ready(frame):

@@ -5,6 +5,7 @@
 
 mod connections;
 mod control_host;
+mod frame_output;
 
 use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
@@ -45,6 +46,7 @@ const POLL_INTERVAL: Duration = Duration::from_secs(1);
 const CLI_DETAIL_LIMIT: usize = 240;
 const UNKNOWN_WAITING_DETAIL: &str = "waiting, no pending command identified";
 const DOCTOR_PROBE_TIMEOUT: Duration = Duration::from_millis(150);
+type OfficeTerminal = Terminal<CrosstermBackend<frame_output::FrameOutput<io::Stdout>>>;
 
 #[cfg(unix)]
 static TERMINATION_SIGNAL: AtomicI32 = AtomicI32::new(0);
@@ -505,7 +507,10 @@ fn main() -> Result<()> {
     apply_color_mode(args.color);
     let capabilities = detect_terminal_with_timeout(DEFAULT_PROBE_TIMEOUT).unwrap_or_default();
     let mut terminal_guard = TerminalModeGuard::enter_alternate()?;
-    let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(frame_output::FrameOutput::new(
+        io::stdout(),
+        capabilities.synchronized_output,
+    )))?;
 
     let result = run(&mut terminal, &mut runtime, &args, capabilities);
     drop(terminal);
@@ -730,7 +735,7 @@ fn print_terminal_report() {
         cli_quoted_value(&renderer.encoding_reason),
     );
     println!(
-        "terminal_graphics protocol={} probe={} cells={} cell_pixels={}",
+        "terminal_graphics protocol={} probe={} cells={} cell_pixels={} synchronized_output={}",
         graphics_protocol_label(capabilities.graphics),
         cli_quoted_value(&probe),
         terminal_cells.map_or_else(
@@ -741,6 +746,7 @@ fn print_terminal_report() {
             || "unknown".to_string(),
             |cell| format!("{}x{}", cell.width, cell.height),
         ),
+        capabilities.synchronized_output,
     );
     match terminal_cells.and_then(|cells| diagnostic_frame(ui, capabilities, cells)) {
         Some(frame) => println!(
@@ -1690,7 +1696,7 @@ fn optional_metric(value: Option<u64>) -> String {
 }
 
 fn run(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    terminal: &mut OfficeTerminal,
     runtime: &mut Runtime,
     args: &Args,
     capabilities: Capabilities,
@@ -1730,6 +1736,7 @@ fn run(
     );
     let mut control_cursor = theywork_control::BridgeCursor::default();
     let mut notebook_save = Instant::now();
+    let mut clear_before_frame = false;
     let terminal_cells = terminal.size()?;
     let mut presented_size = (terminal_cells.width, terminal_cells.height);
     let image_cell_size = capabilities
@@ -1839,9 +1846,11 @@ fn run(
                         }
                         persist_notebook(runtime, &ui)?;
                         image_presenter.present(terminal.backend_mut(), None)?;
+                        Write::flush(terminal.backend_mut())?;
                         ui.invalidate_pointer();
                         mouse_capture.sync(false)?;
                         let status = handoff_console(terminal, &command);
+                        clear_before_frame = true;
                         mouse_capture.sync(ui.mouse_enabled())?;
                         match status {
                             Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
@@ -1874,6 +1883,11 @@ fn run(
                 ui.invalidate_pointer();
                 presented_size = current_size;
             }
+            terminal.backend_mut().writer_mut().begin();
+            if clear_before_frame {
+                terminal.clear()?;
+                clear_before_frame = false;
+            }
             image_presenter.resize(
                 terminal.backend_mut(),
                 (terminal_cells.width, terminal_cells.height),
@@ -1903,147 +1917,169 @@ fn run(
                     &native_frame,
                 )?;
             }
+            let write_started = Instant::now();
+            terminal.backend_mut().writer_mut().finish()?;
+            image_presenter.note_write_time(write_started.elapsed());
 
             if !image_presenter.enabled() || image_presenter.current_frame_presented {
                 ui.frame_presented();
             }
 
             if event::poll(FRAME)? {
-                let input = event::read()?;
-                // Input updates must not wait for an animation pacing interval.
-                image_presenter.next_frame = Instant::now();
-                if let TermEvent::Paste(text) = input {
-                    ui.handle_paste(&text);
-                    continue;
-                }
-                {
-                    let previous_view = ui.view();
-                    let command = match input {
-                        TermEvent::Key(key) => {
-                            if is_ctrl_c(key) {
-                                return Ok(());
-                            }
-                            ui.handle_key(key)
-                        }
-                        TermEvent::Mouse(mouse) => ui.handle_mouse(mouse),
-                        TermEvent::Resize(_, _) => {
-                            ui.invalidate_pointer();
-                            None
-                        }
-                        _ => None,
-                    };
-                    match command {
-                        Some(UiCommand::Quit) => return Ok(()),
-                        Some(UiCommand::Control(mut command)) => {
-                            if let theywork_render::views::control::Command::Start {
-                                project, ..
-                            } = &mut command
-                            {
-                                let absolute = match resolve_filesystem_path(Path::new(project)) {
-                                    Ok(path) => path,
-                                    Err(error) => {
-                                        ui.complete_control(error.to_string(), false);
-                                        continue;
-                                    }
-                                };
-                                *project = absolute.to_string_lossy().into_owned();
-                                let project = match normalize_cli_path(&absolute) {
-                                    Ok(path) => path,
-                                    Err(error) => {
-                                        ui.complete_control(error.to_string(), false);
-                                        continue;
-                                    }
-                                };
-                                if !runtime.config.only_paths.is_empty()
-                                    && !runtime
-                                        .config
-                                        .only_paths
-                                        .iter()
-                                        .any(|path| path == Path::new(&project))
-                                {
-                                    ui.complete_control("This view is scoped with --project. Open the full tower to create a task in another project.".into(),false);
-                                    continue;
-                                }
-                            }
-                            if let Err(error) = control.submit(command, &runtime.world) {
-                                ui.complete_control(error.to_string(), false);
-                            }
-                        }
-                        Some(UiCommand::Sources) => {
-                            let paused_sources = poller.stop();
-                            // Joining can finish an in-flight poll. Keep its events
-                            // before replacing the channel and resuming the cursors.
-                            for result in poller.drain() {
-                                for event in result.events {
-                                    runtime.world.apply(event);
-                                }
-                                for error in result.errors {
-                                    if !runtime.errors.contains(&error) {
-                                        runtime.errors.push(error);
-                                    }
-                                }
-                            }
-                            image_presenter.present(terminal.backend_mut(), None)?;
-                            let mut connection_args = active_args.clone();
-                            connection_args.setup = true;
-                            let value = connections::Connections::from_args(&connection_args)?;
-                            ui.invalidate_pointer();
-                            mouse_capture.sync(false)?;
-                            let action = connections::show(
-                                terminal,
-                                value,
-                                active_args.config_dir.as_deref(),
-                                active_args.remember.unwrap_or(true),
-                                !active_args.no_save,
-                                ui.mouse_enabled(),
-                                ui.preferences().light,
-                            )?;
-                            mouse_capture.sync(ui.mouse_enabled())?;
-                            let replaced_world = !matches!(&action, connections::Action::Cancel);
-                            match action {
-                                connections::Action::Connect { value, remember } => {
-                                    active_args.remember = Some(remember);
-                                    value.apply(&mut active_args);
-                                    active_args.demo = false;
-                                    active_args.setup = false;
-                                    *runtime = build_runtime(&active_args)?;
-                                    ui.open_tower();
-                                }
-                                connections::Action::Demo => {
-                                    active_args.demo = true;
-                                    *runtime = build_runtime(&active_args)?;
-                                    ui.open_tower();
-                                }
-                                connections::Action::Cancel => runtime.sources = paused_sources,
-                            }
-                            ui.set_observation_summary(source_observation(
-                                runtime,
-                                &runtime.errors,
-                                now,
-                            ));
-                            poller = Poller::start(std::mem::take(&mut runtime.sources));
-                            control = control_host::Host::start(
-                                connections::Connections::from_args(&active_args)?,
-                                runtime
-                                    .config_dir
-                                    .clone()
-                                    .filter(|_| runtime.save_preferences),
-                                !runtime.demo,
-                            );
-                            if replaced_world {
-                                control_cursor = theywork_control::BridgeCursor::default();
-                            }
-                            terminal.clear()?;
-                        }
-                        None => {}
+                // Coalesce queued input before encoding another image. Bound
+                // the batch so held keys cannot starve observation updates.
+                for _ in 0..32 {
+                    if !event::poll(Duration::ZERO)? {
+                        break;
                     }
-                    if previous_view == View::Cameras && ui.view() == View::Office {
-                        persist_selected_office(runtime, ui.selected_office(), now)?;
+                    let input = event::read()?;
+                    let coalesce = matches!(&input, TermEvent::Key(key) if matches!(key.code,
+                    KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right |
+                    KeyCode::Home | KeyCode::End | KeyCode::PageUp | KeyCode::PageDown));
+                    // Input updates must not wait for an animation pacing interval.
+                    image_presenter.next_frame = Instant::now();
+                    if let TermEvent::Paste(text) = input {
+                        ui.handle_paste(&text);
+                        continue;
+                    }
+                    {
+                        let previous_view = ui.view();
+                        let command = match input {
+                            TermEvent::Key(key) => {
+                                if is_ctrl_c(key) {
+                                    return Ok(());
+                                }
+                                ui.handle_key(key)
+                            }
+                            TermEvent::Mouse(mouse) => ui.handle_mouse(mouse),
+                            TermEvent::Resize(_, _) => {
+                                ui.invalidate_pointer();
+                                None
+                            }
+                            _ => None,
+                        };
+                        match command {
+                            Some(UiCommand::Quit) => return Ok(()),
+                            Some(UiCommand::Control(mut command)) => {
+                                if let theywork_render::views::control::Command::Start {
+                                    project,
+                                    ..
+                                } = &mut command
+                                {
+                                    let absolute = match resolve_filesystem_path(Path::new(project))
+                                    {
+                                        Ok(path) => path,
+                                        Err(error) => {
+                                            ui.complete_control(error.to_string(), false);
+                                            continue;
+                                        }
+                                    };
+                                    *project = absolute.to_string_lossy().into_owned();
+                                    let project = match normalize_cli_path(&absolute) {
+                                        Ok(path) => path,
+                                        Err(error) => {
+                                            ui.complete_control(error.to_string(), false);
+                                            continue;
+                                        }
+                                    };
+                                    if !runtime.config.only_paths.is_empty()
+                                        && !runtime
+                                            .config
+                                            .only_paths
+                                            .iter()
+                                            .any(|path| path == Path::new(&project))
+                                    {
+                                        ui.complete_control("This view is scoped with --project. Open the full tower to create a task in another project.".into(),false);
+                                        continue;
+                                    }
+                                }
+                                if let Err(error) = control.submit(command, &runtime.world) {
+                                    ui.complete_control(error.to_string(), false);
+                                }
+                            }
+                            Some(UiCommand::Sources) => {
+                                let paused_sources = poller.stop();
+                                // Joining can finish an in-flight poll. Keep its events
+                                // before replacing the channel and resuming the cursors.
+                                for result in poller.drain() {
+                                    for event in result.events {
+                                        runtime.world.apply(event);
+                                    }
+                                    for error in result.errors {
+                                        if !runtime.errors.contains(&error) {
+                                            runtime.errors.push(error);
+                                        }
+                                    }
+                                }
+                                terminal.backend_mut().writer_mut().begin();
+                                image_presenter.present(terminal.backend_mut(), None)?;
+                                let mut connection_args = active_args.clone();
+                                connection_args.setup = true;
+                                let value = connections::Connections::from_args(&connection_args)?;
+                                ui.invalidate_pointer();
+                                mouse_capture.sync(false)?;
+                                let action = connections::show(
+                                    terminal,
+                                    value,
+                                    active_args.config_dir.as_deref(),
+                                    active_args.remember.unwrap_or(true),
+                                    !active_args.no_save,
+                                    ui.mouse_enabled(),
+                                    ui.preferences().light,
+                                )?;
+                                mouse_capture.sync(ui.mouse_enabled())?;
+                                let replaced_world =
+                                    !matches!(&action, connections::Action::Cancel);
+                                match action {
+                                    connections::Action::Connect { value, remember } => {
+                                        active_args.remember = Some(remember);
+                                        value.apply(&mut active_args);
+                                        active_args.demo = false;
+                                        active_args.setup = false;
+                                        *runtime = build_runtime(&active_args)?;
+                                        ui.open_tower();
+                                    }
+                                    connections::Action::Demo => {
+                                        active_args.demo = true;
+                                        *runtime = build_runtime(&active_args)?;
+                                        ui.open_tower();
+                                    }
+                                    connections::Action::Cancel => runtime.sources = paused_sources,
+                                }
+                                ui.set_observation_summary(source_observation(
+                                    runtime,
+                                    &runtime.errors,
+                                    now,
+                                ));
+                                poller = Poller::start(std::mem::take(&mut runtime.sources));
+                                control = control_host::Host::start(
+                                    connections::Connections::from_args(&active_args)?,
+                                    runtime
+                                        .config_dir
+                                        .clone()
+                                        .filter(|_| runtime.save_preferences),
+                                    !runtime.demo,
+                                );
+                                if replaced_world {
+                                    control_cursor = theywork_control::BridgeCursor::default();
+                                }
+                                clear_before_frame = true;
+                            }
+                            None => {}
+                        }
+                        if previous_view == View::Cameras && ui.view() == View::Office {
+                            persist_selected_office(runtime, ui.selected_office(), now)?;
+                        }
+                        if !coalesce || previous_view != ui.view() {
+                            break;
+                        }
                     }
                 }
             }
         }
     })();
+    // An encoding/drawing failure must discard its incomplete buffered frame.
+    terminal.backend_mut().writer_mut().cancel();
     poller.stop();
     persist_notebook(runtime, &ui)?;
     if let Some(directory) = runtime
@@ -2078,7 +2114,7 @@ fn persist_notebook(runtime: &Runtime, ui: &Ui) -> Result<()> {
 /// A native child owns the real terminal until it exits or detaches. Restore
 /// the office even if spawning fails; never inject text into another console.
 fn handoff_console(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    terminal: &mut OfficeTerminal,
     command: &theywork_control::native::NativeCommand,
 ) -> Result<bool> {
     struct ReturnToOffice;
@@ -2102,7 +2138,7 @@ fn handoff_console(
     println!("they-work · official provider console. Exit or detach to return to the office.");
     let result = command.run().map(|status| status.success());
     drop(restore);
-    terminal.clear()?;
+    terminal.backend_mut().writer_mut().cancel();
     result
 }
 
@@ -2112,6 +2148,8 @@ struct TerminalImagePresenter {
     last_area: Option<Rect>,
     last_frame: Option<theywork_render::PixelFrame>,
     current_frame_presented: bool,
+    image_changed: bool,
+    last_text: Option<Buffer>,
 }
 
 impl TerminalImagePresenter {
@@ -2130,6 +2168,8 @@ impl TerminalImagePresenter {
             last_area: None,
             last_frame: None,
             current_frame_presented: false,
+            image_changed: false,
+            last_text: None,
         }
     }
 
@@ -2148,6 +2188,7 @@ impl TerminalImagePresenter {
             self.next_frame = Instant::now();
             self.last_area = None;
             self.last_frame = None;
+            self.last_text = None;
         }
         Ok(())
     }
@@ -2158,21 +2199,28 @@ impl TerminalImagePresenter {
         pixel_frame: Option<theywork_render::PixelFrame>,
     ) -> Result<bool> {
         self.current_frame_presented = true;
+        self.image_changed = false;
         let Some(surface) = self.surface.as_mut() else {
             return Ok(false);
         };
         let Some(pixel_frame) = pixel_frame else {
+            self.image_changed = self.last_area.is_some();
             surface.clear(output)?;
             self.last_area = None;
             self.last_frame = None;
-            output.flush()?;
+            if self.image_changed {
+                self.last_text = None;
+            }
             return Ok(false);
         };
         let Some(area) = pixel_frame.cell_area() else {
+            self.image_changed = self.last_area.is_some();
             surface.clear(output)?;
             self.last_area = None;
             self.last_frame = None;
-            output.flush()?;
+            if self.image_changed {
+                self.last_text = None;
+            }
             return Ok(false);
         };
         let rectangle = CellRect::new(area.x, area.y, area.width, area.height);
@@ -2182,10 +2230,13 @@ impl TerminalImagePresenter {
         );
         if surface.geometry().pixel_size(rectangle) != Some(frame_size) {
             self.current_frame_presented = false;
+            self.image_changed = self.last_area.is_some();
             surface.clear(output)?;
             self.last_area = None;
             self.last_frame = None;
-            output.flush()?;
+            if self.image_changed {
+                self.last_text = None;
+            }
             return Ok(false);
         }
         let started = Instant::now();
@@ -2211,7 +2262,7 @@ impl TerminalImagePresenter {
             write!(output, "\x1b[{};{}H\x1b[{}X", y + 1, area.x + 1, area.width)?;
         }
         let report = surface.draw(output, &image, rectangle)?;
-        output.flush()?;
+        self.image_changed = true;
         self.last_area = Some(area);
         self.last_frame = Some(pixel_frame);
         if surface.protocol() == theywork_terminal_image::GraphicsProtocol::Sixel {
@@ -2219,6 +2270,17 @@ impl TerminalImagePresenter {
                 started + sixel_frame_interval(report.written_bytes, started.elapsed());
         }
         Ok(true)
+    }
+
+    fn note_write_time(&mut self, elapsed: Duration) {
+        if self.image_changed
+            && self
+                .surface
+                .as_ref()
+                .is_some_and(|s| s.protocol() == GraphicsProtocol::Sixel)
+        {
+            self.next_frame = self.next_frame.max(Instant::now() + elapsed);
+        }
     }
 }
 
@@ -2247,27 +2309,44 @@ fn present_composed_frame<W: Write>(
                 .collect::<HashSet<_>>()
         })
         .unwrap_or_default();
-    crossterm::queue!(output, crossterm::cursor::SavePosition)?;
-    let visible = presenter.present(output, pixels)?;
-    let mut next_column = 0;
-    output.draw(text.content.iter().enumerate().filter_map(|(index, cell)| {
-        let x = text.area.x + (index % usize::from(text.area.width)) as u16;
-        let y = text.area.y + (index / usize::from(text.area.width)) as u16;
-        if x == text.area.x {
-            next_column = x;
+    let old_area = presenter.last_area;
+    let mut image_bytes = Vec::new();
+    let visible = presenter.present(&mut image_bytes, pixels)?;
+    let mut next = text.clone();
+    for y in text.area.y..text.area.bottom() {
+        for x in text.area.x..text.area.right() {
+            next[(x, y)].set_skip(
+                visible
+                    && area.is_some_and(|a| a.contains((x, y).into()))
+                    && !native_cells.contains(&(x, y)),
+            );
         }
-        if x < next_column {
-            return None;
+    }
+    let cached = presenter.last_text.as_ref().filter(|b| b.area == text.area);
+    let mut previous = cached.cloned().unwrap_or_else(|| Buffer::empty(text.area));
+    for y in text.area.y..text.area.bottom() {
+        for x in text.area.x..text.area.right() {
+            // Images erase native labels even when the labels did not change.
+            // Also repaint any region exposed by a moved or removed image.
+            if cached.is_none()
+                || (presenter.image_changed
+                    && [old_area, area]
+                        .into_iter()
+                        .flatten()
+                        .any(|a| a.contains((x, y).into())))
+            {
+                previous[(x, y)].set_symbol("\0");
+            }
         }
-        next_column =
-            x.saturating_add(ratatui::text::Line::from(cell.symbol()).width().max(1) as u16);
-        (!visible
-            || !area.is_some_and(|area| area.contains((x, y).into()))
-            || native_cells.contains(&(x, y)))
-        .then_some((x, y, cell))
-    }))?;
-    crossterm::queue!(output, crossterm::cursor::RestorePosition)?;
-    Write::flush(output)?;
+    }
+    let updates = previous.diff(&next);
+    if !image_bytes.is_empty() || !updates.is_empty() {
+        crossterm::queue!(output, crossterm::cursor::SavePosition)?;
+        output.write_all(&image_bytes)?;
+        output.draw(updates.into_iter())?;
+        crossterm::queue!(output, crossterm::cursor::RestorePosition)?;
+    }
+    presenter.last_text = Some(next);
     Ok(())
 }
 
@@ -2791,6 +2870,7 @@ mod tests {
                 graphics: protocol,
                 cell_size: Some(CellSize::new(8, 16)),
                 terminal_cells: Some((80, 24)),
+                synchronized_output: true,
             };
             let mut presenter = TerminalImagePresenter::new(capabilities, (80, 24));
             let mut output = Vec::new();
@@ -2825,15 +2905,115 @@ mod tests {
             )
             .unwrap();
             let repeated = &output[original_length..];
-            assert!(repeated.windows(4).any(|part| part == b"HELP"));
-            assert!(!repeated
-                .windows(3)
-                .any(|part| part == b"\x1bPq" || part == b"\x1b_G"));
             assert!(
-                repeated.ends_with(b"\x1b8"),
-                "restore the finder/text cursor after presentation"
+                repeated.is_empty(),
+                "unchanged images and text produce no output"
             );
+            // A geometry change retires the old image and erases its labels.
+            // Identical native text must be restored after the new image.
+            presenter.resize(&mut output, (81, 24)).unwrap();
+            let resized_start = output.len();
+            present_composed_frame(
+                &mut CrosstermBackend::new(&mut output),
+                &mut presenter,
+                Some(ui.pixel_frame().with_text_backgrounds()),
+                terminal.backend().buffer(),
+            )
+            .unwrap();
+            assert!(output[resized_start..]
+                .windows(4)
+                .any(|bytes| bytes == b"HELP"));
+            assert!(output.ends_with(b"\x1b8"));
         }
+    }
+
+    #[test]
+    fn composed_diff_handles_wide_text_and_repaints_only_erased_regions() {
+        use ratatui::style::{Color, Style};
+        use theywork_render::canvas::Canvas;
+        let mut canvas = Canvas::with_color_depth(16, 16, ColorDepth::TrueColor);
+        canvas.set_image_cell_size(Some((8, 16)));
+        let image_area = Rect::new(0, 0, 2, 1);
+        let mut text = Buffer::empty(Rect::new(0, 0, 6, 2));
+        canvas.fill(Color::Red);
+        canvas.render(&mut text, image_area);
+        text.set_string(0, 1, "界é", Style::default());
+        let first = canvas.pixel_frame();
+        let mut presenter = TerminalImagePresenter::new(
+            Capabilities {
+                graphics: GraphicsProtocol::Sixel,
+                cell_size: Some(CellSize::new(8, 16)),
+                terminal_cells: Some((6, 2)),
+                synchronized_output: false,
+            },
+            (6, 2),
+        );
+        let mut output = Vec::new();
+        present_composed_frame(
+            &mut CrosstermBackend::new(&mut output),
+            &mut presenter,
+            Some(first.clone()),
+            &text,
+        )
+        .unwrap();
+        output.clear();
+        text.set_string(0, 1, "a ", Style::default());
+        present_composed_frame(
+            &mut CrosstermBackend::new(&mut output),
+            &mut presenter,
+            Some(first),
+            &text,
+        )
+        .unwrap();
+        let delta = String::from_utf8_lossy(&output);
+        assert!(
+            delta.contains("a "),
+            "clear the trailing cell of a wide glyph: {delta:?}"
+        );
+        assert!(!delta.contains('é'), "unchanged text is not rewritten");
+        assert!(!output.windows(3).any(|bytes| bytes == b"\x1bPq"));
+
+        output.clear();
+        canvas.fill(Color::Blue);
+        canvas.render(&mut text, image_area);
+        presenter.next_frame = Instant::now();
+        present_composed_frame(
+            &mut CrosstermBackend::new(&mut output),
+            &mut presenter,
+            Some(canvas.pixel_frame()),
+            &text,
+        )
+        .unwrap();
+        assert!(output.windows(3).any(|bytes| bytes == b"\x1bPq"));
+        assert!(
+            !String::from_utf8_lossy(&output).contains('é'),
+            "text outside the image stays intact"
+        );
+
+        output.clear();
+        text.set_string(
+            0,
+            0,
+            "Restored",
+            Style::default().fg(Color::White).bg(Color::Black),
+        );
+        present_composed_frame(
+            &mut CrosstermBackend::new(&mut output),
+            &mut presenter,
+            None,
+            &text,
+        )
+        .unwrap();
+        assert!(String::from_utf8_lossy(&output).contains("Restor"));
+        output.clear();
+        present_composed_frame(
+            &mut CrosstermBackend::new(&mut output),
+            &mut presenter,
+            None,
+            &text,
+        )
+        .unwrap();
+        assert!(output.is_empty());
     }
 
     #[test]
@@ -2862,6 +3042,7 @@ mod tests {
             graphics: GraphicsProtocol::Sixel,
             cell_size: Some(CellSize::new(8, 16)),
             terminal_cells: Some((80, 24)),
+            synchronized_output: false,
         };
         let mut presenter = TerminalImagePresenter::new(capabilities, (80, 24));
         let mut output = Vec::new();
@@ -2887,6 +3068,7 @@ mod tests {
             graphics: GraphicsProtocol::Sixel,
             cell_size: None,
             terminal_cells: Some((80, 24)),
+            synchronized_output: false,
         };
         let presenter = TerminalImagePresenter::new(capabilities, (80, 24));
         assert!(!presenter.enabled());
@@ -2900,6 +3082,7 @@ mod tests {
             },
             cell_size: Some(CellSize::new(10, 20)),
             terminal_cells: Some((160, 48)),
+            synchronized_output: false,
         };
         let frame = diagnostic_frame(Ui::new(), capabilities, (160, 48))
             .expect("diagnostic renderer frame");
@@ -2923,6 +3106,7 @@ mod tests {
             graphics: GraphicsProtocol::Sixel,
             cell_size: Some(CellSize::new(8, 16)),
             terminal_cells: Some((1, 1)),
+            synchronized_output: false,
         };
         let mut presenter = TerminalImagePresenter::new(capabilities, (1, 1));
         let mut output = Vec::new();

@@ -9,3 +9,6 @@ description = "Safe Kitty and Sixel image transport for terminal cell rectangles
 crossterm = { workspace = true }
 libc = { workspace = true }
 png = "0.17"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Console", "Win32_System_Threading"] }

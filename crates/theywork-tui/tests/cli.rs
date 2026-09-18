@@ -575,6 +575,7 @@ fn doctor_explains_the_published_container_terminal_fallback() {
         .env("TERM", "xterm-256color")
         .env_remove("COLORTERM")
         .env_remove("TERM_PROGRAM")
+        .env_remove("WT_SESSION")
         .env_remove("LANG")
         .env_remove("LC_ALL")
         .env_remove("LC_CTYPE")
@@ -596,6 +597,7 @@ fn doctor_explains_the_published_container_terminal_fallback() {
     assert!(text.contains("terminal_encoding encoding=quadrants"));
     assert!(text.contains("sextant glyph coverage cannot be queried"));
     assert!(text.contains("terminal_graphics protocol=none probe=\"skipped:not_a_tty\""));
+    assert!(text.contains("synchronized_output=false"));
     assert!(text.contains("terminal_frame mode=cells covered_cells=unknown source_pixels=unknown"));
     assert!(text.contains("terminal_action=they-work --demo (press s to compare pixel encodings with your terminal font)"));
 }

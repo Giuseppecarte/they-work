@@ -94,6 +94,18 @@ impl Action {
             Self::Close => "Back",
             Self::Decorate(_) => "Design",
             Self::Character(_) => "Character",
+            Self::Inspect(_) | Self::InspectRecord(_, _) => "Work brief",
+            Self::EnterFloor(_) => "Office",
+            Self::SelectFloor(_) => "Select floor",
+            Self::WorkTab(tab) => tab.label(),
+            Self::WorkLatest => "Back to latest",
+            Self::WorkResults => "Results",
+            Self::WorkExpand => "Expand / collapse",
+            Self::WorkActions | Self::Controls(_) => "Task actions",
+            Self::Review(_) => "Review request",
+            Self::Team(_) | Self::SelectTeam(_) => "Team",
+            Self::SelectDesks(_, _) => "Desks",
+            Self::Key(KeyCode::Char('q')) => "Quit",
             _ => "Open",
         }
     }

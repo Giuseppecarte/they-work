@@ -7,6 +7,96 @@ use theywork_core::{Agent, Event, EventKind, SourceId, ThreadIdentity, WorkerId,
 fn key(code: KeyCode) -> KeyEvent {
     KeyEvent::new(code, KeyModifiers::NONE)
 }
+
+#[test]
+fn focus_keeps_labels_and_identity_across_frames_and_resize() {
+    use ratatui::style::Modifier;
+    let world = fixture(2, 3);
+    let mut ui = Ui::new();
+    ui.open_tower();
+    let mut terminal = Terminal::new(TestBackend::new(80, 24)).unwrap();
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    let target = ui.focus_targets[0].clone();
+    let label = (target.area.x..target.area.right())
+        .map(|x| terminal.backend().buffer()[(x, target.area.y)].symbol())
+        .collect::<String>();
+    ui.handle_key(key(KeyCode::Tab));
+    for (width, height) in [(80, 24), (120, 36)] {
+        terminal.backend_mut().resize(width, height);
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        let focused = &ui.focus_targets[ui.focus.unwrap()];
+        assert_eq!(focused.action, target.action);
+        let cells = terminal.backend().buffer();
+        assert_eq!(
+            (focused.area.x..focused.area.right())
+                .map(|x| cells[(x, focused.area.y)].symbol())
+                .collect::<String>()
+                .split_whitespace()
+                .collect::<Vec<_>>(),
+            label.split_whitespace().collect::<Vec<_>>()
+        );
+        for x in focused.area.x..focused.area.right() {
+            assert!(cells[(x, focused.area.y)]
+                .modifier
+                .contains(Modifier::UNDERLINED));
+        }
+    }
+}
+
+#[test]
+fn floor_focus_does_not_highlight_every_workers_nameplate() {
+    use interaction::Action;
+    use ratatui::style::Modifier;
+    let world = fixture(1, 3);
+    let mut ui = Ui::new();
+    ui.set_image_cell_size(Some((8, 16)));
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    ui.focus = ui
+        .focus_targets
+        .iter()
+        .position(|hit| matches!(hit.action, Action::SelectFloor(_)));
+    assert!(ui.focus.is_some());
+    terminal.draw(|f| ui.draw(f, &world)).unwrap();
+    let area = ui.focus_targets[ui.focus.unwrap()].area;
+    assert!(area.height > 1);
+    for (x, y, cell) in ui.pixel_frame().text_cells() {
+        if area.contains((*x, *y).into()) {
+            assert_eq!(cell.modifier.contains(Modifier::UNDERLINED), *y == area.y);
+        }
+    }
+}
+
+#[test]
+fn footer_explains_navigation_and_context_preserves_selected_worker() {
+    for (width, height) in [(80, 24), (120, 36)] {
+        let world = fixture(2, 3);
+        let mut ui = Ui::new();
+        ui.open_tower();
+        let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+        let row = |terminal: &Terminal<TestBackend>, y| {
+            (0..width)
+                .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                .collect::<String>()
+        };
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        assert!(row(&terminal, height - 1).contains("Enter floor"));
+        assert!(row(&terminal, height - 1).contains("? Help"));
+        ui.handle_key(key(KeyCode::Enter));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        assert!(row(&terminal, height - 1).contains("Esc Tower"));
+        assert!(row(&terminal, height - 1).contains("Enter worker"));
+        let selected = ui.selected_worker_id.clone().unwrap();
+        let alias = crate::design::profile_for(&selected.0, &ui.character_profiles).name;
+        assert!(row(&terminal, 1).contains(&alias));
+        ui.handle_key(key(KeyCode::Enter));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        assert!(row(&terminal, height - 1).contains("Esc Office"));
+        ui.handle_key(key(KeyCode::Esc));
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        assert_eq!(ui.selected_worker_id, Some(selected));
+    }
+}
 fn fixture(projects: usize, first_workers: usize) -> World {
     let mut world = World::new();
     for floor in 0..projects {

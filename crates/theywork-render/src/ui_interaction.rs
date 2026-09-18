@@ -388,7 +388,7 @@ impl Ui {
         }
         let area = Rect::new(full.x, full.y + 1, full.width, 1);
         let issue = self.observation.errors.first();
-        let text = if let Some(issue) = issue {
+        let mut text = if let Some(issue) = issue {
             format!(
                 "! Source issue · c Connections · {}",
                 views::safe_display(issue)
@@ -419,6 +419,27 @@ impl Ui {
                 }
             )
         };
+        if issue.is_none() && self.view != View::Cameras {
+            if let Some(worker) = office.and_then(|office| {
+                office
+                    .workers
+                    .iter()
+                    .find(|worker| Some(&worker.id) == self.selected_worker_id.as_ref())
+            }) {
+                let project = office.map_or("No project", |o| o.name.as_str());
+                let name = crate::design::profile_for(&worker.id.0, &self.character_profiles).name;
+                let state = crate::presentation::state_label(worker, self.now);
+                // Bound each identity independently so a long project name
+                // cannot hide the selected worker or its current state.
+                let budget = full.width.saturating_sub(state.len() as u16 + 6) as usize;
+                text = format!(
+                    "{} / {} · {}",
+                    views::short_path(project, budget / 2),
+                    views::short_path(&name, budget - budget / 2),
+                    state
+                );
+            }
+        }
         let style = Style::default()
             .fg(if issue.is_some() {
                 views::WARNING
@@ -498,7 +519,20 @@ impl Ui {
             || self.workboard.open
             || self.phone_open
             || self.more_open;
-        let mut actions = vec![if self.more_open {
+        let back_label = if self.settings_open && self.advanced_settings {
+            "Esc Settings"
+        } else if modal {
+            "Esc Back"
+        } else {
+            match self.view {
+                View::Desk => "Esc Office",
+                View::Office => "Esc Tower",
+                View::Cameras => "q Quit",
+            }
+        };
+        let mut actions = vec![if !modal && self.view == View::Cameras {
+            Action::Key(KeyCode::Char('q'))
+        } else if self.more_open {
             Action::More
         } else if (self.settings_open && self.advanced_settings)
             || (self.workboard.open && self.workboard.showing_coverage())
@@ -508,15 +542,24 @@ impl Ui {
             Action::Close
         }];
         if !modal {
-            actions.push(Action::Key(KeyCode::Char('s')));
-            if let Some(id) = self.selected_office_id.clone() {
-                actions.push(Action::Decorate(id));
+            actions.push(Action::Key(KeyCode::Char('?')));
+            if area.width >= 110 {
+                actions.push(Action::Key(KeyCode::Char('s')));
+                if let Some(id) = self.selected_office_id.clone() {
+                    actions.push(Action::Decorate(id));
+                }
             }
         }
         let mut x = area.x;
-        for action in actions {
-            let label = if matches!(action, Action::Key(KeyCode::Esc) | Action::More) {
-                "Back"
+        for (index, action) in actions.into_iter().enumerate() {
+            // At narrow widths the action hint takes precedence over buttons.
+            if area.right().saturating_sub(x) < 36 {
+                break;
+            }
+            let label = if index == 0 {
+                back_label
+            } else if action == Action::Key(KeyCode::Char('?')) {
+                "? Help"
             } else {
                 action.label()
             };
@@ -531,7 +574,10 @@ impl Ui {
                 self.frame_hits.push(hit);
             }
         }
-        let hint = if self.more_open {
+        let focused = self.focus.and_then(|index| self.focus_targets.get(index));
+        let hint = if let Some(focused) = focused.filter(|_| !modal) {
+            format!("Enter {} · Tab next", focused.action.label())
+        } else if self.more_open {
             "↑↓ choose · Enter opens".into()
         } else if self.customize.open {
             "Tab · Apply / Cancel".into()
@@ -552,15 +598,31 @@ impl Ui {
             "↑↓ · Enter opens".into()
         } else if self.view == View::Desk {
             if area.width < 60 {
-                "↑↓ read · e expand"
+                "Tab actions · ↑↓ read"
             } else {
                 "Tab controls · ↑↓ read · e expand"
             }
             .into()
-        } else if !self.navigation_hint.is_empty() {
-            self.navigation_hint.clone()
+        } else if self.view == View::Cameras {
+            "Enter floor · ↑↓ select · / search".into()
+        } else if self.view == View::Office {
+            "Enter worker · arrows select · Tab controls".into()
         } else {
             "Tab controls · Enter open · ? help".into()
+        };
+        let hint = if x == area.x && !modal {
+            let enter = if self.view == View::Cameras {
+                "floor"
+            } else {
+                "worker"
+            };
+            if area.width >= 30 {
+                format!("Enter {enter} · Esc back · ? Help")
+            } else {
+                "Enter open · ? Help".into()
+            }
+        } else {
+            hint
         };
         Paragraph::new(hint)
             .style(Style::default().fg(views::MUTED))
@@ -574,11 +636,18 @@ impl Ui {
             if hit.area.width == 0 || hit.area.height == 0 {
                 return;
             }
-            let rect = Rect::new(hit.area.x, hit.area.y, 1, 1);
-            views::paint_opaque(frame, rect, views::selection_style());
-            Paragraph::new(">")
-                .style(views::selection_style())
-                .render(rect, frame.buffer_mut());
+            let mut rect = hit.area.intersection(frame.area());
+            // The floor's mouse target includes its artwork and worker labels.
+            // Keyboard focus belongs on its header, not on every worker inside.
+            if matches!(hit.action, Action::SelectFloor(_)) {
+                rect.height = rect.height.min(1);
+            }
+            frame.buffer_mut().set_style(
+                rect,
+                views::selection_style().add_modifier(
+                    ratatui::style::Modifier::BOLD | ratatui::style::Modifier::UNDERLINED,
+                ),
+            );
         }
     }
 }

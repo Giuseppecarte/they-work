@@ -52,8 +52,9 @@ pub(crate) fn draw(frame: &mut Frame, scroll: &mut usize) {
             .map(|action| format!("{}  {}", action.shortcut(), action.label())),
     );
     entries.extend([
-        "Tab / Shift+Tab focus controls. Arrows select or scroll; Enter activates.",
-        "Esc returns. Mouse clicks use the same available actions.",
+        "Tab / Shift+Tab highlights a whole control; Enter activates it.",
+        "Arrows select or scroll. The footer shows what Enter opens and where Esc returns.",
+        "Esc: work brief to office, office to tower. Mouse uses the same actions.",
         "Scene: PgUp/PgDn changes floors. 1–9 jumps to a floor; ! finds attention.",
         "Work brief: Now, Activity, Team and Details. e / F7 expands the panel.",
         "Activity: read retained events; Back to latest resumes following updates.",

@@ -208,8 +208,11 @@ pub(crate) fn prepare(args: &mut Args) -> Result<bool> {
             value.claude = value.claude_home.is_dir();
             value.codex = value.codex_home.is_dir();
         }
+        let capabilities = theywork_terminal_image::detect_terminal().unwrap_or_default();
         let mut guard = TerminalModeGuard::enter_alternate()?;
-        let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+        let mut terminal = Terminal::new(CrosstermBackend::new(
+            crate::frame_output::FrameOutput::new(io::stdout(), capabilities.synchronized_output),
+        ))?;
         let action = show(
             &mut terminal,
             value,
@@ -371,8 +374,8 @@ fn invalid_source(value: &Connections) -> Option<usize> {
     .position(|(enabled, path)| *enabled && !path.is_dir())
 }
 
-pub(crate) fn show<B: ratatui::backend::Backend>(
-    terminal: &mut Terminal<B>,
+pub(crate) fn show(
+    terminal: &mut crate::OfficeTerminal,
     mut value: Connections,
     config_dir: Option<&Path>,
     remember: bool,
@@ -393,6 +396,7 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
         }
         let mut presented = Vec::new();
         let mut presented_size = Rect::default();
+        terminal.backend_mut().writer_mut().begin();
         terminal.draw(|frame| {
             presented_size = frame.area();
             presented = source_hits(frame.area(), editing.is_some());
@@ -419,6 +423,7 @@ pub(crate) fn show<B: ratatui::backend::Backend>(
                 theywork_render::canvas::Canvas::quantize_colors(frame.buffer_mut());
             }
         })?;
+        terminal.backend_mut().writer_mut().finish()?;
         if !event::poll(FRAME)? {
             continue;
         }

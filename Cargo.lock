@@ -730,6 +730,7 @@ dependencies = [
  "crossterm",
  "libc",
  "png",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

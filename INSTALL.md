@@ -29,6 +29,38 @@ The binary goes in Cargo's user bin directory. Follow rustup's PATH instructions
 terminal does not yet recognize `cargo` or `they-work`; opening a new terminal
 usually applies them. Press `q` to leave the demo.
 
+### PowerShell in Windows Terminal
+
+Use an up-to-date Windows Terminal and open a PowerShell tab. The native binary
+detects Sixel graphics, cell dimensions and synchronized output automatically;
+PowerShell itself does not select the graphics protocol. Windows Terminal added
+[synchronized output](https://github.com/microsoft/terminal/pull/18826) to present
+complete frames together. The app prepares graphics and labels before sending
+them and keeps unchanged text on screen.
+
+~~~powershell
+they-work --demo
+they-work --sources none --doctor
+~~~
+
+The diagnostic line `terminal_graphics` reports `protocol=sixel`, cell dimensions,
+and `synchronized_output=true` when those capabilities are detected. If support
+is absent, the app uses its compatible renderer or buffered updates without
+synchronization. Updating Windows Terminal can make these capabilities available.
+Full motion remains the default; `s` opens Settings with an optional Reduced
+motion setting. Large windows still require more graphics data per update.
+
+`Tab` highlights a complete control and `Enter` activates it. In the scene,
+arrows choose a floor or worker; `Enter` opens it. The footer shows the return
+destination: `Esc` goes from the work brief to the office, then to the tower.
+Use `?` for help or `/` to find a task. The context row retains the selected
+worker and its observed state while reading its work panel.
+
+Native Windows Terminal playback remains a separate acceptance check: automated
+protocol tests and Linux PTY captures do not establish that a Windows display
+has no visible flashing. Validate animation, overlays, resizing and returning
+from an official provider console at 80×24 and 120×36 cells.
+
 ## Native release installers
 
 After a release with native assets is published, a reviewed local copy of the

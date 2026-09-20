@@ -10,7 +10,8 @@ output. Use these exact filenames for their intended designs:
 | Desk detail | desk.png |
 | Phone | phone.png |
 
-The source of truth for these images is [docs/design](../design/README.md).
+The source of truth is [Modern campus](../design/Campus.dc.html), an independent
+schematic of the current visual direction. Earlier boards are historical.
 scripts/render-design.sh renders those boards into this directory; do not edit
 the generated PNGs by hand. The contact sheet scales each reference to fit
 beside the output without stretching it. PNG at the native design dimensions
@@ -35,8 +36,8 @@ meaningful visual comparison:
 | Themes | themes.png |
 
 The renderer script also writes floor-dark.png, floor-light.png, and
-titles.png as supporting source boards. The dark floor is an alias of the
-canonical floor.png, the light floor is its light design variant, and the
+titles.png as supporting source boards. The light floor is an alias of the
+canonical floor.png, the dark floor is its dark design variant, and the
 title board is not a separate rendered surface; none adds a contact-sheet row.
 
 ## Regenerating

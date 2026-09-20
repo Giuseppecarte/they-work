@@ -230,7 +230,10 @@ pub(crate) fn prepare(args: &mut Args) -> Result<bool> {
                             serde_json::from_slice::<theywork_render::RendererPreferences>(&bytes)
                                 .ok()
                         })
-                        .is_some_and(|preferences| preferences.light)),
+                        .map_or_else(
+                            || theywork_render::RendererPreferences::default().light,
+                            |preferences| preferences.light,
+                        )),
         );
         drop(terminal);
         guard.restore()?;

@@ -28,36 +28,36 @@ use crate::sprite::WORKER_HEAD_HEIGHT;
 #[cfg(test)]
 use crate::sprite::{Sprite, SpriteSet, WorkerLook};
 
-pub(crate) const BACKGROUND: Color = Color::Rgb(13, 24, 40);
-pub(crate) const WALL: Color = Color::Rgb(58, 51, 88);
-pub(crate) const FLOOR: Color = Color::Rgb(220, 201, 164);
-pub(crate) const PANEL: Color = Color::Rgb(22, 38, 58);
-pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(34, 53, 77);
-pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(53, 39, 24);
-pub(crate) const INK: Color = Color::Rgb(255, 244, 222);
-pub(crate) const MUTED: Color = Color::Rgb(178, 191, 210);
-pub(crate) const ACCENT: Color = Color::Rgb(91, 222, 205);
-pub(crate) const SECONDARY: Color = Color::Rgb(197, 174, 242);
-pub(crate) const HOT: Color = Color::Rgb(255, 126, 130);
-pub(crate) const WARNING: Color = Color::Rgb(255, 199, 99);
-pub(crate) const GOOD: Color = Color::Rgb(129, 219, 155);
+pub(crate) const BACKGROUND: Color = Color::Rgb(24, 26, 29);
+pub(crate) const WALL: Color = Color::Rgb(64, 68, 72);
+pub(crate) const FLOOR: Color = Color::Rgb(189, 174, 150);
+pub(crate) const PANEL: Color = Color::Rgb(34, 37, 41);
+pub(crate) const PANEL_HIGHLIGHT: Color = Color::Rgb(48, 53, 59);
+pub(crate) const ATTENTION_PANEL: Color = Color::Rgb(60, 46, 28);
+pub(crate) const INK: Color = Color::Rgb(245, 246, 248);
+pub(crate) const MUTED: Color = Color::Rgb(185, 191, 200);
+pub(crate) const ACCENT: Color = Color::Rgb(128, 185, 255);
+pub(crate) const SECONDARY: Color = Color::Rgb(190, 200, 216);
+pub(crate) const HOT: Color = Color::Rgb(255, 145, 145);
+pub(crate) const WARNING: Color = Color::Rgb(247, 204, 125);
+pub(crate) const GOOD: Color = Color::Rgb(147, 214, 172);
 pub(crate) const SCANLINE: Color = PANEL_HIGHLIGHT;
 
-pub(crate) const LIGHT_BACKGROUND: Color = Color::Rgb(255, 249, 235);
-pub(crate) const LIGHT_PANEL: Color = Color::Rgb(248, 239, 222);
-pub(crate) const LIGHT_LINE: Color = Color::Rgb(222, 212, 191);
-pub(crate) const LIGHT_INK: Color = Color::Rgb(35, 48, 64);
-pub(crate) const LIGHT_WALL: Color = Color::Rgb(207, 198, 224);
-pub(crate) const LIGHT_WALL_DARK: Color = Color::Rgb(189, 178, 212);
-pub(crate) const LIGHT_FLOOR: Color = Color::Rgb(230, 217, 184);
-pub(crate) const LIGHT_WOOD: Color = Color::Rgb(162, 112, 63);
-pub(crate) const LIGHT_WOOD_DARK: Color = Color::Rgb(131, 87, 41);
-pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(34, 91, 59);
-pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(113, 69, 6);
-pub(crate) const LIGHT_FAILED: Color = Color::Rgb(152, 38, 49);
-pub(crate) const LIGHT_ACCENT: Color = Color::Rgb(12, 91, 90);
-pub(crate) const LIGHT_SECONDARY: Color = Color::Rgb(105, 45, 138);
-pub(crate) const LIGHT_MUTED: Color = Color::Rgb(91, 82, 88);
+pub(crate) const LIGHT_BACKGROUND: Color = Color::Rgb(247, 247, 245);
+pub(crate) const LIGHT_PANEL: Color = Color::Rgb(237, 239, 240);
+pub(crate) const LIGHT_LINE: Color = Color::Rgb(215, 222, 231);
+pub(crate) const LIGHT_INK: Color = Color::Rgb(28, 31, 36);
+pub(crate) const LIGHT_WALL: Color = Color::Rgb(243, 243, 239);
+pub(crate) const LIGHT_WALL_DARK: Color = Color::Rgb(213, 217, 216);
+pub(crate) const LIGHT_FLOOR: Color = Color::Rgb(226, 214, 193);
+pub(crate) const LIGHT_WOOD: Color = Color::Rgb(190, 164, 128);
+pub(crate) const LIGHT_WOOD_DARK: Color = Color::Rgb(142, 119, 91);
+pub(crate) const LIGHT_RUNNING: Color = Color::Rgb(26, 99, 58);
+pub(crate) const LIGHT_BLOCKED: Color = Color::Rgb(112, 72, 9);
+pub(crate) const LIGHT_FAILED: Color = Color::Rgb(165, 35, 46);
+pub(crate) const LIGHT_ACCENT: Color = Color::Rgb(0, 85, 180);
+pub(crate) const LIGHT_SECONDARY: Color = Color::Rgb(55, 75, 101);
+pub(crate) const LIGHT_MUTED: Color = Color::Rgb(79, 84, 92);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum UiTheme {

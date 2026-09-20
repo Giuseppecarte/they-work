@@ -7,42 +7,38 @@ use crate::canvas::Canvas;
 use crate::sprite::SpriteSet;
 
 pub(super) fn palette(theme: usize, light: bool) -> [Color; 4] {
+    let accents = [
+        (113, 137, 133),
+        (110, 130, 153),
+        (124, 141, 112),
+        (138, 125, 145),
+    ];
+    let (r, g, b) = accents[theme % accents.len()];
     if light {
-        let colors = match theme {
-            0 => [
-                (189, 178, 212),
-                (207, 198, 224),
-                (230, 217, 184),
-                (162, 112, 63),
-            ],
-            1 => [
-                (149, 173, 197),
-                (178, 196, 214),
-                (199, 213, 224),
-                (82, 112, 142),
-            ],
-            2 => [
-                (147, 179, 148),
-                (174, 201, 170),
-                (216, 224, 181),
-                (132, 117, 70),
-            ],
-            _ => [
-                (176, 145, 191),
-                (198, 171, 213),
-                (214, 204, 232),
-                (115, 86, 143),
-            ],
-        };
-        return colors.map(|(r, g, b)| Color::Rgb(r, g, b));
+        [
+            Color::Rgb(196, 201, 201),
+            Color::Rgb(243, 243, 239),
+            [
+                Color::Rgb(226, 214, 193),
+                Color::Rgb(217, 215, 207),
+                Color::Rgb(221, 218, 198),
+                Color::Rgb(223, 213, 209),
+            ][theme % 4],
+            Color::Rgb(r, g, b),
+        ]
+    } else {
+        [
+            Color::Rgb(43, 48, 53),
+            Color::Rgb(65, 69, 73),
+            [
+                Color::Rgb(104, 96, 82),
+                Color::Rgb(91, 97, 104),
+                Color::Rgb(95, 102, 86),
+                Color::Rgb(101, 93, 100),
+            ][theme % 4],
+            Color::Rgb(r, g, b),
+        ]
     }
-    let colors = match theme {
-        0 => [(43, 37, 66), (58, 51, 88), (220, 201, 164), (138, 90, 56)],
-        1 => [(22, 31, 51), (30, 42, 68), (65, 80, 107), (47, 61, 87)],
-        2 => [(36, 59, 44), (47, 74, 56), (203, 211, 168), (122, 106, 69)],
-        _ => [(46, 23, 64), (61, 31, 82), (34, 32, 61), (58, 47, 102)],
-    };
-    colors.map(|(r, g, b)| Color::Rgb(r, g, b))
 }
 
 /// Attention is visible first without changing project or conversation identity.

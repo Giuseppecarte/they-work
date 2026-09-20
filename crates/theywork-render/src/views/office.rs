@@ -30,23 +30,23 @@ const MANAGER_HOLD_MS: u64 = 1_800;
 const SKY_CYCLE_MS: u64 = 90_000;
 const CLOUD_DRIFT_MS: u64 = 220;
 
-const OUTLINE: Color = Color::Rgb(13, 11, 20);
+const OUTLINE: Color = Color::Rgb(55, 61, 66);
 const FLOOR_LIGHT: Color = Color::Rgb(220, 201, 164);
 const FLOOR_DARK: Color = Color::Rgb(156, 135, 99);
 const FLOOR_DITHER: Color = Color::Rgb(192, 170, 130);
 const WALL_LIGHT: Color = Color::Rgb(58, 51, 88);
-const WINDOW_FRAME: Color = Color::Rgb(43, 37, 66);
-const WINDOW_LIGHT: Color = Color::Rgb(90, 169, 201);
-const TABLE_TOP: Color = Color::Rgb(107, 68, 41);
-const TABLE_LIGHT: Color = Color::Rgb(138, 90, 56);
-const CHAIR_BACK: Color = Color::Rgb(65, 58, 91);
-const RUG: Color = Color::Rgb(194, 90, 74);
-const RUG_BORDER: Color = Color::Rgb(142, 58, 46);
+const WINDOW_FRAME: Color = Color::Rgb(162, 174, 180);
+const WINDOW_LIGHT: Color = Color::Rgb(179, 205, 214);
+const TABLE_TOP: Color = Color::Rgb(170, 149, 117);
+const TABLE_LIGHT: Color = Color::Rgb(216, 196, 162);
+const CHAIR_BACK: Color = Color::Rgb(94, 108, 118);
+const RUG: Color = Color::Rgb(160, 173, 170);
+const RUG_BORDER: Color = Color::Rgb(123, 142, 140);
 #[cfg(test)]
-const TITLE_SIGN: Color = Color::Rgb(92, 15, 12);
+const TITLE_SIGN: Color = Color::Rgb(62, 73, 85);
 #[cfg(test)]
-const TITLE_BODY: Color = Color::Rgb(142, 26, 21);
-const TITLE_COLOR: Color = Color::Rgb(184, 231, 222);
+const TITLE_BODY: Color = Color::Rgb(76, 91, 110);
+const TITLE_COLOR: Color = Color::Rgb(236, 241, 247);
 #[cfg(test)]
 const SIGN_EXTRUSION_STEPS: usize = 6;
 #[cfg(test)]
@@ -61,10 +61,10 @@ const SIGN_MAX_WIDTH_NUMERATOR: usize = 9;
 const SIGN_MAX_WIDTH_DENOMINATOR: usize = 20;
 #[cfg(test)]
 const SIGN_STATUS_RESERVE_CELLS: usize = 38;
-const NIGHT_SKY_TOP: Color = Color::Rgb(13, 11, 20);
-const NIGHT_SKY_BOTTOM: Color = Color::Rgb(58, 51, 88);
-const DAY_SKY_TOP: Color = Color::Rgb(88, 214, 232);
-const DAY_SKY_BOTTOM: Color = Color::Rgb(90, 169, 201);
+const NIGHT_SKY_TOP: Color = Color::Rgb(34, 43, 53);
+const NIGHT_SKY_BOTTOM: Color = Color::Rgb(81, 105, 126);
+const DAY_SKY_TOP: Color = Color::Rgb(194, 222, 231);
+const DAY_SKY_BOTTOM: Color = Color::Rgb(164, 198, 211);
 
 // The sixth column is a composition gutter: the outer occupied tile still has
 // room for a full-width worker and desk instead of ending at the floor edge.
@@ -109,9 +109,11 @@ pub(super) fn apply_room_palette(canvas: &mut Canvas, palette: usize) {
     };
     canvas.remap_materials(&[
         (FLOOR_LIGHT, floor),
+        (super::FLOOR, floor),
         (FLOOR_DARK, dark),
         (FLOOR_DITHER, mid),
         (WALL, wall),
+        (WALL_LIGHT, wall),
         (Color::Rgb(188, 145, 93), floor),
         (Color::Rgb(224, 181, 115), mid),
         (Color::Rgb(91, 82, 112), wall),
@@ -4532,7 +4534,7 @@ mod tests {
                     .pixel_frame()
                     .rgb()
                     .chunks_exact(3)
-                    .any(|pixel| pixel == [79, 158, 232]),
+                    .any(|pixel| pixel == [89, 123, 157]),
                 "missing worker clothing at {encoding:?}"
             );
         }
@@ -4716,7 +4718,7 @@ mod tests {
                     PixelEncoding::HalfBlocks,
                 );
                 canvas.set_light_mode(light);
-                for (x, color) in [FLOOR, WALL, Color::Rgb(79, 158, 232), WARNING]
+                for (x, color) in [FLOOR, WALL, Color::Rgb(89, 123, 157), WARNING]
                     .into_iter()
                     .enumerate()
                 {

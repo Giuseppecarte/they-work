@@ -20,111 +20,86 @@ pub(super) fn background(key: RoomKey) -> Sprite {
     let accent = materials.equipment;
     let trim = materials.trim;
     let wood = materials.floor;
-    a.rect(0, 0, w, h, rgb(31, 42, 55));
+    a.rect(0, 0, w, h, trim);
     a.rect(s, 2, w - s - 2, f, wall);
     a.rect(s, f, w - s, h - f, wood);
     // Floor joints remain subordinate to people and do not expand the wall.
-    let plank = if key.overview { 10 } else { 16 };
+    let plank = if key.overview { 20 } else { 36 };
     for y in (f..h).step_by(plank as usize) {
-        a.rect(s, y, w - s, 1, lighten(wood, 7));
-        let start = s + if ((y - f) / plank) % 2 == 0 { 0 } else { 27 };
-        for x in (start..w).step_by(54) {
-            a.rect(x, y, 1, plank, darken(wood, 8));
+        a.rect(s, y, w - s, 1, lighten(wood, 3));
+        let start = s + if ((y - f) / plank) % 2 == 0 { 0 } else { 53 };
+        for x in (start..w).step_by(106) {
+            a.rect(x, y, 1, plank, darken(wood, 4));
         }
     }
-    a.rect(s, f - 3, w - s, 3, trim);
+    a.rect(s, f - 1, w - s, 1, trim);
     a.rect(s, f, w - s, 1, lighten(trim, 25));
-    a.rect(0, 0, w, 2, rgb(38, 46, 55));
-    a.rect(0, 2, w, 1, rgb(135, 129, 111));
-    a.rect(0, h - 2, w, 2, rgb(33, 40, 50));
+    a.rect(0, 0, w, 1, trim);
+    a.rect(0, 1, w, 1, lighten(wall, 4));
+    a.rect(0, h - 2, w, 2, trim);
     let title = key.title as i32;
-    a.rect(s + 6, 4, w - s - 12, title + 2, trim);
-    a.rect(s + 7, 4, w - s - 14, 1, lighten(trim, 17));
+    a.rect(s + 6, 4, w - s - 12, title + 2, wall);
+    a.rect(s + 7, 4, w - s - 14, 1, lighten(wall, 3));
     // Every preset changes its structure, not merely its hue.
     let top = (title + 10).max(f - if key.overview { 42 } else { 86 });
-    let window_h = if key.overview { 17 } else { 33 };
+    let window_h = (f - top - 7).max(8);
+    let pane_w = (w - s - 24).max(4);
+    // Broad glazing and slender mullions frame the workers without filling
+    // their circulation space. Collaboration and research keep distinct zones.
     match key.preset {
         OfficePreset::Studio => {
-            for x in (s + 9..w - 42).step_by(((w - s - 25) as usize / 3).max(if key.overview {
-                78
-            } else {
-                116
-            })) {
-                glazing(
-                    &mut a,
-                    x,
-                    top,
-                    if key.overview { 47 } else { 70 },
-                    window_h,
-                    materials.glazing,
-                );
-            }
-            if !key.overview {
-                a.rect(w - 42, top + 5, 27, 4, materials.storage);
-                books(&mut a, w - 40, top - 8, 24, 13, materials.supplies);
+            glazing(&mut a, s + 12, top, pane_w, window_h, materials.glazing);
+            for x in (s + 12 + pane_w / 3..w - 10).step_by((pane_w / 3).max(1) as usize) {
+                a.rect(x, top, 1, window_h, materials.metal);
             }
         }
         OfficePreset::Workshop => {
-            let peg_w = (w - s - 26).min(if key.overview { 110 } else { 190 });
+            glazing(&mut a, s + 12, top, pane_w, window_h, materials.glazing);
+            let board_w = (pane_w / 3).max(8);
+            a.rect(s + 18, top + 5, board_w, window_h - 10, materials.storage);
             a.rect(
-                s + 10,
-                top,
-                peg_w,
-                window_h + 5,
-                lighten(materials.storage, 22),
+                s + 19,
+                top + 6,
+                board_w - 2,
+                window_h - 12,
+                lighten(wall, 8),
             );
-            for yy in (top + 3..top + window_h).step_by(5) {
-                for xx in (s + 13..s + peg_w).step_by(7) {
-                    a.rect(xx, yy, 1, 1, darken(materials.storage, 12));
-                }
+            // A quiet planning board, with abstract cards rather than fake work.
+            for n in 0..3 {
+                a.rect(
+                    s + 23 + n * (board_w / 4),
+                    top + 10,
+                    (board_w / 5).max(2),
+                    4,
+                    materials.supplies[n as usize],
+                );
             }
-            for x in (s + 18..s + peg_w - 7).step_by(24) {
-                a.rect(x, top + 6, 2, 12, materials.metal);
-                a.rect(x - 3, top + 6, 8, 3, accent);
-            }
-            a.rect(s + 8, top + window_h + 5, peg_w + 4, 3, materials.storage);
             a.rect(
-                w - 21,
-                title + 10,
-                3,
-                (f - title - 10).max(0),
-                materials.trim,
+                s + 17,
+                top + window_h - 4,
+                board_w + 2,
+                2,
+                materials.desktop,
             );
         }
         OfficePreset::Laboratory => {
-            for x in (s + 9..w - 24).step_by(((w - s - 25) as usize / 3).max(if key.overview {
-                57
-            } else {
-                89
-            })) {
-                glazing(
-                    &mut a,
-                    x,
-                    top,
-                    if key.overview { 40 } else { 65 },
-                    window_h,
-                    materials.glazing,
-                );
-                a.rect(
-                    x + 4,
-                    top + window_h + 4,
-                    if key.overview { 31 } else { 56 },
-                    3,
-                    materials.desktop,
-                );
-            }
-            for x in (s + 8..w - 8).step_by(28) {
-                a.rect(x, f - 17, 1, 14, darken(wall, 9));
+            glazing(&mut a, s + 12, top, pane_w, window_h, materials.glazing);
+            let bay = (pane_w / 3).max(8);
+            for x in (s + 12..w - 12).step_by(bay as usize) {
+                a.rect(x, top, 1, window_h, materials.metal);
+                a.rect(x + 3, top + window_h - 12, bay - 7, 10, materials.storage);
+                a.rect(x + 3, top + window_h - 13, bay - 7, 1, materials.desktop);
+                a.rect(x + 5, top + window_h - 8, bay - 11, 1, materials.metal);
             }
         }
     }
     // A small fitted door occupies the shaft, with one style-specific detail.
-    a.rect(0, 3, s - 1, h - 5, rgb(39, 53, 65));
-    a.rect(s - 3, 3, 3, h - 5, rgb(25, 37, 50));
+    a.rect(0, 3, s - 1, h - 5, darken(wall, 8));
+    a.rect(s - 3, 3, 3, h - 5, trim);
     let door_w = s - 14;
     let door_h = if key.overview { 37 } else { 65 };
     let door_y = f - door_h;
-    a.rect(6, door_y - 3, door_w + 2, door_h + 4, rgb(24, 36, 46));
+    a.rect(6, door_y - 3, door_w + 2, door_h + 4, trim);
     let metal = if key.zones[0] % 3 == 1 {
         accent
     } else {
@@ -139,16 +114,16 @@ pub(super) fn background(key: RoomKey) -> Sprite {
             door_h - 1,
             lighten(metal, 20),
         );
-        a.rect(s / 2 - 1, door_y, 2, door_h, rgb(62, 84, 94));
+        a.rect(s / 2 - 1, door_y, 2, door_h, darken(materials.metal, 24));
         a.rect(11, door_y + 3, 2, door_h - 6, lighten(metal, 33));
         a.rect(s / 2 - 4, door_y - 5, 8, 2, rgb(171, 218, 180));
     } else {
         a.rect(8, door_y, door_w - 2, door_h, materials.desktop);
-        a.rect(11, door_y + 4, door_w - 8, door_h / 2, accent);
+        a.rect(11, door_y + 4, door_w - 8, door_h / 2, materials.glazing);
         a.rect(12, door_y + 5, 2, door_h / 2 - 2, lighten(accent, 40));
         a.rect(s - 12, door_y + door_h / 2 + 6, 3, 2, rgb(232, 202, 133));
     }
-    a.rect(6, f, door_w + 2, 2, rgb(174, 182, 165));
+    a.rect(6, f, door_w + 2, 2, materials.metal);
     if key.zones[0] % 3 == 2 {
         a.rect(8, door_y - 11, door_w - 4, 3, materials.prop);
     }
@@ -168,22 +143,36 @@ pub(super) fn background(key: RoomKey) -> Sprite {
         0 => coffee_station(&mut a, rest_x, rest_floor, key.overview, materials),
         1 => {
             let width = if key.overview { 21 } else { 32 };
-            a.rect(rest_x - 12, rest_floor - 14, width, 12, accent);
+            a.rect(
+                rest_x - 12,
+                rest_floor - 14,
+                width,
+                11,
+                materials.upholstery,
+            );
             a.rect(
                 rest_x - 10,
                 rest_floor - 13,
                 width - 4,
                 6,
-                lighten(accent, 18),
+                lighten(materials.upholstery, 18),
             );
-            a.rect(rest_x - 12, rest_floor - 3, width, 3, darken(accent, 20));
-            books(
-                &mut a,
-                rest_x - 9,
-                rest_floor - 6,
-                12,
+            a.rect(rest_x - 14, rest_floor - 10, 3, 8, materials.upholstery);
+            a.rect(
+                rest_x + width - 13,
+                rest_floor - 10,
                 3,
-                materials.supplies,
+                8,
+                materials.upholstery,
+            );
+            a.rect(rest_x - 10, rest_floor - 3, 2, 3, materials.metal);
+            a.rect(rest_x + width - 16, rest_floor - 3, 2, 3, materials.metal);
+            a.rect(
+                rest_x - 11 + width / 2,
+                rest_floor - 13,
+                1,
+                10,
+                darken(materials.upholstery, 12),
             );
         }
         _ => super::plant(&mut a, rest_x, rest_floor, if key.overview { 0 } else { 1 }),
@@ -224,21 +213,24 @@ pub(super) fn background(key: RoomKey) -> Sprite {
 }
 
 fn glazing(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, c: Color) {
-    a.rect(x - 2, y - 2, w + 4, h + 5, rgb(38, 57, 68));
-    a.rect(x - 1, y - 1, w + 2, h + 2, rgb(106, 125, 128));
+    a.rect(x - 1, y - 1, w + 2, h + 2, darken(c, 23));
     a.rect(x, y, w, h, c);
     a.rect(x, y, w, h / 2, lighten(c, 12));
-    for n in 0..w / 10 {
-        let bh = 4 + (n * 7) % 10;
-        a.rect(x + n * 10, y + h - bh, 8, bh, darken(c, 30));
-        a.rect(x + n * 10 + 2, y + h - bh + 2, 1, 1, rgb(203, 213, 174));
+    // A garden silhouette and broad reflections suggest daylight through glass.
+    for n in 0..w / 32 {
+        let bh = 3 + (n * 7) % 9;
+        a.ellipse(x + n * 32, y + h - bh, 28, bh, darken(c, 13));
     }
     a.poly(
-        &[(x + 3, y), (x + 10, y), (x + 3, y + h), (x, y + h)],
-        lighten(c, 14),
+        &[
+            (x + w / 3, y),
+            (x + w / 3 + 12, y),
+            (x + 12, y + h),
+            (x, y + h),
+        ],
+        lighten(c, 8),
     );
-    a.rect(x + w / 2, y, 2, h, rgb(65, 93, 101));
-    a.rect(x - 3, y + h + 2, w + 6, 2, rgb(123, 138, 134));
+    a.rect(x, y + h, w, 1, lighten(c, 20));
 }
 fn books(a: &mut Raster, x: i32, y: i32, w: i32, h: i32, colors: [Color; 4]) {
     for (i, c) in colors.into_iter().enumerate() {

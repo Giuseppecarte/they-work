@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>they-work · Modern campus design</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f7f5;color:#1c1f24;font:15px ui-monospace,monospace;--panel:#edeff0;--line:#ccd2d6;--ink:#1c1f24;--muted:#4f545c;--blue:#0055b4;--wall:#f5f4f0;--floor:#e2d6c1;--glass:#bed7dc;--wood:#e0ccaa;--metal:#b3bbc1;--cloth:#5d656b}
+body.dark{background:#181a1d;color:#f5f6f8;--panel:#222529;--line:#42484e;--ink:#f5f6f8;--muted:#b9bfc8;--blue:#80b9ff;--wall:#424445;--floor:#686052;--glass:#536f7e;--wood:#b5a182;--metal:#89949e}
+header{height:64px;padding:18px 30px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}h1{font-size:19px;margin:0;letter-spacing:-.5px}small{color:var(--muted);font-size:11px}.frame{margin:26px 30px 16px;border:1px solid var(--line);background:var(--panel)}nav{padding:12px 16px;color:var(--blue);border-bottom:1px solid var(--line);font-size:12px}.content{display:flex;height:calc(100vh - 350px);min-height:150px}.scene{flex:1;min-width:0}svg{display:block;width:100%;height:100%;shape-rendering:crispEdges}.details{width:32%;padding:22px;border-left:1px solid var(--line);font-size:12px;line-height:1.65}.details h2{font-size:14px;margin-top:0}.details strong{color:var(--blue)}.details p{margin:22px 0}.button{display:inline-block;padding:5px 9px;background:var(--blue);color:var(--panel);font-weight:bold}.footer{border-top:1px solid var(--line);padding:11px 16px;font-size:12px;color:var(--muted)}.legend{display:flex;gap:24px;margin:18px 30px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:8px}.swatch{width:18px;height:18px;border:1px solid var(--line)}.caption{margin:16px 30px;line-height:1.6;max-width:1000px;font-size:12px;color:var(--muted)}.settings{padding:32px;line-height:2.8;width:100%;font-size:14px}.settings b{color:var(--blue)}
+</style>
+<header><h1>they-work / Modern campus</h1><small id="label"></small></header>
+<div class="frame"><nav>Tower &nbsp; Attention &nbsp; Deliveries &nbsp; Search &nbsp; Connections</nav><div class="content"><div class="scene" id="scene"></div><aside class="details" id="details"><h2>Jamie V.</h2><div>Build the shared interface</div><p><strong>FOR YOU · Review request</strong><br>Approval needed before the next action.</p><p><strong>OBSERVED</strong><br>Editing the account view.</p><p><strong>TEAM</strong><br>Dani E. · Ready<br>Noam M. · Working</p><span class="button">Review request</span></aside></div><div class="footer">Esc Back &nbsp; · &nbsp; Enter Open &nbsp; · &nbsp; Tab Controls &nbsp; · &nbsp; ? Help</div></div>
+<div class="legend"><span><i class="swatch" style="background:var(--wall)"></i>Warm white</span><span><i class="swatch" style="background:var(--wood)"></i>Pale oak</span><span><i class="swatch" style="background:var(--glass)"></i>Glass</span><span><i class="swatch" style="background:var(--metal)"></i>Aluminum</span></div>
+<p class="caption">Broad glazing, slender furniture, contemporary pixel people, and clear native text. Open workspace, collaboration studio, and research lab share a restrained material language. Blue identifies interaction; amber, red, and green retain their status meanings.</p>
+<p class="caption">Design direction at presentation scale. This schematic is independent of renderer captures; terminal evidence is reviewed at 80×24 and 120×36 cells.</p>
+<script>
+const q=new URLSearchParams(location.search), surface=q.get('surface')||'floor';
+if(q.get('theme')==='dark')document.body.classList.add('dark');
+document.querySelector('#label').textContent=surface.replaceAll('-',' ')+' · '+(q.get('theme')||'light');
+const clothes=['#4f6787','#dbd1bd','#a28f76','#6d8ba3','#b2b7b4','#c6b9a8','#938793','#414957','#c3d2d8','#5b8077','#404246','#8f9b80'];
+const skins=['#f8cca1','#dfa87b','#b77c58','#7c4d39','#efb797','#a06748'];
+const rect=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+function person(x,y,i,scale=1){let s=rect(9,40,9,15,'#343a43')+rect(24,40,9,15,'#343a43')+rect(7,55,12,3,'#d8dadd')+rect(24,55,12,3,'#d8dadd')+rect(6,27,30,19,clothes[i])+rect(3,29,5,17,clothes[i])+rect(34,29,5,17,clothes[i])+rect(3,43,5,5,skins[i%6])+rect(34,43,5,5,skins[i%6])+rect(10,8,23,23,skins[i%6])+rect(8,5,25,8,'#635244')+rect(8,11,5,8,'#635244')+rect(17,18,3,3,'#2a2932')+rect(27,18,3,3,'#2a2932');
+if(i===0)s+=rect(6,9,3,15,'#8996a1')+rect(33,10,4,15,'#8996a1')+rect(8,3,26,3,'#343a43');
+if(i===8)s+=rect(14,16,8,1,'#343a43')+rect(25,16,8,1,'#343a43')+rect(21,19,5,1,'#343a43');
+if(i===5)for(let yy=30;yy<44;yy+=5)s+=rect(8,yy,25,2,'#5d6a78');
+return `<g transform="translate(${x} ${y}) scale(${scale})">${s}</g>`;}
+function room(y,kind=0){let s=rect(0,y,960,275,'var(--wall)')+rect(0,y+192,960,83,'var(--floor)')+rect(0,y,76,275,'var(--panel)')+rect(75,y,2,275,'var(--metal)')+rect(15,y+75,46,117,'var(--metal)')+rect(19,y+79,18,110,'var(--glass)')+rect(39,y+79,18,110,'var(--glass)')+rect(100,y+36,830,155,'var(--glass)');
+for(const x of [375,650])s+=rect(x,y+36,2,155,'var(--metal)');
+if(kind===1)s+=rect(115,y+50,200,90,'var(--panel)')+rect(132,y+65,32,14,'#aebbbb')+rect(174,y+65,32,14,'#c3b6a2')+rect(216,y+65,32,14,'#acb8c6');
+if(kind===2)for(const x of [112,390,670])s+=rect(x,y+154,240,32,'var(--panel)')+rect(x,y+153,240,2,'var(--metal)');
+for(let i=0;i<3;i++){const x=230+i*165;s+=rect(x+4,y+140,32,44,'var(--cloth)')+person(x-7,y+112,i*3)+rect(x-24,y+166,146,4,'var(--wood)')+rect(x-14,y+170,3,23,'var(--metal)')+rect(x+103,y+170,3,23,'var(--metal)')+rect(x+59,y+130,40,28,'var(--metal)')+rect(x+61,y+132,36,21,'#324653')+rect(x+77,y+158,3,8,'var(--metal)')+`<text x="${x-14}" y="${y+220}" fill="var(--ink)" font-size="12">${['Jamie V.','Dani E.','Noam M.'][i]}</text>`;}
+s+=rect(899,y+237,20,21,'#a99c88')+rect(908,y+216,3,25,'#63846a')+rect(895,y+211,18,10,'#7f9b7b')+rect(910,y+223,18,10,'#63846a');return s;}
+let content='';
+if(surface==='cast'){for(let i=0;i<12;i++)content+=person(55+(i%6)*150,18+Math.floor(i/6)*155,i,1.8);content=`<svg viewBox="0 0 960 340">${content}</svg>`;}
+else if(['settings','first-run','identity','titles'].includes(surface)){content=`<div class="settings"><b>${surface==='first-run'?'Choose your conversation sources':'Appearance'}</b><br>Theme &nbsp; Light / Dark<br>Motion &nbsp; Full / Reduced<br>Office &nbsp; Open workspace<br>Keyboard &nbsp; Tab to choose · Enter to open<br><span class="button">${surface==='first-run'?'Continue':'Apply'}</span></div>`;}
+else {const stacked=['guard-office','cameras','themes'].includes(surface);content=`<svg viewBox="0 0 960 ${stacked?825:330}">${room(0)}${stacked?room(275,1)+room(550,2):''}</svg>`;}
+document.querySelector('#scene').innerHTML=content;
+if(!['desk','phone'].includes(surface))document.querySelector('#details').remove();
+if(surface==='phone'){document.querySelector('#scene').remove();document.querySelector('#details').style.width='100%';}
+</script>
+</html>

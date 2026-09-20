@@ -5,6 +5,18 @@ Docker is optional for observation. Use the native binary for task controls and
 provider console handoff. Docker enforces read-only data mounts and disables
 runtime networking, so its normal launch is an observation environment.
 
+## Modern campus appearance
+
+New sessions open in light mode: warm white surfaces, pale oak desks, glass,
+and aluminum, with contemporary animated pixel characters. Use `--dark` for
+its graphite counterpart, or choose the theme in Settings (`s`). Saved light
+and dark choices still take precedence over the new default.
+
+All office designs now share this visual language. Open workspace,
+Collaboration studio, and Research lab replace the old preset labels;
+saved layouts, palette choices, character names, and outfit slots are retained.
+Use Design to customize a room. Reduced motion remains available in Settings.
+
 ## Install this checkout now
 
 The changes on this branch have not been published as native release assets.

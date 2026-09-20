@@ -9,17 +9,33 @@ pub const WIDTH: usize = 48;
 pub const HEIGHT: usize = 64;
 pub const COSTUMES: [&str; 12] = [
     "Headphones",
-    "Chef",
-    "Explorer",
-    "Gardener",
-    "Astronaut",
-    "Artist",
-    "Wizard",
-    "Rocker",
-    "Bookworm",
-    "Runner",
-    "Hard hat",
-    "Dinosaur",
+    "Knitwear",
+    "Overshirt",
+    "Denim",
+    "Hoodie",
+    "Striped tee",
+    "Cardigan",
+    "Blazer",
+    "Oxford shirt",
+    "Athleisure",
+    "Turtleneck",
+    "Crewneck",
+];
+
+// Shared clothing colors keep both independently authored sprite sizes coherent.
+pub(super) const CLOTHING: [Color; 12] = [
+    rgb(79, 103, 135),
+    rgb(219, 209, 189),
+    rgb(162, 143, 118),
+    rgb(109, 139, 163),
+    rgb(178, 183, 180),
+    rgb(198, 185, 168),
+    rgb(147, 135, 147),
+    rgb(65, 73, 87),
+    rgb(195, 210, 216),
+    rgb(91, 128, 119),
+    rgb(64, 66, 70),
+    rgb(143, 155, 128),
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -253,24 +269,10 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
         rgb(214, 211, 192),
         rgb(81, 64, 114),
     ];
-    let shirts = [
-        rgb(83, 123, 170),
-        rgb(237, 232, 207),
-        rgb(178, 119, 65),
-        rgb(98, 153, 100),
-        rgb(220, 230, 226),
-        rgb(210, 102, 86),
-        rgb(112, 88, 168),
-        rgb(63, 64, 85),
-        rgb(186, 132, 72),
-        rgb(76, 160, 151),
-        rgb(233, 182, 70),
-        rgb(112, 163, 88),
-    ];
     let (skin, skin_shadow) = skins[character.skin as usize % skins.len()];
     let hair = hairs[character.hair as usize % hairs.len()];
     let ink = rgb(42, 39, 52);
-    let shirt = shirts[costume];
+    let shirt = CLOTHING[costume];
     let shade = darken(shirt, 34);
     let shine = lighten(shirt, 24);
     let walking = pose == Pose::Walk;
@@ -290,63 +292,33 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
     } else {
         0
     };
-    // Behind the body: long hair, backpack, cape, ponytail and dinosaur tail.
+    // Contemporary layers and hair are drawn behind the animated body.
     match costume {
         2 => {
-            art.rect(6, 35 + bob, 9, 19, ink);
-            art.rect(6, 36 + bob, 7, 15, rgb(101, 86, 65));
+            art.rect(7, 36 + bob, 8, 17, rgb(106, 94, 80));
+            art.rect(7, 38 + bob, 2, 12, rgb(149, 135, 113));
         }
         3 => {
-            art.rect(10, 23 + bob, 28, 23, hair);
-            art.rect(11, 39 + bob, 4, 9, hair);
+            art.rect(10, 23 + bob, 28, 21, hair);
+            art.rect(11, 39 + bob, 4, 8, hair);
         }
         4 => {
-            art.rect(7, 32 + bob, 34, 21, ink);
-            art.rect(8, 34 + bob, 31, 15, rgb(160, 174, 183));
+            art.ellipse(8, 27 + bob, 31, 17, shade);
         }
         6 => {
-            art.poly(
-                &[(14, 33 + bob), (33, 33 + bob), (40, 58), (7, 58)],
-                darken(shirt, 25),
-            );
-            art.rect(9, 54, 29, 3, rgb(164, 126, 176));
-        }
-        7 => {
-            art.poly(
-                &[
-                    (11, 22),
-                    (4, 19),
-                    (9, 15),
-                    (5, 11),
-                    (14, 10),
-                    (12, 5),
-                    (23, 9),
-                    (28, 4),
-                    (33, 11),
-                    (39, 9),
-                    (37, 19),
-                ],
-                hair,
-            );
+            art.poly(&[(12, 34 + bob), (34, 34 + bob), (36, 57), (10, 57)], shade);
         }
         9 => {
-            art.ellipse(33, 13 + bob, 11, 13, hair);
+            art.ellipse(33, 13 + bob, 10, 12, hair);
             art.poly(
                 &[
                     (39, 19 + bob),
-                    (47, 26 + bob),
-                    (44, 39 + bob),
-                    (37, 31 + bob),
+                    (44, 27 + bob),
+                    (42, 37 + bob),
+                    (36, 30 + bob),
                 ],
                 hair,
             );
-        }
-        11 => {
-            art.poly(
-                &[(31, 49), (42, 47), (46, 39), (47, 53), (39, 57), (30, 56)],
-                shade,
-            );
-            art.rect(41, 46, 3, 3, shine);
         }
         _ => {}
     }
@@ -484,96 +456,52 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
     }
     // Costume cuts and identifying items remain visible beneath every face.
     match costume {
-        0 => {
+        0 | 4 => {
             art.poly(&[(16, 34 + bob), (23, 40 + bob), (30, 34 + bob)], shade);
-            art.rect(19, 38 + bob, 1, 7, rgb(218, 231, 227));
-            art.rect(27, 38 + bob, 1, 6, rgb(218, 231, 227));
+            art.rect(19, 38 + bob, 1, 7, rgb(226, 229, 227));
+            art.rect(27, 38 + bob, 1, 6, rgb(226, 229, 227));
             art.rect(19, 47 + bob, 10, 3, shade);
         }
         1 => {
-            art.rect(18, 36 + bob, 11, 17, rgb(247, 240, 218));
-            art.rect(20, 44 + bob, 7, 5, rgb(198, 212, 203));
-            art.rect(15, 49 + bob, 18, 2, rgb(186, 90, 80));
+            for x in (16..32).step_by(3) {
+                art.rect(x, 39 + bob, 1, 13, darken(shirt, 12));
+            }
+            art.rect(16, 51 + bob, 16, 2, shade);
         }
-        2 => {
-            art.line((16, 35 + bob), (29, 52 + bob), rgb(69, 59, 48));
-            art.line((17, 35 + bob), (30, 52 + bob), rgb(223, 179, 103));
-            art.rect(27, 45 + bob, 9, 9, rgb(96, 66, 45));
-            art.rect(28, 46 + bob, 7, 3, rgb(164, 112, 63));
-        }
-        3 => {
-            art.rect(17, 39 + bob, 13, 14, rgb(69, 104, 133));
-            art.rect(17, 35 + bob, 3, 9, rgb(83, 121, 150));
-            art.rect(27, 35 + bob, 3, 9, rgb(83, 121, 150));
-            art.rect(20, 43 + bob, 7, 5, rgb(52, 82, 111));
-            art.rect(19, 40 + bob, 1, 1, rgb(233, 198, 110));
-        }
-        4 => {
-            art.rect(18, 38 + bob, 12, 10, rgb(80, 100, 118));
-            art.rect(20, 40 + bob, 3, 3, rgb(140, 213, 215));
-            art.rect(25, 40 + bob, 3, 2, rgb(216, 123, 90));
-            art.rect(21, 46 + bob, 7, 1, rgb(186, 198, 193));
-            art.rect(15, 51 + bob, 17, 2, rgb(145, 165, 174));
+        2 | 3 | 8 => {
+            art.line((16, 35 + bob), (23, 41 + bob), lighten(shirt, 22));
+            art.line((31, 35 + bob), (24, 41 + bob), shade);
+            art.rect(23, 40 + bob, 2, 13, shade);
+            art.rect(28, 42 + bob, 5, 4, shade);
+            for y in [42, 47, 51] {
+                art.rect(24, y + bob, 1, 1, rgb(224, 226, 224));
+            }
         }
         5 => {
-            for y in [39, 43, 47] {
-                art.rect(15, y + bob, 16, 2, rgb(237, 215, 175));
+            for y in [39, 44, 49] {
+                art.rect(15, y + bob, 17, 2, rgb(93, 106, 120));
             }
-            art.poly(
-                &[
-                    (16, 33 + bob),
-                    (32, 33 + bob),
-                    (28, 38 + bob),
-                    (18, 37 + bob),
-                ],
-                rgb(82, 114, 118),
-            );
-            art.rect(27, 37 + bob, 4, 12, rgb(78, 111, 114));
         }
-        6 => {
-            art.line((16, 35 + bob), (23, 53 + bob), rgb(181, 147, 89));
-            art.line((31, 35 + bob), (24, 53 + bob), rgb(224, 188, 102));
-            star(&mut art, 20, 44 + bob, rgb(242, 211, 135));
-        }
-        7 => {
+        6 | 7 => {
+            art.rect(20, 36 + bob, 8, 16, rgb(220, 222, 216));
             art.poly(
-                &[(16, 35 + bob), (22, 43 + bob), (17, 40 + bob)],
-                rgb(136, 137, 144),
+                &[(15, 34 + bob), (22, 43 + bob), (17, 40 + bob)],
+                lighten(shirt, 25),
             );
-            art.poly(
-                &[(31, 35 + bob), (25, 43 + bob), (30, 41 + bob)],
-                rgb(104, 105, 121),
-            );
-            art.rect(23, 39 + bob, 2, 13, rgb(166, 164, 151));
-            art.rect(15, 45 + bob, 5, 2, ink);
-        }
-        8 => {
-            art.rect(22, 36 + bob, 3, 17, rgb(108, 75, 65));
-            for y in [40, 45, 49] {
-                art.rect(23, y + bob, 1, 1, rgb(237, 207, 154));
-            }
-            art.rect(28, 42 + bob, 5, 4, rgb(124, 87, 59));
+            art.poly(&[(32, 34 + bob), (26, 43 + bob), (31, 41 + bob)], shade);
+            art.rect(15, 46 + bob, 5, 2, shade);
         }
         9 => {
-            art.poly(
-                &[(15, 35 + bob), (24, 42 + bob), (31, 35 + bob)],
-                rgb(204, 221, 216),
-            );
-            art.rect(13, 39 + bob, 2, 10, rgb(226, 236, 223));
-            art.rect(30, 39 + bob, 2, 11, rgb(226, 236, 223));
-            art.rect(22, 41 + bob, 2, 11, rgb(34, 100, 110));
+            art.rect(23, 36 + bob, 1, 16, rgb(205, 218, 214));
+            art.rect(14, 39 + bob, 2, 11, shade);
         }
         10 => {
-            art.rect(16, 36 + bob, 5, 16, rgb(238, 168, 62));
-            art.rect(27, 36 + bob, 5, 16, rgb(239, 168, 62));
-            art.rect(16, 43 + bob, 16, 3, rgb(240, 233, 175));
-            art.rect(17, 36 + bob, 2, 16, rgb(252, 225, 132));
+            art.rect(18, 33 + bob, 13, 6, shirt);
+            art.rect(17, 39 + bob, 15, 1, shade);
         }
         11 => {
-            art.ellipse(18, 36 + bob, 12, 17, rgb(207, 218, 150));
-            for y in [37, 43, 49] {
-                art.rect(32, y + bob, 5, 3, rgb(213, 189, 95));
-            }
+            art.poly(&[(17, 34 + bob), (24, 39 + bob), (30, 34 + bob)], shade);
+            art.rect(16, 51 + bob, 16, 2, shade);
         }
         _ => {}
     }
@@ -686,183 +614,88 @@ fn character_pose(character: Character, pose: Pose, phase: u8, front: bool) -> S
         art.rect(31, 19 + bob, 4, 1, darken(hair, 10));
     }
     // Every crown is drawn independently at this resolution.
+    hair_cap(&mut art, hair, bob);
     match costume {
         0 => {
-            hair_cap(&mut art, hair, bob);
-            art.line((9, 18 + bob), (9, 11 + bob), ink);
             art.rect(10, 9 + bob, 27, 3, ink);
-            art.line((36, 11 + bob), (38, 18 + bob), ink);
-            art.rect(8, 18 + bob, 6, 12, rgb(178, 75, 77));
-            art.rect(35, 18 + bob, 6, 12, rgb(146, 56, 68));
-            art.rect(8, 19 + bob, 2, 8, rgb(233, 134, 110));
+            art.line((10, 11 + bob), (9, 20 + bob), ink);
+            art.line((36, 11 + bob), (38, 20 + bob), ink);
+            art.rect(8, 18 + bob, 6, 12, rgb(134, 145, 154));
+            art.rect(35, 18 + bob, 6, 12, rgb(109, 121, 132));
         }
         1 => {
-            art.ellipse(8, 5 + bob, 13, 14, rgb(206, 213, 198));
-            art.ellipse(15, 1 + bob, 16, 17, rgb(247, 241, 220));
-            art.ellipse(28, 5 + bob, 13, 14, rgb(225, 229, 211));
-            art.rect(12, 14 + bob, 24, 6, rgb(234, 229, 207));
-            art.rect(14, 15 + bob, 2, 4, rgb(250, 246, 228));
+            art.ellipse(12, 4 + bob, 22, 13, hair);
+            art.ellipse(9, 9 + bob, 8, 10, hair);
         }
         2 => {
-            hair_cap(&mut art, hair, bob);
             art.poly(
                 &[
-                    (12, 14 + bob),
-                    (14, 8 + bob),
-                    (31, 8 + bob),
-                    (36, 17 + bob),
-                    (10, 17 + bob),
+                    (10, 16 + bob),
+                    (12, 7 + bob),
+                    (31, 6 + bob),
+                    (36, 12 + bob),
+                    (27, 13 + bob),
                 ],
-                rgb(139, 104, 59),
+                hair,
             );
-            art.rect(8, 16 + bob, 32, 3, rgb(104, 77, 48));
-            art.rect(14, 12 + bob, 19, 3, rgb(202, 159, 86));
-            art.rect(30, 18 + bob, 8, 2, rgb(202, 159, 86));
         }
         3 => {
-            art.ellipse(8, 6 + bob, 31, 13, rgb(210, 178, 96));
-            art.rect(4, 15 + bob, 40, 4, rgb(126, 113, 65));
-            art.rect(6, 14 + bob, 36, 3, rgb(225, 197, 122));
-            art.rect(12, 12 + bob, 23, 3, rgb(108, 145, 100));
-            art.ellipse(31, 8 + bob, 5, 5, rgb(218, 135, 134));
+            art.rect(10, 15 + bob, 4, 18, hair);
+            art.rect(34, 14 + bob, 4, 20, hair);
         }
         4 => {
-            art.poly(
-                &[
-                    (13, 8 + bob),
-                    (32, 8 + bob),
-                    (40, 15 + bob),
-                    (40, 30 + bob),
-                    (33, 37 + bob),
-                    (13, 37 + bob),
-                    (6, 29 + bob),
-                    (6, 16 + bob),
-                ],
-                rgb(193, 211, 214),
-            );
-            art.poly(
-                &[
-                    (14, 11 + bob),
-                    (31, 11 + bob),
-                    (36, 16 + bob),
-                    (36, 29 + bob),
-                    (31, 34 + bob),
-                    (14, 34 + bob),
-                    (10, 28 + bob),
-                    (10, 17 + bob),
-                ],
-                rgb(70, 105, 129),
-            );
-            art.rect(14, 15 + bob, 18, 15, rgb(191, 191, 155));
-            art.rect(18, 22 + bob, 3, 3, ink);
-            art.rect(28, 22 + bob, 3, 3, ink);
-            art.rect(14, 14 + bob, 16, 2, rgb(193, 232, 228));
-            art.rect(12, 17 + bob, 2, 10, rgb(172, 220, 224));
-            art.rect(37, 21 + bob, 5, 8, rgb(226, 154, 76));
+            art.ellipse(14, 5 + bob, 19, 9, hair);
+            art.rect(12, 9 + bob, 22, 4, hair);
         }
         5 => {
-            hair_cap(&mut art, hair, bob);
-            art.ellipse(8, 6 + bob, 30, 12, rgb(81, 62, 89));
-            art.rect(17, 6 + bob, 22, 6, rgb(112, 85, 119));
-            art.rect(26, 3 + bob, 4, 5, rgb(62, 48, 70));
-            art.rect(12, 16 + bob, 22, 2, rgb(61, 47, 69));
+            art.ellipse(24, 2 + bob, 12, 10, hair);
+            art.rect(12, 11 + bob, 3, 13, hair);
         }
         6 => {
-            art.poly(
-                &[
-                    (6, 18 + bob),
-                    (15, 14 + bob),
-                    (24, 1 + bob),
-                    (29, 9 + bob),
-                    (34, 14 + bob),
-                    (43, 18 + bob),
-                    (41, 21 + bob),
-                    (7, 21 + bob),
-                ],
-                rgb(101, 76, 149),
-            );
-            art.poly(
-                &[(16, 14 + bob), (24, 2 + bob), (24, 16 + bob)],
-                rgb(144, 113, 190),
-            );
-            art.rect(13, 16 + bob, 25, 3, rgb(195, 153, 84));
-            star(&mut art, 25, 11 + bob, rgb(248, 219, 144));
+            art.rect(9, 14 + bob, 5, 22, hair);
+            art.rect(34, 17 + bob, 5, 18, hair);
         }
         7 => {
             art.poly(
                 &[
-                    (11, 20 + bob),
-                    (13, 13 + bob),
-                    (17, 8 + bob),
-                    (23, 11 + bob),
-                    (28, 5 + bob),
-                    (32, 14 + bob),
-                    (36, 18 + bob),
-                    (31, 18 + bob),
-                    (26, 13 + bob),
-                    (22, 17 + bob),
-                    (17, 14 + bob),
+                    (11, 16 + bob),
+                    (13, 8 + bob),
+                    (20, 4 + bob),
+                    (32, 7 + bob),
+                    (36, 14 + bob),
                 ],
                 hair,
             );
-            art.rect(33, 27 + bob, 3, 3, rgb(216, 190, 116));
+            art.rect(33, 27 + bob, 2, 3, rgb(189, 179, 152));
         }
         8 => {
-            hair_cap(&mut art, hair, bob);
-            if front {
-                for x in [15, 26] {
-                    art.rect(x, 20 + bob, 10, 7, rgb(76, 90, 99));
-                    art.rect(x + 2, 21 + bob, 6, 4, rgb(195, 218, 207));
-                    art.rect(x + 4, 22 + bob, 2, 3, ink);
-                }
-                art.rect(24, 22 + bob, 3, 1, ink);
-            } else {
-                art.rect(19, 20 + bob, 10, 7, rgb(76, 90, 99));
-                art.rect(31, 20 + bob, 6, 7, rgb(76, 90, 99));
-                art.rect(21, 21 + bob, 6, 4, rgb(195, 218, 207));
-                art.rect(32, 21 + bob, 3, 4, rgb(195, 218, 207));
-                art.rect(23, 22 + bob, 2, 3, ink);
-                art.rect(33, 22 + bob, 1, 3, ink);
-                art.rect(28, 22 + bob, 4, 1, ink);
+            for x in if front { [15, 26] } else { [19, 30] } {
+                art.rect(x, 20 + bob, 9, 7, rgb(76, 84, 92));
+                art.rect(x + 1, 21 + bob, 6, 4, skin);
+                art.rect(x + 4, 22 + bob, 2, 3, ink);
             }
+            art.rect(if front { 24 } else { 28 }, 22 + bob, 3, 1, ink);
         }
         9 => {
-            hair_cap(&mut art, hair, bob);
-            art.rect(12, 16 + bob, 24, 3, rgb(241, 210, 121));
-            art.rect(33, 16 + bob, 7, 3, rgb(244, 188, 113));
+            art.rect(12, 16 + bob, 24, 2, rgb(174, 194, 186));
         }
         10 => {
-            hair_cap(&mut art, hair, bob);
-            art.ellipse(10, 5 + bob, 28, 16, rgb(231, 171, 57));
-            art.rect(7, 16 + bob, 35, 4, rgb(195, 135, 41));
-            art.rect(11, 16 + bob, 26, 2, rgb(255, 211, 94));
-            art.rect(23, 5 + bob, 5, 11, rgb(255, 213, 103));
-        }
-        11 => {
             art.poly(
                 &[
-                    (8, 22 + bob),
-                    (7, 11 + bob),
-                    (14, 5 + bob),
-                    (32, 6 + bob),
-                    (39, 14 + bob),
-                    (39, 32 + bob),
-                    (35, 35 + bob),
-                    (34, 16 + bob),
-                    (15, 17 + bob),
-                    (12, 32 + bob),
-                    (8, 30 + bob),
+                    (10, 16 + bob),
+                    (9, 8 + bob),
+                    (15, 5 + bob),
+                    (30, 5 + bob),
+                    (36, 12 + bob),
+                    (31, 15 + bob),
                 ],
-                rgb(95, 142, 77),
+                hair,
             );
-            art.rect(13, 5 + bob, 6, 6, rgb(119, 171, 93));
-            art.rect(27, 6 + bob, 6, 6, rgb(119, 171, 93));
-            art.rect(15, 7 + bob, 2, 2, ink);
-            art.rect(29, 8 + bob, 2, 2, ink);
-            art.rect(8, 16 + bob, 28, 3, rgb(167, 196, 119));
-            for x in [13, 19, 25, 31] {
-                art.rect(x, 19 + bob, 2, 3, rgb(247, 235, 186));
-            }
+        }
+        11 => {
+            art.ellipse(8, 7 + bob, 12, 12, hair);
+            art.ellipse(16, 3 + bob, 14, 13, hair);
+            art.ellipse(27, 7 + bob, 12, 11, hair);
         }
         _ => {}
     }
@@ -970,11 +803,6 @@ fn hair_cap(art: &mut Raster, hair: Color, bob: i32) {
         hair,
     );
     art.rect(16, 10 + bob, 9, 2, lighten(hair, 19));
-}
-
-fn star(art: &mut Raster, x: i32, y: i32, color: Color) {
-    art.rect(x, y - 2, 1, 5, color);
-    art.rect(x - 2, y, 5, 1, color);
 }
 
 pub(super) fn darken(color: Color, amount: u8) -> Color {

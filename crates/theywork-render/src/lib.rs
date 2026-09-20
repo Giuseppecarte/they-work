@@ -80,7 +80,7 @@ impl Default for RendererPreferences {
     fn default() -> Self {
         Self {
             projection: "auto".into(),
-            light: false,
+            light: true,
             motion: true,
             name_plates: true,
             color_depth: None,
@@ -200,7 +200,7 @@ impl Ui {
             settings_open: false,
             settings_cursor: 0,
             projection: views::office::Projection::Auto,
-            theme: views::UiTheme::Dark,
+            theme: views::UiTheme::Light,
             color_depth,
             color_locked,
             encoding,

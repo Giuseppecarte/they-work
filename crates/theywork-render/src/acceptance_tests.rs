@@ -569,3 +569,22 @@ fn compact_compatibility_cameras_keep_identity_and_saved_camera() {
         assert_eq!(ui.selected_worker_id, selected);
     }
 }
+
+#[test]
+fn campus_defaults_and_saved_designs_round_trip_without_resetting_choices() {
+    assert!(RendererPreferences::default().light);
+    assert!(Ui::new().preferences().light);
+    let saved: RendererPreferences = serde_json::from_str(r#"{
+        "light":false,"wardrobe":{"task":11},"office_palettes":{"project":3},
+        "office_designs":{"project":{"preset":"Workshop","entrance":2,"desks":1,"meeting":2,"rest":1}}
+    }"#).unwrap();
+    let mut ui = Ui::new();
+    ui.restore_preferences(&saved);
+    assert_eq!(ui.preferences(), saved);
+    let restored: RendererPreferences =
+        serde_json::from_str(&serde_json::to_string(&ui.preferences()).unwrap()).unwrap();
+    assert_eq!(restored, saved);
+    let missing_theme: RendererPreferences = serde_json::from_str(r#"{"motion":false}"#).unwrap();
+    assert!(missing_theme.light);
+    assert!(!missing_theme.motion);
+}

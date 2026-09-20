@@ -77,9 +77,9 @@ pub enum OfficePreset {
 impl OfficePreset {
     pub fn label(self) -> &'static str {
         match self {
-            Self::Studio => "Warm studio",
-            Self::Workshop => "Creative workshop",
-            Self::Laboratory => "Laboratory",
+            Self::Studio => "Open workspace",
+            Self::Workshop => "Collaboration studio",
+            Self::Laboratory => "Research lab",
         }
     }
     pub fn next(self) -> Self {

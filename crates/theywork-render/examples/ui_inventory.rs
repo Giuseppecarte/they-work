@@ -2,7 +2,7 @@
 //! claim that snapshots certify real terminals, providers or human usability.
 #[allow(dead_code)]
 #[path = "tower_overview.rs"]
-mod tower_fixture;
+pub(crate) mod tower_fixture;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
 use ratatui::{backend::TestBackend, Terminal};

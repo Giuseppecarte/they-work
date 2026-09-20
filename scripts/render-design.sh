@@ -42,16 +42,16 @@ render() {
 }
 
 echo "rendering design references into docs/references"
-render Main.dc.html     floor         1200 760
-render Main.dc.html     floor-dark    1200 760
-render Light.dc.html    floor-light   1200 760
-render Tabs.dc.html     guard-office  1240 860
-render Messages.dc.html desk           900 800
-render Phone.dc.html    phone          760 800
-render Devs.dc.html     cast          1240 940
-render Views.dc.html    cameras       1240 720
-render Settings.dc.html settings      1000 760
-render Identity.dc.html identity      1240 640
-render FirstRun.dc.html first-run     1000 640
-render Offices.dc.html  themes        1100 700
-render Titles.dc.html   titles        1000 520
+render 'Campus.dc.html?surface=floor' floor 1200 760
+render 'Campus.dc.html?surface=floor&theme=dark' floor-dark 1200 760
+render 'Campus.dc.html?surface=floor' floor-light 1200 760
+render 'Campus.dc.html?surface=guard-office' guard-office 1240 860
+render 'Campus.dc.html?surface=desk' desk 900 800
+render 'Campus.dc.html?surface=phone' phone 760 800
+render 'Campus.dc.html?surface=cast' cast 1240 940
+render 'Campus.dc.html?surface=cameras' cameras 1240 720
+render 'Campus.dc.html?surface=settings' settings 1000 760
+render 'Campus.dc.html?surface=identity' identity 1240 640
+render 'Campus.dc.html?surface=first-run' first-run 1000 640
+render 'Campus.dc.html?surface=themes' themes 1100 700
+render 'Campus.dc.html?surface=titles' titles 1000 520

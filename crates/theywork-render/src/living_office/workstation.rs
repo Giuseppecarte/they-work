@@ -134,10 +134,13 @@ pub(super) fn chair(a: &mut Raster, key: RoomKey, x: usize) {
     let materials = super::materials::for_room(key);
     let upholstery = materials.upholstery;
     let seat = if small { 5 } else { 9 };
-    a.ellipse(x - 2, y + h - 3, w + 4, 4, rgb(45, 54, 55));
+    a.ellipse(x - 2, y + h - 3, w + 4, 4, darken(materials.floor, 14));
     a.rect(x + 2, y, w - 4, h - seat - 1, ink);
     a.rect(x + 3, y + 1, w - 6, h - seat - 3, upholstery);
     a.rect(x + 4, y + 2, w - 8, 1, lighten(upholstery, 25));
+    for row in (y + 4..y + h - seat - 3).step_by(3) {
+        a.rect(x + 4, row, w - 8, 1, darken(upholstery, 9));
+    }
     a.rect(x, y + h - seat, w, if small { 3 } else { 4 }, ink);
     a.rect(x + 1, y + h - seat, w - 2, 1, lighten(upholstery, 22));
     a.rect(
@@ -168,7 +171,7 @@ pub(super) fn furniture(
     let materials = super::materials::for_room(key);
     let edge = materials.desk_edge;
     let y = f - if small { 7 } else { 16 };
-    let th = if small { 3 } else { 4 };
+    let th = if small { 2 } else { 3 };
     let inset = if key.meeting && key.zones[2].is_multiple_of(3) && x == key.first_x as i32 {
         2
     } else {
@@ -189,10 +192,10 @@ pub(super) fn furniture(
     };
     a.rect(x + inset, y, width, th, edge);
     a.rect(x + inset, y, width, 1, lighten(materials.desktop, 22));
-    a.rect(x + inset, y + th - 1, width, 1, darken(edge, 34));
+    a.rect(x + inset, y + th - 1, width, 1, darken(edge, 18));
     for leg in [x + 5, x + sw - 10] {
-        a.rect(leg, y + th, 2, f - y - th, rgb(32, 47, 55));
-        a.rect(leg, f - 1, 5, 2, rgb(42, 53, 55));
+        a.rect(leg, y + th, 2, f - y - th, materials.metal);
+        a.rect(leg, f - 1, 5, 2, darken(materials.metal, 18));
     }
     if key.zones[1] % 3 == 1 {
         let dw = if small { 9 } else { 17 };

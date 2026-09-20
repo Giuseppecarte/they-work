@@ -250,21 +250,21 @@ impl Customize {
                 ("Preset", self.design.preset.label().into()),
                 (
                     "Entrance",
-                    ["Emblem", "Plant wall", "Notice board"][self.design.entrance as usize].into(),
-                ),
-                (
-                    "Desks",
-                    ["Classic", "Books & tools", "Soft lighting"][self.design.desks as usize]
+                    ["Wayfinding", "Accent trim", "Display rail"][self.design.entrance as usize]
                         .into(),
                 ),
                 (
+                    "Desks",
+                    ["Open desks", "Fitted storage", "Laptops"][self.design.desks as usize].into(),
+                ),
+                (
                     "Meeting",
-                    ["Roundtable", "Whiteboard", "Project wall"][self.design.meeting as usize]
+                    ["Shared table", "Long table", "Table display"][self.design.meeting as usize]
                         .into(),
                 ),
                 (
                     "Rest",
-                    ["Coffee", "Green corner", "Reading nook"][self.design.rest as usize].into(),
+                    ["Coffee", "Lounge", "Green corner"][self.design.rest as usize].into(),
                 ),
             ]
         };

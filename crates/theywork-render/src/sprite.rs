@@ -459,17 +459,17 @@ impl SpriteSet {
     pub(crate) fn persona_label(&self, worker: &Worker) -> (&'static str, &'static str) {
         const PERSONAS: [(&str, &str); 12] = [
             ("Headphones", "Makes imaginary mixtapes"),
-            ("Chef", "Collects tiny recipes"),
-            ("Explorer", "Keeps a lucky compass"),
-            ("Gardener", "Names every desk plant"),
-            ("Astronaut", "Counts imaginary satellites"),
-            ("Artist", "Sketches clouds at lunch"),
-            ("Wizard", "Collects dramatic hats"),
-            ("Rocker", "Plays air guitar"),
-            ("Bookworm", "Organizes books by colour"),
-            ("Runner", "Races the imaginary elevator"),
-            ("Hard hat", "Builds miniature bridges"),
-            ("Dinosaur", "Tells prehistoric puns"),
+            ("Knitwear", "Collects tiny recipes"),
+            ("Overshirt", "Keeps a lucky compass"),
+            ("Denim", "Names every desk plant"),
+            ("Hoodie", "Likes quiet corners"),
+            ("Striped tee", "Sketches clouds at lunch"),
+            ("Cardigan", "Collects soft scarves"),
+            ("Blazer", "Plays air guitar"),
+            ("Oxford shirt", "Organizes books by colour"),
+            ("Athleisure", "Races the imaginary elevator"),
+            ("Turtleneck", "Enjoys design books"),
+            ("Crewneck", "Trades weekend stories"),
         ];
         self.wardrobe
             .borrow()
@@ -1247,14 +1247,14 @@ const DESIGN_WORKER_ROWS: &[&str] = &[
 fn wardrobe_palette(agent: Agent, look: WorkerLook) -> Vec<(char, Color)> {
     let cloth = match agent {
         Agent::Codex => [
-            Color::Rgb(79, 158, 232),
-            Color::Rgb(47, 111, 174),
-            Color::Rgb(127, 189, 242),
+            Color::Rgb(89, 123, 157),
+            Color::Rgb(59, 89, 122),
+            Color::Rgb(145, 172, 194),
         ],
         Agent::Claude => [
-            Color::Rgb(232, 131, 74),
-            Color::Rgb(180, 95, 44),
-            Color::Rgb(255, 176, 122),
+            Color::Rgb(166, 145, 118),
+            Color::Rgb(121, 103, 84),
+            Color::Rgb(210, 192, 166),
         ],
     };
     let skin = [
@@ -1305,19 +1305,19 @@ fn static_palette() -> Vec<(char, Color)> {
         ('S', Color::Rgb(255, 193, 137)),
         ('E', Color::Rgb(50, 42, 62)),
         ('Y', Color::Rgb(224, 166, 63)),
-        ('Q', Color::Rgb(65, 69, 105)),
+        ('Q', Color::Rgb(83, 94, 109)),
         ('!', Color::Rgb(240, 180, 41)),
-        ('W', Color::Rgb(186, 119, 74)),
+        ('W', Color::Rgb(211, 192, 161)),
         ('L', Color::Rgb(91, 186, 126)),
         ('l', Color::Rgb(133, 221, 148)),
-        ('P', Color::Rgb(222, 132, 100)),
-        ('M', Color::Rgb(42, 47, 77)),
-        ('O', Color::Rgb(100, 211, 224)),
+        ('P', Color::Rgb(196, 195, 184)),
+        ('M', Color::Rgb(48, 59, 68)),
+        ('O', Color::Rgb(151, 185, 199)),
         ('F', Color::Rgb(188, 145, 93)),
         ('f', Color::Rgb(224, 181, 115)),
         ('B', Color::Rgb(91, 82, 112)),
         ('b', Color::Rgb(117, 103, 139)),
-        ('C', Color::Rgb(108, 185, 213)),
+        ('C', Color::Rgb(170, 197, 205)),
         ('c', Color::Rgb(210, 218, 230)),
     ]
 }
@@ -1857,15 +1857,15 @@ mod tests {
         };
         assert_eq!(
             frame(Agent::Claude, false).pixel(9, 18),
-            Some(Color::Rgb(232, 131, 74))
+            Some(Color::Rgb(166, 145, 118))
         );
         assert_eq!(
             frame(Agent::Codex, false).pixel(9, 18),
-            Some(Color::Rgb(79, 158, 232))
+            Some(Color::Rgb(89, 123, 157))
         );
         assert_eq!(
             frame(Agent::Codex, true).pixel(9, 18),
-            Some(Color::Rgb(79, 158, 232))
+            Some(Color::Rgb(89, 123, 157))
         );
     }
 

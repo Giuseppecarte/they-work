@@ -1,7 +1,30 @@
 # Design source
 
-The intended design for every surface, one file per artboard. These are the
-authority: where the code and a board disagree, the board is what we meant.
+The current design direction is [Modern campus](Campus.dc.html). It supplies
+all current reference surfaces through its `surface` and `theme` parameters.
+It is an independent schematic, not a screenshot or terminal certification.
+Earlier individual boards remain here as historical design material.
+
+The current renderer review is reproducible with:
+
+```sh
+env -u NO_COLOR COLORTERM=truecolor ./scripts/cargo run --example campus_review -- target/campus-review/ui
+env -u NO_COLOR COLORTERM=truecolor ./scripts/cargo run --example studio_gallery -- target/campus-review/art
+scripts/render-design.sh
+make shot
+```
+
+The first command exports 19 real UI routes at 80×24 and 120×36 cells, in both
+themes and with graphics or native cells. It records physical RGBA layers and
+native text separately; it is not terminal playback. The second exports both
+authored character grids, furniture variants, and decorative motion frames.
+Inspect the assembled views and exercise the native app before landing.
+
+
+## Historical boards
+
+These earlier artboards document the former direction. They are retained for
+context and are no longer the source of the current reference images.
 
 | File | Surface |
 | --- | --- |
@@ -27,7 +50,7 @@ renders locally.
 
 ## Regenerating the reference images
 
-`docs/references/` holds a rendered PNG of each board, which the review contact
+`docs/references/` holds a rendered PNG of each campus surface, which the review contact
 sheet places beside the real output. To refresh them after editing a board:
 
 ~~~bash

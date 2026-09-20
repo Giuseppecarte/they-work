@@ -19,9 +19,11 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
 use crossterm::cursor::{MoveTo, Show};
+#[cfg(windows)]
+use crossterm::event::EnableMouseCapture;
 use crossterm::event::{
-    self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-    Event as TermEvent, KeyCode, KeyEvent, KeyModifiers,
+    self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, Event as TermEvent,
+    KeyCode, KeyEvent, KeyModifiers, MouseEventKind,
 };
 use crossterm::execute;
 use crossterm::terminal::{
@@ -143,6 +145,34 @@ fn parse_mouse(value: &str) -> std::result::Result<bool, String> {
     }
 }
 
+/// The office uses clicks and scrolling, so do not request hover or drag reports.
+struct EnableOfficeMouseCapture;
+
+impl crossterm::Command for EnableOfficeMouseCapture {
+    fn write_ansi(&self, f: &mut impl std::fmt::Write) -> std::fmt::Result {
+        f.write_str("\x1b[?1003l\x1b[?1002l\x1b[?1000h\x1b[?1006h")
+    }
+
+    #[cfg(windows)]
+    fn execute_winapi(&self) -> io::Result<()> {
+        EnableMouseCapture.execute_winapi()
+    }
+
+    #[cfg(windows)]
+    fn is_ansi_code_supported(&self) -> bool {
+        false
+    }
+}
+
+/// Native consoles and already queued terminal reports can still contain motion.
+fn ignored_input(input: &TermEvent) -> bool {
+    matches!(
+        input,
+        TermEvent::Mouse(event)
+            if matches!(event.kind, MouseEventKind::Moved | MouseEventKind::Drag(_) | MouseEventKind::Up(_))
+    ) || matches!(input, TermEvent::FocusGained | TermEvent::FocusLost)
+}
+
 /// Releases capture on every return path, including failures during a handoff.
 struct MouseCaptureGuard {
     enabled: bool,
@@ -151,7 +181,7 @@ impl MouseCaptureGuard {
     fn sync(&mut self, enabled: bool) -> Result<()> {
         if self.enabled != enabled {
             if enabled {
-                execute!(io::stdout(), EnableMouseCapture)?;
+                execute!(io::stdout(), EnableOfficeMouseCapture)?;
             } else {
                 execute!(io::stdout(), DisableMouseCapture)?;
             }
@@ -1926,13 +1956,20 @@ fn run(
             }
 
             if event::poll(FRAME)? {
-                // Coalesce queued input before encoding another image. Bound
-                // the batch so held keys cannot starve observation updates.
-                for _ in 0..32 {
-                    if !event::poll(Duration::ZERO)? {
+                // Drain ignored reports without redrawing for each one. Bound
+                // both reports and actions so input cannot starve observation.
+                let mut actions = 0;
+                for _ in 0..256 {
+                    // The TTY reader needs a positive timeout to inspect its
+                    // parser and descriptor, even when input is already queued.
+                    if !event::poll(Duration::from_millis(1))? {
                         break;
                     }
                     let input = event::read()?;
+                    if ignored_input(&input) {
+                        continue;
+                    }
+                    actions += 1;
                     let coalesce = matches!(&input, TermEvent::Key(key) if matches!(key.code,
                     KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right |
                     KeyCode::Home | KeyCode::End | KeyCode::PageUp | KeyCode::PageDown));
@@ -2070,7 +2107,7 @@ fn run(
                         if previous_view == View::Cameras && ui.view() == View::Office {
                             persist_selected_office(runtime, ui.selected_office(), now)?;
                         }
-                        if !coalesce || previous_view != ui.view() {
+                        if !coalesce || actions >= 32 || previous_view != ui.view() {
                             break;
                         }
                     }

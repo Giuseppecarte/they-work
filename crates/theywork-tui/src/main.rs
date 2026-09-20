@@ -6,8 +6,11 @@
 mod connections;
 mod control_host;
 mod frame_output;
+mod frame_schedule;
 
-use std::collections::HashSet;
+use frame_schedule::{FrameSchedule, GraphicsMode};
+
+use std::collections::{HashSet, VecDeque};
 use std::fs::{self, OpenOptions};
 use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -73,6 +76,8 @@ OPTIONS:
   --color <auto|true|256|none>
                            Choose terminal color handling
   --mouse <on|off>         Enable clicks or keep terminal text selection
+  --graphics <auto|images|cells>
+                           Adapt graphics for responsive controls (default: auto)
   --setup                  Choose local sources and their folders
   --sources <all|codex|claude|none>
                            Choose which conversations may be read
@@ -115,6 +120,7 @@ struct Args {
     dark: bool,
     color: Option<ColorMode>,
     mouse: Option<bool>,
+    graphics: GraphicsMode,
     config_dir: Option<PathBuf>,
     setup: bool,
     no_save: bool,
@@ -171,6 +177,7 @@ fn ignored_input(input: &TermEvent) -> bool {
         TermEvent::Mouse(event)
             if matches!(event.kind, MouseEventKind::Moved | MouseEventKind::Drag(_) | MouseEventKind::Up(_))
     ) || matches!(input, TermEvent::FocusGained | TermEvent::FocusLost)
+        || matches!(input, TermEvent::Key(key) if key.kind == event::KeyEventKind::Release)
 }
 
 /// Releases capture on every return path, including failures during a handoff.
@@ -215,6 +222,12 @@ where
             "-h" | "--help" => parsed.help = true,
             "--demo" => parsed.demo = true,
             "--all" => parsed.all = true,
+            "--graphics" => {
+                parsed.graphics = GraphicsMode::parse(&next_value(&mut arguments, "--graphics")?)?;
+            }
+            value if value.starts_with("--graphics=") => {
+                parsed.graphics = GraphicsMode::parse(&value["--graphics=".len()..])?;
+            }
             "--once" => parsed.once = true,
             "--headless" => parsed.headless = true,
             "--exit-after" => {
@@ -644,13 +657,14 @@ fn termination_error() -> Option<anyhow::Error> {
 }
 
 fn is_ctrl_c(input: KeyEvent) -> bool {
-    input.code == KeyCode::Char('c') && input.modifiers.contains(KeyModifiers::CONTROL)
+    matches!(input.code, KeyCode::Char('c' | 'C'))
+        && input.modifiers.contains(KeyModifiers::CONTROL)
 }
 
 fn doctor(args: &Args) -> Result<i32> {
     if args.consent_needed {
         println!("they-work doctor\nNo sources selected yet. Only folder locations were checked.");
-        print_terminal_report();
+        print_terminal_report(args.graphics);
         let value = connections::Connections::from_args(args)?;
         for (label, path) in [
             ("Claude Code", value.claude_home),
@@ -670,7 +684,7 @@ fn doctor(args: &Args) -> Result<i32> {
     let reports = theywork_collect::inspect_selected(&config, now_ms());
 
     println!("they-work doctor");
-    print_terminal_report();
+    print_terminal_report(args.graphics);
     for report in &reports {
         print_store_report(report);
         if !report.home_found || !report.readable {
@@ -721,7 +735,7 @@ fn doctor(args: &Args) -> Result<i32> {
     ))
 }
 
-fn print_terminal_report() {
+fn print_terminal_report(graphics: GraphicsMode) {
     println!(
         "terminal_env TERM={} COLORTERM={} TERM_PROGRAM={} LANG={} LC_ALL={} LC_CTYPE={}",
         environment_value("TERM"),
@@ -778,6 +792,18 @@ fn print_terminal_report() {
         ),
         capabilities.synchronized_output,
     );
+    println!(
+        "terminal_graphics_mode selected={}",
+        match graphics {
+            GraphicsMode::Auto => "auto",
+            GraphicsMode::Images => "images",
+            GraphicsMode::Cells => "cells",
+        }
+    );
+    let mut capabilities = capabilities;
+    if graphics == GraphicsMode::Cells {
+        capabilities.graphics = GraphicsProtocol::None;
+    }
     match terminal_cells.and_then(|cells| diagnostic_frame(ui, capabilities, cells)) {
         Some(frame) => println!(
             "terminal_frame mode={} covered_cells={}x{} source_pixels={}x{}",
@@ -1729,8 +1755,11 @@ fn run(
     terminal: &mut OfficeTerminal,
     runtime: &mut Runtime,
     args: &Args,
-    capabilities: Capabilities,
+    mut capabilities: Capabilities,
 ) -> Result<()> {
+    if args.graphics == GraphicsMode::Cells {
+        capabilities.graphics = GraphicsProtocol::None;
+    }
     let mut ui = Ui::new();
     let preferences = runtime
         .config_dir
@@ -1765,6 +1794,10 @@ fn run(
         !runtime.demo,
     );
     let mut control_cursor = theywork_control::BridgeCursor::default();
+    let mut control_revision = 0;
+    let mut pending_events = VecDeque::new();
+    let mut schedule = FrameSchedule::new(args.graphics, Instant::now());
+    let mut fallback_pending = false;
     let mut notebook_save = Instant::now();
     let mut clear_before_frame = false;
     let terminal_cells = terminal.size()?;
@@ -1786,176 +1819,7 @@ fn run(
             }
             let now = now_ms();
 
-            if runtime.demo {
-                for event in theywork_core::demo::events(now) {
-                    runtime.world.apply(event);
-                }
-            } else {
-                for result in poller.drain() {
-                    ui.set_observation_summary(source_observation(runtime, &result.errors, now));
-                    for event in result.events {
-                        runtime.world.apply(event);
-                    }
-                    for error in result.errors {
-                        if !runtime.errors.contains(&error) {
-                            runtime.errors.push(error);
-                        }
-                    }
-                }
-            }
-
-            let mut latest = control.latest();
-            if !runtime.config.only_paths.is_empty() {
-                let allowed: HashSet<_> =
-                    latest
-                        .snapshot
-                        .iter()
-                        .flat_map(|snapshot| snapshot.threads.values())
-                        .filter(|thread| {
-                            let raw = thread.project.to_string_lossy();
-                            let path = latest
-                                .project_aliases
-                                .get(raw.as_ref())
-                                .map_or(raw.as_ref(), String::as_str);
-                            runtime
-                                .config
-                                .only_paths
-                                .iter()
-                                .any(|selected| selected == Path::new(path))
-                        })
-                        .map(|thread| thread.identity.worker_id())
-                        .chain(runtime.world.offices().flat_map(|office| {
-                            office.workers.iter().map(|worker| worker.id.clone())
-                        }))
-                        .collect();
-                latest
-                    .status
-                    .tasks
-                    .retain(|id, _| allowed.contains(&theywork_core::WorkerId(id.clone())));
-                latest
-                    .status
-                    .requests
-                    .retain(|request| allowed.contains(&request.worker));
-            }
-            ui.set_control_status(latest.status);
-            if let Some(snapshot) = latest.snapshot {
-                let batch = theywork_control::reconcile_snapshot(&snapshot, &control_cursor);
-                for mut event in batch.events {
-                    if let Some(project) = latest.project_aliases.get(&event.office_path) {
-                        event.office_path = project.clone();
-                        event.office = theywork_core::OfficeId(project.clone());
-                    }
-                    if !runtime.config.only_paths.is_empty()
-                        && !runtime
-                            .config
-                            .only_paths
-                            .iter()
-                            .any(|path| path == Path::new(&event.office_path))
-                    {
-                        continue;
-                    }
-                    runtime.world.apply(event);
-                }
-                control_cursor = batch.next_cursor;
-            }
-            for outcome in control.drain() {
-                match outcome {
-                    control_host::Outcome::Receipt {
-                        detail,
-                        clear_draft,
-                    } => ui.complete_control(detail, clear_draft),
-                    control_host::Outcome::Console {
-                        command,
-                        clear_draft,
-                    } => {
-                        let paused_sources = poller.stop();
-                        for result in poller.drain() {
-                            for event in result.events {
-                                runtime.world.apply(event);
-                            }
-                        }
-                        persist_notebook(runtime, &ui)?;
-                        image_presenter.present(terminal.backend_mut(), None)?;
-                        Write::flush(terminal.backend_mut())?;
-                        ui.invalidate_pointer();
-                        mouse_capture.sync(false)?;
-                        let status = handoff_console(terminal, &command);
-                        clear_before_frame = true;
-                        mouse_capture.sync(ui.mouse_enabled())?;
-                        match status {
-                            Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
-                            Ok(false) => ui.complete_control("Official console exited without confirming success. Inspect its output before sending again.".into(), false),
-                            Err(error) => ui.complete_control(format!("Console could not open: {error}"), false),
-                        }
-                        poller = Poller::start(paused_sources);
-                        control = control_host::Host::start(
-                            connections::Connections::from_args(&active_args)?,
-                            runtime
-                                .config_dir
-                                .clone()
-                                .filter(|_| runtime.save_preferences),
-                            !runtime.demo,
-                        );
-                    }
-                }
-            }
-            if notebook_save.elapsed() >= Duration::from_secs(5) {
-                persist_notebook(runtime, &ui)?;
-                notebook_save = Instant::now();
-            }
-            runtime.world.tick(now);
-            ui.tick(now);
-
-            mouse_capture.sync(ui.mouse_enabled())?;
-            let terminal_cells = terminal.size()?;
-            let current_size = (terminal_cells.width, terminal_cells.height);
-            if current_size != presented_size {
-                ui.invalidate_pointer();
-                presented_size = current_size;
-            }
-            terminal.backend_mut().writer_mut().begin();
-            if clear_before_frame {
-                terminal.clear()?;
-                clear_before_frame = false;
-            }
-            image_presenter.resize(
-                terminal.backend_mut(),
-                (terminal_cells.width, terminal_cells.height),
-            )?;
-            let mut pixel_frame = None;
-            let mut native_frame = None;
-            terminal.draw(|frame| {
-                ui.draw(frame, &runtime.world);
-                if image_presenter.enabled() {
-                    native_frame = Some(frame.buffer_mut().clone());
-                    // Image protocols can erase their old rectangle. Paint
-                    // native text only after that operation has completed.
-                    for cell in &mut frame.buffer_mut().content {
-                        cell.set_skip(true);
-                    }
-                    pixel_frame = Some(ui.pixel_frame().with_text_backgrounds());
-                }
-            })?;
-            if ui.actions_changed_since_presented() {
-                image_presenter.next_frame = Instant::now();
-            }
-            if let Some(native_frame) = native_frame {
-                present_composed_frame(
-                    terminal.backend_mut(),
-                    &mut image_presenter,
-                    pixel_frame,
-                    &native_frame,
-                )?;
-            }
-            let write_started = Instant::now();
-            terminal.backend_mut().writer_mut().finish()?;
-            image_presenter.note_write_time(write_started.elapsed());
-
-            if !image_presenter.enabled() || image_presenter.current_frame_presented {
-                ui.frame_presented();
-            }
-
-            if event::poll(FRAME)? {
+            if event::poll(schedule.wait(Instant::now()))? {
                 // Drain ignored reports without redrawing for each one. Bound
                 // both reports and actions so input cannot starve observation.
                 let mut actions = 0;
@@ -1970,6 +1834,7 @@ fn run(
                         continue;
                     }
                     actions += 1;
+                    schedule.dirty = true;
                     let coalesce = matches!(&input, TermEvent::Key(key) if matches!(key.code,
                     KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right |
                     KeyCode::Home | KeyCode::End | KeyCode::PageUp | KeyCode::PageDown));
@@ -2036,6 +1901,9 @@ fn run(
                             }
                             Some(UiCommand::Sources) => {
                                 let paused_sources = poller.stop();
+                                for event in pending_events.drain(..) {
+                                    runtime.world.apply(event);
+                                }
                                 // Joining can finish an in-flight poll. Keep its events
                                 // before replacing the channel and resuming the cursors.
                                 for result in poller.drain() {
@@ -2089,6 +1957,7 @@ fn run(
                                     now,
                                 ));
                                 poller = Poller::start(std::mem::take(&mut runtime.sources));
+                                control_revision = 0;
                                 control = control_host::Host::start(
                                     connections::Connections::from_args(&active_args)?,
                                     runtime
@@ -2113,6 +1982,211 @@ fn run(
                     }
                 }
             }
+
+            if pending_events.is_empty() {
+                if runtime.demo {
+                    if schedule.due(Instant::now()) {
+                        pending_events.extend(theywork_core::demo::events(now));
+                    }
+                } else if let Ok(result) = poller.results.try_recv() {
+                    ui.set_observation_summary(source_observation(runtime, &result.errors, now));
+                    pending_events.extend(result.events);
+                    for error in result.errors {
+                        if !runtime.errors.contains(&error) {
+                            runtime.errors.push(error);
+                        }
+                    }
+                    schedule.dirty = true;
+                }
+            }
+
+            if let Some(mut latest) = control.latest_since(&mut control_revision) {
+                schedule.dirty = true;
+                if !runtime.config.only_paths.is_empty() {
+                    let allowed: HashSet<_> = latest
+                        .snapshot
+                        .iter()
+                        .flat_map(|snapshot| snapshot.threads.values())
+                        .filter(|thread| {
+                            let raw = thread.project.to_string_lossy();
+                            let path = latest
+                                .project_aliases
+                                .get(raw.as_ref())
+                                .map_or(raw.as_ref(), String::as_str);
+                            runtime
+                                .config
+                                .only_paths
+                                .iter()
+                                .any(|selected| selected == Path::new(path))
+                        })
+                        .map(|thread| thread.identity.worker_id())
+                        .chain(runtime.world.offices().flat_map(|office| {
+                            office.workers.iter().map(|worker| worker.id.clone())
+                        }))
+                        .collect();
+                    latest
+                        .status
+                        .tasks
+                        .retain(|id, _| allowed.contains(&theywork_core::WorkerId(id.clone())));
+                    latest
+                        .status
+                        .requests
+                        .retain(|request| allowed.contains(&request.worker));
+                }
+                ui.set_control_status(latest.status);
+                if let Some(snapshot) = latest.snapshot {
+                    let batch = theywork_control::reconcile_snapshot(&snapshot, &control_cursor);
+                    for mut event in batch.events {
+                        if let Some(project) = latest.project_aliases.get(&event.office_path) {
+                            event.office_path = project.clone();
+                            event.office = theywork_core::OfficeId(project.clone());
+                        }
+                        if !runtime.config.only_paths.is_empty()
+                            && !runtime
+                                .config
+                                .only_paths
+                                .iter()
+                                .any(|path| path == Path::new(&event.office_path))
+                        {
+                            continue;
+                        }
+                        pending_events.push_back(event);
+                    }
+                    control_cursor = batch.next_cursor;
+                }
+            }
+            for outcome in control.drain() {
+                schedule.dirty = true;
+                match outcome {
+                    control_host::Outcome::Receipt {
+                        detail,
+                        clear_draft,
+                    } => ui.complete_control(detail, clear_draft),
+                    control_host::Outcome::Console {
+                        command,
+                        clear_draft,
+                    } => {
+                        let paused_sources = poller.stop();
+                        for event in pending_events.drain(..) {
+                            runtime.world.apply(event);
+                        }
+                        for result in poller.drain() {
+                            for event in result.events {
+                                runtime.world.apply(event);
+                            }
+                        }
+                        persist_notebook(runtime, &ui)?;
+                        image_presenter.present(terminal.backend_mut(), None)?;
+                        Write::flush(terminal.backend_mut())?;
+                        ui.invalidate_pointer();
+                        mouse_capture.sync(false)?;
+                        let status = handoff_console(terminal, &command);
+                        clear_before_frame = true;
+                        mouse_capture.sync(ui.mouse_enabled())?;
+                        match status {
+                            Ok(true) => ui.complete_control("Returned from official console. Background tasks remain with their provider.".into(), clear_draft),
+                            Ok(false) => ui.complete_control("Official console exited without confirming success. Inspect its output before sending again.".into(), false),
+                            Err(error) => ui.complete_control(format!("Console could not open: {error}"), false),
+                        }
+                        poller = Poller::start(paused_sources);
+                        control_revision = 0;
+                        control = control_host::Host::start(
+                            connections::Connections::from_args(&active_args)?,
+                            runtime
+                                .config_dir
+                                .clone()
+                                .filter(|_| runtime.save_preferences),
+                            !runtime.demo,
+                        );
+                    }
+                }
+            }
+            if notebook_save.elapsed() >= Duration::from_secs(5) {
+                persist_notebook(runtime, &ui)?;
+                notebook_save = Instant::now();
+            }
+            let update_started = Instant::now();
+            for _ in 0..256 {
+                let Some(event) = pending_events.pop_front() else {
+                    break;
+                };
+                runtime.world.apply(event);
+                schedule.dirty = true;
+                if update_started.elapsed() >= Duration::from_millis(4) {
+                    break;
+                }
+            }
+            if !schedule.due(Instant::now()) {
+                continue;
+            }
+            let frame_started = Instant::now();
+            runtime.world.tick(now);
+            ui.tick(now);
+
+            mouse_capture.sync(ui.mouse_enabled())?;
+            let terminal_cells = terminal.size()?;
+            let current_size = (terminal_cells.width, terminal_cells.height);
+            if current_size != presented_size {
+                ui.invalidate_pointer();
+                presented_size = current_size;
+            }
+            terminal.backend_mut().writer_mut().begin();
+            if fallback_pending {
+                image_presenter.present(terminal.backend_mut(), None)?;
+                image_presenter.surface = None;
+                ui.set_image_cell_size(None);
+                ui.show_performance_notice();
+                ui.invalidate_pointer();
+                clear_before_frame = true;
+                fallback_pending = false;
+            }
+            if clear_before_frame {
+                terminal.clear()?;
+                clear_before_frame = false;
+            }
+            image_presenter.resize(
+                terminal.backend_mut(),
+                (terminal_cells.width, terminal_cells.height),
+            )?;
+            let mut pixel_frame = None;
+            let mut native_frame = None;
+            terminal.draw(|frame| {
+                ui.draw(frame, &runtime.world);
+                if image_presenter.enabled() {
+                    native_frame = Some(frame.buffer_mut().clone());
+                    // Image protocols can erase their old rectangle. Paint
+                    // native text only after that operation has completed.
+                    for cell in &mut frame.buffer_mut().content {
+                        cell.set_skip(true);
+                    }
+                    pixel_frame = Some(ui.pixel_frame().with_text_backgrounds());
+                }
+            })?;
+            if ui.actions_changed_since_presented() {
+                image_presenter.next_frame = Instant::now();
+            }
+            if let Some(native_frame) = native_frame {
+                present_composed_frame(
+                    terminal.backend_mut(),
+                    &mut image_presenter,
+                    pixel_frame,
+                    &native_frame,
+                )?;
+            }
+            let write_started = Instant::now();
+            terminal.backend_mut().writer_mut().finish()?;
+            image_presenter.note_write_time(write_started.elapsed());
+
+            if !image_presenter.enabled() || image_presenter.current_frame_presented {
+                ui.frame_presented();
+            }
+            fallback_pending = schedule.presented(
+                Instant::now(),
+                frame_started.elapsed(),
+                image_presenter.enabled(),
+                ui.animation_enabled(),
+                image_presenter.next_frame,
+            );
         }
     })();
     // An encoding/drawing failure must discard its incomplete buffered frame.
@@ -2668,6 +2742,36 @@ mod tests {
 
     fn parse(arguments: &[&str]) -> std::result::Result<Args, String> {
         parse_args(arguments.iter().map(|argument| (*argument).to_string()))
+    }
+
+    #[test]
+    fn graphics_modes_are_explicit_and_validate_values() {
+        assert_eq!(parse(&[]).unwrap().graphics, GraphicsMode::Auto);
+        assert_eq!(
+            parse(&["--demo", "--graphics", "cells"]).unwrap().graphics,
+            GraphicsMode::Cells
+        );
+        assert_eq!(
+            parse(&["--graphics=images"]).unwrap().graphics,
+            GraphicsMode::Images
+        );
+        assert!(parse(&["--graphics"]).is_err());
+        assert!(parse(&["--graphics=invalid"]).is_err());
+    }
+
+    #[test]
+    fn releases_do_not_redraw_but_presses_and_repeats_reach_the_ui() {
+        for kind in [
+            event::KeyEventKind::Press,
+            event::KeyEventKind::Repeat,
+            event::KeyEventKind::Release,
+        ] {
+            let key = KeyEvent::new_with_kind(KeyCode::Tab, KeyModifiers::NONE, kind);
+            assert_eq!(
+                ignored_input(&TermEvent::Key(key)),
+                kind == event::KeyEventKind::Release
+            );
+        }
     }
 
     #[test]

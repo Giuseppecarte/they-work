@@ -60,13 +60,34 @@ and `synchronized_output=true` when those capabilities are detected. If support
 is absent, the app uses its compatible renderer or buffered updates without
 synchronization. Updating Windows Terminal can make these capabilities available.
 Full motion remains the default; `s` opens Settings with an optional Reduced
-motion setting. Large windows still require more graphics data per update.
+motion setting. `--graphics auto` (the default) switches to simpler cell graphics
+for the rest of the session after three consecutive image frames take more than
+75 ms. The office layout and theme stay the same. Use `--graphics cells` for
+consistent lightweight rendering, or `--graphics images` to retain images when
+the terminal supports them. Large windows require more graphics data per update.
 
 `Tab` highlights a complete control and `Enter` activates it. In the scene,
 arrows choose a floor or worker; `Enter` opens it. The footer shows the return
 destination: `Esc` goes from the work brief to the office, then to the tower.
 Use `?` for help or `/` to find a task. The context row retains the selected
 worker and its observed state while reading its work panel.
+Letter shortcuts also accept uppercase input; text entered in search and drafts
+keeps its original case. The explicit `O` and `W` reset shortcuts retain their
+separate meanings.
+
+### Codex CLI projects inside WSL
+
+Build the optimized Linux binary and run it inside the same WSL distribution
+as your Codex sessions:
+
+~~~sh
+make native
+./target/release/they-work --sources codex --codex-home "$HOME/.codex" --all
+~~~
+
+Restart the app after rebuilding. Use this release build for everyday use;
+debug builds spend substantially more time rendering large offices. Add
+`--graphics cells` if you prefer the lightweight renderer from startup.
 
 Native Windows Terminal playback remains a separate acceptance check: automated
 protocol tests and Linux PTY captures do not establish that a Windows display

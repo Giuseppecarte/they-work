@@ -20,6 +20,7 @@ use crate::connections::Connections;
 
 #[derive(Clone, Default)]
 pub struct Latest {
+    pub revision: u64,
     pub status: ControlStatus,
     pub snapshot: Option<Arc<ControlSnapshot>>,
     pub project_aliases: BTreeMap<String, String>,
@@ -61,7 +62,9 @@ impl Host {
                 if Instant::now() >= next_probe {
                     backend.refresh();
                     if let Ok(mut value) = shared.lock() {
+                        let revision = value.revision.wrapping_add(1);
                         *value = backend.latest();
+                        value.revision = revision;
                     }
                     next_probe = Instant::now() + Duration::from_secs(2);
                 }
@@ -94,6 +97,15 @@ impl Host {
             .lock()
             .map(|value| value.clone())
             .unwrap_or_default()
+    }
+
+    pub fn latest_since(&self, revision: &mut u64) -> Option<Latest> {
+        let value = self.latest.lock().ok()?;
+        if value.revision == *revision {
+            return None;
+        }
+        *revision = value.revision;
+        Some(value.clone())
     }
     pub fn drain(&self) -> Vec<Outcome> {
         self.outcomes.try_iter().collect()
@@ -427,6 +439,7 @@ impl Backend {
             })
             .unwrap_or_default();
         Latest {
+            revision: 0,
             status,
             snapshot: self
                 .snapshot

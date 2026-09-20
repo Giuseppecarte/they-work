@@ -624,6 +624,11 @@ impl Ui {
         } else {
             hint
         };
+        let hint = if self.now < self.performance_notice_until {
+            "Simpler graphics for faster controls".into()
+        } else {
+            hint
+        };
         Paragraph::new(hint)
             .style(Style::default().fg(views::MUTED))
             .render(

@@ -98,6 +98,7 @@ impl Default for RendererPreferences {
 ///
 /// The host owns the data (`World`); this owns only presentation.
 pub struct Ui {
+    performance_notice_until: Millis,
     view: View,
     selected_office: usize,
     selected_office_id: Option<OfficeId>,
@@ -173,6 +174,7 @@ impl Ui {
         let (color_depth, color_locked, color_reason) = ColorDepth::environment_selection();
         let (encoding, encoding_locked, encoding_reason) = PixelEncoding::environment_selection();
         Self {
+            performance_notice_until: 0,
             view: View::Office,
             selected_office: 0,
             selected_office_id: None,
@@ -247,6 +249,20 @@ impl Ui {
     /// Advance animations. Called once per frame, before `draw`.
     pub fn tick(&mut self, now: Millis) {
         self.now = now;
+    }
+
+    pub fn animation_enabled(&self) -> bool {
+        self.motion
+            && !self.help_open
+            && !self.finder.open
+            && !self.settings_open
+            && !self.controls.open
+            && !self.customize.open
+            && !self.workboard.open
+    }
+
+    pub fn show_performance_notice(&mut self) {
+        self.performance_notice_until = self.now.saturating_add(8_000);
     }
 
     /// Current presentation screen.
@@ -469,11 +485,21 @@ impl Ui {
     }
 
     /// Handle one key press.
-    pub fn handle_key(&mut self, key: KeyEvent) -> Option<UiCommand> {
+    pub fn handle_key(&mut self, mut key: KeyEvent) -> Option<UiCommand> {
         use crossterm::event::KeyCode;
 
         if key.kind == crossterm::event::KeyEventKind::Release {
             return None;
+        }
+
+        // Terminal protocols can encode Caps Lock as an uppercase character
+        // with Shift. Keep text fields exact and retain the explicit O/W resets.
+        if !self.finder.open && !self.controls.open && !self.customize.open {
+            if let KeyCode::Char(c) = key.code {
+                if c.is_ascii_uppercase() && !matches!(c, 'O' | 'W') {
+                    key.code = KeyCode::Char(c.to_ascii_lowercase());
+                }
+            }
         }
 
         if self.more_open {
@@ -1641,6 +1667,35 @@ mod tests {
             world.apply(event);
         }
         world
+    }
+
+    #[test]
+    fn uppercase_navigation_shortcuts_work_without_changing_search_text() {
+        let mut ui = Ui::new();
+        ui.handle_key(KeyEvent::new(KeyCode::Char('S'), KeyModifiers::SHIFT));
+        assert!(ui.settings_open);
+        ui.handle_key(KeyEvent::new(KeyCode::Char('Q'), KeyModifiers::SHIFT));
+        assert!(!ui.settings_open);
+        assert!(matches!(
+            ui.handle_key(KeyEvent::new(KeyCode::Char('Q'), KeyModifiers::SHIFT)),
+            Some(UiCommand::Quit)
+        ));
+        ui.handle_key(KeyEvent::new(KeyCode::Char('/'), KeyModifiers::NONE));
+        for c in "QuIx".chars() {
+            ui.handle_key(KeyEvent::new(KeyCode::Char(c), KeyModifiers::NONE));
+        }
+        assert!(ui.finder.open);
+        let world = demo_world(0);
+        let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+        terminal.draw(|f| ui.draw(f, &world)).unwrap();
+        let text = terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect::<String>();
+        assert!(text.contains("QuIx"));
     }
 
     #[test]
